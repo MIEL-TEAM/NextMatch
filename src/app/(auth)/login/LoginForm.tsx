@@ -12,16 +12,21 @@ import { toast } from "react-toastify";
 
 export default function LoginForm() {
   const router = useRouter();
-  const {register, handleSubmit, formState: { errors, isValid, isSubmitting }} = useForm<LoginSchema>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
   });
 
- async function onSubmit(data: LoginSchema) {
+  async function onSubmit(data: LoginSchema) {
     const result = await signInUser(data);
-    if(result.status === 'success'){
-      router.push('/members')
-    }else {
+    if (result.status === "success") {
+      router.push("/members");
+      router.refresh();
+    } else {
       toast.error(result.error as string);
     }
   }

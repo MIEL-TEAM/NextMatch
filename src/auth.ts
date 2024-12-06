@@ -3,29 +3,33 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import authConfig from "./auth.config";
 import { prisma } from "./lib/prisma";
 
-
-export const {  handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
-  callbacks:{
-    async session({token, session}){
-       if(token.sub && session.user){
-        session.user.id = token.sub
-       }
-      return session
-    }
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth({
+  callbacks: {
+    async session({ token, session }) {
+      if (token.sub && session.user) {
+        session.user.id = token.sub;
+      }
+      return session;
+    },
   },
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   ...authConfig,
 });
 
-// 1. NextAuth Setup: 
+// 1. NextAuth Setup:
 //     NextAuth is used to manage authentication in your Next.js app.
 //     The PrismaAdapter integrates NextAuth with a Prisma database for storing user and session data.
 
-// 2. Prisma Adapter: 
+// 2. Prisma Adapter:
 //     PrismaAdapter(prisma) connects Prisma to NextAuth. prisma is an instance of your Prisma client, configured in your project.
 
-// 3. Session Strategy: 
+// 3. Session Strategy:
 //     { strategy: "jwt" } specifies that sessions will be managed using JSON Web Tokens (JWT) instead of database sessions.
 
 // 4. authConfig:
