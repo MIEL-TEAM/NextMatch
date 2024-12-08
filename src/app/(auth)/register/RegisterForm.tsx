@@ -10,24 +10,28 @@ import { GiPadlock } from "react-icons/gi";
 import { registerUser } from "@/app/actions/authActions";
 
 export default function RegisterForm() {
-  const {register, handleSubmit, setError, formState: { errors, isValid, isSubmitting},
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isValid, isSubmitting },
   } = useForm<RegisterSchema>({
     // resolver: zodResolver(registerSchema),
     mode: "onTouched",
   });
 
- async function onSubmit(data: RegisterSchema) {
+  async function onSubmit(data: RegisterSchema) {
     const result = await registerUser(data);
-    if(result.status === 'success'){
-      console.log('User registered successfully');
-    }else{
-      if(Array.isArray(result.error)){
+    if (result.status === "success") {
+      console.log("User registered successfully");
+    } else {
+      if (Array.isArray(result.error)) {
         result.error.forEach((err) => {
-          const fieldName = err.path.join('.') as 'email' | 'name' | 'password';
-          setError(fieldName, { message: err.message})
-        })
-      }else{
-        setError('root.serverError', { message: result.error })
+          const fieldName = err.path.join(".") as "email" | "name" | "password";
+          setError(fieldName, { message: err.message });
+        });
+      } else {
+        setError("root.serverError", { message: result.error });
       }
     }
   }
@@ -69,7 +73,9 @@ export default function RegisterForm() {
               errorMessage={errors.password?.message}
             />
             {errors.root?.serverError && (
-              <p className=" text-danger text-sm">{errors.root.serverError.message}</p>
+              <p className=" text-danger text-sm">
+                {errors.root.serverError.message}
+              </p>
             )}
             <Button
               isLoading={isSubmitting}

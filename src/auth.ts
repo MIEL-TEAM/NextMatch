@@ -22,6 +22,10 @@ export const {
   ...authConfig,
 });
 
+// Session: It's like a "log-in state" kept on the client-side (e.g., in a cookie). It stores information about the user while they're logged in, so they don't have to keep logging in during their visit.
+
+// Token (JWT): It's a secure, self-contained piece of data that proves the user is authenticated. The server doesn't need to remember anything, because the token has all the user info inside it. The token is sent with each request to verify the user.
+
 // 1. NextAuth Setup:
 //     NextAuth is used to manage authentication in your Next.js app.
 //     The PrismaAdapter integrates NextAuth with a Prisma database for storing user and session data.

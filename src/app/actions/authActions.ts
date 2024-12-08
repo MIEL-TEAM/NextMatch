@@ -9,14 +9,16 @@ import { LoginSchema } from "@/lib/schemas/loginSchema";
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 
-export async function signInUser(data: LoginSchema): Promise<ActionResult<string>> {
+export async function signInUser(
+  data: LoginSchema
+): Promise<ActionResult<string>> {
   try {
     const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
       redirect: false,
     });
-    
+
     console.log(result);
     return { status: "success", data: "Logged in" };
   } catch (error) {
@@ -33,11 +35,13 @@ export async function signInUser(data: LoginSchema): Promise<ActionResult<string
   }
 }
 
-export async function signOutUser(){
-  await signOut({redirectTo: "/"});
+export async function signOutUser() {
+  await signOut({ redirectTo: "/" });
 }
 
-export async function registerUser( data: RegisterSchema): Promise<ActionResult<User>> {
+export async function registerUser(
+  data: RegisterSchema
+): Promise<ActionResult<User>> {
   try {
     const validated = registerSchema.safeParse(data);
 

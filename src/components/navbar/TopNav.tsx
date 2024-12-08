@@ -47,10 +47,20 @@ export default async function TopNav() {
           <UserMenu user={session.user} />
         ) : (
           <>
-            <Button as={Link} href="/login" variant="bordered" className="text-white">
+            <Button
+              as={Link}
+              href="/login"
+              variant="bordered"
+              className="text-white"
+            >
               Login
             </Button>
-            <Button as={Link} href="/register" variant="bordered" className="text-white">
+            <Button
+              as={Link}
+              href="/register"
+              variant="bordered"
+              className="text-white"
+            >
               Register
             </Button>
           </>
