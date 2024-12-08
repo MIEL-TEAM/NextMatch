@@ -6,15 +6,18 @@ import { compare } from "bcryptjs";
 
 export default {
   providers: [
-    Cerdentials({ name: "cerdentials", async authorize(creds) {
+    Cerdentials({
+      name: "cerdentials",
+      async authorize(creds) {
         const validate = loginSchema.safeParse(creds);
-        
+
         if (validate.success) {
           const { email, password } = validate.data;
 
           const user = await getUserByEmail(email);
 
-          if (!user || !(await compare(password, user.passwordHash))) return null;
+          if (!user || !(await compare(password, user.passwordHash)))
+            return null;
 
           return user;
         }
