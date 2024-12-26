@@ -31,15 +31,15 @@ export default async function TopNav() {
       <NavbarBrand as={Link} href="/">
         <GiMatchTip size={40} className=" text-gray-100" />
         <div className=" font-bold text-3xl flex">
-          <span className=" text-gray-900">Next</span>
-          <span className=" text-gray-200">Match</span>
+          <span className=" text-gray-900">הקליל</span>
+          <span className=" text-gray-200">הבא</span>
         </div>
       </NavbarBrand>
 
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
-        <NavLink href="/members" label="matches" />
-        <NavLink href="/messages" label="messages" />
-        <NavLink href="/lists" label="lists" />
+        <NavLink href="/members" label="התאמות" />
+        <NavLink href="/messages" label="הודעות" />
+        <NavLink href="/lists" label="רשימות" />
       </NavbarContent>
 
       <NavbarContent justify="end">
@@ -53,7 +53,7 @@ export default async function TopNav() {
               variant="bordered"
               className="text-white"
             >
-              Login
+              כניסה
             </Button>
             <Button
               as={Link}
@@ -61,7 +61,7 @@ export default async function TopNav() {
               variant="bordered"
               className="text-white"
             >
-              Register
+              הרשמה
             </Button>
           </>
         )}

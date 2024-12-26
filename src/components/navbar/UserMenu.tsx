@@ -40,14 +40,14 @@ export default function UserMenu({ user }: UserMenuProps) {
             as="span"
             className="h-14 flex flex-row"
           >
-            Signed in as {user?.name}
+            מחובר כ—{user?.name}
           </DropdownItem>
         </DropdownSection>
         <DropdownItem as={Link} href="/members/edit">
-          Edit profile
+          ערוך פרופיל
         </DropdownItem>
         <DropdownItem color="danger" onClick={async () => signOutUser()}>
-          Log Out
+          התנתק
         </DropdownItem>
       </DropdownMenu>
     </Dropdown>
