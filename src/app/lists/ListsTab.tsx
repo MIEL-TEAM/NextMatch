@@ -3,8 +3,8 @@
 import { Tab, Tabs } from "@nextui-org/react";
 import { Member } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-import { Key } from "react";
+import LoadingComponent from "@/components/LoadingComponent";
+import { Key, useTransition } from "react";
 import MemberCard from "../members/MemberCard";
 
 type ListsProps = {
@@ -16,25 +16,29 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+
   const tabs = [
     {
       id: "source",
-      label: "Member I have liked",
+      label: "החברים שאהבתי",
     },
     {
       id: "target",
-      label: "Member That liked me",
+      label: "החברים שאהבו אותי",
     },
     {
       id: "mutual",
-      label: "Mutual likes",
+      label: "לייקים הדדיים",
     },
   ];
 
   function handleTabChange(key: Key) {
-    const params = new URLSearchParams(searchParams);
-    params.set("type", key.toString());
-    router.replace(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams);
+      params.set("type", key.toString());
+      router.replace(`${pathname}?${params.toString()}`);
+    });
   }
 
   return (
@@ -47,18 +51,24 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
       >
         {(item) => (
           <Tab key={item.id} title={item.label}>
-            {members.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-                {members.map((member) => (
-                  <MemberCard
-                    key={member.id}
-                    member={member}
-                    likeIds={likeIds}
-                  />
-                ))}
-              </div>
+            {isPending ? (
+              <LoadingComponent label="בטעינה..." />
             ) : (
-              <div>no members</div>
+              <>
+                {members.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+                    {members.map((member) => (
+                      <MemberCard
+                        key={member.id}
+                        member={member}
+                        likeIds={likeIds}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div>לייקים (לא בוצעו עדיין).</div>
+                )}
+              </>
             )}
           </Tab>
         )}

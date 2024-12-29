@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
+import { FaHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 export default function LoginForm() {
@@ -36,9 +37,12 @@ export default function LoginForm() {
         <div className="flex flex-col gap-2 items-center text-secondary">
           <div className=" flex flex-row items-center gap-3">
             <GiPadlock size={30} />
-            <h1 className=" text-3xl font-semibold">Login</h1>
+            <h1 className=" text-3xl font-semibold">התחברות</h1>
           </div>
-          <p className="text-neutral-500">Welcome back to NextMatch</p>
+          <p className="text-neutral-500">
+            ברוך שובך לקליל הבא
+            <FaHeart className="inline-block mr-2 text-2xl text-red-500" />
+          </p>
         </div>
       </CardHeader>
 
