@@ -48,16 +48,28 @@ export default function MemberSidebar({ member }: MemberSidebarProps) {
         <Divider className="my-3" />
         <nav className="flex flex-col text-center p-4 ml-4 text-2xl gap-4">
           {navLinks.map((link) => (
-            <Link href={link.href} 
-                key={link.name} 
-                className={`block rounded ${ pathname === link.href ? "text-secondary" : "hover:text-secondary/50" }`}>
+            <Link
+              href={link.href}
+              key={link.name}
+              className={`block rounded ${
+                pathname === link.href
+                  ? "text-secondary"
+                  : "hover:text-secondary/50"
+              }`}
+            >
               {link.name}
             </Link>
           ))}
         </nav>
       </CardBody>
       <CardFooter>
-        <Button as={Link} href="/members" fullWidth color="secondary" variant="bordered">
+        <Button
+          as={Link}
+          href="/members"
+          fullWidth
+          color="secondary"
+          variant="bordered"
+        >
           Go back
         </Button>
       </CardFooter>
