@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
 import { registerUser } from "@/app/actions/authActions";
 import { useRouter } from "next/navigation";
+import { handleFormServerError } from "@/lib/util";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -28,14 +29,7 @@ export default function RegisterForm() {
       console.log("User registered successfully");
       router.push("/login");
     } else {
-      if (Array.isArray(result.error)) {
-        result.error.forEach((err) => {
-          const fieldName = err.path.join(".") as "email" | "name" | "password";
-          setError(fieldName, { message: err.message });
-        });
-      } else {
-        setError("root.serverError", { message: result.error });
-      }
+      handleFormServerError(result, setError);
     }
   }
   return (

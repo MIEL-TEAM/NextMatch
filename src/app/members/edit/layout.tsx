@@ -3,26 +3,20 @@ import { ReactNode } from "react";
 import MemberSidebar from "../MemberSidebar";
 import { notFound } from "next/navigation";
 import { Card } from "@nextui-org/react";
+import { getAuthUserId } from "@/app/actions/authActions";
 
-type UserLayoutProps = {
-  children: ReactNode;
-  params: { userId: string };
-};
-
-export default async function Layout({ children, params }: UserLayoutProps) {
-  const { userId } = await params;
+export default async function Layout({ children }: { children: ReactNode }) {
+  const userId = await getAuthUserId();
 
   const member = await getMemberByUserId(userId);
   if (!member) return notFound();
 
-  const basePath = `/members/${member.userId}`;
+  const basePath = `/members/edit`;
 
   const navLinks = [
-    { name: "פרופיל", href: `${basePath}` },
-    { name: "תמונות", href: `${basePath}/photos` },
-    { name: "צ'אט", href: `${basePath}/chat` },
+    { name: "ערוך פרופיל", href: `${basePath}` },
+    { name: "עדכן תמונות", href: `${basePath}/photos` },
   ];
-
   return (
     <div className="grid grid-cols-12 gap-5 h-[80vh]">
       <div className="col-span-3">

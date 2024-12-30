@@ -15,17 +15,15 @@ import { usePathname } from "next/navigation";
 
 type MemberSidebarProps = {
   member: Member;
+  navLinks: { name: string; href: string }[];
 };
 
-export default function MemberSidebar({ member }: MemberSidebarProps) {
+export default function MemberSidebar({
+  member,
+  navLinks,
+}: MemberSidebarProps) {
   const pathname = usePathname();
-  const basePath = `/members/${member.userId}`;
 
-  const navLinks = [
-    { name: "פרופיל", href: `${basePath}` },
-    { name: "תמונות", href: `${basePath}/photos` },
-    { name: "צ'אט", href: `${basePath}/chat` },
-  ];
   return (
     <Card className="w-full mt-10 items-center h-[80vh]">
       <Image
