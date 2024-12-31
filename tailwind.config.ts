@@ -14,6 +14,15 @@ export default {
         "dark-gradient":
           "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
       },
+      keyframes: {
+        pulseOnce: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.2)" },
+        },
+      },
+      animation: {
+        "pulse-once": "pulseOnce 1.5s infinite",
+      },
     },
   },
   darkMode: "class",

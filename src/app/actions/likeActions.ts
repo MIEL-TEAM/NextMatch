@@ -43,7 +43,6 @@ export async function fetchCurrentUserLikeIds() {
       },
     });
 
-    console.log(likeIds);
     return likeIds.map((like) => like.targetUserId);
   } catch (error) {
     console.log(error);

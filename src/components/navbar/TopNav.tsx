@@ -5,13 +5,16 @@ import {
   Link,
   Button,
 } from "@nextui-org/react";
-import { GiMatchTip } from "react-icons/gi";
+
+import { RiHeartPulseLine } from "react-icons/ri";
 import NavLink from "./NavLink";
 import { auth } from "@/auth";
 import UserMenu from "./UserMenu";
+import { getUserInfoForNav } from "@/app/actions/userActions";
 
 export default async function TopNav() {
   const session = await auth();
+  const userInfo = session?.user && (await getUserInfoForNav());
 
   return (
     <Navbar
@@ -29,8 +32,12 @@ export default async function TopNav() {
       }}
     >
       <NavbarBrand as={Link} href="/">
-        <GiMatchTip size={40} className=" text-gray-100" />
-        <div className=" font-bold text-3xl flex">
+        <RiHeartPulseLine
+          size={35}
+          className="text-white animate-pulse-once hover:text-red-400"
+        />
+
+        <div className="m-2 font-bold text-3xl flex">
           <span className=" text-gray-900">הקליל</span>
           <span className=" text-gray-200">הבא</span>
         </div>
@@ -43,8 +50,8 @@ export default async function TopNav() {
       </NavbarContent>
 
       <NavbarContent justify="end">
-        {session?.user ? (
-          <UserMenu user={session.user} />
+        {userInfo ? (
+          <UserMenu userInfo={userInfo} />
         ) : (
           <>
             <Button

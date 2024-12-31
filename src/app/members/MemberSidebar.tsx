@@ -68,7 +68,7 @@ export default function MemberSidebar({
           color="secondary"
           variant="bordered"
         >
-          Go back
+          חזרה לדף הקודם
         </Button>
       </CardFooter>
     </Card>

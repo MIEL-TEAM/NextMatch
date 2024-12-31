@@ -9,15 +9,14 @@ import {
   DropdownSection,
   DropdownTrigger,
 } from "@nextui-org/react";
-import { Session } from "next-auth";
 import Link from "next/link";
 import React from "react";
 
 type UserMenuProps = {
-  user: Session["user"];
+  userInfo: { name: string | null; image: string | null } | null;
 };
 
-export default function UserMenu({ user }: UserMenuProps) {
+export default function UserMenu({ userInfo }: UserMenuProps) {
   return (
     <Dropdown placement="bottom-end">
       <DropdownTrigger>
@@ -26,27 +25,32 @@ export default function UserMenu({ user }: UserMenuProps) {
           as="button"
           className="transition-transform"
           color="secondary"
-          name={user?.name || "user avatar"}
+          name={userInfo?.name || "user avatar"}
           size="sm"
-          src={user?.image || "/images/user.png"}
+          src={userInfo?.image || "/images/user.png"}
         />
       </DropdownTrigger>
 
       <DropdownMenu variant="flat" aria-label="User actions menu">
         <DropdownSection showDivider>
           <DropdownItem
+            key="username-display"
             aria-label="username"
             isReadOnly
             as="span"
             className="h-14 flex flex-row"
           >
-            מחובר כ—{user?.name}
+            מחובר כ—{userInfo?.name}
           </DropdownItem>
         </DropdownSection>
-        <DropdownItem as={Link} href="/members/edit">
+        <DropdownItem key="edit-profile" as={Link} href="/members/edit">
           ערוך פרופיל
         </DropdownItem>
-        <DropdownItem color="danger" onClick={async () => signOutUser()}>
+        <DropdownItem
+          key="sign-out"
+          color="danger"
+          onPress={async () => signOutUser()}
+        >
           התנתק
         </DropdownItem>
       </DropdownMenu>

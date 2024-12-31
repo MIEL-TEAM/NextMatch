@@ -19,3 +19,16 @@ export function handleFormServerError<TFeildValues extends FieldValues>(
     setError("root.serverError", { message: errorResponse.error });
   }
 }
+
+export function transformImageUrl(imageUrl?: string | null) {
+  if (!imageUrl) return null;
+  if (!imageUrl.includes("cloudinary")) return imageUrl;
+
+  const uploadIndex = imageUrl.indexOf("/upload/") + "/upload/".length;
+
+  const transformation = "g_faces/";
+
+  return `${imageUrl.slice(0, uploadIndex)}${transformation}${imageUrl.slice(
+    uploadIndex
+  )}`;
+}
