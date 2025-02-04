@@ -1,5 +1,6 @@
 "use client";
 
+import PresenceDot from "@/components/PresenceDot";
 import { calculateAge } from "@/lib/util";
 import {
   Button,
@@ -36,6 +37,9 @@ export default function MemberSidebar({
 
       <CardBody>
         <div className="flex flex-col items-center">
+          <div className="flex">
+            <PresenceDot member={member} />
+          </div>
           <div className="text-2xl">
             {member.name}, {calculateAge(member.dateOfBirth)}
           </div>

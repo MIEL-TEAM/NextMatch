@@ -45,8 +45,8 @@ export default async function TopNav() {
 
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavLink href="/members" label="התאמות" />
-        <NavLink href="/messages" label="הודעות" />
         <NavLink href="/lists" label="רשימות" />
+        <NavLink href="/messages" label="הודעות" />
       </NavbarContent>
 
       <NavbarContent justify="end">

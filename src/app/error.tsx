@@ -31,7 +31,7 @@ export default function Error({
         </CardBody>
 
         <CardFooter className="flex justify-center">
-          <Button onClick={() => reset()} color="secondary" variant="bordered">
+          <Button onPress={() => reset()} color="secondary" variant="bordered">
             Try Again
           </Button>
         </CardFooter>
