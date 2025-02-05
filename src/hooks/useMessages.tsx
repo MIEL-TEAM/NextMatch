@@ -8,6 +8,7 @@ export const useMessages = (initialMessages: MessageDto[]) => {
   const messages = useMessageStore((state) => state.messages);
   const setMessages = useMessageStore((state) => state.set);
   const removeMessage = useMessageStore((state) => state.remove);
+  const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -45,10 +46,11 @@ export const useMessages = (initialMessages: MessageDto[]) => {
     async (message: MessageDto) => {
       setIsDeleting({ id: message.id, loading: true });
       await deleteMessage(message.id, isOutbox);
-      router.refresh();
+      removeMessage(message.id);
+      if (!message.dateRead && !isOutbox) updateUnreadCount(-1);
       setIsDeleting({ id: "", loading: false });
     },
-    [isOutbox, router]
+    [isOutbox, removeMessage, updateUnreadCount]
   );
 
   const handleRowSelect = (key: Key) => {

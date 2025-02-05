@@ -41,7 +41,7 @@ export default function MessageTable({ initialMessages }: TableProps) {
           )}
         </TableHeader>
 
-        <TableBody items={messages} emptyContent="אין הודעות למכולה זו">
+        <TableBody items={messages} emptyContent="אין הודעות בתיבה הזו">
           {(item) => (
             <TableRow key={item.id} className="cursor-pointer">
               {(columnKey) => (

@@ -21,10 +21,8 @@ export default function UserMenu({ userInfo }: UserMenuProps) {
     <Dropdown placement="bottom-end">
       <DropdownTrigger>
         <Avatar
-          isBordered
           as="button"
-          className="transition-transform"
-          color="secondary"
+          className="transition-transform border-2 border-white rounded-full outline outline-2 outline-black bg-black"
           name={userInfo?.name || "user avatar"}
           size="sm"
           src={userInfo?.image || "/images/user.png"}

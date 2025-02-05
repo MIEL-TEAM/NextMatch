@@ -10,6 +10,16 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        reddit: ["Reddit Sans", "sans-serif"],
+        rubik: ["Rubik", "serif"],
+      },
+      fontWeight: {
+        light: "200",
+        normal: "250",
+        bold: "700",
+        extrabold: "900",
+      },
       backgroundImage: {
         "dark-gradient":
           "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
@@ -21,7 +31,7 @@ export default {
         },
       },
       animation: {
-        "pulse-once": "pulseOnce 1.5s infinite",
+        "bounce-slow": "bounce 3s infinite",
       },
     },
   },
