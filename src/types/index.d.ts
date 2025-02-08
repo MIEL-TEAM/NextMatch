@@ -32,3 +32,32 @@ type MessageDto = {
   recipientName?: string;
   recipientImage?: string | null;
 };
+
+type UserFilters = {
+  ageRange: number[];
+  orderBy: string;
+  gender: string[];
+};
+
+type PagingParams = {
+  pageNumber: number;
+  pageSize: number;
+};
+
+type PagingResult = {
+  totalPages: number;
+  totalCount: number;
+} & PagingParams;
+
+type PaginatedResponse<T> = {
+  items: T[];
+  totalCount: number;
+};
+
+type GetMemberParams = {
+  ageRange?: string;
+  gender?: string;
+  pageNumber?: string;
+  pageSize?: string;
+  orderBy?: string;
+};

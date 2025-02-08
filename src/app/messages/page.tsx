@@ -9,7 +9,9 @@ export default async function MessagesPage({
   searchParams: { container: string };
 }) {
   const params = await searchParams;
-  const messages = await getMessageByContainer(params.container);
+  const { messages, nextCursor } = await getMessageByContainer(
+    params.container
+  );
   console.log({ messages });
 
   return (
@@ -19,7 +21,7 @@ export default async function MessagesPage({
       </div>
 
       <div className="col-span-10">
-        <MessageTable initialMessages={messages} />
+        <MessageTable initialMessages={messages} nextCursor={nextCursor} />
       </div>
     </div>
   );
