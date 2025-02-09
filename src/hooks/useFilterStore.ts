@@ -13,6 +13,7 @@ const useFilterStore = create<FilterState>()(
       ageRange: [18, 100],
       gender: ["male", "female"],
       orderBy: "updated",
+      withPhoto: true,
     },
     setFilters: (filterName, value) =>
       set((state) => {

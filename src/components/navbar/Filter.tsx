@@ -2,7 +2,7 @@
 
 import { useFilters } from "@/hooks/useFilters";
 import { Button } from "@nextui-org/button";
-import { Select, SelectItem, Slider, Spinner } from "@nextui-org/react";
+import { Select, SelectItem, Slider, Spinner, Switch } from "@nextui-org/react";
 
 export default function Filter() {
   const {
@@ -14,6 +14,7 @@ export default function Filter() {
     filters,
     clientLoaded,
     isPending,
+    selectWithPhoto,
   } = useFilters();
 
   return (
@@ -48,6 +49,15 @@ export default function Filter() {
             defaultValue={filters.ageRange}
             onChangeEnd={(value) => selectAge(value as number[])}
             aria-label="בחר/י טווח גילאים"
+          />
+        </div>
+        <div className="flex flex-col items-center">
+          <p className="text-sm">עם תמונה</p>
+          <Switch
+            color="secondary"
+            defaultSelected
+            size="sm"
+            onChange={selectWithPhoto}
           />
         </div>
         <div className="w-1/4">
