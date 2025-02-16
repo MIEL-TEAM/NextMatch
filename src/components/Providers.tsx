@@ -12,9 +12,14 @@ import "react-toastify/dist/ReactToastify.css";
 type ProvidersProps = {
   children: ReactNode;
   userId: string | null;
+  profileComplete: boolean;
 };
 
-export default function Providers({ children, userId }: ProvidersProps) {
+export default function Providers({
+  children,
+  userId,
+  profileComplete,
+}: ProvidersProps) {
   const isUnreadCountSet = useRef(false);
 
   const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
@@ -36,8 +41,8 @@ export default function Providers({ children, userId }: ProvidersProps) {
     }
   }, [setUnreadCount, userId]);
 
-  usePresenceChannel();
-  useNotificationChannel(userId);
+  usePresenceChannel(userId, profileComplete);
+  useNotificationChannel(userId, profileComplete);
   return (
     <NextUIProvider>
       <ToastContainer

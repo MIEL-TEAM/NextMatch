@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-// loginSchema: Defines the validation rules with Zod.
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email({
+    message: "אימייל לא תקין",
+  }),
   password: z.string().min(6, {
-    message: "Password must be at least 6 characters",
+    message: "הסיסמה חייבת להיות באורך של לפחות 6 תווים",
   }),
 });
 
-// LoginSchema: Infers a TypeScript type from loginSchema for type safety.
 export type LoginSchema = z.infer<typeof loginSchema>;

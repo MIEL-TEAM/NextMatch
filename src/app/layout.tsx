@@ -16,11 +16,13 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await auth();
   const userId = session?.user?.id || null;
+  const profileComplete = session?.user.profileComplete as boolean;
+
   return (
     <html lang="he" dir="rtl">
       <link rel="icon" href="/icons/Logo.png" sizes="any" />
       <body>
-        <Providers userId={userId}>
+        <Providers userId={userId} profileComplete={profileComplete}>
           <TopNav />
           <main className="container mx-auto">{children}</main>
         </Providers>
