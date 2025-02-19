@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import Cerdentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Github from "next-auth/providers/github";
@@ -18,7 +20,7 @@ export default {
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     }),
     Cerdentials({
-      name: "cerdentials",
+      name: "credentials",
       async authorize(creds) {
         const validate = loginSchema.safeParse(creds);
 
