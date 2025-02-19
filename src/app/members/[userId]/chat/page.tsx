@@ -6,16 +6,15 @@ import MessageList from "./MessageList";
 import { createChatId } from "@/lib/util";
 
 type UserParamsProps = {
-  params: {
-    userId: string;
-  };
+  params: Promise<{ userId: string }>;
 };
 
 export default async function ChatPage({ params }: UserParamsProps) {
   const userId = await getAuthUserId();
-  const paramsId = await params;
-  const messages = await getMessageThread(paramsId.userId);
-  const chatId = createChatId(userId, paramsId.userId);
+  const { userId: paramsUserId } = await params;
+
+  const messages = await getMessageThread(paramsUserId);
+  const chatId = createChatId(userId, paramsUserId);
 
   return (
     <CardInnerWrapper

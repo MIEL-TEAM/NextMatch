@@ -6,7 +6,7 @@ import { Card } from "@nextui-org/react";
 
 type UserLayoutProps = {
   children: ReactNode;
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 };
 
 export default async function Layout({ children, params }: UserLayoutProps) {

@@ -19,5 +19,8 @@ export async function POST(request: Request) {
     const authResponse = pusherServer.authorizeChannel(socketId, channel, data);
 
     return NextResponse.json(authResponse);
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }

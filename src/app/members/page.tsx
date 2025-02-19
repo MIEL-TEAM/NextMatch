@@ -6,11 +6,11 @@ import PaginationComponent from "@/components/PaginationComponent";
 import { GetMemberParams } from "@/types";
 import EmptyState from "@/components/EmptyState";
 
-export default async function MembersPage({
-  searchParams,
-}: {
-  searchParams: GetMemberParams;
-}) {
+type MembersPageProps = {
+  searchParams: Promise<GetMemberParams>;
+};
+
+export default async function MembersPage({ searchParams }: MembersPageProps) {
   const params = await searchParams;
   const { items: members, totalCount } = await getMembers(params);
   const likeIds = await fetchCurrentUserLikeIds();
@@ -22,10 +22,9 @@ export default async function MembersPage({
       ) : (
         <>
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-            {members &&
-              members?.map((member) => (
-                <MemberCard member={member} key={member.id} likeIds={likeIds} />
-              ))}
+            {members?.map((member) => (
+              <MemberCard member={member} key={member.id} likeIds={likeIds} />
+            ))}
           </div>
 
           <PaginationComponent totalCount={totalCount} />

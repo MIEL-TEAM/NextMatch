@@ -4,12 +4,17 @@ import ResultMessage from "@/components/ResultMessage";
 import { Spinner } from "@nextui-org/react";
 import { MdOutlineMailOutline } from "react-icons/md";
 
+type VerifyEmailPageProps = {
+  searchParams: Promise<{ token?: string }>;
+};
+
 export default async function VerifyEmailPage({
   searchParams,
-}: {
-  searchParams: { token: string };
-}) {
-  const result = await verifyEmail(searchParams.token);
+}: VerifyEmailPageProps) {
+  const params = await searchParams;
+  const token = params.token ?? "";
+
+  const result = await verifyEmail(token);
 
   return (
     <CardWrapper

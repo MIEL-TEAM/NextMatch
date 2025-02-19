@@ -14,6 +14,7 @@ export default {
         reddit: ["Reddit Sans", "sans-serif"],
         rubik: ["Rubik", "serif"],
       },
+
       fontWeight: {
         light: "200",
         normal: "250",

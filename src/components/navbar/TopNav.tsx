@@ -67,9 +67,10 @@ export default async function TopNav() {
           className="hidden sm:flex gap-4 font-rubik"
           justify="center"
         >
-          {links.map((item) => (
-            <NavLink key={item.href} href={item.href} label={item.label} />
-          ))}
+          {session &&
+            links.map((item) => (
+              <NavLink key={item.href} href={item.href} label={item.label} />
+            ))}
         </NavbarContent>
 
         <NavbarContent justify="end">

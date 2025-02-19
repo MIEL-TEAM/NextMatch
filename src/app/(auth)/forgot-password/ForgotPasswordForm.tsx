@@ -15,7 +15,7 @@ export default function ForgotPasswordForm() {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting, isValid },
+    formState: { isSubmitting, isValid },
   } = useForm();
 
   const onSubmit = async (data: FieldValues) => {
