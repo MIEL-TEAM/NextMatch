@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { auth } from "@/auth";
 import { pusherServer } from "@/lib/pusher";
 import { NextResponse } from "next/server";
