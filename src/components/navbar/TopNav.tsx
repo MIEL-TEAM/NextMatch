@@ -17,6 +17,18 @@ export default async function TopNav() {
   const session = await auth();
   const userInfo = session?.user && (await getUserInfoForNav());
 
+  const memberLinks = [
+    { href: "/members", label: "אנשים" },
+    { href: "/lists", label: "רשימות" },
+    { href: "/messages", label: "הודעות" },
+  ];
+
+  const adminLinks = [
+    { href: "/admin/moderation", label: "מתן תמונה למתן אישור" },
+  ];
+
+  const links = session?.user.role === "ADMIN" ? adminLinks : memberLinks;
+
   return (
     <>
       <Navbar
@@ -55,9 +67,9 @@ export default async function TopNav() {
           className="hidden sm:flex gap-4 font-rubik"
           justify="center"
         >
-          <NavLink href="/members" label="אנשים" />
-          <NavLink href="/lists" label="רשימות" />
-          <NavLink href="/messages" label="הודעות" />
+          {links.map((item) => (
+            <NavLink key={item.href} href={item.href} label={item.label} />
+          ))}
         </NavbarContent>
 
         <NavbarContent justify="end">

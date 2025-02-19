@@ -68,6 +68,8 @@ export async function addImage(url: string, publicId: string) {
 }
 
 export async function setMainImage(photo: Photo) {
+  if (!photo.isApproved)
+    throw new Error("רק תמונות מאושרות יכולות להיות מוגדרות כתמונה ראשית");
   try {
     const userId = await getAuthUserId();
     await prisma.user.update({
