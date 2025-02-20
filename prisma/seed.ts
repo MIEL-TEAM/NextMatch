@@ -7,41 +7,37 @@ const prisma = new PrismaClient();
 async function seedMembers() {
   await Promise.all(
     membersData.map(async (member) => {
-      const existingUser = await prisma.user.findUnique({
+      await prisma.user.upsert({
         where: { email: member.email },
-      });
-
-      if (!existingUser) {
-        await prisma.user.create({
-          data: {
-            email: member.email,
-            emailVerified: new Date(),
-            name: member.name,
-            passwordHash: await hash("password", 10),
-            image: member.image,
-            profileComplete: true,
-            member: {
-              create: {
-                dateOfBirth: new Date(member.dateOfBirth),
-                gender: member.gender,
-                name: member.name,
-                created: new Date(member.created),
-                updated: new Date(member.lastActive),
-                city: member.city,
-                description: member.description,
-                country: member.country,
-                image: member.image,
-                photos: {
-                  create: {
-                    url: member.image,
-                    isApproved: true,
-                  },
+        update: {},
+        create: {
+          email: member.email,
+          emailVerified: new Date(),
+          name: member.name,
+          passwordHash: await hash("password", 10),
+          image: member.image,
+          profileComplete: true,
+          member: {
+            create: {
+              dateOfBirth: new Date(member.dateOfBirth),
+              gender: member.gender,
+              name: member.name,
+              created: new Date(member.created),
+              updated: new Date(member.lastActive),
+              city: member.city,
+              description: member.description,
+              country: member.country,
+              image: member.image,
+              photos: {
+                create: {
+                  url: member.image,
+                  isApproved: true,
                 },
               },
             },
           },
-        });
-      }
+        },
+      });
     })
   );
 }
