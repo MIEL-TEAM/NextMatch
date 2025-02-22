@@ -6,9 +6,9 @@ import TopNav from "@/components/navbar/TopNav";
 import { auth } from "@/auth";
 
 export const metadata: Metadata = {
-  title: "Miel – ככה עושים היכרויות היום",
+  title: "ככה עושים היכרויות היום - Miel",
   description:
-    "Miel היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין!",
+    "!היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel",
 };
 
 export default async function RootLayout({
