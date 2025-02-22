@@ -7,7 +7,7 @@ export async function sendVerificationEmail(email: string, token: string) {
   const link = `${baseUrl}/verify-email?token=${token}`;
 
   return resend.emails.send({
-    from: "testing@resend.dev",
+    from: "mail@miel-love.com",
     to: email,
     subject: "אימות כתובת האימייל שלך - ברוך הבא ל-Miel!",
     html: `
@@ -48,7 +48,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   const link = `${baseUrl}/reset-password?token=${token}`;
 
   return resend.emails.send({
-    from: "testing@resend.dev",
+    from: "mail@miel-love.com",
     to: email,
     subject: "איפוס סיסמה - Miel",
     html: `

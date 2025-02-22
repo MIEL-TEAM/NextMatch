@@ -10,7 +10,7 @@ export default function RegisterSuccessPage() {
   return (
     <CardWrapper
       headerText="נרשמת בהצלחה"
-      subHeaderText="כעת תוכל להתחבר לאפליקציה"
+      subHeaderText="כמעט סיימנו! אמת/י את כתובת האימייל שלך כדי שתוכל/י להיכנס ולהתחיל להשתמש באפליקציה 😊"
       action={() => router.push("/login")}
       actionLabel="עבור להתחברות"
       headerIcon={FaCheckCircle}
