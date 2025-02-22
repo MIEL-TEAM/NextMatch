@@ -15,13 +15,16 @@ export default function Filter() {
     clientLoaded,
     isPending,
     selectWithPhoto,
+    totalCount,
   } = useFilters();
 
   return (
     <div className="shadow-md py-2">
       <div className="flex flex-row justify-around items-center">
         <div className="flex gap-2 items-center">
-          <div className="text-secondary font-semibold text-xl">תוצאות: 10</div>
+          <div className="text-secondary font-semibold text-xl">
+            תוצאות: {totalCount}
+          </div>
           {isPending && <Spinner size="sm" color="secondary" />}
         </div>
         <div className="flex gap-2 items-center">

@@ -8,7 +8,7 @@ import { auth } from "@/auth";
 export const metadata: Metadata = {
   title: "Miel – ככה עושים היכרויות היום",
   description:
-    "Miel היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – קל, מהיר ולעניין!",
+    "Miel היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין!",
 };
 
 export default async function RootLayout({

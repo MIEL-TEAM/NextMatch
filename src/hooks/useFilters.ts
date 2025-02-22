@@ -18,7 +18,7 @@ export const useFilters = () => {
 
   const { filters, setFilters } = useFilterStore();
 
-  const { pageNumber, pageSize } = usePaginationStore(
+  const { pageNumber, pageSize, totalCount } = usePaginationStore(
     (state) => state.pagination
   );
   const setPage = usePaginationStore((state) => state.setPage);
@@ -97,5 +97,6 @@ export const useFilters = () => {
     filters,
     clientLoaded,
     isPending,
+    totalCount,
   };
 };
