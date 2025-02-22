@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Image } from "@nextui-org/react";
+import Image from "next/image";
 import Link from "next/link";
 
 export type MielHomePageProps = {
@@ -23,7 +23,7 @@ export default function MielHomePage({ session }: MielHomePageProps) {
         className="flex flex-col items-center"
       >
         <Image
-          src="/icons/Logo.png"
+          src="/images/icons/Logo.png"
           width={80}
           height={80}
           alt="Miel Logo"

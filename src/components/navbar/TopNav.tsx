@@ -4,8 +4,8 @@ import {
   NavbarContent,
   Link,
   Button,
-  Image,
 } from "@nextui-org/react";
+import Image from "next/image";
 
 import NavLink from "./NavLink";
 import { auth } from "@/auth";
@@ -48,7 +48,7 @@ export default async function TopNav() {
         <NavbarBrand as={Link} href="/" className="flex items-center space-x-3">
           <div className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white/20 backdrop-blur-md shadow-xl border border-white/30 transition-all duration-[1500ms] ease-out hover:shadow-2xl">
             <Image
-              src="/icons/Logo.png"
+              src="/images/icons/Logo.png"
               width={35}
               height={35}
               alt="logo png"

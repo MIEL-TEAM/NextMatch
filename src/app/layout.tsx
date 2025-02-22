@@ -20,7 +20,7 @@ export default async function RootLayout({
 
   return (
     <html lang="he" dir="rtl">
-      <link rel="icon" href="/icons/Logo.png" sizes="any" />
+      <link rel="icon" href="/images/icons/Logo.png" sizes="any" />
       <body>
         <Providers userId={userId} profileComplete={profileComplete}>
           <TopNav />
