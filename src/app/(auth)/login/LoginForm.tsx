@@ -33,52 +33,53 @@ export default function LoginForm() {
       toast.error(result.error as string);
     }
   }
+
   return (
-    <Card className="bg-white w-2/5 mx-auto shadow-lg rounded-xl">
+    <Card className="bg-white w-full max-w-md mx-auto shadow-lg rounded-xl p-6 sm:p-8">
       <CardHeader className="flex flex-col items-center justify-center text-[#E37B27]">
-        <div className="flex flex-col gap-2 items-center">
-          <div className=" flex flex-row items-center gap-3">
+        <div className="flex flex-col gap-2 items-center text-center">
+          <div className="flex flex-row items-center gap-3">
             <GiPadlock size={30} className="text-[#E37B27]" />
-            <h1 className=" text-3xl font-semibold">התחברות</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold">התחברות</h1>
           </div>
-          <p className="text-neutral-500">
+          <p className="text-neutral-500 text-sm sm:text-base">
             ברוך שובך ל-Miel
-            <FaHeart className="inline-block mr-2 text-2xl text-[#E37B27]" />
+            <FaHeart className="inline-block mr-2 text-xl sm:text-2xl text-[#E37B27]" />
           </p>
         </div>
       </CardHeader>
 
       <CardBody>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            <Input
-              label="אימייל"
-              variant="bordered"
-              {...register("email")}
-              isInvalid={!!errors.email}
-              errorMessage={errors.email?.message as string}
-            />
-            <Input
-              label="סיסמה"
-              variant="bordered"
-              type="password"
-              {...register("password")}
-              isInvalid={!!errors.password}
-              errorMessage={errors.password?.message as string}
-            />
-            <Button
-              isLoading={isSubmitting}
-              isDisabled={!isValid}
-              fullWidth
-              className="bg-[#E37B27] text-white hover:bg-[#FFB547]"
-              type="submit"
-            >
-              התחבר
-            </Button>
-            <SocialLogin />
-            <div className="flex justify-center hover:underline text-sm">
-              <Link href="/forgot-password">שכחתי סיסמה?</Link>
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <Input
+            label="אימייל"
+            variant="bordered"
+            {...register("email")}
+            isInvalid={!!errors.email}
+            errorMessage={errors.email?.message as string}
+            className="w-full"
+          />
+          <Input
+            label="סיסמה"
+            variant="bordered"
+            type="password"
+            {...register("password")}
+            isInvalid={!!errors.password}
+            errorMessage={errors.password?.message as string}
+            className="w-full"
+          />
+          <Button
+            isLoading={isSubmitting}
+            isDisabled={!isValid}
+            fullWidth
+            className="bg-[#E37B27] text-white hover:bg-[#FFB547] text-lg"
+            type="submit"
+          >
+            התחבר
+          </Button>
+          <SocialLogin />
+          <div className="flex justify-center hover:underline text-sm">
+            <Link href="/forgot-password">שכחתי סיסמה?</Link>
           </div>
         </form>
       </CardBody>

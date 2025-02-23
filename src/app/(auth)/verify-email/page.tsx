@@ -17,18 +17,24 @@ export default async function VerifyEmailPage({
   const result = await verifyEmail(token);
 
   return (
-    <CardWrapper
-      headerText="מאמתים את כתובת האימייל שלך... 😉"
-      headerIcon={MdOutlineMailOutline}
-      body={
-        <div className="flex flex-col space-y-4 items-center">
-          <div className="flex flex-row items-center">
-            <p>כמעט שם! מאמתים את האימייל שלך כדי שתוכל להתחיל להכיר... 😏</p>
-            {!result && <Spinner color="secondary" />}
+    <div className="flex flex-col justify-center items-center min-h-screen overflow-hidden text-black fixed inset-0 px-6 sm:px-12">
+      <CardWrapper
+        headerText="מאמתים את כתובת האימייל שלך... 😉"
+        headerIcon={MdOutlineMailOutline}
+        body={
+          <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3">
+            <p className="text-center sm:text-right text-base sm:text-lg">
+              כמעט שם! מאמתים את האימייל שלך כדי שתוכל להתחיל להכיר... 😏
+            </p>
+            {!result && (
+              <div className="flex justify-center">
+                <Spinner color="secondary" />
+              </div>
+            )}
           </div>
-        </div>
-      }
-      footer={<ResultMessage result={result} />}
-    />
+        }
+        footer={<ResultMessage result={result} />}
+      />
+    </div>
   );
 }

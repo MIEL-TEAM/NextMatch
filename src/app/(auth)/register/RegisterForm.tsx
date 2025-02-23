@@ -68,47 +68,49 @@ export default function RegisterForm() {
   };
 
   return (
-    <Card className="bg-white w-2/5 mx-auto shadow-lg rounded-xl">
-      <CardHeader className="flex flex-col items-center justify-center text-[#E37B27]">
+    <Card className="bg-white w-full max-w-md mx-auto shadow-lg rounded-xl p-6 sm:p-8">
+      <CardHeader className="flex flex-col items-center justify-center text-[#E37B27] text-center">
         <div className="flex flex-col gap-2 items-center">
-          <div className=" flex flex-row items-center gap-3">
-            <h1 className=" text-3xl font-semibold">הרשמה</h1>
+          <div className="flex flex-row items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-semibold">הרשמה</h1>
             <GiPadlock size={30} className="text-[#E37B27]" />
           </div>
-          <p className="text-neutral-500">ברוכים הבאים ל-Miel</p>
+          <p className="text-neutral-500 text-sm sm:text-base">
+            ברוכים הבאים ל-Miel
+          </p>
         </div>
       </CardHeader>
 
       <CardBody>
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onNext)}>
-            <div className="space-y-4">
-              {getStepContent(activeStep)}
-              {errors.root?.serverError && (
-                <p className=" text-danger text-sm">
-                  {errors.root.serverError.message}
-                </p>
-              )}
-              <div className="flex flex-row items-center gap-6">
+          <form onSubmit={handleSubmit(onNext)} className="space-y-5">
+            {getStepContent(activeStep)}
+
+            {errors.root?.serverError && (
+              <p className="text-danger text-sm">
+                {errors.root.serverError.message}
+              </p>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+              <Button
+                isLoading={isSubmitting}
+                isDisabled={!isValid}
+                fullWidth
+                className="bg-[#E37B27] text-white hover:bg-[#FFB547] py-2 sm:py-3 text-base sm:text-lg"
+                type="submit"
+              >
+                {activeStep === stepSchemas.length - 1 ? "שלח" : "המשך"}
+              </Button>
+              {activeStep !== 0 && (
                 <Button
-                  isLoading={isSubmitting}
-                  isDisabled={!isValid}
+                  onPress={onBack}
                   fullWidth
-                  className="bg-[#E37B27] text-white hover:bg-[#FFB547]"
-                  type="submit"
+                  className="bg-[#FFB547] text-white hover:bg-[#E37B27] py-2 sm:py-3 text-base sm:text-lg"
                 >
-                  {activeStep === stepSchemas.length - 1 ? "שלח" : "המשך"}
+                  חזרה
                 </Button>
-                {activeStep !== 0 && (
-                  <Button
-                    onPress={onBack}
-                    fullWidth
-                    className="bg-[#FFB547] text-white hover:bg-[#E37B27]"
-                  >
-                    חזרה
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
           </form>
         </FormProvider>

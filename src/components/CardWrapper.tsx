@@ -28,33 +28,39 @@ export default function CardWrapper({
   footer,
 }: CardWrapperProps) {
   return (
-    <div className="flex items-center justify-center vertical-center">
-      <Card className="w-2/5 mx-auto p-4">
+    <div className="h-screen flex items-center justify-center px-4 sm:px-6">
+      <Card className="w-full max-w-sm sm:max-w-md lg:max-w-lg p-6 sm:p-8 shadow-lg rounded-xl">
         <CardHeader className="flex flex-col items-center justify-center">
           <div className="flex flex-col gap-2 items-center text-secondary">
-            <div className=" flex flex-row items-center gap-3">
-              <h1 className=" text-3xl font-semibold">{headerText}</h1>
+            <div className="flex flex-row items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-semibold">
+                {headerText}
+              </h1>
               <Icon size={30} />
             </div>
             {subHeaderText && (
-              <p className="text-neutral-500">{subHeaderText}</p>
+              <p className="text-neutral-500 text-sm sm:text-base text-center">
+                {subHeaderText}
+              </p>
             )}
           </div>
         </CardHeader>
 
         {body && <CardBody>{body}</CardBody>}
-        <CardFooter>
+
+        <CardFooter className="w-full">
           {action && (
             <Button
               onPress={action}
               fullWidth
               color="secondary"
               variant="bordered"
+              className="text-base sm:text-lg"
             >
               {actionLabel}
             </Button>
           )}
-          {footer && <>{footer}</>}
+          {footer && <div className="mt-4">{footer}</div>}
         </CardFooter>
       </Card>
     </div>

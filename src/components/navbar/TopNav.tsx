@@ -12,6 +12,7 @@ import { auth } from "@/auth";
 import UserMenu from "./UserMenu";
 import { getUserInfoForNav } from "@/app/actions/userActions";
 import FiltersWrapper from "./FiltersWrapper";
+import MobileMenu from "./MobileMenu";
 
 export default async function TopNav() {
   const session = await auth();
@@ -73,27 +74,33 @@ export default async function TopNav() {
             ))}
         </NavbarContent>
 
-        <NavbarContent justify="end">
+        <NavbarContent justify="end" className="gap-2">
           {userInfo ? (
-            <UserMenu userInfo={userInfo} />
+            <>
+              <UserMenu userInfo={userInfo} />
+              <MobileMenu links={links} isAuthenticated={true} />
+            </>
           ) : (
             <>
-              <Button
-                as={Link}
-                href="/login"
-                variant="bordered"
-                className="text-white"
-              >
-                כניסה
-              </Button>
-              <Button
-                as={Link}
-                href="/register"
-                variant="bordered"
-                className="text-white"
-              >
-                הרשמה
-              </Button>
+              <div className="hidden sm:flex gap-2">
+                <Button
+                  as={Link}
+                  href="/login"
+                  variant="bordered"
+                  className="text-white"
+                >
+                  כניסה
+                </Button>
+                <Button
+                  as={Link}
+                  href="/register"
+                  variant="bordered"
+                  className="text-white"
+                >
+                  הרשמה
+                </Button>
+              </div>
+              <MobileMenu links={links} isAuthenticated={false} />
             </>
           )}
         </NavbarContent>
