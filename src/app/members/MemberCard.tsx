@@ -37,15 +37,20 @@ export default function MemberCard({ member, likeIds }: UserMemberProps) {
 
   return (
     <>
-      <div className="mx-auto">
-        <Card as={Link} href={`/members/${member.userId}`} isPressable>
+      <div className="mx-auto w-full p-2 sm:p-4">
+        <Card
+          as={Link}
+          href={`/members/${member.userId}`}
+          isPressable
+          className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
+        >
           <Image
             isZoomed
             alt={member.name}
-            width={300}
-            height={""}
+            width={200}
+            height={200}
             src={transformImageUrl(member.image) || "/images/user.png"}
-            className="aspect-square object-cover"
+            className="aspect-square object-cover w-full rounded-t-lg"
           />
           <div onClick={preventLinkAction}>
             <div className="absolute top-3 right-3 z-10">
@@ -59,12 +64,12 @@ export default function MemberCard({ member, likeIds }: UserMemberProps) {
               <PresenceDot member={member} />
             </div>
           </div>
-          <CardFooter className="flex w-80 justify-start bg-black overflow-hidden absolute bottom-0 z-10 bg-dark-gradient">
+          <CardFooter className="flex justify-start bg-black overflow-hidden absolute bottom-0 z-10 bg-dark-gradient w-full rounded-b-lg p-2">
             <div className="flex flex-col text-white">
-              <span className="font-semibold">
+              <span className="font-semibold text-sm">
                 {member.name}, {calculateAge(member.dateOfBirth)}
               </span>
-              <span className="text-sm">{member.city}</span>
+              <span className="text-xs">{member.city}</span>
             </div>
           </CardFooter>
         </Card>

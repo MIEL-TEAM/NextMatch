@@ -42,7 +42,7 @@ export default function UserMenu({ userInfo }: UserMenuProps) {
           </DropdownItem>
         </DropdownSection>
         <DropdownItem key="edit-profile" as={Link} href="/members/edit">
-          ערוך פרופיל
+          הפרופיל שלי
         </DropdownItem>
         <DropdownItem
           key="sign-out"

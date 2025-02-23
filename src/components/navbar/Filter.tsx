@@ -2,7 +2,10 @@
 
 import { useFilters } from "@/hooks/useFilters";
 import { Button } from "@nextui-org/button";
-import { Select, SelectItem, Slider, Spinner, Switch } from "@nextui-org/react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { FaFilter } from "react-icons/fa";
+import FilterContent from "./FilterStyles";
 
 export default function Filter() {
   const {
@@ -18,70 +21,65 @@ export default function Filter() {
     totalCount,
   } = useFilters();
 
-  return (
-    <div className="shadow-md py-2">
-      <div className="flex flex-row justify-around items-center">
-        <div className="flex gap-2 items-center">
-          <div className="text-secondary font-semibold text-xl">
-            תוצאות: {totalCount}
-          </div>
-          {isPending && <Spinner size="sm" color="secondary" />}
-        </div>
-        <div className="flex gap-2 items-center">
-          <div>מגדר:</div>
-          {gendersList.map(({ icon: Icon, value }) => (
-            <Button
-              key={value}
-              size="sm"
-              isIconOnly
-              color={filters.gender.includes(value) ? "secondary" : "default"}
-              onPress={() => selectGender(value)}
-            >
-              <Icon size={24} />
-            </Button>
-          ))}
-        </div>
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-        <div className="flex flex-row items-center gap-2 w-1/4">
-          <Slider
-            label={clientLoaded && "טווח גילאים"}
-            color="secondary"
-            size="sm"
-            minValue={18}
-            maxValue={100}
-            defaultValue={filters.ageRange}
-            onChangeEnd={(value) => selectAge(value as number[])}
-            aria-label="בחר/י טווח גילאים"
-          />
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="text-sm">עם תמונה</p>
-          <Switch
-            color="secondary"
-            defaultSelected
-            size="sm"
-            onChange={selectWithPhoto}
-          />
-        </div>
-        <div className="w-1/4">
-          <Select
-            size="sm"
-            fullWidth
-            label="מיין לפי"
-            variant="bordered"
-            color="secondary"
-            aria-label="בחר סדר מיון"
-            selectedKeys={new Set([filters.orderBy])}
-            onSelectionChange={selectOrder}
+  const toggleFilter = () => {
+    setIsFilterOpen(!isFilterOpen);
+  };
+
+  return (
+    <div className="relative">
+      <motion.div
+        className="fixed bottom-4 right-4 z-50"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <Button
+          isIconOnly
+          color="secondary"
+          size="lg"
+          aria-label="Toggle Filter"
+          onPress={toggleFilter}
+          className="shadow-lg"
+        >
+          <FaFilter size={24} />
+        </Button>
+      </motion.div>
+
+      <AnimatePresence>
+        {isFilterOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-start pt-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={toggleFilter}
           >
-            {orderByList.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </Select>
-        </div>
-      </div>
+            <motion.div
+              className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -50, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FilterContent
+                orderByList={orderByList}
+                gendersList={gendersList}
+                selectAge={selectAge}
+                selectGender={selectGender}
+                selectOrder={selectOrder}
+                filters={filters}
+                clientLoaded={clientLoaded}
+                isPending={isPending}
+                selectWithPhoto={() => selectWithPhoto}
+                totalCount={totalCount}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

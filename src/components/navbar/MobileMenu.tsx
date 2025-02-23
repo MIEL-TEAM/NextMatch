@@ -28,9 +28,13 @@ const MobileMenu = ({ links, isAuthenticated }: MobileMenuProps) => {
 
       <Button
         onPress={() => setIsOpen(!isOpen)}
-        className="text-[#FFB547] hover:text-[#E37B27] transition duration-300 sm:hidden"
+        className="left-0 p-0 bg-transparent border-none focus:outline-none transition duration-300 sm:hidden"
       >
-        {isOpen ? <X size={32} /> : <Menu size={32} />}
+        {isOpen ? (
+          <X size={32} className="text-white" />
+        ) : (
+          <Menu size={32} className="text-white" />
+        )}
       </Button>
 
       <div
