@@ -57,7 +57,7 @@ export default function Filter() {
             onClick={toggleFilter}
           >
             <motion.div
-              className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6"
+              className="bg-white z-20 rounded-lg shadow-lg w-full max-w-4xl p-6"
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}
