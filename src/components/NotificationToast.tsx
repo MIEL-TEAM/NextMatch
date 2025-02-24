@@ -21,29 +21,21 @@ export default function NotificationToast({
   return (
     <Link
       href={href}
-      className="flex items-center p-3 rounded-full shadow-lg 
-      bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-400 
-      text-white w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg
-      mx-auto transition-transform duration-300 hover:scale-105"
-      style={{
-        background: "linear-gradient(90deg, #FFD700, #FFA500, #FF8C00)",
-        padding: "7px 16px",
-        borderRadius: "20px",
-      }}
+      className="flex items-center text-white w-full max-w-[300px] sm:w-auto sm:max-w-[320px]"
     >
-      <div className="mr-3 flex-shrink-0">
+      <div className="mr-2">
         <Image
           src={transformImageUrl(image) || "/images/user.png"}
-          width={50}
-          height={50}
-          className="object-cover rounded-full border-2 border-white"
           alt="Sender image"
+          className="w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full object-cover border-2 border-white shadow-md hover:border-blue-500 hover:shadow-lg transition-all duration-300"
+          width={50}
+          height={35}
         />
       </div>
 
-      <div className="flex flex-col flex-grow justify-center">
+      <div className="flex flex-grow flex-col justify-center">
         <div className="font-semibold text-sm sm:text-base">{title}</div>
-        <div className="text-xs sm:text-sm opacity-90">
+        <div className="text-xs sm:text-sm">
           {subtitle || "לחץ/י לצפייה בפרופיל"}
         </div>
       </div>
@@ -57,22 +49,7 @@ export const newMessageToast = (message: MessageDto) => {
       image={message.senderImage}
       href={`/members/${message.senderId}/chat`}
       title={`${message.senderName} שלח/ה לך הודעה`}
-    />,
-    {
-      position: "bottom-center",
-      autoClose: 5000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-      style: {
-        background: "none",
-        boxShadow: "none",
-        padding: "0",
-      },
-    }
+    />
   );
 };
 
@@ -89,19 +66,13 @@ export const newLikeToast = (
       subtitle="לחץ/י כאן כדי לצפות בפרופיל שלהם"
     />,
     {
-      position: "bottom-right",
-      autoClose: 5000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
       style: {
-        background: "none",
-        boxShadow: "none",
-        padding: "0",
+        width: "90%",
+        maxWidth: "320px",
+        padding: "10px",
+        borderRadius: "10px",
       },
+      className: "custom-toast-container",
     }
   );
 };

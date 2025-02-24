@@ -14,3 +14,8 @@
     @apply cursor-pointer border-2 hover:bg-gray-100 flex items-center justify-center rounded-lg shadow-sm min-w-[36px] w-9 h-9 text-sm;
   }
 }
+
+/* toast style */
+.Toastify__toast {
+  background: linear-gradient(to right, #ffdb7d, #fca652, #e67620) !important;
+}
