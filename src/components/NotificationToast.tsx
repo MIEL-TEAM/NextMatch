@@ -27,8 +27,8 @@ export default function NotificationToast({
       mx-auto transition-transform duration-300 hover:scale-105"
       style={{
         background: "linear-gradient(90deg, #FFD700, #FFA500, #FF8C00)",
-        padding: "12px 16px",
-        borderRadius: "50px",
+        padding: "7px 16px",
+        borderRadius: "20px",
       }}
     >
       <div className="mr-3 flex-shrink-0">

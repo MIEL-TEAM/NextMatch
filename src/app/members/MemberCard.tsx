@@ -60,7 +60,7 @@ export default function MemberCard({ member, likeIds }: UserMemberProps) {
                 hasLiked={hasLiked}
               />
             </div>
-            <div className="absolute top-2 left-3 z-50">
+            <div className="absolute top-2 left-3 z-[10]">
               <PresenceDot member={member} />
             </div>
           </div>
