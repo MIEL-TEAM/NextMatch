@@ -7,15 +7,18 @@ export function calculateAge(dob: Date) {
 }
 
 export function formatShortDateTime(date: Date | string | null | undefined) {
-  if (!date) return "";
-  return format(new Date(date), "dd MMM yy h:mm:a");
+  if (!date) return ""; // Handle null or undefined
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return ""; // Handle invalid dates
+  return format(parsedDate, "dd MMM yy h:mm:a");
 }
 
 export function timeAgo(date: string | null | undefined) {
-  if (!date) return "";
-  return formatDistance(new Date(date), new Date());
+  if (!date) return ""; // Handle null or undefined
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return ""; // Handle invalid dates
+  return formatDistance(parsedDate, new Date());
 }
-
 export function handleFormServerError<TFeildValues extends FieldValues>(
   errorResponse: { error: string | ZodIssue[] },
   setError: UseFormSetError<TFeildValues>

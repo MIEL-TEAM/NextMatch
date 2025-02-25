@@ -66,7 +66,7 @@ export default function MessageBox({
           {message.senderName}
         </span>
         <span className="text-sm text-gray-500 ml-2 mr-1">
-          {message.created ? formatShortDateTime(message.created) : ""}
+          {message.created ? formatShortDateTime(message.created) : "לא ידוע"}
         </span>
       </div>
     </div>
