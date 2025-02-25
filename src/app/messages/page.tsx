@@ -14,15 +14,14 @@ export default async function MessagesPage({
   const { messages, nextCursor } = await getMessageByContainer(
     params.container
   );
-  console.log({ messages });
 
   return (
-    <div className="grid grid-cols-12 gap-5 h-[80vh] mt-10">
-      <div className="col-span-2">
+    <div className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-5 h-auto md:h-[80vh] mt-4 md:mt-10 px-2 md:px-4">
+      <div className="w-full md:col-span-2">
         <MessageSideBar />
       </div>
 
-      <div className="col-span-10">
+      <div className="w-full md:col-span-10">
         <MessageTable initialMessages={messages} nextCursor={nextCursor} />
       </div>
     </div>

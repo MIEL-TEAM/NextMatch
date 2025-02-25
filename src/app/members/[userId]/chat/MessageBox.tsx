@@ -41,7 +41,9 @@ export default function MessageBox({
   const renderMessageContent = () => (
     <div className={messageContentClasses}>
       {renderMessageHeader()}
-      <p className="text-sm py-3 text-gray-900">{message.text}</p>
+      <p className="text-sm py-3 text-gray-900 break-words whitespace-pre-wrap">
+        {message.text}
+      </p>
     </div>
   );
 
@@ -79,7 +81,9 @@ export default function MessageBox({
         })}
       >
         {!isCurrentUserSender && renderAvatar()}
-        <div>{renderMessageContent()}</div>
+        <div className="w-full md:w-auto max-w-[80%]">
+          {renderMessageContent()}
+        </div>
         {isCurrentUserSender && renderAvatar()}
       </div>
 

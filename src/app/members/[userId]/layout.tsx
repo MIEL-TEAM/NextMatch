@@ -24,12 +24,14 @@ export default async function Layout({ children, params }: UserLayoutProps) {
   ];
 
   return (
-    <div className="grid grid-cols-12 gap-5 h-[80vh]">
-      <div className="col-span-3">
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-5 min-h-screen px-2 md:px-4">
+      <div className="w-full md:col-span-3">
         <MemberSidebar member={member} navLinks={navLinks} />
       </div>
-      <div className="col-span-9">
-        <Card className="w-full mt-10 h-[80vh]">{children}</Card>
+      <div className="w-full md:col-span-9">
+        <Card className="w-full mt-4 md:mt-10 min-h-[50vh] md:h-[80vh] shadow-lg">
+          {children}
+        </Card>
       </div>
     </div>
   );

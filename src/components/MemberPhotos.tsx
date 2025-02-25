@@ -14,6 +14,7 @@ type MemberPhotosProps = {
   editing?: boolean;
   mainImageUrl?: string | null;
 };
+
 export default function MemberPhotos({
   photos,
   editing,
@@ -32,6 +33,7 @@ export default function MemberPhotos({
     try {
       await setMainImage(photo);
       router.refresh();
+      toast.success("תמונת הפרופיל העדכנית עודכנה בהצלחה!");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -42,22 +44,28 @@ export default function MemberPhotos({
   const onDelete = async (photo: Photo) => {
     if (photo.url === mainImageUrl) return null;
     setIsLoading({ isLoading: true, id: photo.id, type: "delete" });
-    await deleteImage(photo);
-    router.refresh();
-    setIsLoading({ isLoading: false, id: "", type: "" });
+    try {
+      await deleteImage(photo);
+      router.refresh();
+      toast.success("התמונה נמחקה בהצלחה!");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading({ isLoading: false, id: "", type: "" });
+    }
   };
 
   return (
-    <div className="grid grid-cols-5 gap-3 p-5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
       {photos &&
         photos.map((photo) => (
-          <div key={photo.id} className="relative">
+          <div key={photo.id} className="relative aspect-square">
             <MemberImage photo={photo} />
             {editing && (
               <>
                 <div
                   onClick={() => onSetMain(photo)}
-                  className="absolute top-3 left-3 z-50"
+                  className="absolute top-2 left-2 z-50 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <StarButton
                     selected={photo.url === mainImageUrl}
@@ -70,7 +78,7 @@ export default function MemberPhotos({
                 </div>
                 <div
                   onClick={() => onDelete(photo)}
-                  className="absolute top-3 right-3 z-50"
+                  className="absolute top-2 right-2 z-50 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <DeleteButton
                     loading={

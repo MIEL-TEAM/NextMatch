@@ -43,7 +43,7 @@ export default function ChatForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full">
         <Input
           fullWidth
           placeholder="הקלד הודעה"
@@ -51,6 +51,7 @@ export default function ChatForm() {
           {...register("text")}
           isInvalid={!!errors.text}
           errorMessage={!!errors.text?.message}
+          className="flex-grow"
         />
         <Button
           type="submit"

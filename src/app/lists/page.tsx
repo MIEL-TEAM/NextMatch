@@ -18,7 +18,7 @@ export default async function ListsPage({
   const members = await fetchLikedMembers(searchParams.type);
 
   return (
-    <div>
+    <div className="w-full max-w-screen-2xl mx-auto px-2 md:px-4 py-2 md:py-4">
       <ListsTab members={members} likeIds={likeIds} />
     </div>
   );

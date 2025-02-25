@@ -13,11 +13,11 @@ export default async function MemberEditPage() {
 
   return (
     <>
-      <CardHeader className="text-2xl font-semibold text-secondary">
+      <CardHeader className="text-2xl font-semibold text-secondary p-4">
         עריכת פרופיל
       </CardHeader>
       <Divider />
-      <CardBody className="text-right">
+      <CardBody className="text-right p-4">
         <EditForm member={member} />
       </CardBody>
     </>

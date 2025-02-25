@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 type EditFormProps = {
   member: Member;
 };
+
 export default function EditForm({ member }: EditFormProps) {
   const router = useRouter();
   const {
@@ -55,7 +56,10 @@ export default function EditForm({ member }: EditFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col space-y-4 p-4"
+    >
       <Input
         label="שם"
         variant="bordered"
@@ -63,6 +67,7 @@ export default function EditForm({ member }: EditFormProps) {
         defaultValue={member.name}
         isInvalid={!!errors.name}
         errorMessage={errors.name?.message}
+        className="w-full"
       />
       <Textarea
         label="תיאור"
@@ -71,9 +76,10 @@ export default function EditForm({ member }: EditFormProps) {
         defaultValue={member.description}
         isInvalid={!!errors.description}
         errorMessage={errors.description?.message}
-        minRows={6}
+        minRows={4}
+        className="w-full"
       />
-      <div className="flex flex-row gap-3 ">
+      <div className="flex flex-col md:flex-row gap-3">
         <Input
           label="עיר"
           variant="bordered"
@@ -81,6 +87,7 @@ export default function EditForm({ member }: EditFormProps) {
           defaultValue={member.city}
           isInvalid={!!errors.city}
           errorMessage={errors.city?.message}
+          className="w-full"
         />
         <Input
           label="מדינה"
@@ -89,16 +96,15 @@ export default function EditForm({ member }: EditFormProps) {
           defaultValue={member.country}
           isInvalid={!!errors.country}
           errorMessage={errors.country?.message}
+          className="w-full"
         />
       </div>
       {errors.root?.serverError && (
-        <p className=" text-danger text-sm">
-          {errors.root.serverError.message}
-        </p>
+        <p className="text-danger text-sm">{errors.root.serverError.message}</p>
       )}
       <Button
         type="submit"
-        className="flex self-start"
+        className="w-full md:w-auto self-start"
         variant="solid"
         isDisabled={!isValid || !isDirty}
         isLoading={isSubmitting}

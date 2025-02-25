@@ -17,13 +17,14 @@ export default async function Layout({ children }: { children: ReactNode }) {
     { name: "ערוך פרופיל", href: `${basePath}` },
     { name: "עדכן תמונות", href: `${basePath}/photos` },
   ];
+
   return (
-    <div className="grid grid-cols-12 gap-5 h-[80vh]">
-      <div className="col-span-3">
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 h-[80vh] p-4">
+      <div className="col-span-1 md:col-span-3">
         <MemberSidebar member={member} navLinks={navLinks} />
       </div>
-      <div className="col-span-9">
-        <Card className="w-full mt-10 h-[80vh]">{children}</Card>
+      <div className="col-span-1 md:col-span-9">
+        <Card className="w-full mt-10 h-[80vh] p-4">{children}</Card>
       </div>
     </div>
   );

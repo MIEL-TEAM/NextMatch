@@ -15,14 +15,14 @@ export default async function PhotosPage() {
 
   return (
     <>
-      <CardHeader className="flex flex-row justify-between items-center">
-        <div className="text-2xl font-semibold text-secondary">
-          עריכת פרופיל
+      <CardHeader className="flex flex-col md:flex-row justify-between items-center p-4">
+        <div className="text-2xl font-semibold text-secondary mb-4 md:mb-0">
+          עריכת תמונות פרופיל
         </div>
         <MemberPhotoUpload />
       </CardHeader>
       <Divider />
-      <CardBody className="text-right">
+      <CardBody className="p-4">
         <MemberPhotos
           photos={photos}
           editing={true}

@@ -14,13 +14,14 @@ export default function MemberPhotoUpload() {
     if (result.info && typeof result.info === "object") {
       await addImage(result.info.secure_url, result.info.public_id);
       router.refresh();
+      toast.success("התמונה הועלתה בהצלחה!");
     } else {
       toast.error("בעיה בהעלאת התמונה");
     }
   };
 
   return (
-    <div>
+    <div className="flex justify-end">
       <ImageButtonUpload onUploadImage={onAddImage} />
     </div>
   );

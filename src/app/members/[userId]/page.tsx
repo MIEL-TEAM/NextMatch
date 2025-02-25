@@ -17,6 +17,9 @@ export default async function MemberDetailedPage({
   if (!member) return notFound();
 
   return (
-    <CardInnerWrapper header="פרופיל" body={<div>{member.description}</div>} />
+    <CardInnerWrapper
+      header="פרופיל"
+      body={<div className="p-4 text-justify">{member.description}</div>}
+    />
   );
 }
