@@ -1,7 +1,7 @@
 "use client";
 
 import PresenceAvatar from "@/components/PresenceAvatar";
-import { timeAgo, transformImageUrl } from "@/lib/util";
+import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
 import { MessageDto } from "@/types";
 import { clsx } from "clsx";
 import React, { useEffect, useRef } from "react";
@@ -66,7 +66,7 @@ export default function MessageBox({
           {message.senderName}
         </span>
         <span className="text-sm text-gray-500 ml-2 mr-1">
-          {message.created}
+          {message.created ? formatShortDateTime(message.created) : ""}
         </span>
       </div>
     </div>

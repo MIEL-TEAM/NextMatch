@@ -32,6 +32,8 @@ export default function MessageList({
   }, [initialMessages.readCount, updateUnreadCount]);
 
   const handleNewMessage = useCallback((message: MessageDto) => {
+    if (!message.created) message.created = new Date().toISOString();
+    if (!message.dateRead) message.dateRead = null;
     setMessages((prevMessages) => {
       return [...prevMessages, message];
     });

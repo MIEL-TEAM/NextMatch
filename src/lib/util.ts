@@ -6,11 +6,13 @@ export function calculateAge(dob: Date) {
   return differenceInYears(new Date(), dob);
 }
 
-export function formatShortDateTime(date: Date) {
-  return format(date, "dd MMM yy h:mm:a");
+export function formatShortDateTime(date: Date | string | null | undefined) {
+  if (!date) return "";
+  return format(new Date(date), "dd MMM yy h:mm:a");
 }
 
-export function timeAgo(date: string) {
+export function timeAgo(date: string | null | undefined) {
+  if (!date) return "";
   return formatDistance(new Date(date), new Date());
 }
 
