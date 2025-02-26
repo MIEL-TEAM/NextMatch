@@ -49,23 +49,23 @@ export default function MessageBox({
 
   const renderMessageHeader = () => (
     <div
-      className={clsx("flex flex-col md:flex-row items-center w-full", {
-        "justify-between": isCurrentUserSender,
-      })}
+      className={clsx(
+        "flex flex-col md:flex-row items-start md:items-center w-full"
+      )}
     >
       {message.dateRead && message.recipientId !== currentUserId ? (
-        <span className="text-xs text-black text-italic">
+        <span className="text-xs text-black italic">
           (נקרא לפני {timeAgo(message.dateRead)})
         </span>
       ) : (
         <div></div>
       )}
 
-      <div className="flex flex-col md:flex-row items-center gap-2">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 w-full">
         <span className="text-sm font-semibold text-gray-900">
           {message.senderName}
         </span>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 block">
           {message.created ? formatShortDateTime(message.created) : "לא ידוע"}
         </span>
       </div>
