@@ -32,61 +32,46 @@ export default function MessageBox({
     </div>
   );
 
-  const messageContentClasses = clsx("flex flex-col w-[100%] px-2 py-1", {
-    "rounded-l-xl rounded-tr-xl text-white bg-blue-100": isCurrentUserSender,
-    "rounded-r-xl rounded-tl-xl border-gray-200 bg-green-100":
-      !isCurrentUserSender,
-  });
+  const messageContentClasses = clsx(
+    "flex flex-col w-full px-4 py-3 rounded-lg",
+    {
+      "bg-blue-100 text-white": isCurrentUserSender,
+      "bg-green-100 border border-gray-200": !isCurrentUserSender,
+    }
+  );
 
   const renderMessageContent = () => (
     <div className={messageContentClasses}>
       {renderMessageHeader()}
-      <p className="text-sm py-3 text-gray-900 break-words whitespace-pre-wrap">
-        {message.text}
-      </p>
+      <p className="text-sm py-2 text-gray-900 break-words">{message.text}</p>
     </div>
   );
 
   const renderMessageHeader = () => (
-    <div
-      className={clsx(
-        "flex flex-col md:flex-row items-start md:items-center w-full"
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 w-full text-gray-900">
+      <span className="text-sm font-semibold">{message.senderName}</span>
+      <span className="text-xs text-gray-500">
+        {message.created ? formatShortDateTime(message.created) : "Unknown"}
+      </span>
+      {message.dateRead && message.recipientId !== currentUserId && (
+        <span className="text-xs text-gray-500 italic whitespace-nowrap">
+          (Read {timeAgo(message.dateRead)} ago)
+        </span>
       )}
-    >
-      {message.dateRead && message.recipientId !== currentUserId ? (
-        <span className="text-xs text-black italic">
-          (נקרא לפני {timeAgo(message.dateRead)})
-        </span>
-      ) : (
-        <div></div>
-      )}
-
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 w-full">
-        <span className="text-sm font-semibold text-gray-900">
-          {message.senderName}
-        </span>
-        <span className="text-sm text-gray-500 block">
-          {message.created ? formatShortDateTime(message.created) : "לא ידוע"}
-        </span>
-      </div>
     </div>
   );
 
   return (
     <div className="grid grid-rows-1">
       <div
-        className={clsx("flex gap-2 mb-3", {
-          "justify-end text-right": isCurrentUserSender,
-          "justify-start": !isCurrentUserSender,
+        className={clsx("flex gap-3 mb-4", {
+          "flex-row-reverse": isCurrentUserSender,
+          "flex-row": !isCurrentUserSender,
         })}
       >
-        {!isCurrentUserSender && renderAvatar()}
-        <div className="w-full md:w-auto max-w-[80%]">
-          {renderMessageContent()}
-        </div>
-        {isCurrentUserSender && renderAvatar()}
+        {renderAvatar()}
+        <div className="flex-1 max-w-[85%]">{renderMessageContent()}</div>
       </div>
-
       <div ref={messageEndRef} />
     </div>
   );
