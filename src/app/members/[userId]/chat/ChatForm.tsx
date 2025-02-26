@@ -29,7 +29,6 @@ export default function ChatForm() {
 
   const onSubmit = async (data: MessageSchema) => {
     const result = await createMessgae(params.userId, data);
-    console.log(data);
 
     if (result.status === "error") {
       handleFormServerError(result, setError);

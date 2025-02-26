@@ -107,9 +107,15 @@ export default function MemberImage({ photo }: MemberImageProps) {
                 src={photo.publicId}
                 width={750}
                 height={750}
-                className={clsx("rounded-2xl", {
-                  "opacity-40": !photo?.isApproved && role !== "ADMIN",
-                })}
+                sizes="(max-width: 480px) 95vw, (max-width: 768px) 80vw, (max-width: 1024px) 60vw, 750px"
+                className={clsx(
+                  "w-full object-cover rounded-2xl transition-opacity duration-300",
+                  {
+                    "opacity-40": !photo?.isApproved && role !== "ADMIN",
+                  }
+                )}
+                crop="fill"
+                gravity="faces"
                 priority
               />
             ) : (
