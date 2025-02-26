@@ -46,34 +46,30 @@ export default function MessageBox({
     }
   );
 
+  const formattedDateTime = message.created
+    ? formatShortDateTime(message.created)
+    : "Unknown";
+
+  const formattedReadTime = message.dateRead
+    ? `Read ${timeAgo(message.dateRead)} ago`
+    : "";
+
   const renderMessageContent = () => (
     <div className={messageContentClasses}>
       {renderMessageHeader()}
       <p className="text-sm py-2 text-gray-900 break-words">{message.text}</p>
-      {/* Move timestamp to bottom on mobile */}
-      <div className="text-xs text-gray-500 self-end mt-1 md:hidden">
-        {message.created ? formatShortDateTime(message.created) : "Unknown"}
+      <div className="text-xs text-gray-500 self-end mt-1">
+        {formattedDateTime}
         {message.dateRead && message.recipientId !== currentUserId && (
-          <span className="ml-1 italic">
-            · Read {timeAgo(message.dateRead)} ago
-          </span>
+          <span className="ml-1 italic">· {formattedReadTime}</span>
         )}
       </div>
     </div>
   );
 
   const renderMessageHeader = () => (
-    <div className="flex flex-wrap items-center w-full text-gray-900">
-      <span className="text-sm font-semibold mr-2">{message.senderName}</span>
-      {/* Hide timestamp in header on mobile, show it in desktop */}
-      <span className="text-xs text-gray-500 hidden md:inline">
-        {message.created ? formatShortDateTime(message.created) : "Unknown"}
-      </span>
-      {message.dateRead && message.recipientId !== currentUserId && (
-        <span className="text-xs text-gray-500 italic ml-2 hidden md:inline">
-          (Read {timeAgo(message.dateRead)} ago)
-        </span>
-      )}
+    <div className="flex items-center w-full text-gray-900">
+      <span className="text-sm font-semibold">{message.senderName}</span>
     </div>
   );
 
