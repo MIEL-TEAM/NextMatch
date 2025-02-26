@@ -49,7 +49,7 @@ export default function MessageBox({
 
   const renderMessageHeader = () => (
     <div
-      className={clsx("flex items-center w-full", {
+      className={clsx("flex flex-col md:flex-row items-center w-full", {
         "justify-between": isCurrentUserSender,
       })}
     >
@@ -61,11 +61,11 @@ export default function MessageBox({
         <div></div>
       )}
 
-      <div className="flex">
+      <div className="flex flex-col md:flex-row items-center gap-2">
         <span className="text-sm font-semibold text-gray-900">
           {message.senderName}
         </span>
-        <span className="text-sm text-gray-500 ml-2 mr-1">
+        <span className="text-sm text-gray-500">
           {message.created ? formatShortDateTime(message.created) : "לא ידוע"}
         </span>
       </div>

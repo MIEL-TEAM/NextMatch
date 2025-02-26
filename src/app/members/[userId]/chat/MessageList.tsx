@@ -35,7 +35,6 @@ export default function MessageList({
     if (!message.created) message.created = new Date().toISOString();
     if (!message.dateRead) message.dateRead = null;
 
-    console.log("New message received:", message);
     setMessages((prevMessages) => {
       return [...prevMessages, message];
     });
