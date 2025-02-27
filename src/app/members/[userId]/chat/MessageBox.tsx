@@ -53,7 +53,7 @@ export default function MessageBox({
     >
       {message.dateRead && message.recipientId !== currentUserId ? (
         <span className="text-xs text-black text-italic">
-          (נקרא לפני {timeAgo(message.dateRead)})
+          (נקרא {timeAgo(message.dateRead)})
         </span>
       ) : (
         <div></div>

@@ -1,7 +1,9 @@
-import { differenceInYears, formatDistance } from "date-fns";
-import { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { format, toZonedTime } from "date-fns-tz";
+import { differenceInYears, formatDistance } from "date-fns";
+import { he } from "date-fns/locale";
+import { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { ZodIssue } from "zod";
+import { parseDateString } from "./date-parsing";
 
 export function calculateAge(dob: Date) {
   return differenceInYears(new Date(), dob);
@@ -11,35 +13,56 @@ export function formatShortDateTime(date: Date | string | null | undefined) {
   if (!date) return "";
 
   try {
-    const dateObj = typeof date === "string" ? new Date(date) : date;
+    let dateObj: Date;
 
-    if (isNaN(dateObj.getTime())) {
-      console.error("Invalid date:", date);
-      return String(date);
+    if (typeof date === "string") {
+      // Try parsing non-standard date strings
+      dateObj = parseDateString(date) || new Date(date);
+
+      if (isNaN(dateObj.getTime())) {
+        console.error("Invalid date:", date);
+        return String(date);
+      }
+    } else {
+      dateObj = date;
     }
 
     const israelTime = toZonedTime(dateObj, "Asia/Jerusalem");
-
     return format(israelTime, "dd MMM HH:mm", { timeZone: "Asia/Jerusalem" });
   } catch (error) {
     console.error("Error formatting date:", error);
     return String(date);
   }
 }
+
 export function timeAgo(date: string | null | undefined) {
   if (!date) return "";
 
   try {
-    const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime())) {
-      return "";
+    let dateObj: Date;
+
+    if (typeof date === "string") {
+      // Try parsing non-standard date strings
+      dateObj = parseDateString(date) || new Date(date);
+
+      if (isNaN(dateObj.getTime())) {
+        console.error("Invalid date:", date);
+        return "";
+      }
+    } else {
+      dateObj = date;
     }
-    return formatDistance(dateObj, new Date());
+
+    return formatDistance(dateObj, new Date(), {
+      addSuffix: true,
+      locale: he,
+    });
   } catch (error) {
     console.error("Error calculating time ago:", error);
     return "";
   }
 }
+
 export function handleFormServerError<TFeildValues extends FieldValues>(
   errorResponse: { error: string | ZodIssue[] },
   setError: UseFormSetError<TFeildValues>
