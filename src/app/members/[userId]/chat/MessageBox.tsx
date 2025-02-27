@@ -64,7 +64,6 @@ export default function MessageBox({
           {message.senderName}
         </span>
         <span className="text-sm text-gray-500 ml-2 mr-1 whitespace-nowrap">
-          {/* Safe date formatting with error handling */}
           {formatShortDateTime(message.created)}
         </span>
       </div>

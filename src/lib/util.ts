@@ -1,5 +1,6 @@
-import { differenceInYears, format, formatDistance } from "date-fns";
+import { differenceInYears, formatDistance } from "date-fns";
 import { FieldValues, Path, UseFormSetError } from "react-hook-form";
+import { format, toZonedTime } from "date-fns-tz";
 import { ZodIssue } from "zod";
 
 export function calculateAge(dob: Date) {
@@ -10,24 +11,21 @@ export function formatShortDateTime(date: Date | string | null | undefined) {
   if (!date) return "";
 
   try {
-    // Convert to Date object if it's a string
     const dateObj = typeof date === "string" ? new Date(date) : date;
 
-    // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
       console.error("Invalid date:", date);
-      return String(date); // Return the original string if parsing fails
+      return String(date);
     }
 
-    // Use a space instead of colon before 'a' in format
-    return format(dateObj, "dd MMM yy h:mm a");
+    const israelTime = toZonedTime(dateObj, "Asia/Jerusalem");
+
+    return format(israelTime, "dd MMM HH:mm", { timeZone: "Asia/Jerusalem" });
   } catch (error) {
     console.error("Error formatting date:", error);
-    return String(date); // Return the original value as a fallback
+    return String(date);
   }
 }
-
-// Update timeAgo to handle nullable/undefined values too
 export function timeAgo(date: string | null | undefined) {
   if (!date) return "";
 
