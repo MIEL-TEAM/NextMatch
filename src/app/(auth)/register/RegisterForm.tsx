@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { handleFormServerError } from "@/lib/util";
 import UserDetailsForm from "./UserDetailsForm";
 import ProfileForm from "./ProfileForm";
+import SocialLogin from "../login/SocialLogin";
 
 const stepSchemas = [registerSchema, profileSchema];
 
@@ -112,6 +113,7 @@ export default function RegisterForm() {
                 </Button>
               )}
             </div>
+            <SocialLogin />
           </form>
         </FormProvider>
       </CardBody>
