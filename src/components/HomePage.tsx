@@ -44,13 +44,15 @@ export default function MielHomePage({ session }: MielHomePageProps) {
       </motion.div>
 
       {session !== "guest" ? (
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white px-6 py-3 rounded-lg mt-8 shadow-lg text-lg sm:text-xl"
-        >
-          <Link href="/members">המשך</Link>
-        </motion.button>
+        <Link href="/members">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white px-6 py-3 rounded-lg mt-8 shadow-lg text-lg sm:text-xl"
+          >
+            המשך
+          </motion.button>
+        </Link>
       ) : (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -58,20 +60,24 @@ export default function MielHomePage({ session }: MielHomePageProps) {
           transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
           className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-8 w-full max-w-md"
         >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white px-6 py-3 rounded-lg shadow-lg text-lg sm:text-xl w-full"
-          >
-            <Link href="/login">התחברות</Link>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white px-6 py-3 rounded-lg shadow-lg text-lg sm:text-xl w-full"
-          >
-            <Link href="/register">הרשמה</Link>
-          </motion.button>
+          <Link href="/login">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white px-20 py-3 rounded-lg shadow-lg text-lg sm:text-xl w-full"
+            >
+              התחברות
+            </motion.button>
+          </Link>
+          <Link href="/register">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white px-20 py-3 rounded-lg shadow-lg text-lg sm:text-xl w-full"
+            >
+              הרשמה
+            </motion.button>
+          </Link>
         </motion.div>
       )}
     </motion.div>
