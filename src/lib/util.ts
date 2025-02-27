@@ -6,18 +6,12 @@ export function calculateAge(dob: Date) {
   return differenceInYears(new Date(), dob);
 }
 
-export function formatShortDateTime(date: Date | string | null | undefined) {
-  if (!date) return ""; // Handle null or undefined
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return ""; // Handle invalid dates
-  return format(parsedDate, "dd MMM yy h:mm:a");
+export function formatShortDateTime(date: Date) {
+  return format(date, "dd MMM yy h:mm:a");
 }
 
-export function timeAgo(date: string | null | undefined) {
-  if (!date) return ""; // Handle null or undefined
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return ""; // Handle invalid dates
-  return formatDistance(parsedDate, new Date());
+export function timeAgo(date: string) {
+  return formatDistance(new Date(date), new Date());
 }
 export function handleFormServerError<TFeildValues extends FieldValues>(
   errorResponse: { error: string | ZodIssue[] },

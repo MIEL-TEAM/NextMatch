@@ -1,10 +1,9 @@
 "use client";
 
 import PresenceAvatar from "@/components/PresenceAvatar";
-import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
+import { timeAgo, transformImageUrl } from "@/lib/util";
 import { MessageDto } from "@/types";
 import { clsx } from "clsx";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useRef } from "react";
 
 type MessageBoxProps = {
@@ -18,19 +17,14 @@ export default function MessageBox({
 }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;
   const messageEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (messageEndRef.current)
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messageEndRef]);
 
-  const handleAvatarClick = () => {
-    router.push(`/members/${message.senderId}`);
-  };
-
   const renderAvatar = () => (
-    <div className="self-end cursor-pointer" onClick={handleAvatarClick}>
+    <div className="self-end">
       <PresenceAvatar
         src={transformImageUrl(message.senderImage) || "/images/user.png"}
         userId={message.senderId}
@@ -38,38 +32,41 @@ export default function MessageBox({
     </div>
   );
 
-  const messageContentClasses = clsx(
-    "flex flex-col w-full px-4 py-3 rounded-lg",
-    {
-      "bg-blue-100 text-white": isCurrentUserSender,
-      "bg-green-100 border border-gray-200": !isCurrentUserSender,
-    }
-  );
-
-  const formattedDateTime = message.created
-    ? formatShortDateTime(message.created)
-    : "Unknown";
-
-  const formattedReadTime = message.dateRead
-    ? `Read ${timeAgo(message.dateRead)} ago`
-    : "";
+  const messageContentClasses = clsx("flex flex-col w-[100%] px-2 py-1", {
+    "rounded-l-xl rounded-tr-xl text-white bg-blue-100": isCurrentUserSender,
+    "rounded-r-xl rounded-tl-xl border-gray-200 bg-green-100":
+      !isCurrentUserSender,
+  });
 
   const renderMessageContent = () => (
     <div className={messageContentClasses}>
       {renderMessageHeader()}
-      <p className="text-sm py-2 text-gray-900 break-words">{message.text}</p>
-      <div className="text-xs text-gray-500 self-end mt-1">
-        {formattedDateTime}
-        {message.dateRead && message.recipientId !== currentUserId && (
-          <span className="ml-1 italic">· {formattedReadTime}</span>
-        )}
-      </div>
+      <p className="text-sm py-3 text-gray-900">{message.text}</p>
     </div>
   );
 
   const renderMessageHeader = () => (
-    <div className="flex items-center w-full text-gray-900">
-      <span className="text-sm font-semibold">{message.senderName}</span>
+    <div
+      className={clsx("flex items-center w-full text-gray-900", {
+        "justify-between": isCurrentUserSender,
+      })}
+    >
+      {message.dateRead && message.recipientId !== currentUserId ? (
+        <span className="text-xs text-black text-italic">
+          (נקרא לפני {timeAgo(message.dateRead)})
+        </span>
+      ) : (
+        <div></div>
+      )}
+
+      <div className="flex">
+        <span className="text-sm font-semibold text-gray-900">
+          {message.senderName}
+        </span>
+        <span className="text-sm text-gray-500 ml-2 mr-1">
+          {message.created}
+        </span>
+      </div>
     </div>
   );
 
@@ -77,15 +74,17 @@ export default function MessageBox({
     <div className="grid grid-rows-1">
       <div
         className={clsx("flex gap-3 mb-4", {
-          "flex-row-reverse": isCurrentUserSender,
-          "flex-row": !isCurrentUserSender,
+          "justify-end text-right": isCurrentUserSender,
+          "justify-start": !isCurrentUserSender,
         })}
       >
-        {renderAvatar()}
+        {!isCurrentUserSender && renderAvatar()}
         <div className="flex-1 max-w-[85%] sm:max-w-[80%]">
           {renderMessageContent()}
         </div>
+        {isCurrentUserSender && renderAvatar()}
       </div>
+
       <div ref={messageEndRef} />
     </div>
   );
