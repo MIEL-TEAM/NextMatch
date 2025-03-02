@@ -3,12 +3,12 @@
 import React, { useState } from "react";
 import { Button } from "@nextui-org/react";
 import { MessageCircleIcon, MapPinIcon, ShareIcon } from "lucide-react";
-import Link from "next/link";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { Member } from "@prisma/client";
 import { toast } from "react-toastify";
 import LikeButton from "./LikeButton";
 import { getToastStyle } from "@/hooks/useIsMobile";
+import { useRouter } from "next/navigation";
 
 type ProfileHeaderProps = {
   member: Member;
@@ -26,6 +26,7 @@ export default function ProfileHeader({
   const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
   const [loading, setLoading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const router = useRouter();
   async function toggleLike() {
     setLoading(true);
     try {
@@ -87,16 +88,15 @@ export default function ProfileHeader({
           </span>
         </div>
         <div className="flex items-center gap-2 mt-2">
-          <Link href={`/members/${userId}/chat`} className="w-full">
-            <Button
-              color="warning"
-              variant="solid"
-              startContent={<MessageCircleIcon size={18} />}
-              className="w-full"
-            >
-              צור קשר
-            </Button>
-          </Link>
+          <Button
+            color="warning"
+            variant="solid"
+            startContent={<MessageCircleIcon size={18} />}
+            className="w-full"
+            onPress={() => router.push(`/members/${userId}/chat`)}
+          >
+            צור קשר
+          </Button>
           <div onClick={preventLinkAction}>
             <div className="flex items-center bg-red-200 justify-center p-1 rounded-lg border border-default-200">
               <LikeButton
