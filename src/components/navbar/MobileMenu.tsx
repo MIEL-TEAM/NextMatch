@@ -1,82 +1,56 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Button } from "@nextui-org/react";
-import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import { usePathname } from "next/navigation";
+import { Home, MessageCircle, Heart, User } from "lucide-react";
 
-interface MobileMenuProps {
-  links: Array<{ href: string; label: string }>;
-  isAuthenticated?: boolean;
-}
-
-const MobileMenu = ({ links, isAuthenticated }: MobileMenuProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside(menuRef, () => setIsOpen(false));
+const MobileNav = ({ userId }: { userId: string | null }) => {
+  const pathname = usePathname();
+  const profileLink = userId ? `/members/${userId}` : "/login";
 
   return (
-    <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      <Button
-        onPress={() => setIsOpen(!isOpen)}
-        className="left-0 p-0 bg-transparent border-none focus:outline-none transition duration-300 sm:hidden"
+    <nav className="fixed z-50 bottom-0 left-0 w-full bg-white shadow-md border-t border-gray-200 flex justify-around items-center p-3 sm:hidden">
+      <Link
+        href="/members"
+        className={`flex flex-col items-center ${
+          pathname === "/members" ? "text-[#FFB547]" : "text-gray-600"
+        } hover:text-[#FFB547]`}
       >
-        {isOpen ? (
-          <X size={32} className="text-white" />
-        ) : (
-          <Menu size={32} className="text-white" />
-        )}
-      </Button>
+        <Home size={24} />
+        <span className="text-xs">ראשי</span>
+      </Link>
 
-      <div
-        ref={menuRef}
-        className={`fixed top-0 right-0 w-64 h-screen bg-white shadow-lg z-50 p-5 transition-transform duration-500 ease-in-out transform ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+      <Link
+        href="/lists"
+        className={`flex flex-col items-center ${
+          pathname === "/lists" ? "text-[#FFB547]" : "text-gray-600"
+        } hover:text-[#FFB547]`}
       >
-        <nav className="flex flex-col gap-6 mt-8">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-lg font-medium text-gray-700 hover:text-[#FFB547] transition duration-300"
-              onClick={() => setIsOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <Heart size={24} />
+        <span className="text-xs">רשימות</span>
+      </Link>
 
-          {!isAuthenticated && (
-            <>
-              <Link
-                href="/login"
-                className="text-lg font-medium text-gray-700 hover:text-[#FFB547] transition duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                כניסה
-              </Link>
-              <Link
-                href="/register"
-                className="text-lg font-medium text-gray-700 hover:text-[#FFB547] transition duration-300"
-                onClick={() => setIsOpen(false)}
-              >
-                הרשמה
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
-    </>
+      <Link
+        href="/messages"
+        className={`flex flex-col items-center ${
+          pathname === "/messages" ? "text-[#FFB547]" : "text-gray-600"
+        } hover:text-[#FFB547]`}
+      >
+        <MessageCircle size={24} />
+        <span className="text-xs">הודעות</span>
+      </Link>
+
+      <Link
+        href={profileLink}
+        className={`flex flex-col items-center ${
+          pathname === profileLink ? "text-[#FFB547]" : "text-gray-600"
+        } hover:text-[#FFB547]`}
+      >
+        <User size={24} />
+        <span className="text-xs">פרופיל</span>
+      </Link>
+    </nav>
   );
 };
 
-export default MobileMenu;
+export default MobileNav;

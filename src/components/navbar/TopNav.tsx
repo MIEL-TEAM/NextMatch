@@ -12,11 +12,12 @@ import { auth } from "@/auth";
 import UserMenu from "./UserMenu";
 import { getUserInfoForNav } from "@/app/actions/userActions";
 import FiltersWrapper from "./FiltersWrapper";
-import MobileMenu from "./MobileMenu";
+import MobileNav from "./MobileMenu";
 
 export default async function TopNav() {
   const session = await auth();
   const userInfo = session?.user && (await getUserInfoForNav());
+  const userId = session?.user?.id || null;
 
   const memberLinks = [
     { href: "/members", label: "אנשים" },
@@ -28,7 +29,7 @@ export default async function TopNav() {
     { href: "/admin/moderation", label: "מתן תמונה למתן אישור" },
   ];
 
-  const links = session?.user.role === "ADMIN" ? adminLinks : memberLinks;
+  const links = session?.user?.role === "ADMIN" ? adminLinks : memberLinks;
 
   return (
     <>
@@ -78,7 +79,6 @@ export default async function TopNav() {
           {userInfo ? (
             <>
               <UserMenu userInfo={userInfo} />
-              <MobileMenu links={links} isAuthenticated={true} />
             </>
           ) : (
             <>
@@ -100,13 +100,14 @@ export default async function TopNav() {
                   הרשמה
                 </Button>
               </div>
-              <MobileMenu links={links} isAuthenticated={false} />
             </>
           )}
         </NavbarContent>
       </Navbar>
 
       <FiltersWrapper />
+
+      {session && <MobileNav userId={userId} />}
     </>
   );
 }
