@@ -115,3 +115,23 @@ export async function updateLastActive() {
     throw error;
   }
 }
+
+export async function getMemberPhotos(userId: string) {
+  try {
+    const photos = await prisma.photo.findMany({
+      where: {
+        member: {
+          userId: userId,
+        },
+      },
+      orderBy: {
+        isApproved: "desc",
+      },
+    });
+
+    return photos;
+  } catch (error) {
+    console.error("Error fetching member photos:", error);
+    return null;
+  }
+}

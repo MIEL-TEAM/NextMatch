@@ -1,5 +1,5 @@
 import React from "react";
-import { getMembers } from "../actions/memberActions";
+import { getMembers, getMemberPhotos } from "../actions/memberActions";
 import { fetchCurrentUserLikeIds } from "../actions/likeActions";
 import MemberCard from "./MemberCard";
 import PaginationComponent from "@/components/PaginationComponent";
@@ -15,6 +15,13 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const { items: members, totalCount } = await getMembers(params);
   const likeIds = await fetchCurrentUserLikeIds();
 
+  const membersWithPhotos = await Promise.all(
+    members.map(async (member) => {
+      const photos = await getMemberPhotos(member.userId);
+      return { member, photos: photos || [] };
+    })
+  );
+
   return (
     <>
       {!members || members.length === 0 ? (
@@ -22,8 +29,13 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       ) : (
         <>
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4 sm:p-6">
-            {members?.map((member) => (
-              <MemberCard member={member} key={member.id} likeIds={likeIds} />
+            {membersWithPhotos?.map(({ member, photos }) => (
+              <MemberCard
+                member={member}
+                key={member.id}
+                likeIds={likeIds}
+                photos={photos}
+              />
             ))}
           </div>
 

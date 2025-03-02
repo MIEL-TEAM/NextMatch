@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Spinner, Tab, Tabs } from "@nextui-org/react";
-import { Member } from "@prisma/client";
+import { Member, Photo } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Key, useTransition } from "react";
 import MemberCard from "../members/MemberCard";
+import { getMemberPhotos } from "../actions/memberActions";
 
 type ListsProps = {
   members: Member[];
@@ -16,6 +18,9 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [membersWithPhotos, setMembersWithPhotos] = useState<
+    { member: Member; photos: Photo[] }[]
+  >([]);
 
   const tabs = [
     {
@@ -31,6 +36,20 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
       label: "לייקים הדדיים",
     },
   ];
+
+  useEffect(() => {
+    async function fetchPhotos() {
+      const membersWithPhotosData = await Promise.all(
+        members.map(async (member) => {
+          const photos = await getMemberPhotos(member.userId);
+          return { member, photos: photos || [] };
+        })
+      );
+      setMembersWithPhotos(membersWithPhotosData);
+    }
+
+    fetchPhotos();
+  }, [members]);
 
   function handleTabChange(key: Key) {
     startTransition(() => {
@@ -71,13 +90,14 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
         const isSelected = searchParams.get("type") === item.id;
         return isSelected ? (
           <div key={item.id} className="w-full">
-            {members.length > 0 ? (
+            {membersWithPhotos.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-                {members.map((member) => (
+                {membersWithPhotos.map(({ member, photos }) => (
                   <MemberCard
                     key={member.id}
                     member={member}
                     likeIds={likeIds}
+                    photos={photos}
                   />
                 ))}
               </div>
