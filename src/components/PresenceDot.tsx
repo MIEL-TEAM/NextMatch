@@ -13,11 +13,16 @@ export default function PresenceDot({ member }: PresenceProps) {
   if (!isOnline) return null;
   return (
     <>
-      <GoDot
-        size={36}
-        className="fill-white z-10 absolute -top-[2px] -right-[2px]"
-      />
-      <GoDotFill size={32} className="fill-green-500 animate-pulse z-20" />
+      <div className="relative" title="מחובר/ת">
+        <GoDot
+          size={36}
+          className="fill-white z-10 absolute -top-[2px] -right-[2px]"
+        />
+        <GoDotFill
+          size={32}
+          className="fill-[#007A33] border-2 border-white rounded-full animate-pulse z-20 cursor-pointer"
+        />
+      </div>
     </>
   );
 }

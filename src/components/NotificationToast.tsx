@@ -72,7 +72,6 @@ export const newLikeToast = (
         padding: "10px",
         borderRadius: "10px",
       },
-      className: "custom-toast-container",
     }
   );
 };

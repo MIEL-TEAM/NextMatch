@@ -8,6 +8,7 @@ import DeleteButton from "./DeleteButton";
 import MemberImage from "./MemberImage";
 import StarButton from "./StarButton";
 import { toast } from "react-toastify";
+import { getToastStyle } from "@/hooks/useIsMobile";
 
 type MemberPhotosProps = {
   photos: Photo[] | null;
@@ -30,10 +31,13 @@ export default function MemberPhotos({
   const onSetMain = async (photo: Photo) => {
     if (photo.url === mainImageUrl) return null;
     setIsLoading({ isLoading: true, id: photo.id, type: "main" });
+
     try {
       await setMainImage(photo);
       router.refresh();
-      toast.success("תמונת הפרופיל העדכנית עודכנה בהצלחה!");
+      toast.success("תמונת הפרופיל עודכנה בהצלחה", {
+        style: getToastStyle(),
+      });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -44,10 +48,13 @@ export default function MemberPhotos({
   const onDelete = async (photo: Photo) => {
     if (photo.url === mainImageUrl) return null;
     setIsLoading({ isLoading: true, id: photo.id, type: "delete" });
+
     try {
       await deleteImage(photo);
       router.refresh();
-      toast.success("התמונה נמחקה בהצלחה!");
+      toast.success("התמונה נמחקה בהצלחה", {
+        style: getToastStyle(),
+      });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
