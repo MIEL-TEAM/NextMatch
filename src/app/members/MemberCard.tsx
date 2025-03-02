@@ -36,9 +36,11 @@ export default function MemberCard({
     }
   }
 
-  const preventLinkAction = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const preventLinkAction = (event: React.MouseEvent | undefined) => {
+    if (event && event.preventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   };
 
   return (
@@ -53,7 +55,7 @@ export default function MemberCard({
           <MemberImageCarousel
             photos={photos}
             defaultImageUrl={member.image}
-            preventNavigate={preventLinkAction}
+            preventNavigate={(event) => preventLinkAction(event)}
           />
           <div onClick={preventLinkAction}>
             <div className="absolute top-3 right-3 z-10">

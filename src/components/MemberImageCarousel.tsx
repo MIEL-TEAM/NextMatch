@@ -34,23 +34,21 @@ export default function MemberImageCarousel({
     setAllImages(urls);
   }, [photos, defaultImageUrl]);
 
-  const handlePrev = (e: React.MouseEvent) => {
-    if (preventNavigate) preventNavigate(e);
+  const handlePrev = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? allImages.length - 1 : prevIndex - 1
     );
   };
 
-  const handleNext = (e: React.MouseEvent) => {
-    if (preventNavigate) preventNavigate(e);
+  const handleNext = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === allImages.length - 1 ? 0 : prevIndex + 1
     );
   };
 
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => handleNext({} as React.MouseEvent),
-    onSwipedRight: () => handlePrev({} as React.MouseEvent),
+    onSwipedLeft: () => handleNext(),
+    onSwipedRight: () => handlePrev(),
     trackMouse: false,
   });
 
@@ -59,7 +57,11 @@ export default function MemberImageCarousel({
   }
 
   return (
-    <div className="relative w-full h-full" {...swipeHandlers}>
+    <div
+      className="relative w-full h-full touch-pan-y"
+      style={{ touchAction: "pan-y" }}
+      {...swipeHandlers}
+    >
       <Image
         isZoomed
         alt="Member photo"
