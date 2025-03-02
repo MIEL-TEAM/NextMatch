@@ -19,3 +19,8 @@
 .Toastify__toast {
   background: linear-gradient(to right, #ffdb7d, #fca652, #e67620) !important;
 }
+
+input,
+textarea {
+  font-size: 16px !important;
+}

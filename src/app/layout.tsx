@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: "ככה עושים היכרויות היום - Miel",
   description:
     "!היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel",
+  viewport:
+    "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
 export default async function RootLayout({
