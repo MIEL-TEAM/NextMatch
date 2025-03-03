@@ -1,11 +1,14 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+
 import { Photo } from "@prisma/client";
 import { transformImageUrl } from "@/lib/util";
 import { Image } from "@nextui-org/react";
-import { useSwipeable } from "react-swipeable";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type MemberImageCarouselProps = {
   photos: Photo[];
@@ -18,93 +21,75 @@ export default function MemberImageCarousel({
   defaultImageUrl,
   preventNavigate,
 }: MemberImageCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [allImages, setAllImages] = useState<string[]>([]);
+  const allImages = photos?.length
+    ? photos.map((photo) => transformImageUrl(photo.url) ?? "/images/user.png")
+    : [defaultImageUrl || "/images/user.png"];
 
-  useEffect(() => {
-    if (!photos || photos.length === 0) {
-      setAllImages([defaultImageUrl || "/images/user.png"]);
-      return;
-    }
-
-    const urls = photos.map(
-      (photo) => transformImageUrl(photo.url) ?? "/images/user.png"
-    );
-
-    setAllImages(urls);
-  }, [photos, defaultImageUrl]);
-
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? allImages.length - 1 : prevIndex - 1
-    );
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === allImages.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => handleNext(),
-    onSwipedRight: () => handlePrev(),
-    trackMouse: false,
-  });
-
-  if (allImages.length === 0) {
-    return null;
-  }
+  if (!allImages.length) return null;
 
   return (
-    <div
-      className="relative w-full h-full touch-pan-y"
-      style={{ touchAction: "pan-y" }}
-      {...swipeHandlers}
-    >
-      <Image
-        isZoomed
-        alt="Member photo"
-        src={allImages[currentIndex]}
-        className="w-full h-full object-cover"
-        removeWrapper
-      />
+    <div className="relative w-full h-full">
+      <Swiper
+        modules={[Navigation, Pagination]}
+        loop
+        pagination={{
+          clickable: true,
+          bulletActiveClass:
+            "swiper-pagination-bullet-active bg-white opacity-100",
+          bulletClass: "swiper-pagination-bullet bg-white/50 opacity-70",
+        }}
+        navigation={{
+          nextEl: ".carousel-next-btn",
+          prevEl: ".carousel-prev-btn",
+        }}
+        className="w-full h-full"
+      >
+        {allImages.map((src, index) => (
+          <SwiperSlide key={index}>
+            <Image
+              isZoomed
+              alt="Member photo"
+              src={src}
+              className="w-full h-full object-cover"
+              removeWrapper
+              onClick={(e) => preventNavigate?.(e)}
+            />
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
       {allImages.length > 1 && (
         <>
-          <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1 z-20">
-            {allImages.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full ${
-                  currentIndex === index ? "bg-white" : "bg-white/50"
-                }`}
-                onClick={(e) => {
-                  if (preventNavigate) preventNavigate(e);
-                  setCurrentIndex(index);
-                }}
-              />
-            ))}
-          </div>
+          <button
+            onClick={(e) => preventNavigate?.(e)}
+            className="carousel-prev-btn absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5 z-30 flex items-center justify-center w-10 h-10 transition-all duration-200 shadow-lg border border-white/20"
+            aria-label="Previous photo"
+          >
+            <ChevronLeft color="white" strokeWidth={3} size={20} />
+          </button>
 
-          <div className="hidden sm:block">
-            <button
-              onClick={handlePrev}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-1 z-30"
-              aria-label="Previous photo"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={handleNext}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-1 z-30"
-              aria-label="Next photo"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
+          <button
+            onClick={(e) => preventNavigate?.(e)}
+            className="carousel-next-btn absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5 z-30 flex items-center justify-center w-10 h-10 transition-all duration-200 shadow-lg border border-white/20"
+            aria-label="Next photo"
+          >
+            <ChevronRight color="white" strokeWidth={3} size={20} />
+          </button>
         </>
       )}
+
+      <style jsx global>{`
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+          display: none !important;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+          background: none !important;
+          color: transparent !important;
+        }
+      `}</style>
     </div>
   );
 }
