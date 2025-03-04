@@ -2,25 +2,19 @@
 
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
-import { calculateAge } from "@/lib/util";
-import { Card, CardFooter } from "@nextui-org/react";
-import { Member, Photo } from "@prisma/client";
+import { calculateAge, transformImageUrl } from "@/lib/util";
+import { Card, CardFooter, Image } from "@nextui-org/react";
+import { Member } from "@prisma/client";
 import Link from "next/link";
 import { useState } from "react";
 import { toggleLikeMember } from "../actions/likeActions";
-import MemberImageCarousel from "@/components/MemberImageCarousel";
 
 type UserMemberProps = {
   member: Member;
   likeIds: string[];
-  photos: Photo[];
 };
 
-export default function MemberCard({
-  member,
-  likeIds,
-  photos,
-}: UserMemberProps) {
+export default function MemberCard({ member, likeIds }: UserMemberProps) {
   const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
   const [loading, setLoading] = useState(false);
 
@@ -36,11 +30,9 @@ export default function MemberCard({
     }
   }
 
-  const preventLinkAction = (event: React.MouseEvent | undefined) => {
-    if (event && event.preventDefault) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+  const preventLinkAction = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   return (
@@ -52,10 +44,12 @@ export default function MemberCard({
         className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
       >
         <div className="relative aspect-square overflow-hidden rounded-t-lg">
-          <MemberImageCarousel
-            photos={photos}
-            defaultImageUrl={member.image}
-            preventNavigate={(event) => preventLinkAction(event)}
+          <Image
+            isZoomed
+            alt={member.name}
+            src={transformImageUrl(member.image) || "/images/user.png"}
+            className="w-full h-full object-cover"
+            removeWrapper
           />
           <div onClick={preventLinkAction}>
             <div className="absolute top-3 right-3 z-10">

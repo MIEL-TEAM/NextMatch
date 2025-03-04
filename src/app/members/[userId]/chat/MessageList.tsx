@@ -36,6 +36,8 @@ export default function MessageList({
     if (!message.dateRead) message.dateRead = null;
 
     setMessages((prevMessages) => {
+      if (prevMessages.some((msg) => msg.id === message.id))
+        return prevMessages;
       return [...prevMessages, message];
     });
   }, []);

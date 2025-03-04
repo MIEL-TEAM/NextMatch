@@ -21,7 +21,7 @@ export default async function TopNav() {
 
   const memberLinks = [
     { href: "/members", label: "אנשים" },
-    { href: "/lists", label: "רשימות" },
+    { href: "/lists", label: "קשרים" },
     { href: "/messages", label: "הודעות" },
   ];
 
