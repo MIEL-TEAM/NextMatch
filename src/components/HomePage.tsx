@@ -38,7 +38,7 @@ export default function MielHomePage({ session }: MielHomePageProps) {
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}
       onAnimationComplete={() => setAnimationComplete(true)}
-      className="flex flex-col justify-center items-center min-h-screen text-black fixed inset-0 px-6 sm:px-12 bg-gradient-to-b from-amber-50 to-orange-50"
+      className="flex flex-col justify-center items-center min-h-screen text-black inset-0 px-6 sm:px-12 bg-gradient-to-b from-amber-50 to-orange-50"
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
