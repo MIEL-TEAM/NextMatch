@@ -62,4 +62,5 @@ type GetMemberParams = {
   pageSize?: string;
   orderBy?: string;
   withPhoto?: string;
+  onlineOnly?: string;
 };

@@ -32,6 +32,32 @@ export default function MielHomePage({ session }: MielHomePageProps) {
     }
   }, [animationComplete, taglines.length]);
 
+  const heartDrawingVariants = {
+    hidden: {
+      pathLength: 0,
+      opacity: 0.2,
+    },
+    visible: {
+      pathLength: 1,
+      opacity: 1,
+      transition: {
+        pathLength: {
+          duration: 3,
+          ease: "easeInOut",
+          repeat: Infinity,
+          repeatType: "loop",
+          repeatDelay: 0.5,
+        },
+        opacity: {
+          duration: 1,
+          repeat: Infinity,
+          repeatType: "reverse",
+          repeatDelay: 2,
+        },
+      },
+    },
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -53,6 +79,26 @@ export default function MielHomePage({ session }: MielHomePageProps) {
           transition={{ duration: 1.5, delay: 0.3 }}
           className="absolute -right-40 -bottom-40 w-96 h-96 rounded-full bg-orange-400"
         />
+      </div>
+
+      <div className="absolute z-10 top-20 right-12 sm:top-16 sm:right-20">
+        <svg
+          viewBox="0 0 32 32"
+          className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20"
+        >
+          <motion.path
+            d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
+            C30,20.335,16,28.261,16,28.261z"
+            stroke="#FF8A00"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="rgba(255, 138, 0, 0.3)"
+            variants={heartDrawingVariants}
+            initial="hidden"
+            animate="visible"
+          />
+        </svg>
       </div>
 
       <motion.div
@@ -112,50 +158,139 @@ export default function MielHomePage({ session }: MielHomePageProps) {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.8, duration: 1 }}
-        className="flex flex-col gap-5 mt-4 mb-8 max-w-lg text-center z-10"
+        className="flex flex-col gap-5 mt-4 mb-8 max-w-4xl text-center z-10 w-full"
       >
-        <h2 className="text-xl font-semibold text-orange-700">
+        <motion.h2
+          initial={{ y: 15, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="text-2xl font-semibold text-orange-700"
+          style={{ direction: "rtl" }}
+        >
           למה לבחור מיאל?
-        </h2>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center text-gray-700">
-          <div className="flex items-center bg-white bg-opacity-70 p-3 rounded-lg shadow-sm">
-            <span className="bg-amber-100 p-2 rounded-full mr-2">✨</span>
-            <span>חווית היכרויות חדשנית</span>
-          </div>
-          <div className="flex items-center bg-white bg-opacity-70 p-3 rounded-lg shadow-sm">
-            <span className="bg-amber-100 p-2 rounded-full mr-2">🔒</span>
-            <span>אבטחה ופרטיות מתקדמים</span>
-          </div>
-          <div className="flex items-center bg-white bg-opacity-70 p-3 rounded-lg shadow-sm">
-            <span className="bg-amber-100 p-2 rounded-full mr-2">❤️</span>
-            <span>התאמות איכותיות</span>
-          </div>
+        </motion.h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full px-2">
+          {[
+            {
+              icon: "✨",
+              title: "חווית היכרויות חדשנית",
+              description: "ממשק אינטואיטיבי ומעוצב להיכרויות משמעותיות",
+              color: "from-orange-400 to-amber-500",
+              delay: 1.0,
+            },
+            {
+              icon: "🔒",
+              title: "אבטחה ופרטיות מתקדמים",
+              description: "הגנה מלאה על המידע האישי שלך",
+              color: "from-amber-400 to-yellow-500",
+              delay: 1.2,
+            },
+            {
+              icon: "❤️",
+              title: "התאמות איכותיות",
+              description: "אלגוריתם חכם שמבין את ההעדפות שלך",
+              color: "from-red-400 to-orange-400",
+              delay: 1.4,
+            },
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.7, delay: feature.delay }}
+              whileHover={{
+                y: -5,
+                boxShadow: "0 15px 30px rgba(255, 165, 0, 0.2)",
+                scale: 1.03,
+              }}
+              className="backdrop-blur-md bg-white/70 rounded-xl p-5 text-center border border-orange-200 shadow-lg overflow-hidden relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500 ease-out" />
+
+              <motion.div
+                className={`w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center text-xl bg-gradient-to-br ${feature.color}`}
+                whileHover={{ rotate: [0, -5, 5, -5, 0], scale: 1.1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <span className="drop-shadow-md">{feature.icon}</span>
+              </motion.div>
+
+              <h3
+                className="text-lg font-bold text-orange-700 mb-2"
+                style={{ direction: "rtl" }}
+              >
+                {feature.title}
+              </h3>
+              <p className="text-sm text-gray-700" style={{ direction: "rtl" }}>
+                {feature.description}
+              </p>
+
+              <motion.div
+                className="absolute bottom-0 right-0 w-12 h-12 rounded-tl-xl bg-gradient-to-tl from-transparent to-orange-200/40"
+                animate={{
+                  opacity: [0.3, 0.6, 0.3],
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                }}
+              />
+            </motion.div>
+          ))}
         </div>
       </motion.div>
 
       {session !== "guest" ? (
         <Link href="/members" className="z-10">
           <motion.button
-            whileHover={{ scale: 1.03 }}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0 10px 25px rgba(255, 165, 0, 0.4)",
+            }}
             whileTap={{ scale: 0.97 }}
-            className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-8 py-3 rounded-full mt-4 shadow-lg text-lg sm:text-xl font-medium flex items-center"
+            className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-8 py-3 rounded-full mt-4 shadow-lg text-lg sm:text-xl font-medium flex items-center group overflow-hidden relative"
           >
-            <span>המשך</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <span className="relative z-10">המשך</span>
+
+            <motion.div
+              className="relative z-10 mr-2"
+              animate={{ x: [0, 5, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
             >
-              <path
-                fillRule="evenodd"
-                d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </motion.div>
+
+            <motion.div
+              className="absolute top-0 -left-20 w-10 h-full bg-white/20 transform rotate-12 -skew-x-12"
+              animate={{ left: ["100%"] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "easeInOut",
+              }}
+            />
           </motion.button>
         </Link>
       ) : (
@@ -167,30 +302,57 @@ export default function MielHomePage({ session }: MielHomePageProps) {
         >
           <Link href="/login" className="w-full">
             <motion.button
-              whileHover={{ scale: 1.03 }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 10px 25px rgba(255, 165, 0, 0.4)",
+              }}
               whileTap={{ scale: 0.97 }}
-              className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-3 rounded-full shadow-lg text-lg sm:text-xl font-medium w-full flex items-center justify-center"
+              className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-3 rounded-full shadow-lg text-lg sm:text-xl font-medium w-full flex items-center justify-center relative overflow-hidden group"
             >
-              <span>התחברות</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+              <span className="relative z-10">התחברות</span>
+              <motion.div
+                className="relative z-10 mr-2"
+                animate={{ x: [0, 5, 0] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                }}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </motion.div>
+
+              <motion.div
+                className="absolute top-0 -left-20 w-10 h-full bg-white/20 transform rotate-12 -skew-x-12"
+                animate={{ left: ["100%"] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                  ease: "easeInOut",
+                }}
+              />
             </motion.button>
           </Link>
           <Link href="/register" className="w-full">
             <motion.button
-              whileHover={{ scale: 1.03 }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 8px 20px rgba(255, 165, 0, 0.15)",
+              }}
               whileTap={{ scale: 0.97 }}
-              className="bg-white border-2 border-orange-400 text-orange-500 px-6 py-3 rounded-full shadow-sm text-lg sm:text-xl font-medium w-full flex items-center justify-center"
+              className="backdrop-blur-sm bg-white/80 border-2 border-orange-400 text-orange-500 px-6 py-3 rounded-full shadow-sm text-lg sm:text-xl font-medium w-full flex items-center justify-center"
             >
               <span>הרשמה</span>
               <svg
@@ -206,7 +368,6 @@ export default function MielHomePage({ session }: MielHomePageProps) {
         </motion.div>
       )}
 
-      {/* Social proof section - fixing RTL issues */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -215,28 +376,29 @@ export default function MielHomePage({ session }: MielHomePageProps) {
       >
         <div className="flex flex-row-reverse gap-1 mb-2">
           {[...Array(5)].map((_, i) => (
-            <svg
+            <motion.svg
               key={i}
+              whileHover={{
+                scale: 1.2,
+                rotate: 5,
+                filter: "drop-shadow(0 0 8px rgba(251, 191, 36, 0.7))",
+              }}
+              transition={{ duration: 0.2 }}
               className="w-5 h-5 text-amber-400 fill-current"
               viewBox="0 0 24 24"
             >
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-            </svg>
+            </motion.svg>
           ))}
         </div>
-        <p className="text-xs text-gray-600" style={{ direction: "rtl" }}>
+        <motion.p
+          whileHover={{ scale: 1.05 }}
+          className="text-xs text-gray-600 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full"
+          style={{ direction: "rtl" }}
+        >
           הצטרפו ל-10,000+ משתמשים מרוצים
-        </p>
+        </motion.p>
       </motion.div>
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.7 }}
-        transition={{ delay: 1.2, duration: 1 }}
-        className="absolute bottom-6 text-sm text-gray-600 text-center max-w-xs sm:max-w-md z-10"
-      >
-        המטרה שלנו היא לייצר קשרים אמיתיים - לא להתמכר לאפליקציה
-      </motion.p>
     </motion.div>
   );
 }
