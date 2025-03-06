@@ -224,12 +224,12 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
                     </div>
                   </div>
                   <div className="p-3 sm:p-4 md:p-8 w-full md:w-2/3 text-left flex flex-col justify-center">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center m-0 justify-between">
                       <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 mb-1 sm:mb-2 flex items-center">
                         הצטרפו לאחרונה
                         <span className="ml-2">✨</span>
                       </h3>
-                      <div className="flex space-x-2">
+                      <div className="flex gap-x-1">
                         {membersData.slice(0, 5).map((_, idx) => (
                           <span
                             key={idx}
