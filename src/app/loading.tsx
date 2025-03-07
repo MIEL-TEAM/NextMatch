@@ -1,5 +1,5 @@
-import LoadingComponent from "@/components/LoadingComponent";
+import HeartLoading from "@/components/HeartLoading";
 
 export default function loading() {
-  return <LoadingComponent />;
+  return <HeartLoading />;
 }

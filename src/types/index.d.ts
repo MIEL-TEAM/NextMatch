@@ -56,6 +56,7 @@ type PaginatedResponse<T> = {
 };
 
 type GetMemberParams = {
+  filter: string;
   ageRange?: string;
   gender?: string;
   pageNumber?: string;

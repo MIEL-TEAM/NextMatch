@@ -32,32 +32,6 @@ export default function MielHomePage({ session }: MielHomePageProps) {
     }
   }, [animationComplete, taglines.length]);
 
-  const heartDrawingVariants = {
-    hidden: {
-      pathLength: 0,
-      opacity: 0.2,
-    },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: {
-        pathLength: {
-          duration: 3,
-          ease: "easeInOut",
-          repeat: Infinity,
-          repeatType: "loop",
-          repeatDelay: 0.5,
-        },
-        opacity: {
-          duration: 1,
-          repeat: Infinity,
-          repeatType: "reverse",
-          repeatDelay: 2,
-        },
-      },
-    },
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -79,26 +53,6 @@ export default function MielHomePage({ session }: MielHomePageProps) {
           transition={{ duration: 1.5, delay: 0.3 }}
           className="absolute -right-40 -bottom-40 w-96 h-96 rounded-full bg-orange-400"
         />
-      </div>
-
-      <div className="absolute z-10 top-20 right-12 sm:top-16 sm:right-20">
-        <svg
-          viewBox="0 0 32 32"
-          className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20"
-        >
-          <motion.path
-            d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
-            C30,20.335,16,28.261,16,28.261z"
-            stroke="#FF8A00"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="rgba(255, 138, 0, 0.3)"
-            variants={heartDrawingVariants}
-            initial="hidden"
-            animate="visible"
-          />
-        </svg>
       </div>
 
       <motion.div

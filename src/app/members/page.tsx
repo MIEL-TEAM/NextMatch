@@ -14,6 +14,9 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const { items: members, totalCount } = await getMembers(params);
   const likeIds = await fetchCurrentUserLikeIds();
 
+  const isOnlineFilter =
+    params.filter === "online" || params.onlineOnly === "true";
+
   const membersWithPhotos = await Promise.all(
     members.map(async (member) => {
       const photos = await getMemberPhotos(member.userId);
@@ -21,7 +24,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
     })
   );
 
-  if (!members || members.length === 0) {
+  if (!members || (members.length === 0 && !isOnlineFilter)) {
     return <EmptyState />;
   }
 
@@ -30,6 +33,8 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       membersData={membersWithPhotos}
       totalCount={totalCount}
       likeIds={likeIds}
+      isOnlineFilter={isOnlineFilter}
+      noResults={members.length === 0}
     />
   );
 }

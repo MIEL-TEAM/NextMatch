@@ -1,12 +1,22 @@
 "use client";
 
-import { Button } from "@nextui-org/button";
-import { Select, SelectItem, Slider, Spinner, Switch } from "@nextui-org/react";
+import {
+  Button,
+  Select,
+  SelectItem,
+  Slider,
+  Spinner,
+  Switch,
+} from "@nextui-org/react";
 import { motion } from "framer-motion";
+import React from "react";
 
 interface FilterContentProps {
   orderByList: { value: string; label: string }[];
-  gendersList: { icon: any; value: string }[];
+  gendersList: {
+    icon: React.ComponentType<{ size?: number }>;
+    value: string;
+  }[];
   selectAge: (value: number[]) => void;
   selectGender: (value: string) => void;
   selectOrder: (value: any) => void;
@@ -69,13 +79,16 @@ export default function FilterContent({
         whileHover={{ scale: 1.05 }}
       >
         <Slider
-          label={clientLoaded && "טווח גילאים"}
+          label={clientLoaded ? "טווח גילאים" : ""}
           color="secondary"
           size="sm"
           minValue={18}
           maxValue={100}
           defaultValue={filters.ageRange}
-          onChangeEnd={(value) => selectAge(value as number[])}
+          onChangeEnd={(value) => {
+            const ageValues = Array.isArray(value) ? value : [value, value];
+            selectAge(ageValues);
+          }}
           aria-label="בחר/י טווח גילאים"
         />
       </motion.div>
