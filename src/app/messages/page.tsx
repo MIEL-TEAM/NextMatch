@@ -16,12 +16,12 @@ export default async function MessagesPage({
   );
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-5 h-auto md:h-[80vh] mt-4 md:mt-10 px-2 md:px-4">
-      <div className="w-full md:col-span-2">
+    <div className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-5 min-h-[85vh] mt-4 md:mt-6 px-3 md:px-5 pb-4">
+      <div className="w-full md:col-span-3 lg:col-span-2">
         <MessageSideBar />
       </div>
 
-      <div className="w-full md:col-span-10">
+      <div className="w-full md:col-span-9 lg:col-span-10">
         <MessageTable initialMessages={messages} nextCursor={nextCursor} />
       </div>
     </div>

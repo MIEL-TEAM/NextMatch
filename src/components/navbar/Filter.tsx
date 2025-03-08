@@ -3,7 +3,7 @@
 import { useFilters } from "@/hooks/useFilters";
 import { Button } from "@nextui-org/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaFilter } from "react-icons/fa";
 import FilterContent from "./FilterStyles";
 
@@ -22,17 +22,28 @@ export default function Filter() {
   } = useFilters();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
   };
 
+  if (!isMounted) return null;
+
   return (
     <div className="relative">
-      <motion.div
-        className="fixed bottom-4 right-4 z-50"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+      <div
+        className="fixed bottom-4 right-4 z-[9999]"
+        style={{
+          position: "fixed",
+          bottom: "5rem",
+          right: "1rem",
+          zIndex: 9999,
+        }}
       >
         <Button
           isIconOnly
@@ -44,12 +55,12 @@ export default function Filter() {
         >
           <FaFilter size={24} />
         </Button>
-      </motion.div>
+      </div>
 
       <AnimatePresence>
         {isFilterOpen && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-start pt-20"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9000] flex justify-center items-start pt-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -57,7 +68,7 @@ export default function Filter() {
             onClick={toggleFilter}
           >
             <motion.div
-              className="bg-white z-20 rounded-lg shadow-lg w-full max-w-4xl p-6"
+              className="bg-white z-[9001] rounded-lg shadow-lg w-full max-w-4xl m-4 p-6"
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}

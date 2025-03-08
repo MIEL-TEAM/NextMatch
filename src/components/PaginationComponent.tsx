@@ -25,7 +25,7 @@ export default function PaginationComponent({
 
   return (
     <div className="border-t-2 w-full mt-5">
-      <div className="flex flex-col sm:flex-row justify-between items-center py-5 gap-4 m-4 sm:gap-3 md:gap-4 lg:gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 m-4 sm:gap-3 md:gap-4 lg:gap-6">
         <div className="text-sm sm:text-base text-center sm:text-left whitespace-nowrap">
           {resultText}
         </div>

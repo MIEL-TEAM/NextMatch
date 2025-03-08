@@ -12,8 +12,8 @@ interface InlineEmptyStateProps {
 }
 
 const InlineEmptyState: React.FC<InlineEmptyStateProps> = ({
-  message = "אף אחד לא מחובר כרגע",
-  subMessage = "נסה שוב מאוחר יותר או בחר סינון אחר",
+  message,
+  subMessage,
   icon = <Clock size={48} className="text-amber-500" />,
 }) => {
   return (

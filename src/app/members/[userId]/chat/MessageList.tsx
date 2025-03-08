@@ -69,7 +69,7 @@ export default function MessageList({
   }, [chatId, handleNewMessage, handleReadMessages]);
 
   return (
-    <div className="overflow-y-auto h-[calc(100vh-200px)] md:h-[calc(100vh-150px)]">
+    <div className="overflow-y-auto h-[calc(80vh-200px)] md:h-[calc(100vh-150px)]">
       {messages.length === 0 ? (
         "עדיין לא התחלתם שיחה ☺️"
       ) : (

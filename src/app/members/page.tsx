@@ -25,7 +25,13 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   );
 
   if (!members || (members.length === 0 && !isOnlineFilter)) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        message="לא נמצאו תוצאות בטווח הגילאים שבחרת"
+        subMessage="נסה/י להרחיב את טווח הגילאים או לשנות את הגדרות הסינון"
+        icon
+      />
+    );
   }
 
   return (

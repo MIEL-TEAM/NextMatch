@@ -1,7 +1,7 @@
 "use client";
 
 import useMessageStore from "@/hooks/useMessageStore";
-import { Chip } from "@nextui-org/react";
+import { Card, Chip } from "@nextui-org/react";
 import clsx from "clsx";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
@@ -35,28 +35,49 @@ export default function MessageSideBar() {
   };
 
   return (
-    <div className="flex flex-row md:flex-col shadow-md rounded-lg cursor-pointer w-full md:w-52 mb-4 md:mb-0">
-      {items.map(({ key, icon: Icon, label, chip }) => (
-        <div
-          key={key}
-          className={clsx(
-            "flex flex-1 md:flex-none items-center justify-center md:justify-start rounded-t-lg md:gap-2 p-2 md:p-3",
-            {
-              "text-secondary font-semibold": selected === key,
-              "text-black hover:text-secondary/70": selected !== key,
-            }
-          )}
-          onClick={() => handleSelect(key)}
-        >
-          <Icon size={20} className="md:size-[25px]" />
-          <div className="hidden md:flex justify-between flex-row">
-            <span>{label}</span>
-            {chip && <Chip className="mr-2">{unreadCount}</Chip>}
+    <Card className="shadow-md p-2">
+      <div className="flex flex-row md:flex-col cursor-pointer w-full">
+        {items.map(({ key, icon: Icon, label, chip }) => (
+          <div
+            key={key}
+            className={clsx(
+              "flex flex-1 md:flex-none items-center justify-center md:justify-start rounded-lg md:gap-3 p-3 md:p-4 transition-colors duration-200",
+              {
+                "bg-secondary/10 text-secondary font-semibold":
+                  selected === key,
+                "hover:bg-gray-100 text-gray-700": selected !== key,
+              }
+            )}
+            onClick={() => handleSelect(key)}
+          >
+            <Icon size={20} className="md:size-[25px]" />
+            <div className="hidden md:flex justify-between flex-row items-center w-full">
+              <span>{label}</span>
+              {chip && (
+                <Chip
+                  color="secondary"
+                  variant="flat"
+                  size="sm"
+                  className="mr-1"
+                >
+                  {unreadCount}
+                </Chip>
+              )}
+            </div>
+
+            {chip && (
+              <Chip
+                color="secondary"
+                variant="flat"
+                size="sm"
+                className="ml-1 md:hidden"
+              >
+                {unreadCount}
+              </Chip>
+            )}
           </div>
-          {/* Mobile chip */}
-          {chip && <Chip className="ml-1 md:hidden">{unreadCount}</Chip>}
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </Card>
   );
 }

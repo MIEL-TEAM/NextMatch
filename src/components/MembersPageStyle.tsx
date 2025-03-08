@@ -123,7 +123,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
           </p>
         </div>
 
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 pb-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6">
             {membersData?.map(({ member }) => (
               <div key={member.id} className="relative">
@@ -307,7 +307,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
 
       {!noResults && (
         <motion.div
-          className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 pb-16"
+          className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8"
           variants={container}
           initial="hidden"
           animate="show"

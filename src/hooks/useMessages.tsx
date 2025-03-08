@@ -25,6 +25,10 @@ export const useMessages = (
   const [isDeleting, setIsDeleting] = useState({ id: "", loading: false });
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const [chats, setChats] = useState<MessageDto[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredChats, setFilteredChats] = useState<MessageDto[]>([]);
+
   useEffect(() => {
     setMessages(initialMessages);
     cursorRef.current = nextCursor;
@@ -32,6 +36,49 @@ export const useMessages = (
       resetMessages();
     };
   }, [initialMessages, setMessages, resetMessages, nextCursor]);
+
+  useEffect(() => {
+    const chatMap = new Map<string, MessageDto>();
+
+    messages.forEach((message) => {
+      const chatPartnerId = isOutbox
+        ? message.recipientId ?? "unknown-recipient"
+        : message.senderId ?? "unknown-sender";
+
+      const existingChat = chatMap.get(chatPartnerId);
+
+      if (
+        !existingChat ||
+        new Date(message.created) > new Date(existingChat.created)
+      ) {
+        chatMap.set(chatPartnerId, message);
+      }
+    });
+
+    const sortedChats = Array.from(chatMap.values()).sort(
+      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+    );
+
+    setChats(sortedChats);
+  }, [messages, isOutbox]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredChats(chats);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = chats.filter((chat) => {
+        const contactName = isOutbox ? chat.recipientName : chat.senderName;
+        const messageText = chat.text;
+
+        return (
+          (contactName && contactName.toLowerCase().includes(query)) ||
+          (messageText && messageText.toLowerCase().includes(query))
+        );
+      });
+      setFilteredChats(filtered);
+    }
+  }, [searchQuery, chats, isOutbox]);
 
   const loadMore = useCallback(async () => {
     if (cursorRef.current) {
@@ -49,15 +96,15 @@ export const useMessages = (
   const columns = [
     {
       key: isOutbox ? "recipientName" : "senderName",
-      lable: isOutbox ? "נמען" : "שולח",
+      lable: "משתמש",
     },
     {
       key: "text",
-      lable: "הודעה",
+      lable: "הודעה אחרונה",
     },
     {
       key: "created",
-      lable: isOutbox ? "תאריך שליחה" : "תאריך קבלה",
+      lable: "זמן",
     },
     {
       key: "actions",
@@ -77,11 +124,16 @@ export const useMessages = (
   );
 
   const handleRowSelect = (key: Key) => {
-    const message = messages.find((message) => message.id === key);
-    const url = isOutbox
-      ? `/members/${message?.recipientId}`
-      : `/members/${message?.senderId}`;
-    router.push(url + "/chat");
+    const message = chats.find((message) => message.id === key);
+
+    if (!message) return;
+
+    const partnerId = isOutbox ? message.recipientId : message.senderId;
+
+    if (!partnerId) return;
+
+    const url = `/members/${partnerId}/chat`;
+    router.push(url);
   };
 
   return {
@@ -90,9 +142,11 @@ export const useMessages = (
     deleteMessage: handleDeleteMessage,
     selectRow: handleRowSelect,
     isDeleting,
-    messages,
+    messages: filteredChats,
     loadMore,
     loadingMore,
     hasMore: !!cursorRef.current,
+    searchQuery,
+    setSearchQuery,
   };
 };

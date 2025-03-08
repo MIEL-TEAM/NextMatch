@@ -16,7 +16,6 @@ export function formatShortDateTime(date: Date | string | null | undefined) {
     let dateObj: Date;
 
     if (typeof date === "string") {
-      // Try parsing non-standard date strings
       dateObj = parseDateString(date) || new Date(date);
 
       if (isNaN(dateObj.getTime())) {
