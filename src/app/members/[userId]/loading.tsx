@@ -1,10 +1,10 @@
-import { Spinner } from "@nextui-org/react";
 import React from "react";
+import HeartLoading from "@/components/HeartLoading";
 
 export default function Loading() {
   return (
     <div className="flex justify-center items-center vertical-center">
-      <Spinner label="...טוען" color="secondary" labelColor="secondary" />
+      <HeartLoading />
     </div>
   );
 }

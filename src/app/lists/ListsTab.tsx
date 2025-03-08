@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, Key, useTransition } from "react";
-import { Spinner, Tab, Tabs } from "@nextui-org/react";
+import { Tab, Tabs } from "@nextui-org/react";
 import { Member, Photo } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import MemberCard from "../members/MemberCard";
 import { getMemberPhotos } from "../actions/memberActions";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
+import HeartLoading from "@/components/HeartLoading";
 
 type ListsProps = {
   members: Member[];
@@ -115,16 +116,47 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
               animate={{ opacity: 1 }}
               className="absolute top-2 right-2"
             >
-              <Spinner color="secondary" size="sm" />
+              <div className="w-6 h-6">
+                <motion.svg viewBox="0 0 32 32" className="w-full h-full">
+                  <motion.path
+                    d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
+                    C30,20.335,16,28.261,16,28.261z"
+                    stroke="#FF8A00"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="rgba(255, 138, 0, 0.3)"
+                    initial={{ pathLength: 0, opacity: 0.2 }}
+                    animate={{
+                      pathLength: 1,
+                      opacity: 1,
+                      transition: {
+                        pathLength: {
+                          duration: 1.5,
+                          ease: "easeInOut",
+                          repeat: Infinity,
+                          repeatType: "loop",
+                        },
+                        opacity: {
+                          duration: 0.5,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                        },
+                      },
+                    }}
+                  />
+                </motion.svg>
+              </div>
             </motion.div>
           )}
         </motion.div>
       </div>
 
       {status === "loading" ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Spinner color="secondary" size="lg" />
-          <p className="mt-4 text-gray-600">טוען את הנתונים...</p>
+        <div className="flex flex-col items-center justify-center py-10">
+          <div className="w-32 h-32 mb-2">
+            <HeartLoading />
+          </div>
         </div>
       ) : status === "error" ? (
         <motion.div
