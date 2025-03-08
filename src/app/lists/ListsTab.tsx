@@ -153,7 +153,7 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
       </div>
 
       {status === "loading" ? (
-        <div className="flex flex-col items-center justify-center py-10">
+        <div className="flex flex-col items-center justify-center vertical-center py-10">
           <div className="w-32 h-32 mb-2">
             <HeartLoading />
           </div>

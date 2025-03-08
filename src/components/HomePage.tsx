@@ -59,7 +59,7 @@ export default function MielHomePage({ session }: MielHomePageProps) {
         initial={{ y: -10 }}
         animate={{ y: [0, -10, 0] }}
         transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-        className="flex flex-col items-center text-center z-10"
+        className="flex flex-col items-center text-center z-10 mt-8 sm:mt-0"
       >
         <div className="relative">
           <motion.div

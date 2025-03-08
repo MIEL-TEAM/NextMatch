@@ -52,7 +52,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
   };
   return (
     <motion.div
-      className="flex justify-center gap-1 sm:gap-2 mb-6 sm:mb-8 flex-wrap"
+      className="flex justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 px-2 sm:px-0 w-full"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.8, duration: 0.5 }}
@@ -60,7 +60,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
       {["all", "new", "online", "nearby"].map((filter) => (
         <motion.button
           key={filter}
-          className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+          className={`min-w-[80px] px-3 sm:px-5 py-2.5 sm:py-2 rounded-full text-sm sm:text-sm font-medium transition-all ${
             activeFilter === filter
               ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md"
               : "bg-white/80 text-gray-700 hover:bg-white hover:shadow-sm"

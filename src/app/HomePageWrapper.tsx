@@ -1,0 +1,106 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+type HomePageWrapperProps = {
+  children: React.ReactNode;
+};
+
+export default function HomePageWrapper({ children }: HomePageWrapperProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const heartDrawingVariants = {
+    hidden: {
+      pathLength: 0,
+      opacity: 0.2,
+    },
+    visible: {
+      pathLength: 1,
+      opacity: 1,
+      transition: {
+        pathLength: {
+          duration: 2,
+          ease: "easeInOut",
+        },
+        opacity: {
+          duration: 1,
+          repeat: 1,
+          repeatType: "reverse",
+        },
+      },
+    },
+  };
+
+  return (
+    <AnimatePresence mode="wait">
+      {isLoading ? (
+        <motion.div
+          key="loading"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          className="fixed inset-0 bg-gradient-to-b from-orange-50 to-amber-100 z-50 flex flex-col justify-center items-center"
+        >
+          <div className="text-center px-4">
+            <motion.svg
+              viewBox="0 0 32 32"
+              className="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80 mx-auto"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.path
+                d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
+                C30,20.335,16,28.261,16,28.261z"
+                stroke="#FF8A00"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="rgba(255, 138, 0, 0.3)"
+                variants={heartDrawingVariants}
+                initial="hidden"
+                animate="visible"
+              />
+            </motion.svg>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="mt-6 text-2xl md:text-3xl lg:text-4xl font-bold text-orange-600 mb-2"
+            >
+              ברוכים הבאים
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.8 }}
+              className="text-lg md:text-xl lg:text-2xl text-orange-800 max-w-md md:max-w-lg lg:max-w-xl mx-auto"
+            >
+              לדור החדש של הדייטינג
+            </motion.p>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

@@ -3,54 +3,73 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, MessageCircle, Heart, User } from "lucide-react";
+import { memo } from "react";
+
+const baseStyles =
+  "flex flex-col items-center text-gray-600 hover:text-[#FFB547] transition-colors duration-150";
+const activeStyles =
+  "flex flex-col items-center text-[#FFB547] transition-colors duration-150";
+
+const NavItem = memo(
+  ({
+    href,
+    isActive,
+    icon: Icon,
+    label,
+  }: {
+    href: string;
+    isActive: boolean;
+    icon: typeof Home;
+    label: string;
+  }) => (
+    <Link
+      href={href}
+      className={isActive ? activeStyles : baseStyles}
+      prefetch={true}
+    >
+      <Icon size={24} />
+      <span className="text-xs mt-1">{label}</span>
+    </Link>
+  )
+);
+
+NavItem.displayName = "NavItem";
 
 const MobileNav = ({ userId }: { userId: string | null }) => {
   const pathname = usePathname();
   const profileLink = userId ? `/members/${userId}` : "/login";
 
   return (
-    <nav className="fixed z-50 bottom-0 left-0 w-full bg-white shadow-md border-t border-gray-200 flex justify-around items-center p-3 sm:hidden">
-      <Link
+    <nav className="fixed z-50 bottom-0 left-0 w-full bg-white shadow-md border-t border-gray-200 flex justify-around items-center p-3 sm:hidden will-change-transform">
+      <NavItem
         href="/members"
-        className={`flex flex-col items-center ${
-          pathname === "/members" ? "text-[#FFB547]" : "text-gray-600"
-        } hover:text-[#FFB547]`}
-      >
-        <Home size={24} />
-        <span className="text-xs">ראשי</span>
-      </Link>
+        isActive={pathname === "/members"}
+        icon={Home}
+        label="ראשי"
+      />
 
-      <Link
+      <NavItem
         href="/lists"
-        className={`flex flex-col items-center ${
-          pathname === "/lists" ? "text-[#FFB547]" : "text-gray-600"
-        } hover:text-[#FFB547]`}
-      >
-        <Heart size={24} />
-        <span className="text-xs">רשימות</span>
-      </Link>
+        isActive={pathname === "/lists"}
+        icon={Heart}
+        label="רשימות"
+      />
 
-      <Link
+      <NavItem
         href="/messages"
-        className={`flex flex-col items-center ${
-          pathname === "/messages" ? "text-[#FFB547]" : "text-gray-600"
-        } hover:text-[#FFB547]`}
-      >
-        <MessageCircle size={24} />
-        <span className="text-xs">הודעות</span>
-      </Link>
+        isActive={pathname === "/messages"}
+        icon={MessageCircle}
+        label="הודעות"
+      />
 
-      <Link
+      <NavItem
         href={profileLink}
-        className={`flex flex-col items-center ${
-          pathname === profileLink ? "text-[#FFB547]" : "text-gray-600"
-        } hover:text-[#FFB547]`}
-      >
-        <User size={24} />
-        <span className="text-xs">פרופיל</span>
-      </Link>
+        isActive={pathname === profileLink}
+        icon={User}
+        label="פרופיל"
+      />
     </nav>
   );
 };
 
-export default MobileNav;
+export default memo(MobileNav);

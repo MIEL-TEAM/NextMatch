@@ -28,8 +28,14 @@ export default function MessageTableCell({
     return `${text.substring(0, maxLength)}...`;
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteClick = (event: any) => {
+    if (event && event.preventDefault) {
+      event.preventDefault();
+    }
+
+    if (event && event.stopPropagation) {
+      event.stopPropagation();
+    }
     setIsDeleteModalOpen(true);
   };
 
@@ -62,9 +68,10 @@ export default function MessageTableCell({
                 isIconOnly
                 size="sm"
                 variant="light"
-                color="default"
+                color="danger"
                 isLoading={isDeleting}
-                onPress={() => handleDeleteClick}
+                onPress={handleDeleteClick}
+                className="min-w-8 h-8"
               >
                 <Trash size={16} />
               </Button>
@@ -78,9 +85,8 @@ export default function MessageTableCell({
                 <p>
                   האם את/ה בטוח/ה שברצונך למחוק את השיחה עם
                   <strong>
-                    {isOutbox ? item.recipientName : item.senderName}
+                    {` ${isOutbox ? item.recipientName : item.senderName}? `}
                   </strong>
-                  ?
                 </p>
               }
               footerButtons={[
