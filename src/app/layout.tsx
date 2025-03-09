@@ -17,11 +17,11 @@ export const metadata: Metadata = {
     title: "ככה עושים היכרויות היום - Miel",
     description:
       "היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel!",
-    url: "/",
+    url: "https://miel-love.com",
     siteName: "Miel",
     images: [
       {
-        url: "/images/social-share.jpg",
+        url: "https://miel-love.com/images/social-share.jpg",
         width: 1200,
         height: 630,
         alt: "Miel - אפליקציית היכרויות",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: "ככה עושים היכרויות היום - Miel",
     description:
       "!היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel",
-    images: ["/images/social-share.jpg"],
+    images: ["https://miel-love.com/images/social-share.jpg"],
   },
   robots: {
     index: true,
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "/",
+    canonical: "https://miel-love.com",
   },
   authors: [{ name: "Miel Team (Almayo Mekonen / Ido Roth)" }],
 };
@@ -69,15 +69,36 @@ export default async function RootLayout({
   const userId = session?.user?.id || null;
   const profileComplete = session?.user.profileComplete as boolean;
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Miel",
+    url: "https://miel-love.com",
+    description:
+      "היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel!",
+    applicationCategory: "Dating",
+    operatingSystem: "Web",
+    logo: "https://miel-love.com/images/icons/Logo.png",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+    },
+  };
+
   return (
     <html lang="he" dir="rtl">
       <head>
-        <link rel="icon" href="/images/icons/Logo.png" sizes="any" />
+        <link
+          rel="icon"
+          href="https://miel-love.com/images/icons/Logo.png"
+          sizes="16x16 32x32 48x48"
+        />
+        <link rel="shortcut icon" href="https://miel-love.com/favicon.ico" />
         <link
           rel="apple-touch-icon"
-          href="/images/icons/apple-touch-icon.png"
+          href="https://miel-love.com/images/icons/apple-touch-icon.png"
         />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="https://miel-love.com/manifest.json" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -85,6 +106,10 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        />
       </head>
       <body>
         <Providers userId={userId} profileComplete={profileComplete}>

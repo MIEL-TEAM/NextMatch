@@ -1,0 +1,18 @@
+{
+  "name": "Miel - ככה עושים היכרויות היום",
+  "short_name": "Miel",
+  "description": "אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F97316",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "/images/icons/Logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
