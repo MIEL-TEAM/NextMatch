@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /manifest.json
+
+# Allow all other content
+Allow: /
