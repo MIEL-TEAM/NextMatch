@@ -1,7 +1,8 @@
 "use client";
 
 import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
-import { useScrollReset } from "@/hooks/useScrollReset";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
@@ -11,10 +12,20 @@ type MielLayoutProps = {
 
 export default function MielLayout({ children }: MielLayoutProps) {
   useDisableScrollOnlyIfNotNeeded();
-  useScrollReset();
+  const pathname = usePathname();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [pathname]);
 
   return (
-    <div className="bg-gradient-to-b from-amber-50 to-orange-50 fixed inset-0 overflow-auto">
+    <div
+      ref={containerRef}
+      className="bg-gradient-to-b from-amber-50 to-orange-50 fixed inset-0 overflow-auto"
+    >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           initial={{ opacity: 0 }}
