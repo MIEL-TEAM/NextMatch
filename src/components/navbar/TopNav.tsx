@@ -23,6 +23,7 @@ export default async function TopNav() {
     { href: "/members", label: "אנשים" },
     { href: "/lists", label: "קשרים" },
     { href: "/messages", label: "הודעות" },
+    { href: "/premium", label: "פרימיום" },
   ];
 
   const adminLinks = [

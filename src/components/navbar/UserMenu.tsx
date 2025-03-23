@@ -24,7 +24,7 @@ export default function UserMenu({ userInfo }: UserMenuProps) {
           as="button"
           className="transition-transform border-2 border-white rounded-full outline outline-2 outline-black bg-black"
           name={userInfo?.name || "user avatar"}
-          size="sm"
+          size="md"
           src={userInfo?.image || "/images/user.png"}
         />
       </DropdownTrigger>
@@ -43,6 +43,9 @@ export default function UserMenu({ userInfo }: UserMenuProps) {
         </DropdownSection>
         <DropdownItem key="edit-profile" as={Link} href="/members/edit">
           הפרופיל שלי
+        </DropdownItem>
+        <DropdownItem key="premium-page" as={Link} href="/premium">
+          שדרג לפרימיום
         </DropdownItem>
         <DropdownItem
           key="sign-out"

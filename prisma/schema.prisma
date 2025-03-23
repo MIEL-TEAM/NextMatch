@@ -38,6 +38,10 @@ model User {
   role            Role      @default(MEMBER)
   accounts        Account[]
   member          Member?
+  isPremium       Boolean   @default(false)
+  premiumUntil    DateTime?
+  boostsAvailable Int       @default(0)
+  boostsUsed      Int       @default(0)
 }
 
 model Member {
@@ -52,6 +56,7 @@ model Member {
   city              String
   country           String
   image             String?
+  boostedUntil      DateTime?
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos            Photo[]
   sourceLikes       Like[]    @relation("source")

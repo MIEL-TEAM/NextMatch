@@ -1,6 +1,7 @@
 "use client";
 
 import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
+import { useScrollReset } from "@/hooks/useScrollReset";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
@@ -10,6 +11,7 @@ type MielLayoutProps = {
 
 export default function MielLayout({ children }: MielLayoutProps) {
   useDisableScrollOnlyIfNotNeeded();
+  useScrollReset();
 
   return (
     <div className="bg-gradient-to-b from-amber-50 to-orange-50 fixed inset-0 overflow-auto">

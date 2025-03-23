@@ -11,7 +11,7 @@ export const membersData = [
       "אני אוהבת לבלות זמן בטבע, לטייל ולחוות חוויות חדשות. אני מחפשת אדם עם תחומי עניין דומים, שיודע להעריך את החיים ואת הקטנים שבדברים.",
     city: "תל אביב",
     country: "ישראל",
-    image: "/images/f1.jpeg",
+    image: "/images/f1.jpg",
   },
   {
     email: "karen@test.com",
@@ -25,7 +25,7 @@ export const membersData = [
       "אוהבת לצחוק, לשוחח ולהכיר אנשים חדשים. חשוב לי שמישהו יוכל להבין אותי ויתקשר בצורה כנה וישירה. מחפשת קשר אמיתי ומשמעותי.",
     city: "תל אביב",
     country: "ישראל",
-    image: "/images/f2.jpeg",
+    image: "/images/f2.jpg",
   },
   {
     email: "margo@test.com",
@@ -39,7 +39,7 @@ export const membersData = [
       "אני אוהבת לבלות עם חברים, לשתות קפה טוב ולהאזין למוזיקה. מחפשת מישהו שיאהב לחלוק חוויות משותפות וילך איתי לטיולים ספונטניים.",
     city: "חיפה",
     country: "ישראל",
-    image: "/images/f3.jpeg",
+    image: "/images/f3.jpg",
   },
   {
     email: "lois@test.com",
@@ -53,7 +53,7 @@ export const membersData = [
       "אוהבת לגלות מקומות חדשים ולפגוש אנשים עם תחומי עניין דומים. מחפשת מישהו שיכול להעניק לי את הזמן והמרחב להיות אני.",
     city: "ירושלים",
     country: "ישראל",
-    image: "/images/f4.jpeg",
+    image: "/images/f4.jpg",
   },
   {
     email: "ruthie@test.com",
@@ -67,7 +67,7 @@ export const membersData = [
       "אני אוהבת לעזור לאנשים וליצור קשרים אמיתיים. מחפשת אדם פתוח, חייכן ועם חוש הומור טוב. בוא נגלה יחד את העולם.",
     city: "אילת",
     country: "ישראל",
-    image: "/images/f5.jpeg",
+    image: "/images/f5.jpg",
   },
   {
     email: "todd@test.com",
@@ -81,7 +81,7 @@ export const membersData = [
       "אני אדם אוהב חיים, עם תחביבים מגוונים. חשוב לי להכיר מישהי כנה שתוכל לחלוק איתי חוויות ולצחוק ביחד.",
     city: "רמת גן",
     country: "ישראל",
-    image: "/images/m1.jpeg",
+    image: "/images/m1.jpg",
   },
   {
     email: "porter@test.com",
@@ -95,7 +95,7 @@ export const membersData = [
       "אני אדם עם תחומי עניין מגוונים. אוהב לטייל ולפגוש אנשים חדשים. מחפש מישהי שיכולה להיות החברה הכי טובה שלי ולהיות מישהי שאני יכול לסמוך עליה.",
     city: "תל אביב",
     country: "ישראל",
-    image: "/images/m2.jpeg",
+    image: "/images/m2.jpg",
   },
   {
     email: "mayo@test.com",
@@ -109,7 +109,7 @@ export const membersData = [
       "אני אוהב אתגרים וחדשנות, ותמיד פתוח ללמוד ולהתפתח. מחפש מישהו עם מחשבה פתוחה ומעניין אותי לגלות איתו עולם חדש.",
     city: "נתניה",
     country: "ישראל",
-    image: "/images/m3.jpeg",
+    image: "/images/m3.jpg",
   },
   {
     email: "skinner@test.com",
@@ -123,7 +123,7 @@ export const membersData = [
       "אני אדם חייכן, אוהב להכיר אנשים חדשים ולנסות דברים חדשים. מחפש קשר רציני ומעוניין להכיר מישהי עם תחומי עניין דומים.",
     city: "חולון",
     country: "ישראל",
-    image: "/images/m4.jpeg",
+    image: "/images/m4.jpg",
   },
   {
     email: "davis@test.com",
@@ -137,7 +137,7 @@ export const membersData = [
       "אני אדם פשוט שאוהב לבלות עם חברים, לראות סרטים ולשוחח על נושאים מעניינים. מחפש מישהי שמחפשת קשר אמיתי וישיר.",
     city: "אשדוד",
     country: "ישראל",
-    image: "/images/m5.jpeg",
+    image: "/images/m5.jpg",
   },
   {
     email: "almayo@test.com",
@@ -195,7 +195,7 @@ export const membersData = [
       "אני אוהבת לרקוד ולבשל. מחפשת קשר כנה ויציב עם מישהו שאוהב את החיים.",
     city: "ירושלים",
     country: "ישראל",
-    image: "/images/f8.jpeg",
+    image: "/images/f8.jpg",
   },
   {
     email: "tamar@test.com",
