@@ -5,12 +5,15 @@ import Link from "next/link";
 
 const MielFooter: FC = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12 mt-16" dir="rtl">
+    <footer
+      className="bg-gray-900 text-white py-12 mt-16 rounded-2xl"
+      dir="rtl"
+    >
       <div className="container mx-auto px-4">
         <div className="mb-12">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-amber-400">
-              אנשים יחידים, הקשיבו: מיאל היא אפליקציית ההיכרויות היחידה שבאמת
+              רווקים ורווקות, הקשיבו: מיאל היא אפליקציית ההיכרויות היחידה שבאמת
               דואגת לכם
             </h2>
             <p className="text-gray-300 mb-6 leading-relaxed">

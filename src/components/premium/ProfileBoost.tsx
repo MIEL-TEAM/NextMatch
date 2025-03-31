@@ -1,7 +1,5 @@
-// components/ProfileBoost.tsx
-"use client";
-
-import { useState } from "react";
+// premium/ProfileBoost.tsx
+import React, { useState } from "react";
 import {
   Button,
   Card,
@@ -17,7 +15,7 @@ interface ProfileBoostProps {
   onBoostProfile: () => Promise<void>;
 }
 
-export default function ProfileBoost({
+export function ProfileBoost({
   isPremium,
   boostsAvailable,
   onBoostProfile,

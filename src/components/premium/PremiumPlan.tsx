@@ -9,8 +9,8 @@ import {
   CardHeader,
   Divider,
 } from "@nextui-org/react";
-
 import AppModal from "@/components/AppModal";
+import { FiCheck, FiXCircle } from "react-icons/fi";
 
 interface Feature {
   text: string;
@@ -27,6 +27,8 @@ interface PremiumPlanProps {
   onActivate: () => void;
   isHighlighted?: boolean;
   planIcon?: React.ReactNode;
+  isActive?: boolean;
+  onCancel?: () => void;
 }
 
 export default function PremiumPlan({
@@ -39,6 +41,8 @@ export default function PremiumPlan({
   onActivate,
   isHighlighted = false,
   planIcon,
+  isActive = false,
+  onCancel,
 }: PremiumPlanProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const safeFeatures = Array.isArray(features) ? features : [];
@@ -53,21 +57,35 @@ export default function PremiumPlan({
       <Card
         className={`max-w-sm ${
           isHighlighted ? "border-2 border-amber-400 shadow-xl" : ""
-        }`}
+        } ${isActive ? "border-2 border-green-500" : ""}`}
         isHoverable
       >
         <CardHeader className="flex flex-col items-center pb-0">
           {planIcon && (
-            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4 text-amber-500">
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                isActive
+                  ? "bg-green-100 text-green-500"
+                  : "bg-amber-100 text-amber-500"
+              }`}
+            >
               {planIcon}
             </div>
           )}
 
-          {isHighlighted && (
+          {isHighlighted && !isActive && (
             <div className="bg-amber-400 text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
               המומלץ ביותר
             </div>
           )}
+
+          {isActive && (
+            <div className="bg-green-500 text-white text-sm font-bold px-3 py-1 rounded-full mb-2 flex items-center">
+              <FiCheck className="mr-1" />
+              המנוי הפעיל שלך
+            </div>
+          )}
+
           <h2 className="text-2xl font-bold">{title}</h2>
           <p className="text-lg font-medium mt-1">{description}</p>
         </CardHeader>
@@ -76,7 +94,13 @@ export default function PremiumPlan({
           <div className="space-y-3">
             {safeFeatures.map((feature, index) => (
               <div key={index} className="flex items-center gap-2">
-                <span className="text-amber-500 flex-shrink-0">
+                <span
+                  className={
+                    isActive
+                      ? "text-green-500 flex-shrink-0"
+                      : "text-amber-500 flex-shrink-0"
+                  }
+                >
                   {feature.icon}
                 </span>
                 <p>{feature.text}</p>
@@ -87,23 +111,38 @@ export default function PremiumPlan({
           <Divider className="my-4" />
 
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-1">
-              ללא תשלום עכשיו (גרסת פיתוח)
-            </p>
             <p className="text-2xl font-bold">{price}</p>
           </div>
         </CardBody>
 
-        <CardFooter>
-          <Button
-            color={isHighlighted ? "warning" : "primary"}
-            className="w-full"
-            size="lg"
-            isLoading={isLoading}
-            onPress={() => setIsModalOpen(true)}
-          >
-            {buttonText}
-          </Button>
+        <CardFooter className="flex flex-col gap-2">
+          {isActive ? (
+            <>
+              <div className="w-full text-center mb-2">
+                <span className="text-green-600 text-sm">המנוי פעיל כעת</span>
+              </div>
+              <Button
+                color="danger"
+                variant="flat"
+                className="w-full"
+                size="lg"
+                onPress={onCancel}
+                startContent={<FiXCircle />}
+              >
+                בטל מנוי
+              </Button>
+            </>
+          ) : (
+            <Button
+              color={isHighlighted ? "warning" : "primary"}
+              className="w-full"
+              size="lg"
+              isLoading={isLoading}
+              onPress={() => setIsModalOpen(true)}
+            >
+              {buttonText}
+            </Button>
+          )}
         </CardFooter>
       </Card>
 
@@ -153,7 +192,7 @@ export default function PremiumPlan({
             color: isHighlighted ? "warning" : "primary",
             onPress: handleConfirmUpgrade,
             isLoading: isLoading,
-            children: "אשר הצטרפות",
+            children: "המשך לתשלום",
           },
         ]}
       />

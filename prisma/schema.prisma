@@ -28,20 +28,23 @@ model Account {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  name            String?
-  email           String?   @unique
-  emailVerified   DateTime?
-  passwordHash    String?
-  image           String?
-  profileComplete Boolean   @default(false)
-  role            Role      @default(MEMBER)
-  accounts        Account[]
-  member          Member?
-  isPremium       Boolean   @default(false)
-  premiumUntil    DateTime?
-  boostsAvailable Int       @default(0)
-  boostsUsed      Int       @default(0)
+  id                   String    @id @default(cuid())
+  name                 String?
+  email                String?   @unique
+  emailVerified        DateTime?
+  passwordHash         String?
+  image                String?
+  profileComplete      Boolean   @default(false)
+  role                 Role      @default(MEMBER)
+  accounts             Account[]
+  member               Member?
+  isPremium            Boolean   @default(false)
+  premiumUntil         DateTime?
+  boostsAvailable      Int       @default(0)
+  boostsUsed           Int       @default(0)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  canceledAt           DateTime?
 }
 
 model Member {

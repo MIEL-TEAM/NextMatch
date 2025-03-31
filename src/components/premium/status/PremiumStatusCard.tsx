@@ -1,59 +1,31 @@
-"use client";
-
-import { useEffect, useState } from "react";
+// premium/status/PremiumStatusCard.tsx
+import { useEffect } from "react";
 import { Button, Progress } from "@nextui-org/react";
-import { FiHome, FiCheck } from "react-icons/fi";
+import { FiHome, FiX, FiRefreshCw, FiSettings, FiCheck } from "react-icons/fi";
 import confetti from "canvas-confetti";
 
-interface PremiumStatusProps {
+interface PremiumStatusCardProps {
   premiumUntil: Date | null;
   boostsAvailable: number;
   onCancelSubscription: () => void;
-  onManageSubscription?: () => void;
+  onManageSubscription: () => void;
+  onRenewSubscription?: () => void;
   showConfetti?: boolean;
+  isManageLoading?: boolean;
+  canceledAt?: Date | null;
 }
 
-export default function PremiumStatus({
+export function PremiumStatusCard({
   premiumUntil,
   boostsAvailable,
   onCancelSubscription,
   onManageSubscription,
-  showConfetti: externalShowConfetti,
-}: PremiumStatusProps) {
-  // Keep internal showConfetti state for backward compatibility
-  const [internalShowConfetti, setInternalShowConfetti] = useState(false);
-  const [isManageLoading, setIsManageLoading] = useState(false);
-
-  // Determine which showConfetti to use - prefer external if provided
-  const showConfetti =
-    externalShowConfetti !== undefined
-      ? externalShowConfetti
-      : internalShowConfetti;
-
-  const handleManageSubscription = async () => {
-    if (onManageSubscription) {
-      onManageSubscription();
-      return;
-    }
-
-    setIsManageLoading(true);
-    try {
-      const response = await fetch("/api/create-billing-portal", {
-        method: "POST",
-      });
-      const data = await response.json();
-      window.location.href = data.url;
-    } catch (error) {
-      console.error("Error accessing billing portal:", error);
-    } finally {
-      setIsManageLoading(false);
-    }
-  };
-
-  // Set internal confetti flag on mount - this handles the old behavior
-  useEffect(() => {
-    setInternalShowConfetti(true);
-  }, []);
+  onRenewSubscription,
+  showConfetti = false,
+  isManageLoading = false,
+  canceledAt,
+}: PremiumStatusCardProps) {
+  const isCanceled = !!canceledAt;
 
   // Trigger confetti animation
   useEffect(() => {
@@ -95,17 +67,20 @@ export default function PremiumStatus({
     : 0;
 
   const endDate = premiumUntil
-    ? premiumUntil instanceof Date
-      ? premiumUntil.toLocaleDateString("he-IL")
-      : new Date(premiumUntil).toLocaleDateString("he-IL")
+    ? new Date(premiumUntil).toLocaleDateString("he-IL")
     : "לא ידוע";
 
   // Use the actual boosts available value in the display
   const displayBoosts = boostsAvailable || 0;
 
+  // Gradient background changes based on status
+  const cardGradient = isCanceled
+    ? "bg-gradient-to-br from-orange-400 to-amber-500"
+    : "bg-gradient-to-br from-yellow-400 to-amber-500";
+
   return (
     <div className="max-w-md mx-auto overflow-hidden bg-white rounded-3xl shadow-lg">
-      <div className="relative bg-gradient-to-br from-yellow-400 to-amber-500 p-8 text-center">
+      <div className={`relative ${cardGradient} p-8 text-center`}>
         <div className="flex justify-center mb-4">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
             <svg
@@ -117,6 +92,7 @@ export default function PremiumStatus({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6z" />
             </svg>
@@ -125,9 +101,13 @@ export default function PremiumStatus({
 
         <div className="mb-8">
           <div className="inline-flex items-center">
-            <span className="text-2xl font-bold text-white">🎉 מזל טוב!</span>
+            <span className="text-2xl font-bold text-white">
+              {isCanceled ? "⚠️ המנוי יסתיים בקרוב" : "🎉 מזל טוב!"}
+            </span>
           </div>
-          <h2 className="text-xl text-white mt-2">אתה משתמש פרמיום!</h2>
+          <h2 className="text-xl text-white mt-2">
+            {isCanceled ? `המנוי שלך פעיל עד ${endDate}` : "אתה משתמש פרמיום!"}
+          </h2>
         </div>
 
         <div className="grid grid-cols-3 gap-4 -mb-16">
@@ -162,6 +142,19 @@ export default function PremiumStatus({
         <h3 className="text-xl font-bold text-gray-800 mb-4 text-right">
           פרטי המנוי שלך
         </h3>
+
+        {isCanceled && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-100 rounded-lg">
+            <h4 className="text-orange-700 font-bold mb-2 text-right">
+              הודעה חשובה:
+            </h4>
+            <p className="text-orange-700 text-right text-sm">
+              המנוי שלך בוטל ויסתיים בתאריך {endDate}. כדי להמשיך ליהנות מכל
+              ההטבות, אנא חדש את המנוי שלך.
+            </p>
+          </div>
+        )}
+
         <div className="mb-6">
           <div className="flex justify-between mb-2">
             <span>{endDate}</span>
@@ -172,11 +165,13 @@ export default function PremiumStatus({
             maxValue={92}
             color="warning"
             className="mb-1 h-2 rounded-full"
+            aria-label="ימים נותרים למנוי"
           />
           <p className="text-sm text-gray-500 text-right">
             {daysRemaining} ימים נותרו
           </p>
         </div>
+
         <div className="mb-8">
           <div className="flex justify-between mb-2">
             <span>{displayBoosts} / 10</span>
@@ -187,6 +182,7 @@ export default function PremiumStatus({
             maxValue={10}
             color="warning"
             className="mb-1 h-2 rounded-full"
+            aria-label="בוסטים זמינים"
           />
           <p className="text-sm text-gray-500 text-right">
             השתמש בבוסטים כדי להגדיל את הסיכויים שלך
@@ -198,51 +194,89 @@ export default function PremiumStatus({
             היתרונות שלך:
           </h3>
           <ul className="space-y-2 text-right">
-            <li className="flex items-center text-amber-700">
+            <li className="flex items-center justify-end text-amber-700">
               <span>ראה מי אהב את הפרופיל שלך</span>
-              <FiCheck className="ml-2 text-amber-500" />
+              <FiCheck className="mr-2 text-amber-500" aria-hidden="true" />
             </li>
-            <li className="flex items-center text-amber-700">
+            <li className="flex items-center justify-end text-amber-700">
               <span>סינון מתקדם למציאת ההתאמה המושלמת</span>
-              <FiCheck className="ml-2 text-amber-500" />
+              <FiCheck className="mr-2 text-amber-500" aria-hidden="true" />
             </li>
-            <li className="flex items-center text-amber-700">
+            <li className="flex items-center justify-end text-amber-700">
               <span>גישה ללא הגבלה להודעות ולייקים</span>
-              <FiCheck className="ml-2 text-amber-500" />
+              <FiCheck className="mr-2 text-amber-500" aria-hidden="true" />
             </li>
-            <li className="flex items-center text-amber-700">
+            <li className="flex items-center justify-end text-amber-700">
               <span>תעדוף במסך החיפוש</span>
-              <FiCheck className="ml-2 text-amber-500" />
+              <FiCheck className="mr-2 text-amber-500" aria-hidden="true" />
             </li>
           </ul>
         </div>
-        <div className="flex flex-row gap-4 justify-center">
-          <Button
-            color="primary"
-            variant="flat"
-            className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
-            onPress={handleManageSubscription}
-            isLoading={isManageLoading}
-          >
-            נהל את המנוי
-          </Button>
-          <Button
-            color="danger"
-            variant="flat"
-            className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
-            onPress={onCancelSubscription}
-          >
-            בטל מנוי
-          </Button>
-          <Button
-            as="a"
-            href="/members"
-            color="primary"
-            className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
-            endContent={<FiHome />}
-          >
-            חזור לדף הבית
-          </Button>
+
+        <div className="flex flex-col gap-4">
+          {isCanceled ? (
+            // Canceled subscription actions
+            <div className="flex flex-row gap-4 justify-center">
+              {onRenewSubscription && (
+                <Button
+                  color="primary"
+                  className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
+                  onPress={onRenewSubscription}
+                  startContent={<FiRefreshCw aria-hidden="true" />}
+                  isLoading={isManageLoading}
+                  aria-label="חדש את המנוי"
+                >
+                  חדש את המנוי
+                </Button>
+              )}
+              <Button
+                as="a"
+                href="/members"
+                color="default"
+                variant="flat"
+                className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
+                endContent={<FiHome aria-hidden="true" />}
+                aria-label="חזור לדף הבית"
+              >
+                חזור לדף הבית
+              </Button>
+            </div>
+          ) : (
+            // Active subscription actions
+            <div className="flex flex-row gap-4 justify-center">
+              <Button
+                color="primary"
+                variant="flat"
+                className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
+                onPress={onManageSubscription}
+                isLoading={isManageLoading}
+                startContent={<FiSettings aria-hidden="true" />}
+                aria-label="נהל את המנוי"
+              >
+                נהל את המנוי
+              </Button>
+              <Button
+                color="danger"
+                variant="flat"
+                className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
+                onPress={onCancelSubscription}
+                startContent={<FiX aria-hidden="true" />}
+                aria-label="בטל מנוי"
+              >
+                בטל מנוי
+              </Button>
+              <Button
+                as="a"
+                href="/members"
+                color="primary"
+                className="flex-1 font-medium rounded-full px-8 py-2 text-sm"
+                endContent={<FiHome aria-hidden="true" />}
+                aria-label="חזור לדף הבית"
+              >
+                חזור לדף הבית
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

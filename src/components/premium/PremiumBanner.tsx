@@ -1,4 +1,5 @@
-// components/PremiumBanner.tsx
+// premium/PremiumBanner.tsx
+import React from "react";
 import { Button } from "@nextui-org/react";
 import Link from "next/link";
 
@@ -9,7 +10,7 @@ interface PremiumBannerProps {
   buttonLink: string;
 }
 
-export default function PremiumBanner({
+export function PremiumBanner({
   title,
   description,
   buttonText,
