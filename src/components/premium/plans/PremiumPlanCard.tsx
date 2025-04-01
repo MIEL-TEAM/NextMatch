@@ -64,6 +64,8 @@ export function PremiumPlanCard({
     onActivate();
   };
 
+  console.log(canceledAt);
+
   // Format the end date for display
   const formatDate = (date: Date | null) => {
     if (!date) return "";
@@ -87,20 +89,6 @@ export function PremiumPlanCard({
       ? "bg-orange-100 text-orange-500"
       : "bg-green-100 text-green-500"
     : "bg-amber-100 text-amber-500";
-
-  // Determine button text based on status
-  const getBtnText = () => {
-    if (isActive) {
-      if (isCanceled) return "חדש מנוי";
-      return "התוכנית הנוכחית שלך";
-    }
-
-    if (isActive === false && isCanceled) {
-      return "שדרג לתוכנית זו";
-    }
-
-    return buttonText;
-  };
 
   return (
     <>

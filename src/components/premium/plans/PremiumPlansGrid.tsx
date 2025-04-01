@@ -33,9 +33,6 @@ export function PremiumPlansGrid({
   premiumUntil = null,
   onCancel,
 }: PremiumPlansGridProps) {
-  // Helper to determine if premium is active
-  const isPremium = !!activePlan;
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
       <PremiumPlanCard
