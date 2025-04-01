@@ -48,9 +48,7 @@ export default function PremiumPage() {
   const [justCanceled, setJustCanceled] = useState(false);
   const [justRenewed, setJustRenewed] = useState(false);
 
-  /**
-   * Handle successful Stripe checkout
-   */
+  // Handle successful Stripe checkout
   const handleStripeSuccess = useCallback(
     (data: PremiumStatusResponse) => {
       setJustSubscribed(true);
@@ -71,9 +69,7 @@ export default function PremiumPage() {
     [searchParams]
   );
 
-  /**
-   * Check premium status and handle URL parameters
-   */
+  // Check premium status and handle URL parameters
   const checkPremiumStatus = useCallback(async () => {
     try {
       // Get URL parameters
@@ -125,21 +121,12 @@ export default function PremiumPage() {
       // Get current premium status
       const data = await getPremiumStatus();
 
-      // Debug the data
-      console.log("Premium status data from API:", data);
-      console.log("premiumUntil value:", data.premiumUntil);
-      console.log("premiumUntil type:", typeof data.premiumUntil);
-
       if (!data.premiumUntil) {
-        console.warn("No premium expiration date found in user data");
-
         // Add a default date if none exists (if the user is premium)
         if (data.isPremium) {
           // Add three months from current date as a default
           const defaultDate = new Date();
           defaultDate.setMonth(defaultDate.getMonth() + 3);
-
-          console.log("Setting default premium date:", defaultDate);
           data.premiumUntil = defaultDate;
         }
       }
@@ -202,9 +189,7 @@ export default function PremiumPage() {
     }
   }, [searchParams, initialLoading, router]);
 
-  /**
-   * Activate a premium plan
-   */
+  // Activate a premium plan
   const handleActivatePremium = useCallback(
     async (planId: string, months: number = 1) => {
       setLoadingPlan(planId);
@@ -243,9 +228,7 @@ export default function PremiumPage() {
     []
   );
 
-  /**
-   * Cancel subscription via Stripe portal
-   */
+  // Cancel subscription via Stripe portal
   const handleCancelSubscription = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -270,9 +253,7 @@ export default function PremiumPage() {
     }
   }, []);
 
-  /**
-   * Manage subscription via Stripe portal
-   */
+  // Manage subscription via Stripe portal
   const handleManageSubscription = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -305,9 +286,7 @@ export default function PremiumPage() {
     }
   }, []);
 
-  /**
-   * Renew a canceled subscription
-   */
+  // Renew Subscription
   const handleRenewSubscription = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -326,7 +305,6 @@ export default function PremiumPage() {
     }
   }, []);
 
-  // Show loading indicator while fetching initial data
   if (initialLoading) {
     return <HeartLoading />;
   }
@@ -335,7 +313,6 @@ export default function PremiumPage() {
 
   return (
     <div className="container mx-auto py-12 px-4">
-      {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">שדרג לחווית Miel פרימיום</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -344,7 +321,6 @@ export default function PremiumPage() {
         </p>
       </div>
 
-      {/* Status message */}
       {statusMessage && (
         <SuccessMessage
           message={statusMessage.message}
@@ -352,7 +328,6 @@ export default function PremiumPage() {
         />
       )}
 
-      {/* Premium status card (only for premium users) */}
       {isPremium && (
         <div className="mb-12">
           <PremiumStatusCard
@@ -363,6 +338,7 @@ export default function PremiumPage() {
             showConfetti={justSubscribed || justRenewed}
             isManageLoading={isLoading}
             canceledAt={premiumInfo?.canceledAt}
+            justCanceled={justCanceled}
             onRenewSubscription={
               isCanceled ? handleRenewSubscription : undefined
             }
@@ -370,7 +346,6 @@ export default function PremiumPage() {
         </div>
       )}
 
-      {/* Plans section */}
       <div className={isPremium ? "mt-12" : ""}>
         {isPremium && (
           <div className="text-center mb-8">
@@ -405,7 +380,6 @@ export default function PremiumPage() {
         />
       </div>
 
-      {/* Cancellation confirmation modal */}
       <CancelSubscriptionModal
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}

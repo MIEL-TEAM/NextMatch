@@ -239,7 +239,7 @@ export async function activatePremium(formData: FormData) {
         throw new Error("משתמש לא נמצא");
       }
 
-      const updated = await prisma.user.update({
+      await prisma.user.update({
         where: { id: user.id },
         data: {
           isPremium: true,

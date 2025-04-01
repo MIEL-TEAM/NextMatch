@@ -13,6 +13,7 @@ interface PremiumStatusCardProps {
   showConfetti?: boolean;
   isManageLoading?: boolean;
   canceledAt?: Date | null;
+  justCanceled?: boolean;
 }
 
 export function PremiumStatusCard({

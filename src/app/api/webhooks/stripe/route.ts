@@ -3,16 +3,7 @@ import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      STRIPE_SECRET_KEY: string;
-      STRIPE_WEBHOOK_SECRET: string;
-    }
-  }
-}
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 export async function POST(req: NextRequest) {
   try {
