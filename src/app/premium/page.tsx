@@ -78,39 +78,94 @@ export default function PremiumPage() {
       const sessionId = searchParams.get("session_id");
       const canceledAction = searchParams.get("canceled_action") === "true";
       const renewed = searchParams.get("renewed") === "true";
+      const strictRenewalCheck =
+        searchParams.get("strict_renewal_check") === "true";
 
-      // Handle cancellation return from Stripe
       if (canceledAction) {
         try {
-          await processCancellationReturn();
-          setJustCanceled(true);
+          const cancellationResult = await processCancellationReturn();
+
+          setJustCanceled(cancellationResult.cancellationProcessed);
           setStatusMessage({
-            message:
-              "המנוי בוטל בהצלחה, אך יישאר פעיל עד סוף תקופת החיוב הנוכחית",
-            type: "warning",
+            message: cancellationResult.message,
+            type: cancellationResult.success ? "warning" : "error",
           });
+
+          // Update premium info based on cancellation result
+          if (cancellationResult.success) {
+            setIsPremium(true);
+            setPremiumInfo((prevInfo) => ({
+              premiumUntil:
+                cancellationResult.premiumUntil ??
+                prevInfo?.premiumUntil ??
+                null,
+              boostsAvailable: prevInfo?.boostsAvailable ?? 0,
+              activePlan: prevInfo?.activePlan ?? "popular",
+              canceledAt: new Date(),
+            }));
+          }
         } catch (cancelError) {
           console.error("Failed to process cancellation return:", cancelError);
+          setStatusMessage({
+            message: "שגיאה בביטול המנוי",
+            type: "error",
+          });
         }
       }
 
       // Handle renewal return from Stripe
       if (renewed) {
-        await checkStripeSubscriptionStatus();
-        setJustRenewed(true);
-        setStatusMessage({
-          message: "המנוי חודש בהצלחה!",
-          type: "success",
-        });
+        const renewalStatus = await checkStripeSubscriptionStatus();
+        if (renewalStatus?.isPremium) {
+          setJustRenewed(true);
+          setStatusMessage({
+            message: "המנוי חודש בהצלחה!",
+            type: "success",
+          });
+
+          setIsPremium(true);
+          setPremiumInfo((prevInfo) => ({
+            premiumUntil:
+              renewalStatus.premiumUntil ?? prevInfo?.premiumUntil ?? null,
+            boostsAvailable: prevInfo?.boostsAvailable ?? 0,
+            activePlan: prevInfo?.activePlan ?? "popular",
+            canceledAt: renewalStatus.canceledAt ?? null,
+          }));
+        }
+      }
+      if (strictRenewalCheck) {
+        // Perform a careful check of the actual subscription status
+        const renewalStatus = await checkStripeSubscriptionStatus();
+
+        // Only set renewed and show confetti if the subscription is truly active again
+        if (renewalStatus?.isPremium && !renewalStatus.canceledAt) {
+          setJustRenewed(true);
+          setStatusMessage({
+            message: "המנוי חודש בהצלחה!",
+            type: "success",
+          });
+
+          setIsPremium(true);
+          setPremiumInfo((prevInfo) => ({
+            premiumUntil:
+              renewalStatus.premiumUntil ?? prevInfo?.premiumUntil ?? null,
+            boostsAvailable: prevInfo?.boostsAvailable ?? 0,
+            activePlan: prevInfo?.activePlan ?? "popular",
+            canceledAt: null,
+          }));
+        } else {
+          // If no actual renewal occurred
+          setStatusMessage({
+            message: "לא בוצע חידוש למנוי",
+            type: "warning",
+          });
+          setJustRenewed(false);
+        }
       }
 
       // Handle successful payment
       if (success && sessionId) {
-        try {
-          await updatePremiumStatusFromStripe(sessionId);
-        } catch (updateError) {
-          console.error("Failed to update premium status:", updateError);
-        }
+        await updatePremiumStatusFromStripe(sessionId);
       }
 
       // Refresh status if needed
@@ -121,14 +176,11 @@ export default function PremiumPage() {
       // Get current premium status
       const data = await getPremiumStatus();
 
-      if (!data.premiumUntil) {
-        // Add a default date if none exists (if the user is premium)
-        if (data.isPremium) {
-          // Add three months from current date as a default
-          const defaultDate = new Date();
-          defaultDate.setMonth(defaultDate.getMonth() + 3);
-          data.premiumUntil = defaultDate;
-        }
+      // Assign default premium date if not exists
+      if (!data.premiumUntil && data.isPremium) {
+        const defaultDate = new Date();
+        defaultDate.setMonth(defaultDate.getMonth() + 3);
+        data.premiumUntil = defaultDate;
       }
 
       // Update UI based on status
@@ -162,7 +214,7 @@ export default function PremiumPage() {
         }
       }
     } catch (error) {
-      console.error("שגיאה בבדיקת סטטוס פרימיום:", error);
+      console.log(error);
       setStatusMessage({
         message: "שגיאה בטעינת נתוני המנוי, אנא נסה שוב מאוחר יותר",
         type: "error",
@@ -296,8 +348,15 @@ export default function PremiumPage() {
       }
     } catch (error) {
       console.error("שגיאה בחידוש המנוי:", error);
+
+      // More specific error handling
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "שגיאה בחידוש המנוי, אנא נסה שוב";
+
       setStatusMessage({
-        message: "שגיאה בחידוש המנוי, אנא נסה שוב",
+        message: errorMessage,
         type: "error",
       });
     } finally {

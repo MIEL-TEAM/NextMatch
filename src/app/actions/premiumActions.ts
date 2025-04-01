@@ -157,7 +157,6 @@ export async function getPremiumStatus() {
   }
 }
 
-// Creates Stripe checkout session with dynamic URLs
 export async function createCheckoutSession(formData: FormData) {
   const session = await auth();
 
@@ -186,12 +185,15 @@ export async function createCheckoutSession(formData: FormData) {
 
     // Determine the appropriate base URL
     const isLocalhost =
-      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "development" &&
       process.env.NEXT_PUBLIC_APP_URL?.includes("localhost");
 
     const baseUrl = isLocalhost
-      ? "http://localhost:3001"
+      ? "http://localhost:3001" // Ensure this matches your local dev port
       : process.env.NEXT_PUBLIC_APP_URL || "https://miel-love.com";
+
+    // Explicitly log the base URL for debugging
+    console.log("Stripe Checkout Base URL:", baseUrl);
 
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -332,7 +334,6 @@ export async function redirectToCancelSubscription() {
   }
 }
 
-// Used when a user returns from cancellation flow
 export async function processCancellationReturn() {
   const session = await auth();
 
@@ -341,17 +342,58 @@ export async function processCancellationReturn() {
   }
 
   try {
-    // Check the actual status from Stripe to update our database
-    await checkStripeSubscriptionStatus();
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: {
+        stripeSubscriptionId: true,
+      },
+    });
 
-    // Return success without any confusing "subscription successful" message
-    return {
-      success: true,
-      cancellationProcessed: true,
-    };
+    if (!user?.stripeSubscriptionId) {
+      throw new Error("לא נמצא מזהה מנוי");
+    }
+
+    // Directly retrieve the subscription from Stripe
+    const subscription = await stripe.subscriptions.retrieve(
+      user.stripeSubscriptionId
+    );
+
+    // Check if the subscription is actually set to cancel at period end
+    const isCancelScheduled = subscription.cancel_at_period_end;
+    const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+
+    if (isCancelScheduled) {
+      // Update user record to reflect the cancellation
+      await prisma.user.update({
+        where: { email: session.user.email },
+        data: {
+          canceledAt: new Date(),
+          premiumUntil: currentPeriodEnd,
+        },
+      });
+
+      // Revalidate paths
+      revalidatePath("/premium");
+      revalidatePath("/");
+
+      return {
+        success: true,
+        cancellationProcessed: true,
+        message: "המנוי מתוזמן לביטול בסוף תקופת החיוב הנוכחית",
+        premiumUntil: currentPeriodEnd,
+      };
+    } else {
+      // Subscription is still active
+      return {
+        success: false,
+        cancellationProcessed: false,
+        message: "המנוי עדיין פעיל",
+        premiumUntil: null,
+      };
+    }
   } catch (error) {
     console.error("שגיאה בעיבוד החזרה מביטול:", error);
-    throw error;
+    throw new Error("נכשל בעיבוד החזרה מביטול המנוי");
   }
 }
 
@@ -467,7 +509,6 @@ export async function createBillingPortalSession() {
   return { url: stripeSession.url };
 }
 
-// Creates a reactivation portal session for renewals
 export async function createReactivateSubscriptionSession() {
   try {
     const session = await auth();
@@ -493,19 +534,31 @@ export async function createReactivateSubscriptionSession() {
       throw new Error("לא נמצא מזהה מנוי לחידוש");
     }
 
+    // Retrieve the actual subscription to verify its status
+    const subscription = await stripe.subscriptions.retrieve(
+      user.stripeSubscriptionId
+    );
+
+    // Ensure the subscription is actually in a cancelable state
+    if (!subscription.cancel_at_period_end) {
+      throw new Error("המנוי עדיין פעיל ולא ניתן לחדש");
+    }
+
     const stripeSession = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?renewed=true`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?strict_renewal_check=true`,
     });
 
-    return { url: stripeSession.url };
+    return {
+      url: stripeSession.url,
+      currentStatus: subscription.status,
+    };
   } catch (error) {
     console.error("שגיאה בהפעלה מחדש של המנוי:", error);
     throw error;
   }
 }
 
-// Check and update Stripe subscription status
 export async function checkStripeSubscriptionStatus() {
   const session = await auth();
   if (!session?.user?.email) {
@@ -514,7 +567,11 @@ export async function checkStripeSubscriptionStatus() {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { stripeSubscriptionId: true },
+    select: {
+      stripeSubscriptionId: true,
+      isPremium: true,
+      canceledAt: true,
+    },
   });
 
   if (user?.stripeSubscriptionId) {
@@ -523,26 +580,59 @@ export async function checkStripeSubscriptionStatus() {
         user.stripeSubscriptionId
       );
 
-      // Update database based on Stripe's current subscription status
-      await prisma.user.update({
-        where: { email: session.user.email },
-        data: {
-          isPremium: subscription.status === "active",
-          canceledAt: subscription.cancel_at_period_end ? new Date() : null,
-          premiumUntil: subscription.cancel_at_period_end
-            ? new Date(subscription.current_period_end * 1000)
-            : null,
-        },
-      });
+      // Determine the precise status
+      const isActive = subscription.status === "active";
+      const isCancelScheduled = subscription.cancel_at_period_end;
+      const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
-      revalidatePath("/premium");
-      revalidatePath("/");
+      // Detailed update
+      const updateData: {
+        isPremium?: boolean;
+        canceledAt?: Date | null;
+        premiumUntil?: Date | null;
+      } = {
+        isPremium: isActive,
+      };
+
+      // If subscription is set to cancel at period end
+      if (isCancelScheduled) {
+        updateData.canceledAt = new Date();
+        updateData.premiumUntil = currentPeriodEnd;
+      } else {
+        // If not scheduled for cancellation
+        updateData.canceledAt = null;
+        updateData.premiumUntil = null; // Let the system calculate this
+      }
+
+      // Only update if there's a meaningful change
+      const needsUpdate =
+        user.isPremium !== isActive ||
+        (isCancelScheduled && !user.canceledAt) ||
+        (!isCancelScheduled && user.canceledAt);
+
+      if (needsUpdate) {
+        await prisma.user.update({
+          where: { email: session.user.email },
+          data: updateData,
+        });
+
+        revalidatePath("/premium");
+        revalidatePath("/");
+      }
+
+      return {
+        isPremium: isActive,
+        canceledAt: isCancelScheduled ? new Date() : null,
+        premiumUntil: isCancelScheduled ? currentPeriodEnd : null,
+      };
     } catch (error) {
       console.error("Error checking Stripe subscription:", error);
+      return null;
     }
   }
-}
 
+  return null;
+}
 // Profile boost functionality
 export async function boostProfile(formData: FormData) {
   const session = await auth();
