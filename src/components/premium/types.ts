@@ -5,6 +5,11 @@ export interface PremiumInfo {
   canceledAt: Date | null;
 }
 
+export interface Feature {
+  text: string;
+  icon: React.ReactNode;
+}
+
 export interface PremiumStatusResponse {
   id: string;
   name: string | null;
