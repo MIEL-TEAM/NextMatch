@@ -157,7 +157,7 @@ export async function getPremiumStatus() {
   }
 }
 
-// Creates Stripe checkout session
+// Creates Stripe checkout session with dynamic URLs
 export async function createCheckoutSession(formData: FormData) {
   const session = await auth();
 
@@ -184,6 +184,15 @@ export async function createCheckoutSession(formData: FormData) {
       throw new Error(`מזהה מחיר לא נמצא עבור תכנית: ${planId}`);
     }
 
+    // Determine the appropriate base URL
+    const isLocalhost =
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_APP_URL?.includes("localhost");
+
+    const baseUrl = isLocalhost
+      ? "http://localhost:3001"
+      : process.env.NEXT_PUBLIC_APP_URL || "https://miel-love.com";
+
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -193,8 +202,8 @@ export async function createCheckoutSession(formData: FormData) {
         },
       ],
       mode: "subscription",
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?canceled=true`,
+      success_url: `${baseUrl}/premium?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/premium?canceled=true`,
       metadata: {
         userId: session.user.id,
         planId: planId,
@@ -421,33 +430,41 @@ export async function cancelPremium() {
   }
 }
 
-// Creates billing portal session
 export async function createBillingPortalSession() {
-  try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      throw new Error("משתמש לא מאומת");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { stripeCustomerId: true },
-    });
-
-    if (!user?.stripeCustomerId) {
-      throw new Error("לא נמצא מזהה לקוח בסטרייפ עבור המשתמש");
-    }
-
-    const stripeSession = await stripe.billingPortal.sessions.create({
-      customer: user.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?refreshStatus=true`,
-    });
-
-    return { url: stripeSession.url };
-  } catch (error) {
-    console.error("שגיאה בגישה לפורטל החיוב:", error);
-    throw error;
+  const session = await auth();
+  if (!session?.user?.email) {
+    throw new Error("User not authenticated");
   }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: {
+      id: true,
+      email: true,
+      stripeCustomerId: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (!user.stripeCustomerId) {
+    throw new Error(
+      "No Stripe customer ID found. Please subscribe to a plan first."
+    );
+  }
+
+  const stripeSession = await stripe.billingPortal.sessions.create({
+    customer: user.stripeCustomerId,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium`,
+  });
+
+  if (!stripeSession?.url) {
+    throw new Error("Failed to generate Stripe portal URL");
+  }
+
+  return { url: stripeSession.url };
 }
 
 // Creates a reactivation portal session for renewals
