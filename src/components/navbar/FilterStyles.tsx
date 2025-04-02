@@ -102,7 +102,7 @@ export default function FilterContent({
           color="secondary"
           defaultSelected
           size="sm"
-          onChange={selectWithPhoto}
+          onChange={() => selectWithPhoto()}
           className="hover:scale-110 transition-transform"
         />
       </motion.div>

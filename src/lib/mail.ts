@@ -4,7 +4,15 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const link = `${baseUrl}/verify-email?token=${token}`;
+  let verificationLink = "";
+
+  if (process.env.NODE_ENV === "development") {
+    // Running locally
+    verificationLink = `http://localhost:3001/verify-email?token=${token}`;
+  } else {
+    // Running in production
+    verificationLink = `${baseUrl}/verify-email?token=${token}`;
+  }
 
   return resend.emails.send({
     from: "mail@miel-love.com",
@@ -25,7 +33,7 @@ export async function sendVerificationEmail(email: string, token: string) {
                 לחץ על הכפתור למטה כדי לאשר את חשבונך:
             </p>
             
-            <a href="${link}" 
+            <a href="${verificationLink}"
                style="display: inline-block; background-color: #D99152; color: #fff; padding: 15px 30px; 
                       font-size: 20px; font-weight: bold; text-decoration: none; border-radius: 8px; 
                       box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);">
@@ -43,7 +51,6 @@ export async function sendVerificationEmail(email: string, token: string) {
     `,
   });
 }
-
 export async function sendPasswordResetEmail(email: string, token: string) {
   const link = `${baseUrl}/reset-password?token=${token}`;
 

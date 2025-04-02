@@ -55,7 +55,7 @@ export default async function TopNav() {
               width={35}
               height={35}
               alt="logo png"
-              className="object-contain animate-bounce-slow transition-transform duration-[2000ms] ease-in-out hover:scale-105"
+              className="object-contain animate-bounce-slow transition-transform duration-[2000ms] ease-in-out hover:scale-105 w-auto h-auto"
             />
           </div>
 

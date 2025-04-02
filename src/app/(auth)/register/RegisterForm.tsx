@@ -16,6 +16,7 @@ import { handleFormServerError } from "@/lib/util";
 import UserDetailsForm from "./UserDetailsForm";
 import ProfileForm from "./ProfileForm";
 import SocialLogin from "../login/SocialLogin";
+import Link from "next/link";
 
 const stepSchemas = [registerSchema, profileSchema];
 
@@ -114,6 +115,24 @@ export default function RegisterForm() {
               )}
             </div>
             <SocialLogin />
+            <div className="flex flex-col items-center space-y-2 text-sm">
+              <p className="text-neutral-600">כבר יש לך חשבון?</p>
+              <Link
+                href="/login"
+                className="hover:underline text-[#E37B27] font-medium"
+              >
+                התחבר כאן
+              </Link>
+            </div>
+
+            <div className="flex justify-center mt-4">
+              <Link
+                href="/"
+                className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
+              >
+                חזרה לדף הבית
+              </Link>
+            </div>
           </form>
         </FormProvider>
       </CardBody>

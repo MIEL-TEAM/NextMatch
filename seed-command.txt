@@ -1,0 +1,1 @@
+RUN_SEED=true npx prisma db seed

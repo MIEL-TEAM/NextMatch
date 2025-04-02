@@ -2,9 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    staleTimes: {
-      dynamic: 0,
-    },
     optimizePackageImports: ["lodash", "@/components/*"],
   },
   images: {
@@ -19,7 +16,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     config.optimization.splitChunks = {
       chunks: "all",
       maxInitialRequests: 5,
@@ -27,19 +24,10 @@ const nextConfig: NextConfig = {
       maxSize: 250000,
     };
 
-    // Reduce client-side bundle size
-    if (!isServer) {
-      config.optimization.minimize = true;
-    }
-
     return config;
   },
-  // Improve performance and caching
-  poweredByHeader: false,
   productionBrowserSourceMaps: false,
-  compress: true,
   reactStrictMode: true,
-  swcMinify: true,
 };
 
 export default nextConfig;

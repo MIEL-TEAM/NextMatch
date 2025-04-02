@@ -78,8 +78,25 @@ export default function LoginForm() {
             התחבר
           </Button>
           <SocialLogin />
-          <div className="flex justify-center hover:underline text-sm">
-            <Link href="/forgot-password">שכחתי סיסמה?</Link>
+          <div className="flex flex-col items-center space-y-2 text-sm">
+            <Link href="/forgot-password" className="hover:underline">
+              שכחתי סיסמה?
+            </Link>
+            <Link
+              href="/register"
+              className="hover:underline text-[#E37B27] font-medium"
+            >
+              אין לך חשבון? הירשם כאן
+            </Link>
+          </div>
+
+          <div className="flex justify-center mt-4">
+            <Link
+              href="/"
+              className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
+            >
+              חזרה לדף הבית
+            </Link>
           </div>
         </form>
       </CardBody>
