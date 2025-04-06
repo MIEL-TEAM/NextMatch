@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: "miel-love.com",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "miel-love.com",
+        pathname: "/images/**",
+      },
     ],
   },
   webpack: (config) => {

@@ -1,7 +1,7 @@
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { Selection } from "@nextui-org/react";
-import { useState, useEffect, useTransition, ChangeEvent } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { FaMale, FaFemale } from "react-icons/fa";
 import useFilterStore from "./useFilterStore";
 import usePaginationStore from "./usePaginationStore";
@@ -26,7 +26,12 @@ export const useFilters = () => {
   const { ageRange, gender, orderBy, withPhoto } = filters;
 
   useEffect(() => {
-    if (gender || ageRange || orderBy || withPhoto) {
+    if (
+      gender ||
+      ageRange ||
+      orderBy !== undefined ||
+      withPhoto !== undefined
+    ) {
       setPage(1);
     }
   }, [ageRange, gender, orderBy, setPage, withPhoto]);
@@ -35,11 +40,13 @@ export const useFilters = () => {
     startTransition(() => {
       const searchParams = new URLSearchParams();
 
-      if (gender) searchParams.set("gender", gender.join(","));
+      if (gender && gender.length > 0)
+        searchParams.set("gender", gender.join(","));
       if (ageRange) searchParams.set("ageRange", ageRange.toString());
       if (orderBy) searchParams.set("orderBy", orderBy);
       if (pageSize) searchParams.set("pageSize", pageSize.toString());
       if (pageNumber) searchParams.set("pageNumber", pageNumber.toString());
+
       searchParams.set("withPhoto", withPhoto.toString());
 
       router.replace(`${pathname}?${searchParams}`);
@@ -70,7 +77,7 @@ export const useFilters = () => {
     }
   };
 
-  const handleAgeSelece = (value: number[]) => {
+  const handleAgeSelect = (value: number[]) => {
     setFilters("ageRange", value);
   };
 
@@ -83,14 +90,20 @@ export const useFilters = () => {
     else setFilters("gender", [...gender, value]);
   };
 
-  const handleWithPhotoToggle = (event: ChangeEvent<HTMLInputElement>) => {
-    setFilters("withPhoto", event.target.checked);
+  const handleWithPhotoToggle = (event: any) => {
+    if (typeof event === "boolean") {
+      setFilters("withPhoto", event);
+    } else if (event && typeof event.target?.checked === "boolean") {
+      setFilters("withPhoto", event.target.checked);
+    } else {
+      setFilters("withPhoto", !withPhoto);
+    }
   };
 
   return {
     orderByList,
     gendersList,
-    selectAge: handleAgeSelece,
+    selectAge: handleAgeSelect,
     selectGender: handleGenderSelect,
     selectOrder: handleOrderSelect,
     selectWithPhoto: handleWithPhotoToggle,

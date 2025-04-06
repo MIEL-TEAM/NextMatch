@@ -40,6 +40,9 @@ export const profileSchema = z.object({
         message: "עליך להיות לפחות בן 18 כדי להשתמש באפליקציה",
       }
     ),
+  interests: z.array(z.string()).min(1, {
+    message: "בחר לפחות תחום עניין אחד",
+  }),
 });
 
 export const combinedRegisterSchema = registerSchema.and(profileSchema);

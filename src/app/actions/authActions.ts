@@ -14,6 +14,7 @@ import { auth, signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { generateToken, getTokenByToken } from "@/lib/tokens";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
+import { availableInterests } from "@/lib/constants/interests";
 
 export async function signInUser(
   data: LoginSchema
@@ -83,6 +84,7 @@ export async function registerUser(
       dateOfBirth,
       country,
       city,
+      interests, // Extract interests
     } = validated.data;
     const hashedPassword = await bcrypt.hash(password, 10);
     const existingUser = await prisma.user.findUnique({
@@ -107,6 +109,22 @@ export async function registerUser(
             country,
             dateOfBirth: new Date(dateOfBirth),
             gender,
+            // Instead of interests, use MemberInterest
+            MemberInterest: {
+              create: interests.map((interestId) => ({
+                interest: {
+                  connectOrCreate: {
+                    where: { id: interestId },
+                    create: {
+                      id: interestId,
+                      name: getInterestName(interestId),
+                      icon: getInterestIcon(interestId),
+                      category: getInterestCategory(interestId),
+                    },
+                  },
+                },
+              })),
+            },
           },
         },
       },
@@ -129,6 +147,11 @@ export async function registerUser(
   }
 }
 
+// Also add this helper function
+function getInterestCategory(interestId: string): string {
+  const interest = availableInterests.find((int) => int.id === interestId);
+  return interest?.category || "other";
+}
 export async function getUserByEmail(email: string) {
   return prisma.user.findUnique({ where: { email } });
 }
@@ -281,6 +304,22 @@ export async function completeSocialLoginProfile(
             description: data.description,
             city: data.city,
             country: data.country,
+            // Replace interests with MemberInterest
+            MemberInterest: {
+              create: data.interests.map((interestId) => ({
+                interest: {
+                  connectOrCreate: {
+                    where: { id: interestId },
+                    create: {
+                      id: interestId,
+                      name: getInterestName(interestId),
+                      icon: getInterestIcon(interestId),
+                      category: getInterestCategory(interestId),
+                    },
+                  },
+                },
+              })),
+            },
           },
         },
       },
@@ -307,4 +346,16 @@ export async function getUserRole() {
   if (!role) throw new Error("Not in role");
 
   return role;
+}
+
+// Helper function to get interest name from ID
+function getInterestName(interestId: string): string {
+  const interest = availableInterests.find((int) => int.id === interestId);
+  return interest?.name || interestId;
+}
+
+// Helper function to get interest icon from ID
+function getInterestIcon(interestId: string): string {
+  const interest = availableInterests.find((int) => int.id === interestId);
+  return interest?.icon || "📌";
 }

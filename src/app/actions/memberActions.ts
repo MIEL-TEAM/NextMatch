@@ -97,17 +97,23 @@ export async function getMembers({
 }
 
 export async function getMemberByUserId(userId: string) {
-  try {
-    return prisma.member.findUnique({
-      where: { userId },
-    });
-  } catch (error) {
-    console.error(
-      "Error fetching member by user ID:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
-    return null;
-  }
+  return prisma.member.findUnique({
+    where: {
+      userId: userId,
+    },
+    include: {
+      MemberInterest: {
+        include: {
+          interest: true,
+        },
+      },
+      user: {
+        select: {
+          emailVerified: true,
+        },
+      },
+    },
+  });
 }
 
 export async function getMemberPhotosByUserId(userId: string) {

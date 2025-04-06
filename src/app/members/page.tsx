@@ -3,7 +3,7 @@ import { getMembers, getMemberPhotos } from "../actions/memberActions";
 import { fetchCurrentUserLikeIds } from "../actions/likeActions";
 import { GetMemberParams } from "@/types";
 import EmptyState from "@/components/EmptyState";
-import MembersStylePage from "@/components/MembersPageStyle";
+import MembersStylePage from "@/components/memberStyles/MembersPageStyle";
 
 type MembersPageProps = {
   searchParams: Promise<GetMemberParams>;

@@ -5,6 +5,7 @@ import Providers from "@/components/Providers";
 import TopNav from "@/components/navbar/TopNav";
 import { auth } from "@/auth";
 import MielLayout from "./mielLayout";
+import MobileBlocker from "@/components/MobileBlocker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://miel-love.com"),
@@ -113,6 +114,7 @@ export default async function RootLayout({
       </head>
       <body>
         <Providers userId={userId} profileComplete={profileComplete}>
+          <MobileBlocker />
           <TopNav />
           <MielLayout>{children}</MielLayout>
         </Providers>

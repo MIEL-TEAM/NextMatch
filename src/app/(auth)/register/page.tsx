@@ -8,7 +8,7 @@ export default function RegisterPage() {
   useDisableScrollOnlyIfNotNeeded();
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen text-black absolute inset-0 px-6 sm:px-12">
+    <div className="flex flex-col justify-center items-center min-h-screen text-black px-6 sm:px-12">
       <RegisterForm />
     </div>
   );

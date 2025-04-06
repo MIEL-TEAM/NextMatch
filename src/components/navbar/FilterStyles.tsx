@@ -24,10 +24,11 @@ interface FilterContentProps {
     gender: string[];
     ageRange: number[];
     orderBy: string;
+    withPhoto: boolean;
   };
   clientLoaded: boolean;
   isPending: boolean;
-  selectWithPhoto: () => void;
+  selectWithPhoto: (event: any) => void;
   totalCount: number;
 }
 
@@ -100,9 +101,9 @@ export default function FilterContent({
         <p className="text-sm">עם תמונה</p>
         <Switch
           color="secondary"
-          defaultSelected
+          isSelected={filters.withPhoto}
           size="sm"
-          onChange={() => selectWithPhoto()}
+          onChange={selectWithPhoto}
           className="hover:scale-110 transition-transform"
         />
       </motion.div>

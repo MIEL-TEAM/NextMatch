@@ -48,25 +48,49 @@ model User {
 }
 
 model Member {
-  id                String    @id @default(cuid())
-  userId            String    @unique
+  id                String           @id @default(cuid()) @map("_id")
+  userId            String           @unique
   name              String
   dateOfBirth       DateTime
   gender            String
-  created           DateTime  @default(now())
-  updated           DateTime  @default(now())
+  created           DateTime         @default(now())
+  updated           DateTime         @default(now())
   description       String
   city              String
   country           String
   image             String?
   boostedUntil      DateTime?
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos            Photo[]
-  sourceLikes       Like[]    @relation("source")
-  targetLikes       Like[]    @relation("target")
-  senderMessages    Message[] @relation("sender")
-  recipientMessages Message[] @relation("recipient")
+  sourceLikes       Like[]           @relation("source")
+  targetLikes       Like[]           @relation("target")
+  senderMessages    Message[]        @relation("sender")
+  recipientMessages Message[]        @relation("recipient")
   Message           Message[]
+  MemberInterest    MemberInterest[]
+}
+
+model Interest {
+  id        String           @id @map("_id")
+  name      String
+  icon      String
+  category  String
+  members   MemberInterest[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model MemberInterest {
+  id         String   @id @default(cuid()) @map("_id")
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId   String
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  interestId String
+  createdAt  DateTime @default(now())
+
+  @@unique([memberId, interestId])
+  @@index([memberId])
+  @@index([interestId])
 }
 
 model Photo {

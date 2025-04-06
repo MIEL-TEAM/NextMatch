@@ -16,6 +16,7 @@ type AppModalProps = {
   body: ReactNode;
   footerButtons?: ButtonProps[];
   imageModal?: boolean;
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 };
 
 export default function AppModal({

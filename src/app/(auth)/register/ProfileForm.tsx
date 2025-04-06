@@ -1,5 +1,6 @@
 "use client";
 
+import InterestSelection from "@/components/interests/InterestSelection";
 import { Input, Select, SelectItem, Textarea } from "@nextui-org/react";
 import { format, subYears } from "date-fns";
 import { useFormContext } from "react-hook-form";
@@ -10,12 +11,17 @@ export default function ProfileForm() {
     getValues,
     register,
     setValue,
+    watch,
   } = useFormContext();
 
   const genderList = [
     { label: "זכר", value: "male" },
     { label: "נקבה", value: "female" },
   ];
+
+  const handleInterestsChange = (selectedInterests: string[]) => {
+    setValue("interests", selectedInterests, { shouldValidate: true });
+  };
 
   return (
     <div className="space-y-3 sm:space-y-4 w-full max-w-md px-2 sm:px-4">
@@ -79,6 +85,12 @@ export default function ProfileForm() {
         isInvalid={!!errors.country}
         errorMessage={errors.country?.message as string}
         className="w-full h-10 sm:h-12"
+      />
+
+      <InterestSelection
+        onChange={handleInterestsChange}
+        defaultSelected={watch("interests") || []}
+        error={errors.interests?.message?.toString()}
       />
     </div>
   );
