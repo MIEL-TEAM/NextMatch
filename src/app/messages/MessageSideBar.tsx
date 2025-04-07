@@ -60,7 +60,7 @@ export default function MessageSideBar() {
                   size="sm"
                   className="mr-1"
                 >
-                  {unreadCount}
+                  {Math.max(0, unreadCount)}
                 </Chip>
               )}
             </div>

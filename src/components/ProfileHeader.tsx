@@ -34,7 +34,10 @@ export default function ProfileHeader({
       setHasLiked(!hasLiked);
       onLikeToggle?.(member.userId, hasLiked);
       toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
-        style: getToastStyle(),
+        style: {
+          ...getToastStyle(),
+          textAlign: "center",
+        },
       });
     } catch (error) {
       console.log(error);
@@ -63,13 +66,19 @@ export default function ProfileHeader({
           `${window.location.origin}/members/${member.userId}`
         );
         toast.success("קישור לפרופיל הועתק", {
-          style: getToastStyle(),
+          style: {
+            ...getToastStyle(),
+            textAlign: "center",
+          },
         });
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
         toast.error("שגיאה בשיתוף הפרופיל", {
-          style: getToastStyle(),
+          style: {
+            ...getToastStyle(),
+            textAlign: "center",
+          },
         });
       }
     } finally {

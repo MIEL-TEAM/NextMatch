@@ -30,7 +30,12 @@ export default function LoginForm() {
       router.push("/members");
       router.refresh();
     } else {
-      toast.error(result.error as string);
+      toast.error(result.error as string, {
+        style: {
+          color: "white",
+          textAlign: "center",
+        },
+      });
     }
   }
 

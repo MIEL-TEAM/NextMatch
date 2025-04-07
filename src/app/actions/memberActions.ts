@@ -102,11 +102,6 @@ export async function getMemberByUserId(userId: string) {
       userId: userId,
     },
     include: {
-      MemberInterest: {
-        include: {
-          interest: true,
-        },
-      },
       user: {
         select: {
           emailVerified: true,

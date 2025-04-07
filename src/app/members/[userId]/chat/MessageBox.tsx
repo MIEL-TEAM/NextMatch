@@ -5,6 +5,7 @@ import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
 import { MessageDto } from "@/types";
 import { clsx } from "clsx";
 import React, { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 type MessageBoxProps = {
   message: MessageDto;
@@ -17,6 +18,7 @@ export default function MessageBox({
 }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (messageEndRef.current)
@@ -24,7 +26,12 @@ export default function MessageBox({
   }, [messageEndRef]);
 
   const renderAvatar = () => (
-    <div className="self-end">
+    <div
+      className="self-end cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-hover relative group"
+      onClick={() => router.push(`/members/${message.senderId}`)}
+      role="button"
+      aria-label={`View ${message.senderName}'s profile`}
+    >
       <PresenceAvatar
         src={transformImageUrl(message.senderImage) || "/images/user.png"}
         userId={message.senderId}

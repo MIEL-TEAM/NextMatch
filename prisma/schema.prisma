@@ -13,100 +13,75 @@ model Account {
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
 }
 
 model User {
-  id                   String    @id @default(cuid())
+  id                   String        @id @default(cuid())
   name                 String?
-  email                String?   @unique
+  email                String?       @unique
   emailVerified        DateTime?
   passwordHash         String?
   image                String?
-  profileComplete      Boolean   @default(false)
-  role                 Role      @default(MEMBER)
-  accounts             Account[]
-  member               Member?
-  isPremium            Boolean   @default(false)
+  profileComplete      Boolean       @default(false)
+  role                 Role          @default(MEMBER)
+  boostsAvailable      Int           @default(0)
+  isPremium            Boolean       @default(false)
   premiumUntil         DateTime?
-  boostsAvailable      Int       @default(0)
-  boostsUsed           Int       @default(0)
-  stripeCustomerId     String?
+  boostsUsed           Int           @default(0)
+  canceledAt           DateTime?     @db.Timestamp(6)
   stripeSubscriptionId String?
-  canceledAt           DateTime?
+  stripeCustomerId     String?
+  member               Member?
+  Transaction          Transaction[]
+  accounts             Account[]
 }
 
 model Member {
-  id                String           @id @default(cuid()) @map("_id")
-  userId            String           @unique
+  id                String    @id @default(cuid())
+  userId            String    @unique
   name              String
   dateOfBirth       DateTime
   gender            String
-  created           DateTime         @default(now())
-  updated           DateTime         @default(now())
+  created           DateTime  @default(now())
+  updated           DateTime  @default(now())
   description       String
   city              String
   country           String
   image             String?
   boostedUntil      DateTime?
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  photos            Photo[]
-  sourceLikes       Like[]           @relation("source")
-  targetLikes       Like[]           @relation("target")
-  senderMessages    Message[]        @relation("sender")
-  recipientMessages Message[]        @relation("recipient")
+  sourceLikes       Like[]    @relation("source")
+  targetLikes       Like[]    @relation("target")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   Message           Message[]
-  MemberInterest    MemberInterest[]
-}
-
-model Interest {
-  id        String           @id @map("_id")
-  name      String
-  icon      String
-  category  String
-  members   MemberInterest[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-}
-
-model MemberInterest {
-  id         String   @id @default(cuid()) @map("_id")
-  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  memberId   String
-  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
-  interestId String
-  createdAt  DateTime @default(now())
-
-  @@unique([memberId, interestId])
-  @@index([memberId])
-  @@index([interestId])
+  recipientMessages Message[] @relation("recipient")
+  senderMessages    Message[] @relation("sender")
+  photos            Photo[]
 }
 
 model Photo {
   id         String  @id @default(cuid())
   url        String
   publicId   String?
-  isApproved Boolean @default(false)
   memberId   String
+  isApproved Boolean @default(false)
   member     Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model Like {
   sourceUserId String
-  sourceMember Member @relation("source", fields: [sourceUserId], references: [userId], onDelete: Cascade)
-
   targetUserId String
+  sourceMember Member @relation("source", fields: [sourceUserId], references: [userId], onDelete: Cascade)
   targetMember Member @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
 
   @@id([sourceUserId, targetUserId])
@@ -118,13 +93,13 @@ model Message {
   created          DateTime  @default(now())
   senderId         String?
   recipientId      String?
-  sender           Member?   @relation("sender", fields: [senderId], references: [userId], onDelete: SetNull)
-  recipient        Member?   @relation("recipient", fields: [recipientId], references: [userId], onDelete: SetNull)
-  Member           Member?   @relation(fields: [memberId], references: [id])
   memberId         String?
   dateRead         DateTime?
   senderDeleted    Boolean   @default(false)
   recipientDeleted Boolean   @default(false)
+  Member           Member?   @relation(fields: [memberId], references: [id])
+  recipient        Member?   @relation("recipient", fields: [recipientId], references: [userId])
+  sender           Member?   @relation("sender", fields: [senderId], references: [userId])
 }
 
 model Token {
@@ -135,6 +110,19 @@ model Token {
   type    TokenType
 
   @@unique([email, token])
+}
+
+model Transaction {
+  id      String   @id
+  userId  String
+  amount  Float
+  planId  String
+  status  String
+  created DateTime @default(now())
+  updated DateTime
+  months  Int      @default(1)
+  boosts  Int      @default(0)
+  User    User     @relation(fields: [userId], references: [id])
 }
 
 enum TokenType {
