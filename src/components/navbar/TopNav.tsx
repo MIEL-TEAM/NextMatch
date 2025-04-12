@@ -79,7 +79,7 @@ export default async function TopNav() {
         <NavbarContent justify="end" className="gap-2">
           {userInfo ? (
             <>
-              <UserMenu userInfo={userInfo} />
+              <UserMenu userInfo={userInfo} userId={userId || undefined} />
             </>
           ) : (
             <>

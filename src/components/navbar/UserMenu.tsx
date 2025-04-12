@@ -13,10 +13,18 @@ import Link from "next/link";
 import React from "react";
 
 type UserMenuProps = {
-  userInfo: { name: string | null; image: string | null } | null;
+  userInfo: {
+    name: string | null;
+    image: string | null;
+  } | null;
+  userId?: string | undefined;
 };
 
-export default function UserMenu({ userInfo }: UserMenuProps) {
+export default function UserMenu({ userInfo, userId }: UserMenuProps) {
+  if (!userId) {
+    return null;
+  }
+
   return (
     <Dropdown placement="bottom-end">
       <DropdownTrigger>
@@ -41,12 +49,19 @@ export default function UserMenu({ userInfo }: UserMenuProps) {
             מחובר כ—{userInfo?.name}
           </DropdownItem>
         </DropdownSection>
-        <DropdownItem key="edit-profile" as={Link} href="/members/edit">
+
+        <DropdownItem key="profile" as={Link} href={`/members/${userId}`}>
           הפרופיל שלי
         </DropdownItem>
+
+        <DropdownItem key="edit-profile" as={Link} href="/members/edit">
+          ערוך פרופיל
+        </DropdownItem>
+
         <DropdownItem key="premium-page" as={Link} href="/premium">
           שדרג לפרימיום
         </DropdownItem>
+
         <DropdownItem
           key="sign-out"
           color="danger"
