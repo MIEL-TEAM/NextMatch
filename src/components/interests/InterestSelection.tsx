@@ -1,6 +1,7 @@
+// components/interests/InterestSelection.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Chip, Button, Input } from "@nextui-org/react";
 import {
   availableInterests,
@@ -9,24 +10,38 @@ import {
 import AppModal from "@/components/AppModal";
 import { SearchIcon } from "lucide-react";
 import InterestItem from "./InterestItem";
+import { useFormContext } from "react-hook-form";
 
 interface InterestSelectionProps {
-  onChange: (selected: string[]) => void;
-  defaultSelected?: string[];
-  error?: string | React.ReactNode;
-  isLoading?: boolean;
+  selectedInterests?: string[];
+  onChange?: (interests: string[]) => void;
 }
 
 export default function InterestSelection({
+  selectedInterests,
   onChange,
-  defaultSelected = [],
-  error,
-  isLoading = false,
 }: InterestSelectionProps) {
-  const [selected, setSelected] = useState<string[]>(defaultSelected);
+  // Check if inside a form context
+  const formContext = useFormContext();
+  const isInForm = !!formContext;
+
+  // Initialize selected state based on props or form
+  const [selected, setSelected] = useState<string[]>(() => {
+    if (selectedInterests) return selectedInterests;
+    if (isInForm) return formContext.getValues("interests") || [];
+    return [];
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // Update selected when props change
+  useEffect(() => {
+    if (selectedInterests) {
+      setSelected(selectedInterests);
+    }
+  }, [selectedInterests]);
 
   const handleSelectionChange = (interestId: string) => {
     const newSelected = selected.includes(interestId)
@@ -34,16 +49,34 @@ export default function InterestSelection({
       : [...selected, interestId];
 
     setSelected(newSelected);
+
+    // Update form if in form context
+    if (isInForm) {
+      formContext.setValue("interests", newSelected);
+    }
+
+    // Call onChange prop if provided
+    if (onChange) {
+      onChange(newSelected);
+    }
   };
 
   const saveInterests = () => {
-    onChange(selected);
+    if (isInForm) {
+      formContext.setValue("interests", selected);
+    }
+
+    if (onChange) {
+      onChange(selected);
+    }
+
     setIsModalOpen(false);
   };
 
   const filteredInterests = availableInterests.filter((interest) => {
     const matchesSearch =
-      interest.name.includes(searchQuery) || interest.id.includes(searchQuery);
+      interest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      interest.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       activeCategory === "all" || interest.category === activeCategory;
     return matchesSearch && matchesCategory;
@@ -147,14 +180,15 @@ export default function InterestSelection({
       color: "warning" as const,
       onPress: saveInterests,
       children: `שמור בחירות (${selected.length})`,
-      isLoading,
     },
   ];
 
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <label className="text-sm font-medium">תחומי עניין</label>
+        <label className="text-sm font-medium">
+          תחומי עניין{isInForm ? " (אופציונלי)" : ""}
+        </label>
         {selected.length > 0 && (
           <span className="text-xs text-gray-500">{selected.length} נבחרו</span>
         )}
@@ -182,7 +216,6 @@ export default function InterestSelection({
               color="primary"
               onPress={() => setIsModalOpen(true)}
               className="ml-1 shrink-0"
-              isLoading={isLoading}
             >
               ערוך
             </Button>
@@ -194,14 +227,11 @@ export default function InterestSelection({
             color="warning"
             onPress={() => setIsModalOpen(true)}
             className="w-full"
-            isLoading={isLoading}
           >
             בחר תחומי עניין
           </Button>
         )}
       </div>
-
-      {error && <p className="text-danger text-sm">{error}</p>}
 
       <AppModal
         isOpen={isModalOpen}

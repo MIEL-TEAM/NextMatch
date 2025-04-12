@@ -14,6 +14,7 @@ import { auth, signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { generateToken, getTokenByToken } from "@/lib/tokens";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
+import { revalidatePath } from "next/cache";
 
 export async function signInUser(
   data: LoginSchema
@@ -125,7 +126,7 @@ export async function registerUser(
     return { status: "success", data: user };
   } catch (error) {
     console.log(error);
-    return { status: "error", error: "הייתה תקלה, ננסה שוב?" };
+    return { status: "error", error: " Something went wrong" };
   }
 }
 
@@ -281,6 +282,7 @@ export async function completeSocialLoginProfile(
             description: data.description,
             city: data.city,
             country: data.country,
+            // Removed Interest_MemberInterests
           },
         },
       },
@@ -307,4 +309,23 @@ export async function getUserRole() {
   if (!role) throw new Error("Not in role");
 
   return role;
+}
+
+export async function setProfileIncomplete() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  await prisma.user.update({
+    where: {
+      id: session.user.id,
+    },
+    data: {
+      profileComplete: false,
+    },
+  });
+
+  revalidatePath("/profile");
+  revalidatePath("/members");
+
+  return { success: true };
 }

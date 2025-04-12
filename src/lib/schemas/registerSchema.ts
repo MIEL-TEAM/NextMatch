@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { calculateAge } from "../util";
+import { availableInterests } from "../constants/interests";
 
 export const registerSchema = z.object({
   name: z.string().min(3, {
@@ -40,15 +41,24 @@ export const profileSchema = z.object({
         message: "עליך להיות לפחות בן 18 כדי להשתמש באפליקציה",
       }
     ),
-  interests: z.array(z.string()).min(1, {
-    message: "בחר לפחות תחום עניין אחד",
-  }),
+
+  interests: z
+    .array(z.string())
+    .optional()
+    .default([])
+    .refine(
+      (interests) =>
+        interests.every((id) =>
+          availableInterests.some((interest) => interest.id === id)
+        ),
+      {
+        message: "תחומי עניין לא תקינים",
+      }
+    ),
 });
 
-export const combinedRegisterSchema = registerSchema.and(profileSchema);
+export const combinedRegisterSchema = registerSchema.merge(profileSchema);
 
 export type ProfileSchema = z.infer<typeof profileSchema>;
 
-export type RegisterSchema = z.infer<
-  typeof registerSchema & typeof profileSchema
->;
+export type RegisterSchema = z.infer<typeof combinedRegisterSchema>;

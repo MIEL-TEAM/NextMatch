@@ -1,11 +1,13 @@
-import { pusherClient } from "@/lib/pusher";
-import { MessageDto } from "@/types";
+"use client";
+
 import { usePathname, useSearchParams } from "next/navigation";
 import { Channel } from "pusher-js";
 import { useRef, useEffect, useCallback } from "react";
 import useMessageStore from "./useMessageStore";
 import { newMessageToast } from "@/components/NewMessageToast";
 import { newLikeToast } from "@/components/NotificationToast";
+import { pusherClient } from "@/lib/pusher";
+import { MessageDto } from "@/types";
 
 export const useNotificationChannel = (
   userId: string | null,

@@ -6,6 +6,7 @@ import TopNav from "@/components/navbar/TopNav";
 import { auth } from "@/auth";
 import MielLayout from "./mielLayout";
 import MobileBlocker from "@/components/MobileBlocker";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://miel-love.com"),
@@ -118,6 +119,8 @@ export default async function RootLayout({
           <TopNav />
           <MielLayout>{children}</MielLayout>
         </Providers>
+
+        <Toaster position="top-center" richColors expand={true} />
       </body>
     </html>
   );

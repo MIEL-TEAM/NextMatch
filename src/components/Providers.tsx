@@ -9,6 +9,8 @@ import { SessionProvider } from "next-auth/react";
 import React, { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "sonner";
+import InterestNotification from "@/hooks/useInterestNotification";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -44,14 +46,19 @@ export default function Providers({
 
   usePresenceChannel(userId, profileComplete);
   useNotificationChannel(userId, profileComplete);
+
   return (
     <SessionProvider>
       <NextUIProvider>
+        {/* This is essential for sonner toasts to appear */}
+        <Toaster position="top-center" richColors />
         <ToastContainer
           position="bottom-right"
           hideProgressBar
           className="z-50"
         />
+        {/* Notice we're using the component now, not the hook */}
+        {userId && <InterestNotification userId={userId} />}
         {children}
       </NextUIProvider>
     </SessionProvider>

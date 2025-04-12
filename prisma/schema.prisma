@@ -47,26 +47,36 @@ model User {
   accounts             Account[]
 }
 
+model Interest {
+  id       String  @id @default(cuid())
+  memberId String
+  name     String
+  icon     String
+  category String?
+  member   Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
 model Member {
-  id                String    @id @default(cuid())
-  userId            String    @unique
+  id                String     @id @default(cuid())
+  userId            String     @unique
   name              String
   dateOfBirth       DateTime
   gender            String
-  created           DateTime  @default(now())
-  updated           DateTime  @default(now())
+  created           DateTime   @default(now())
+  updated           DateTime   @default(now())
   description       String
   city              String
   country           String
   image             String?
   boostedUntil      DateTime?
-  sourceLikes       Like[]    @relation("source")
-  targetLikes       Like[]    @relation("target")
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceLikes       Like[]     @relation("source")
+  targetLikes       Like[]     @relation("target")
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   Message           Message[]
-  recipientMessages Message[] @relation("recipient")
-  senderMessages    Message[] @relation("sender")
+  recipientMessages Message[]  @relation("recipient")
+  senderMessages    Message[]  @relation("sender")
   photos            Photo[]
+  interests         Interest[]
 }
 
 model Photo {

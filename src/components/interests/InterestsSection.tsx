@@ -3,12 +3,13 @@
 import React from "react";
 import { Card, Chip } from "@nextui-org/react";
 import { interestCategories } from "@/lib/constants/interests";
+import { MdInterests } from "react-icons/md";
 
 export type Interest = {
   id: string;
   name: string;
   icon: string;
-  category?: string;
+  category?: string | null;
 };
 
 type InterestsSectionProps = {
@@ -18,7 +19,6 @@ type InterestsSectionProps = {
 export default function InterestsSection({
   interests = [],
 }: InterestsSectionProps) {
-  // Group interests by category
   const interestsByCategory = interests.reduce((acc, interest) => {
     const category = interest.category || "other";
     if (!acc[category]) {
@@ -55,6 +55,11 @@ export default function InterestsSection({
 
   return (
     <Card className="p-4 shadow-sm">
+      <h2 className="text-xl font-semibold text-secondary mb-4 border-b pb-2 flex items-center gap-2">
+        תחומי עניין
+        <MdInterests className="text-orange-500" />
+      </h2>
+
       <div className="space-y-4">
         {sortedCategoryIds.map((categoryId) => {
           const categoryInterests = interestsByCategory[categoryId];
