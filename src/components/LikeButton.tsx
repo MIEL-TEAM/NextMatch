@@ -7,7 +7,7 @@ import { PiSpinnerGap } from "react-icons/pi";
 type LikeButtonProps = {
   loading: boolean;
   hasLiked: boolean;
-  toggleLike: () => void;
+  toggleLike: (e: React.MouseEvent) => void;
 };
 
 export default function LikeButton({

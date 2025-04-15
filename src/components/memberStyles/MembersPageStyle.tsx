@@ -44,11 +44,10 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
   noResults = false,
 }) => {
   const searchParams = useSearchParams();
-
   const initialFilter = searchParams.get("filter") || "all";
+
   const [activeFilter, setActiveFilter] = useState(initialFilter);
-  const [spotlight, setSpotlight] = useState<Member | null>(null);
-  const [spotlightIndex, setSpotlightIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
 
@@ -58,29 +57,35 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
 
   const hasSpotlightMembers = membersWithImages.length > 0;
 
+  const currentSpotlightMember = hasSpotlightMembers
+    ? membersWithImages[currentIndex % membersWithImages.length].member
+    : null;
+
   useEffect(() => {
     setIsMounted(true);
-
-    if (membersWithImages.length > 0) {
-      setSpotlight(membersWithImages[0].member);
-    }
-  }, [membersWithImages]);
+  }, []);
 
   useEffect(() => {
-    if (membersWithImages.length === 0) return;
+    if (!hasSpotlightMembers || membersWithImages.length <= 1) return;
 
-    const intervalId = setInterval(() => {
+    const timerId = setInterval(() => {
       setIsChangingSpotlight(true);
       setTimeout(() => {
-        const nextIndex = (spotlightIndex + 1) % membersWithImages.length;
-        setSpotlightIndex(nextIndex);
-        setSpotlight(membersWithImages[nextIndex].member);
-        setIsChangingSpotlight(false);
+        setCurrentIndex((prevIndex) => {
+          const newIndex = (prevIndex + 1) % membersWithImages.length;
+          return newIndex;
+        });
+
+        setTimeout(() => {
+          setIsChangingSpotlight(false);
+        }, 300);
       }, 300);
     }, 4000);
 
-    return () => clearInterval(intervalId);
-  }, [membersWithImages, spotlightIndex]);
+    return () => {
+      clearInterval(timerId);
+    };
+  }, [hasSpotlightMembers, membersWithImages.length]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -164,9 +169,9 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
 
         {hasSpotlightMembers && (
           <SpotlightMember
-            spotlight={spotlight}
+            spotlight={currentSpotlightMember}
             isChangingSpotlight={isChangingSpotlight}
-            spotlightIndex={spotlightIndex}
+            spotlightIndex={currentIndex}
             membersData={membersWithImages}
             calculateAge={calculateAge}
           />
@@ -202,7 +207,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
           animate="show"
         >
           <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6">
-            {membersData.map(({ member }) => (
+            {membersData.map(({ member, photos }) => (
               <motion.div
                 key={member.id}
                 variants={item}
@@ -215,7 +220,11 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
               >
                 <div className="absolute inset-1 bg-gradient-to-r from-amber-300/20 to-orange-400/20 rounded-lg blur-[0.5px] opacity-0 group-hover:opacity-30 transition duration-300"></div>
                 <div className="relative">
-                  <MemberCard member={member} likeIds={likeIds} />
+                  <MemberCard
+                    member={member}
+                    likeIds={likeIds}
+                    memberPhotos={photos}
+                  />
                 </div>
               </motion.div>
             ))}

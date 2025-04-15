@@ -29,14 +29,24 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
       <div className="absolute inset-0 shadow-[0_8px_30px_rgb(255,140,0,0.12)] rounded-xl"></div>
 
       <AnimatePresence mode="wait">
-        {spotlight && !isChangingSpotlight && (
+        {spotlight && (
           <motion.div
             key={spotlight.id}
             className="relative bg-white rounded-xl shadow-sm overflow-hidden"
             initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              transition: {
+                duration: isChangingSpotlight ? 0.3 : 0.6,
+                ease: "easeInOut",
+              },
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.98,
+              transition: { duration: 0.3 },
+            }}
           >
             <div className="flex flex-col md:flex-row">
               <div
@@ -67,7 +77,7 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
                     הצטרפו לאחרונה
                     <span className="mr-1">✨</span>
                   </h3>
-                  <div className="flex gap-x-1">
+                  <div className="flex gap-x-1 overflow-hidden">
                     {membersData.slice(0, 5).map((_, idx) => (
                       <span
                         key={idx}
