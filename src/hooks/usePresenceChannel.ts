@@ -4,6 +4,21 @@ import { Channel, Members } from "pusher-js";
 import { pusherClient } from "@/lib/pusher";
 import { updateLastActive } from "@/app/actions/memberActions";
 
+// Throttle function to limit frequency of operations
+function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let lastCall = 0;
+  return (...args: Parameters<T>) => {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      func(...args);
+    }
+  };
+}
+
 export const usePresenceChannel = (
   userId: string | null,
   profileComplete: boolean
@@ -35,6 +50,18 @@ export const usePresenceChannel = (
     [remove]
   );
 
+  // Throttle the update last active function to reduce database writes
+  const throttledUpdateLastActive = useCallback(
+    throttle(async () => {
+      try {
+        await updateLastActive();
+      } catch (error) {
+        console.error("Error updating last active:", error);
+      }
+    }, 30000), // Only update every 30 seconds maximum
+    []
+  );
+
   useEffect(() => {
     if (!userId || !profileComplete) return;
     if (!channelRef.current) {
@@ -44,7 +71,7 @@ export const usePresenceChannel = (
         "pusher:subscription_succeeded",
         async (members: Members) => {
           handleSetMembers(Object.keys(members.members));
-          await updateLastActive();
+          throttledUpdateLastActive();
         }
       );
 
@@ -61,26 +88,39 @@ export const usePresenceChannel = (
           handleRemoveMember(member.id);
         }
       );
-    }
 
-    return () => {
-      if (channelRef.current && channelRef.current.subscribed) {
-        channelRef.current.unsubscribe();
-        channelRef.current.unbind(
-          "pusher:subscription_succeeded",
-          handleSetMembers
-        );
-        channelRef.current.unbind("pusher:member_added", handleAddMember);
-        channelRef.current.unbind("pusher:member_removed", handleRemoveMember);
-        channelRef.current = null;
-      }
-    };
+      // Additional interval to update last active status periodically
+      // This ensures updates even when the user remains inactive on a page
+      const interval = setInterval(() => {
+        if (document.visibilityState === "visible") {
+          throttledUpdateLastActive();
+        }
+      }, 60000); // Check every minute
+
+      return () => {
+        clearInterval(interval);
+        if (channelRef.current && channelRef.current.subscribed) {
+          channelRef.current.unsubscribe();
+          channelRef.current.unbind(
+            "pusher:subscription_succeeded",
+            handleSetMembers
+          );
+          channelRef.current.unbind("pusher:member_added", handleAddMember);
+          channelRef.current.unbind(
+            "pusher:member_removed",
+            handleRemoveMember
+          );
+          channelRef.current = null;
+        }
+      };
+    }
   }, [
     handleSetMembers,
     handleAddMember,
     handleRemoveMember,
     userId,
     profileComplete,
+    throttledUpdateLastActive,
   ]);
 
   return { set, add, remove };

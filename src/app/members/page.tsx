@@ -1,5 +1,5 @@
 import React from "react";
-import { getMembers, getMemberPhotos } from "../actions/memberActions";
+import { getMembers, getMembersWithPhotos } from "../actions/memberActions";
 import { fetchCurrentUserLikeIds } from "../actions/likeActions";
 import { GetMemberParams } from "@/types";
 import EmptyState from "@/components/EmptyState";
@@ -9,6 +9,8 @@ type MembersPageProps = {
   searchParams: Promise<GetMemberParams>;
 };
 
+export const revalidate = 60;
+
 export default async function MembersPage({ searchParams }: MembersPageProps) {
   const params = await searchParams;
   const { items: members, totalCount } = await getMembers(params);
@@ -17,12 +19,14 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const isOnlineFilter =
     params.filter === "online" || params.onlineOnly === "true";
 
-  const membersWithPhotos = await Promise.all(
-    members.map(async (member) => {
-      const photos = await getMemberPhotos(member.userId);
-      return { member, photos: photos || [] };
-    })
-  );
+  // Optimize photo fetching with batch query
+  const memberIds = members.map((member) => member.userId);
+  const photosByMemberId = await getMembersWithPhotos(memberIds);
+
+  const membersWithPhotos = members.map((member) => ({
+    member,
+    photos: photosByMemberId[member.userId] || [],
+  }));
 
   if (!members || (members.length === 0 && !isOnlineFilter)) {
     return (

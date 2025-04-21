@@ -5,6 +5,7 @@ import { GetMemberParams, PaginatedResponse } from "@/types";
 import { Member, Photo } from "@prisma/client";
 import { addYears } from "date-fns";
 import { getAuthUserId } from "./authActions";
+import { cache } from "react";
 
 export async function getMembers({
   ageRange = "18,100",
@@ -96,7 +97,40 @@ export async function getMembers({
   }
 }
 
-export async function getMemberByUserId(userId: string) {
+export async function getMembersWithPhotos(memberIds: string[]) {
+  try {
+    const currentUserId = await getAuthUserId();
+
+    const photos = await prisma.photo.findMany({
+      where: {
+        member: {
+          userId: { in: memberIds },
+        },
+        // Only return approved photos for other users
+        ...(!memberIds.includes(currentUserId) ? { isApproved: true } : {}),
+      },
+      orderBy: { isApproved: "desc" },
+    });
+
+    // Group photos by userId
+    const photosByUserId = photos.reduce((acc, photo) => {
+      const member = photo.memberId;
+      if (!acc[member]) acc[member] = [];
+      acc[member].push(photo);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    return photosByUserId;
+  } catch (error) {
+    console.error(
+      "Error fetching member photos in batch:",
+      error ? JSON.stringify(error) : "Unknown error"
+    );
+    return {};
+  }
+}
+
+export const getMemberByUserId = cache(async (userId: string) => {
   return prisma.member.findUnique({
     where: {
       userId: userId,
@@ -109,7 +143,7 @@ export async function getMemberByUserId(userId: string) {
       },
     },
   });
-}
+});
 
 export async function getMemberPhotosByUserId(userId: string) {
   try {
