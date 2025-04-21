@@ -50,12 +50,21 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
+  const [shouldShowSpotlight, setShouldShowSpotlight] = useState(true);
 
   const membersWithImages = membersData.filter(
     ({ member }) => member && member.image
   );
 
   const hasSpotlightMembers = membersWithImages.length > 0;
+
+  useEffect(() => {
+    if (!hasSpotlightMembers) {
+      setShouldShowSpotlight(false);
+    } else {
+      setShouldShowSpotlight(true);
+    }
+  }, [hasSpotlightMembers]);
 
   const currentSpotlightMember = hasSpotlightMembers
     ? membersWithImages[currentIndex % membersWithImages.length].member
@@ -167,7 +176,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
           מצא את החיבור המשמעותי הבא שלך באמצעות האלגוריתם החכם שלנו
         </motion.p>
 
-        {hasSpotlightMembers && (
+        {shouldShowSpotlight && hasSpotlightMembers && (
           <SpotlightMember
             spotlight={currentSpotlightMember}
             isChangingSpotlight={isChangingSpotlight}

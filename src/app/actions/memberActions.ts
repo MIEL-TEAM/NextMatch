@@ -106,7 +106,6 @@ export async function getMembersWithPhotos(memberIds: string[]) {
         member: {
           userId: { in: memberIds },
         },
-        // Only return approved photos for other users
         ...(!memberIds.includes(currentUserId) ? { isApproved: true } : {}),
       },
       orderBy: { isApproved: "desc" },

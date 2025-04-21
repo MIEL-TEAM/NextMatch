@@ -35,19 +35,16 @@ export default function MemberImageCarousel({
     setCurrentIndex(validIndex);
   };
 
-  // Set up swipe handlers
   const handlers = useSwipeable({
     onSwipedLeft: () => goToIndex(currentIndex + 1),
     onSwipedRight: () => goToIndex(currentIndex - 1),
     trackMouse: true,
   });
 
-  // Safety check - if we somehow have no valid images
   if (uniqueImages.length === 0) {
     return children({ url: "/images/user.png", id: "default" });
   }
 
-  // Safety check - if our current index is out of bounds
   const safeIndex = Math.min(currentIndex, uniqueImages.length - 1);
   const currentImage = uniqueImages[safeIndex];
 
@@ -57,7 +54,6 @@ export default function MemberImageCarousel({
 
       {uniqueImages.length > 1 && (
         <>
-          {/* Previous button */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -76,7 +72,6 @@ export default function MemberImageCarousel({
             <ChevronLeft className="text-white w-5 h-5" />
           </button>
 
-          {/* Next button */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -95,7 +90,6 @@ export default function MemberImageCarousel({
             <ChevronRight className="text-white w-5 h-5" />
           </button>
 
-          {/* Indicator dots - exactly like the reference image */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center justify-center z-50">
             {uniqueImages.map((_, idx) => (
               <button

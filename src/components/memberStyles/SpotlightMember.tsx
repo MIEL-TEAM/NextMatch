@@ -24,6 +24,8 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
 
   if (!spotlight || !membersData.length) return null;
 
+  const imageUrl = spotlight.image || "/images/placeholder.jpg";
+
   return (
     <div className="max-w-4xl mx-auto mb-10 sm:mb-16 relative">
       <div className="absolute inset-0 shadow-[0_8px_30px_rgb(255,140,0,0.12)] rounded-xl"></div>
@@ -55,7 +57,7 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
               >
                 <div className="absolute inset-0">
                   <Image
-                    src={spotlight.image || "/images/placeholder.jpg"}
+                    src={imageUrl}
                     alt={spotlight.name || "Profile image"}
                     className="object-cover"
                     width={600}
