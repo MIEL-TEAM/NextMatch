@@ -52,9 +52,13 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
   const [shouldShowSpotlight, setShouldShowSpotlight] = useState(true);
 
-  const membersWithImages = membersData.filter(
-    ({ member }) => member && member.image
-  );
+  const membersWithImages = membersData.filter(({ member }) => {
+    if (!member || !member.image) return false;
+
+    if (member.image.includes("googleusercontent")) return true;
+
+    return true;
+  });
 
   const hasSpotlightMembers = membersWithImages.length > 0;
 
