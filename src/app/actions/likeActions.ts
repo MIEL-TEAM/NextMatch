@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "./authActions";
 import { pusherServer } from "@/lib/pusher";
+import { trackUserInteraction } from "./smartMatchActions";
 
 export async function toggleLikeMember(targetUserId: string, isLiked: boolean) {
   try {
@@ -33,6 +34,11 @@ export async function toggleLikeMember(targetUserId: string, isLiked: boolean) {
           },
         },
       });
+
+      // Track the like interaction for smart matching
+      await trackUserInteraction(targetUserId, "like").catch((e) =>
+        console.error("Failed to track like interaction:", e)
+      );
 
       await pusherServer.trigger(`private-${targetUserId}`, "like:new", {
         name: like.sourceMember.name,

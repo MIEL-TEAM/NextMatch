@@ -57,26 +57,29 @@ model Interest {
 }
 
 model Member {
-  id                String     @id @default(cuid())
-  userId            String     @unique
-  name              String
-  dateOfBirth       DateTime
-  gender            String
-  created           DateTime   @default(now())
-  updated           DateTime   @default(now())
-  description       String
-  city              String
-  country           String
-  image             String?
-  boostedUntil      DateTime?
-  sourceLikes       Like[]     @relation("source")
-  targetLikes       Like[]     @relation("target")
-  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Message           Message[]
-  recipientMessages Message[]  @relation("recipient")
-  senderMessages    Message[]  @relation("sender")
-  photos            Photo[]
-  interests         Interest[]
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  name               String
+  dateOfBirth        DateTime
+  gender             String
+  created            DateTime          @default(now())
+  updated            DateTime          @default(now())
+  description        String
+  city               String
+  country            String
+  image              String?
+  boostedUntil       DateTime?
+  sourceLikes        Like[]            @relation("source")
+  targetLikes        Like[]            @relation("target")
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Message            Message[]
+  recipientMessages  Message[]         @relation("recipient")
+  senderMessages     Message[]         @relation("sender")
+  photos             Photo[]
+  interests          Interest[]
+  interactions       UserInteraction[] @relation("userInteractions")
+  targetInteractions UserInteraction[] @relation("targetInteractions")
+  preference         UserPreference?
 }
 
 model Photo {
@@ -133,6 +136,26 @@ model Transaction {
   months  Int      @default(1)
   boosts  Int      @default(0)
   User    User     @relation(fields: [userId], references: [id])
+}
+
+model UserInteraction {
+  id        String   @id @default(cuid())
+  userId    String
+  targetId  String
+  action    String
+  duration  Int?
+  timestamp DateTime @default(now())
+  weight    Float    @default(1.0)
+  user      Member   @relation("userInteractions", fields: [userId], references: [userId], onDelete: Cascade)
+  target    Member   @relation("targetInteractions", fields: [targetId], references: [userId], onDelete: Cascade)
+}
+
+model UserPreference {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  preferenceData Json // Stores learned preference vectors
+  lastUpdated    DateTime @default(now())
+  user           Member   @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
 
 enum TokenType {

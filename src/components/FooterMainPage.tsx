@@ -2,14 +2,42 @@
 
 import { FC } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const MielFooter: FC = () => {
   return (
     <footer
-      className="bg-gray-900 text-white py-12 mt-16 rounded-2xl"
+      className="bg-black/90 text-white py-12 mt-32 relative overflow-hidden"
       dir="rtl"
     >
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400/80 via-amber-500/80 to-amber-600/80"></div>
+      <div className="absolute -top-12 right-1/2 transform translate-x-1/2 w-24 h-24 opacity-95 pointer-events-none">
+        <Image
+          src="/images/fluffy-heart.png"
+          alt="Miel Heart"
+          width={96}
+          height={96}
+          className="object-contain"
+        />
+      </div>
+
       <div className="container mx-auto px-4">
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-sm border border-amber-500/20">
+            <Image
+              src="/images/miel.png"
+              alt="Miel Heart"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+            <span className="text-2xl font-bold text-white">
+              <span className="text-amber-400">M</span>iel
+            </span>
+          </div>
+        </div>
+
         <div className="mb-12">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-amber-400">
@@ -32,11 +60,36 @@ const MielFooter: FC = () => {
           </div>
         </div>
 
+        {/* New colorful divider */}
+        <div className="relative py-8 mb-8">
+          <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 flex items-center">
+            <div className="relative">
+              <Image
+                src="/images/miel.png"
+                alt="Miel Heart"
+                width={48}
+                height={48}
+                className="object-contain"
+              />
+            </div>
+          </div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></div>
+        </div>
+
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
+            <div className="mb-4 md:mb-0 flex items-center">
+              <div className="relative w-5 h-5 mr-2">
+                <Image
+                  src="/images/miel.png"
+                  alt="Miel Heart"
+                  fill
+                  className="object-contain"
+                />
+              </div>
               <p className="text-sm text-gray-400">
-                © 2024 מיאל בע״מ, כל הזכויות שמורות.
+                © 2024 <span className="text-amber-400 font-medium">Miel</span>,
+                כל הזכויות שמורות.
               </p>
             </div>
 

@@ -15,11 +15,19 @@ export default function LikeButton({
   hasLiked,
   toggleLike,
 }: LikeButtonProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleLike(e);
+  };
+
   return (
     <>
       {!loading ? (
         <div
-          onClick={toggleLike}
+          onClick={handleClick}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           className="relative hover:opacity-80 translate cursor-pointer"
         >
           <AiOutlineHeart

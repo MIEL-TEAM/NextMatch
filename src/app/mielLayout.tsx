@@ -41,7 +41,7 @@ export default function MielLayout({ children }: MielLayoutProps) {
         />
       </div>
 
-      <main className="container mx-auto relative z-10 py-16">{children}</main>
+      <main className="relative z-10 pt-14">{children}</main>
     </div>
   );
 }

@@ -2,224 +2,258 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Quote } from "lucide-react";
 
 const TestimonialsSection = () => {
-  // Testimonial data structure
+  // Testimonial data with unique content for each testimonial
   const testimonials = [
     {
       id: 1,
       names: "שירה ואביב",
       content:
-        "הרגשתי בודדה בעיר הולדתי כי רוב החברים שלי כבר היו בזוגיות בזמן שהייתי בחו״ל. שנינו החלטנו להוריד את מיאל כי שמענו שהיא מתמקדת בחיבורים אמיתיים.",
-      extendedContent:
-        "בניגוד לאפליקציות אחרות, מיאל עזרה לנו להתחבר באמת, ולא רק לסמן עוד ועוד פרופילים. בלעדיה ייתכן שלעולם לא היינו נפגשים ויוצאים למסע הנפלא הזה. תודה על הגישה המיוחדת שלכם לחיבור בין אנשים.",
+        "אפליקציות היכרויות אחרות היו כמו ירי בחבית. אבל אנחנו התחברנו מיד במיאל, והשיחה זרמה בטבעיות. אנחנו ביחד כבר יותר משנה.",
+      avatarPath: "/images/testimonials/couple1.png",
     },
     {
       id: 2,
       names: "אלון ומיכל",
       content:
-        "הודות למיאל מצאתי את אהבת חיי ואנחנו עומדים להתחתן. האפליקציה עזרה לנו להתמקד בקשר איכותי במקום בכמות.",
-      extendedContent:
-        "אחרי שניסיתי אפליקציות אחרות והרגשתי שזה כמו סרט נע של פרופילים, מיאל הייתה רענון אמיתי. האלגוריתם הציג לי פחות התאמות, אבל איכותיות יותר. פגשתי את מיכל ומהשיחות הראשונות ידעתי שיש כאן משהו אמיתי ועמוק.",
+        "הייאוש מאפליקציות היכרויות כמעט גרם לי לוותר. במיאל מצאתי את מיכל כבר בשבוע הראשון, והחיבור היה מיידי. מתכננים חתונה בקרוב.",
+      avatarPath: "/images/testimonials/couple2.png",
     },
     {
       id: 3,
       names: "גבריאל ואור",
       content:
-        "הכרנו במיאל במהלך הסגר של הקורונה. היא מירושלים ואני מתל אביב. המערכת הציגה לנו פחות אנשים, אבל בדיוק את אלה שמתאימים לנו.",
-      extendedContent:
-        "אהבתי שלא הרגשתי לחץ לסמן עוד ועוד פרופילים. במיאל הרגשתי שכל התאמה ראויה לתשומת לב מלאה. אחרי שיחות משמעותיות, ידעתי שמצאתי את האחת. עכשיו אנחנו גרים יחד כבר שנה ומתכננים חתונה.",
+        "בזכות מיאל והאלגוריתם החכם שלו, מצאתי את האחד שמבין אותי באמת. המסלול שלנו היה פשוט - מהודעה ראשונה לאהבה אמיתית.",
+      avatarPath: "/images/testimonials/couple3.png",
     },
     {
       id: 4,
       names: "רותם ודניאל",
       content:
-        "התייאשתי מאפליקציות היכרויות אחרות בגלל ההתמכרות לסוויפים והשטחיות. במיאל הרגשתי חוויה אחרת לגמרי, ממוקדת באיכות ולא בכמות.",
-      extendedContent:
-        "בדייט הראשון שלנו שנמשך 6 שעות דיברנו על כמה התהליך במיאל שונה - אין עוד סוויפ אינסופי, אלא חיבורים אמיתיים. האפליקציה עזרה לנו להתמקד זה בזה במקום לחפש את האופציה הבאה. היום אנחנו מאורסים ומאושרים.",
+        "חיפשנו קשר אמיתי, לא עוד שיחות שטחיות. במיאל גילינו שאפשר להתחבר ברמה עמוקה יותר. הטכנולוגיה שלהם באמת עובדת.",
+      avatarPath: "/images/testimonials/couple4.png",
     },
     {
       id: 5,
       names: "טל ועומר",
       content:
-        "אחרי שנים של תסכול באפליקציות היכרויות, מיאל הייתה גילוי מרענן. הם באמת מבינים מה זה אומר ליצור חיבור אמיתי.",
-      extendedContent:
-        "אהבתי איך מיאל מגבילה את כמות האנשים שאפשר לראות ביום. זה גרם לי להקדיש זמן אמיתי לכל פרופיל במקום 'לשחק בלוטו' עם סוויפים אינסופיים. פגשתי את עומר אחרי שבועיים באפליקציה ומיד הרגשנו חיבור אמיתי. היום אנחנו כבר שנתיים ביחד.",
-    },
-    {
-      id: 6,
-      names: "ליאת ויואב",
-      content:
-        "מיאל הבינה בדיוק את מה שחיפשתי ביחסים, לעומת אפליקציות אחרות שהרגישו כמו קטלוג אינסופי. החיבור שמצאתי עם יואב הוא אמיתי ועמוק.",
-      extendedContent:
-        "אני מודה על ההגבלות החכמות שיש במיאל, שמונעות את ההתמכרות לסוויפים. הן אפשרו לי להתמקד באיכות, לא בכמות. שלושה חודשים אחרי שהכרנו, עברנו לגור יחד ואנחנו כעת מתכננים את העתיד שלנו.",
-    },
-    {
-      id: 7,
-      names: "נועה ואיתי",
-      content:
-        "אחרי שנים של דייטים שטחיים, מיאל עזרה לי למצוא קשר אמיתי. הגישה השונה שלהם לדייטינג, שמונעת התמכרות, עשתה את כל ההבדל.",
-      extendedContent:
-        "האלגוריתם של מיאל הציג לי רק כמה התאמות פוטנציאליות ביום, אבל איכותיות. זה גרם לי להתמקד בכל אחת ולא לחפש אינסופית. איתי היה ההתאמה השלישית שלי, ואחרי שיחה אחת ידעתי שזה שונה מכל הדייטים הקודמים שהיו לי.",
-    },
-    {
-      id: 8,
-      names: "אורי והילה",
-      content:
-        "מיאל שינתה את התפיסה שלי לגבי דייטינג אונליין. במקום להציף אותי באינסוף אפשרויות, הם עזרו לי להתמקד במה שבאמת חשוב - קשר אמיתי.",
-      extendedContent:
-        "אפליקציות אחרות גרמו לי להרגיש כמו בקזינו - עוד סוויפ, עוד סוויפ, אולי המזל יבוא. מיאל גרמה לי להאט ולהסתכל באמת. פגשתי את הילה לפני 8 חודשים והקשר שלנו עמוק ואותנטי בצורה שלא הכרתי קודם.",
-    },
-    {
-      id: 9,
-      names: "מאיה ודור",
-      content:
-        "תמיד הייתי סקפטית לגבי אפליקציות היכרויות, עד שחברה המליצה לי על מיאל. ההבדל הגדול הוא שמיאל לא מנסה להשאיר אותך באפליקציה, אלא לעזור לך למצוא קשר אמיתי.",
-      extendedContent:
-        "הייתי בהלם מהשינוי בחוויה - אפליקציית דייטינג שלא מנסה לגרום לך להתמכר לסוויפים. במקום זה, קיבלתי מעט התאמות, אבל כולן היו רלוונטיות באמת. דור היה ההתאמה החמישית שלי, וכבר 6 חודשים אנחנו לא מפסיקים להודות למיאל.",
-    },
-    {
-      id: 10,
-      names: "גיל וענבר",
-      content:
-        "חיפשתי מישהי עם ערכים דומים לשלי והתאכזבתי מרוב האפליקציות. מיאל הפתיעה אותי בהתמקדות באיכות במקום בכמות הסוויפים.",
-      extendedContent:
-        "מיאל הייתה כמו לשבת עם חבר טוב שמכיר אותך ומציע לך שידוכים אמיתיים, לא סתם עוד פרופיל לסמן. בזכות הגישה הזו פגשתי את ענבר, ואחרי שנה של קשר מדהים אנחנו מתכננים את החיים המשותפים שלנו. תודה שאתם לא עוד אפליקציית דייטים.",
+        "בפעם הראשונה הרגשתי שאפליקציה באמת מבינה את מי אני מחפשת. המפגש הראשון עם עומר היה כמו לפגוש חבר ותיק. היום אנחנו משפחה.",
+      avatarPath: "/images/testimonials/couple5.png",
     },
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [direction, setDirection] = useState<number>(0); // -1 left, 0 none, 1 right
 
-  // Check if screen is mobile-sized
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkIfMobile);
-
-    // Clean up
-    return () => window.removeEventListener("resize", checkIfMobile);
-  }, []);
-
+  // Navigate to next testimonial
   const nextTestimonial = useCallback(() => {
+    setDirection(1);
     setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
   }, [testimonials.length]);
 
-  const handleMouseEnter = () => setIsAutoPlaying(false);
-  const handleMouseLeave = () => setIsAutoPlaying(true);
+  // Jump to specific testimonial
+  const goToTestimonial = useCallback(
+    (index: number) => {
+      if (index === currentIndex) return;
+      setDirection(index > currentIndex ? 1 : -1);
+      setCurrentIndex(index);
+      setProgress(0);
+      setIsAutoPlaying(false);
 
+      // Resume auto playing after 8 seconds of inactivity
+      const timeout = setTimeout(() => {
+        setIsAutoPlaying(true);
+      }, 8000);
+
+      return () => clearTimeout(timeout);
+    },
+    [currentIndex]
+  );
+
+  // Progress animation and auto-play
   useEffect(() => {
     if (!isAutoPlaying) return;
 
-    const interval = setInterval(nextTestimonial, 8000);
-    return () => clearInterval(interval);
+    const storyDuration = 7000; // 7 seconds per testimonial
+    const updateInterval = 30; // Smoother 30ms updates
+    const progressIncrement = (updateInterval / storyDuration) * 100;
+
+    // Progress bar animation
+    const progressTimer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          return 0; // Reset progress when reaching 100%
+        }
+        return prev + progressIncrement;
+      });
+    }, updateInterval);
+
+    // Story advancement
+    const storyTimer = setInterval(() => {
+      nextTestimonial();
+      setProgress(0); // Reset progress on testimonial change
+    }, storyDuration);
+
+    return () => {
+      clearInterval(progressTimer);
+      clearInterval(storyTimer);
+    };
   }, [nextTestimonial, isAutoPlaying]);
 
-  return (
-    <section className="py-16 px-4" dir="rtl">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-amber-800">
-          סיפורי אהבה שנוצרו במיאל
-        </h2>
+  // Animation variants for smoother transitions
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 100 : -100,
+      opacity: 0,
+    }),
+  };
 
-        <div
-          className="relative w-full"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+  return (
+    <section className="py-20 relative overflow-hidden" dir="rtl">
+      {/* Beautiful gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black/90"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-amber-900/5 to-amber-700/5 mix-blend-overlay"></div>
+
+      {/* Content container */}
+      <div className="max-w-6xl mx-auto relative z-10 px-4 sm:px-6 md:px-8">
+        {/* Section heading with animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-16 text-center"
         >
-          <div className="overflow-hidden">
-            <AnimatePresence mode="wait">
-              {isMobile ? (
-                <motion.div
-                  key={`mobile-${currentIndex}`}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full"
-                >
-                  <div className="bg-gray-900 text-white p-6 rounded-xl shadow-lg relative mx-auto max-w-xl">
-                    <Quote className="w-12 h-12 text-gray-600 absolute top-2 right-2 opacity-30" />
-                    <h3 className="text-xl font-bold mb-4 text-amber-400">
-                      {testimonials[currentIndex].names}
-                      <hr className="border-0 h-px bg-amber-400/30 w-4/5 mt-2 mb-0" />
-                    </h3>
-                    <div className="space-y-4">
-                      <p className="text-gray-300">
-                        {testimonials[currentIndex].content}
-                      </p>
-                      {testimonials[currentIndex].extendedContent && (
-                        <p className="text-gray-300">
-                          {testimonials[currentIndex].extendedContent}
-                        </p>
-                      )}
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white inline-block relative">
+            מה המשתמשים שלנו אומרים
+            <motion.div
+              className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600"
+              initial={{ width: 0 }}
+              animate={{ width: "100%" }}
+              transition={{ delay: 0.5, duration: 1 }}
+            />
+          </h2>
+        </motion.div>
+
+        {/* Testimonials container */}
+        <div className="relative w-full overflow-hidden mx-auto max-w-4xl">
+          <AnimatePresence initial={false} mode="wait" custom={direction}>
+            <motion.div
+              key={currentIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.5 },
+              }}
+              className="testimonial-container"
+            >
+              <div className="backdrop-blur-sm bg-white/5 rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+                <div className="p-8 md:p-10">
+                  {/* Quote mark */}
+                  <div className="absolute top-6 right-8 text-7xl text-amber-400/20 font-serif">
+                    ״
+                  </div>
+
+                  {/* Testimonial content */}
+                  <div className="pt-6 relative">
+                    <motion.p
+                      className="text-xl md:text-2xl font-medium leading-relaxed text-white"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.6 }}
+                    >
+                      {testimonials[currentIndex].content}
+                    </motion.p>
+
+                    {/* Couple info */}
+                    <div className="mt-8 flex items-center justify-start gap-4">
+                      <div>
+                        <motion.p
+                          className="text-lg font-medium text-amber-200"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.4, duration: 0.6 }}
+                        >
+                          {testimonials[currentIndex].names}
+                        </motion.p>
+                        <motion.div
+                          className="text-xs text-white/50"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5, duration: 0.6 }}
+                        >
+                          מצאו אהבה במיאל
+                        </motion.div>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={`desktop-${currentIndex}`}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full grid grid-cols-3 gap-6"
-                >
-                  {[0, 1, 2].map((offset) => {
-                    const testimonialIndex =
-                      (currentIndex + offset) % testimonials.length;
-                    const testimonial = testimonials[testimonialIndex];
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
-                    return (
-                      <div
-                        key={testimonial.id}
-                        className="bg-gray-900 text-white p-6 rounded-xl shadow-lg relative"
-                      >
-                        <Quote className="w-12 h-12 text-gray-600 absolute top-2 right-2 opacity-30" />
-                        <h3 className="text-xl font-bold mb-4 text-amber-400">
-                          {testimonial.names}
-                          <hr className="border-0 h-px bg-amber-400/30 w-4/5 mt-2 mb-0" />
-                        </h3>
-                        <div className="space-y-4">
-                          <p className="text-gray-300">{testimonial.content}</p>
-                          {testimonial.extendedContent && (
-                            <p className="text-gray-300">
-                              {testimonial.extendedContent}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="flex justify-center mt-8 gap-2">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  currentIndex === index
-                    ? "bg-amber-500 scale-125"
-                    : "bg-gray-400"
-                }`}
-                aria-label={`עבור לעדות ${index + 1}`}
-              />
-            ))}
+          {/* Progress indicators */}
+          <div className="mt-8">
+            <div className="flex-1 max-w-md mx-auto">
+              <div className="flex items-center justify-center gap-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToTestimonial(index)}
+                    className="relative h-1.5 rounded-full overflow-hidden transition-all duration-300 focus:outline-none"
+                    style={{
+                      width: currentIndex === index ? "60px" : "30px",
+                      backgroundColor:
+                        currentIndex === index
+                          ? "rgba(255,255,255,0.2)"
+                          : "rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    {index === currentIndex && (
+                      <motion.div
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-orange-600"
+                        style={{
+                          width: `${progress}%`,
+                        }}
+                        transition={{ duration: 0.1 }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Add global styles for animations */}
+      <style jsx global>{`
+        @keyframes slow-spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+        .animate-slow-spin {
+          animation: slow-spin 8s linear infinite;
+        }
+      `}</style>
     </section>
   );
 };

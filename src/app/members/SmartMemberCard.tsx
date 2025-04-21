@@ -5,30 +5,52 @@ import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
 import { Card, CardFooter, Image } from "@nextui-org/react";
 import { Member } from "@prisma/client";
-import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { toggleLikeMember } from "../actions/likeActions";
+import {
+  toggleLikeMember,
+  fetchCurrentUserLikeIds,
+} from "../actions/likeActions";
 import MemberImageCarousel from "@/components/MemberImageCarousel";
+import { useInteractionTracking } from "@/hooks/useInteractionTracking";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
-type MemberCardProps = {
+type SmartMemberCardProps = {
   member: Member;
-  likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
 };
 
-export default function MemberCard({
+export default function SmartMemberCard({
   member,
-  likeIds,
   memberPhotos = [],
-}: MemberCardProps) {
-  const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
+}: SmartMemberCardProps) {
+  const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState<Array<{ url: string; id: string }>>([]);
+  const trackInteractions = useInteractionTracking(member.userId);
+  const router = useRouter();
   const processedPhotosRef = useRef(false);
+  const likeCheckedRef = useRef(false);
 
-  // Process photos when member changes
   useEffect(() => {
-    // Only process photos once per member
+    async function checkLikeStatus() {
+      if (likeCheckedRef.current) return;
+
+      try {
+        const likedIds = await fetchCurrentUserLikeIds();
+        if (likedIds.includes(member.userId)) {
+          setHasLiked(true);
+        }
+        likeCheckedRef.current = true;
+      } catch (error) {
+        console.error("Error checking like status:", error);
+      }
+    }
+
+    checkLikeStatus();
+  }, [member.userId]);
+
+  useEffect(() => {
     if (processedPhotosRef.current) return;
     processedPhotosRef.current = true;
 
@@ -49,29 +71,45 @@ export default function MemberCard({
     }
 
     setPhotos(processedPhotos);
-  }, [member.image, member.userId, memberPhotos]);
+  }, [member.userId, member.image, memberPhotos]);
 
   async function toggleLike(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     setLoading(true);
 
     try {
       await toggleLikeMember(member.userId, hasLiked);
+      await trackInteractions.like();
+
       setHasLiked(!hasLiked);
+
+      toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
+        position: "bottom-right",
+      });
     } catch (error) {
       console.error("Like toggle error:", error);
+      toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
+        position: "bottom-right",
+      });
     } finally {
       setLoading(false);
     }
   }
 
+  const handleProfileClick = () => {
+    trackInteractions.profileClick();
+    router.push(`/members/${member.userId}`);
+  };
+
   const renderCardContent = (imageUrl: string) => (
     <Card
-      as={Link}
-      href={`/members/${member.userId}`}
       isPressable
       className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
+      onPress={handleProfileClick}
     >
       <div className="relative aspect-square overflow-hidden rounded-t-lg">
         <Image
@@ -82,7 +120,13 @@ export default function MemberCard({
           removeWrapper
         />
 
-        <div className="absolute top-3 right-3 z-10">
+        <div
+          className="absolute top-3 right-3 z-10"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <LikeButton
             loading={loading}
             toggleLike={toggleLike}
@@ -94,12 +138,16 @@ export default function MemberCard({
           <PresenceDot member={member} />
         </div>
 
-        <CardFooter className="flex justify-start bg-black overflow-hidden absolute bottom-0 z-10 bg-dark-gradient w-full rounded-b-lg p-2">
+        <CardFooter className="flex justify-between bg-black overflow-hidden absolute bottom-0 z-10 bg-dark-gradient w-full rounded-b-lg p-2">
           <div className="flex flex-col text-white">
             <span className="font-semibold text-sm">
               {member.name}, {calculateAge(member.dateOfBirth)}
             </span>
             <span className="text-xs">{member.city}</span>
+          </div>
+
+          <div className="px-2 pb-1 rounded-full bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27]">
+            <span className="text-xs text-white font-medium">התאמה חכמה</span>
           </div>
         </CardFooter>
       </div>

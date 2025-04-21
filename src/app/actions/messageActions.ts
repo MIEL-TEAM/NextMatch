@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { mapMessageToMessageDto } from "@/lib/mappings";
 import { pusherServer } from "@/lib/pusher";
 import { createChatId } from "@/lib/util";
+import { trackUserInteraction } from "./smartMatchActions";
 
 export async function createMessgae(
   recipientUserId: string,
@@ -30,6 +31,11 @@ export async function createMessgae(
 
       select: messageSelect,
     });
+
+    // Track the message interaction for smart matching
+    await trackUserInteraction(recipientUserId, "message").catch((e) =>
+      console.error("Failed to track message interaction:", e)
+    );
 
     const messageDto = mapMessageToMessageDto(message);
 

@@ -7,6 +7,7 @@ import ProfileHeader from "@/components/ProfileHeader";
 import CardInnerWrapper from "@/components/CardInnerWrapper";
 import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import InterestsSection from "@/components/interests/InterestsSection";
+import ProfileViewTracker from "@/components/ProfileViewTracker";
 
 type MemberDetailedPageProps = {
   params: Promise<{ userId: string }>;
@@ -17,26 +18,29 @@ export default async function MemberDetailedPage({
 }: MemberDetailedPageProps) {
   const { userId } = await params;
   const member = await getMemberByUserId(userId);
-  const likeIds = await fetchCurrentUserLikeIds();
 
   if (!member) return notFound();
 
-  // Fetch member interests
+  const likeIds = await fetchCurrentUserLikeIds();
   const interests = await getUserInterestsByUserId(userId);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-6 p-4">
-          <CardInnerWrapper
-            header="פרופיל"
-            body={<div className="p-4 text-justify">{member.description}</div>}
-          />
-          <ProfileHeader member={member} userId={userId} likeIds={likeIds} />
-          <Divider />
-          <InterestsSection interests={interests} />
+    <ProfileViewTracker userId={userId}>
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col gap-6 p-4">
+            <CardInnerWrapper
+              header="פרופיל"
+              body={
+                <div className="p-4 text-justify">{member.description}</div>
+              }
+            />
+            <ProfileHeader member={member} userId={userId} likeIds={likeIds} />
+            <Divider />
+            <InterestsSection interests={interests} />
+          </div>
         </div>
       </div>
-    </div>
+    </ProfileViewTracker>
   );
 }
