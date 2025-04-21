@@ -60,13 +60,13 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
                     className="object-cover"
                     width={600}
                     height={800}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     style={{
                       width: "100%",
                       height: "100%",
                       objectFit: "cover",
                     }}
                     priority
-                    unoptimized={true}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent md:bg-gradient-to-r md:from-black/70 md:via-transparent md:to-transparent"></div>
                 </div>

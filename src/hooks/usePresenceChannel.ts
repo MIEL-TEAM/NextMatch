@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useMemo } from "react";
 import usePresenceStore from "./usePresenceStore";
 import { Channel, Members } from "pusher-js";
 import { pusherClient } from "@/lib/pusher";
@@ -50,17 +50,17 @@ export const usePresenceChannel = (
     [remove]
   );
 
-  // Throttle the update last active function to reduce database writes
-  const throttledUpdateLastActive = useCallback(
-    throttle(async () => {
+  const throttledUpdateLastActive = useMemo(() => {
+    return throttle(async () => {
       try {
         await updateLastActive();
       } catch (error) {
-        console.error("Error updating last active:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error updating last active:", error);
+        }
       }
-    }, 30000), // Only update every 30 seconds maximum
-    []
-  );
+    }, 30000);
+  }, []);
 
   useEffect(() => {
     if (!userId || !profileComplete) return;
@@ -89,13 +89,11 @@ export const usePresenceChannel = (
         }
       );
 
-      // Additional interval to update last active status periodically
-      // This ensures updates even when the user remains inactive on a page
       const interval = setInterval(() => {
         if (document.visibilityState === "visible") {
           throttledUpdateLastActive();
         }
-      }, 60000); // Check every minute
+      }, 60000);
 
       return () => {
         clearInterval(interval);

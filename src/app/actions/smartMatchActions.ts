@@ -5,7 +5,6 @@ import { getAuthUserId } from "./authActions";
 import { PaginatedResponse } from "@/types";
 import { Member } from "@prisma/client";
 
-// Track user interactions (views, likes, messages, etc.)
 export async function trackUserInteraction(
   targetUserId: string,
   action: string,
@@ -15,11 +14,6 @@ export async function trackUserInteraction(
     const userId = await getAuthUserId();
     if (!userId) return null;
 
-    console.log(
-      `Tracking interaction: ${action} from ${userId} to ${targetUserId}`
-    );
-
-    // Calculate weight based on the action type
     let weight = 1.0;
     switch (action) {
       case "view":
@@ -38,7 +32,6 @@ export async function trackUserInteraction(
         weight = 1.0;
     }
 
-    // Record the interaction
     const interaction = await prisma.userInteraction.create({
       data: {
         userId,
@@ -49,16 +42,15 @@ export async function trackUserInteraction(
       },
     });
 
-    console.log(`Interaction recorded with ID: ${interaction.id}`);
-
     return interaction;
   } catch (error) {
-    console.error("Error tracking user interaction:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error tracking user interaction:", error);
+    }
     return null;
   }
 }
 
-// Get smart matches for the current user
 export async function getSmartMatches(
   pageNumber = "1",
   pageSize = "12"
@@ -69,26 +61,20 @@ export async function getSmartMatches(
       return { items: [], totalCount: 0 };
     }
 
-    console.log(`Getting smart matches for user ${userId}`);
-
     const page = parseInt(pageNumber);
     const limit = parseInt(pageSize);
     const skip = (page - 1) * limit;
 
-    // Get users this person has directly interacted with
     const likedUserIds = await prisma.like.findMany({
       where: { sourceUserId: userId },
       select: { targetUserId: true },
     });
-    console.log(`Found ${likedUserIds.length} liked users`);
 
     const messagedUserIds = await prisma.message.findMany({
       where: { senderId: userId },
       select: { recipientId: true },
     });
-    console.log(`Found ${messagedUserIds.length} messaged users`);
 
-    // For profile views, explicitly find both view and profile_click actions
     const viewedUserIds = await prisma.userInteraction.findMany({
       where: {
         userId,
@@ -96,16 +82,7 @@ export async function getSmartMatches(
       },
       select: { targetId: true },
     });
-    console.log(`Found ${viewedUserIds.length} viewed profiles`);
 
-    if (viewedUserIds.length > 0) {
-      console.log(
-        "Example viewed user IDs:",
-        viewedUserIds.slice(0, 3).map((v) => v.targetId)
-      );
-    }
-
-    // Combine all interacted user IDs
     const interactedUserIds = [
       ...likedUserIds.map((like) => like.targetUserId),
       ...messagedUserIds.map((msg) => msg.recipientId),
@@ -114,15 +91,11 @@ export async function getSmartMatches(
 
     // If no interactions, return empty
     if (interactedUserIds.length === 0) {
-      console.log("No user interactions found");
       return { items: [], totalCount: 0 };
     }
 
     // Remove duplicates
     const uniqueUserIds = [...new Set(interactedUserIds)];
-    console.log(
-      `Found ${uniqueUserIds.length} unique users you've interacted with`
-    );
 
     // Get the member details
     const members = await prisma.member.findMany({
@@ -139,7 +112,9 @@ export async function getSmartMatches(
       totalCount: uniqueUserIds.length,
     };
   } catch (error) {
-    console.error("Error getting interacted users:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error getting interacted users:", error);
+    }
     return { items: [], totalCount: 0 };
   }
 }

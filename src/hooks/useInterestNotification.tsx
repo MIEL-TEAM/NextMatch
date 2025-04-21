@@ -25,7 +25,11 @@ export default function InterestNotification({
         setHasInterests(userHasInterests);
         setHasCheckedInterests(true);
       } catch (error) {
-        console.error("Failed to check interests:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to check interests:", error);
+        }
+
+        setHasCheckedInterests(true);
       }
     }
 

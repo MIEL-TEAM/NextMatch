@@ -13,8 +13,6 @@ export const {
   callbacks: {
     async jwt({ user, token }) {
       if (user) {
-        console.log({ user });
-
         token.profileComplete = user.profileComplete;
         token.role = user.role;
       }

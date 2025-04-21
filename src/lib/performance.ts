@@ -7,16 +7,12 @@ export const trackPerformance = (operationName: string) => {
     end: () => {
       const duration = performance.now() - start;
 
-      // Only log slow operations (over 100ms)
-      if (duration > 100) {
-        // Use warn to make it stand out in the console
-        console.warn(
-          `Slow operation: ${operationName} took ${duration.toFixed(2)}ms`
-        );
-
-        // In development, provide more detailed info including a stack trace
-        if (process.env.NODE_ENV === "development") {
-          console.warn(new Error().stack);
+      // Only log extremely slow operations in production (over 500ms)
+      if (duration > 500 && process.env.NODE_ENV === "production") {
+        // Log to monitoring service if available, otherwise silent in production
+        if (typeof window !== "undefined" && window.performance) {
+          // Record performance entry for monitoring tools to collect
+          performance.mark(`${operationName}-end`);
         }
       }
 
@@ -47,24 +43,26 @@ export const trackAsyncFunction = <T extends (...args: any[]) => Promise<any>>(
 export const usePerformanceMonitoring = (
   enabled = process.env.NODE_ENV === "production"
 ) => {
-  if (!enabled) return;
+  if (!enabled || typeof window === "undefined") return;
 
-  // Track page load performance
-  if (typeof window !== "undefined") {
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        const perfData = window.performance.timing;
-        const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-        console.info(`Page load time: ${pageLoadTime}ms`);
+  // Track page load performance silently for monitoring tools
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      // Record performance entry instead of logging
+      performance.mark("page-load-complete");
+      performance.measure(
+        "page-load-time",
+        "navigationStart",
+        "page-load-complete"
+      );
 
-        // Report other important metrics
-        const fcp = performance.getEntriesByName("first-contentful-paint");
-        if (fcp.length > 0) {
-          console.info(
-            `First Contentful Paint: ${fcp[0].startTime.toFixed(2)}ms`
-          );
-        }
-      }, 0);
-    });
-  }
+      // First Contentful Paint - important UX metric
+      const fcp = performance.getEntriesByName("first-contentful-paint");
+      if (fcp.length > 0) {
+        performance.measure("first-contentful-paint", {
+          detail: fcp[0].startTime,
+        });
+      }
+    }, 0);
+  });
 };

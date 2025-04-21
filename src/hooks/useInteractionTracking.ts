@@ -3,6 +3,13 @@
 import { useEffect, useRef } from "react";
 import { trackUserInteraction } from "@/app/actions/smartMatchActions";
 
+// Silent error handler for production
+const handleError = (error: any) => {
+  if (process.env.NODE_ENV === "development") {
+    console.error("Error tracking interaction:", error);
+  }
+};
+
 export function useInteractionTracking(targetUserId: string) {
   const viewStartTime = useRef<number | null>(null);
   const interactionSent = useRef<boolean>(false);
@@ -13,7 +20,7 @@ export function useInteractionTracking(targetUserId: string) {
 
     viewStartTime.current = Date.now();
 
-    trackUserInteraction(targetUserId, "view").catch(console.error);
+    trackUserInteraction(targetUserId, "view").catch(handleError);
     interactionSent.current = true;
 
     return () => {
@@ -23,7 +30,7 @@ export function useInteractionTracking(targetUserId: string) {
         );
         if (duration > 5) {
           trackUserInteraction(targetUserId, "view", duration).catch(
-            console.error
+            handleError
           );
         }
       }
@@ -31,11 +38,15 @@ export function useInteractionTracking(targetUserId: string) {
   }, [targetUserId]);
 
   const trackInteractions = {
-    like: () => trackUserInteraction(targetUserId, "like"),
-    message: () => trackUserInteraction(targetUserId, "message"),
+    like: () => trackUserInteraction(targetUserId, "like").catch(handleError),
+    message: () =>
+      trackUserInteraction(targetUserId, "message").catch(handleError),
     profileClick: () => {
       if (!profileClickSent.current) {
-        return trackUserInteraction(targetUserId, "profile_click");
+        profileClickSent.current = true;
+        return trackUserInteraction(targetUserId, "profile_click").catch(
+          handleError
+        );
       }
       return Promise.resolve(null);
     },
