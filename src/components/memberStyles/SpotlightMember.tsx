@@ -24,7 +24,12 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
 
   if (!spotlight || !membersData.length) return null;
 
-  const imageUrl = spotlight.image || "/images/placeholder.jpg";
+  let imageUrl = spotlight.image || "/images/placeholder.jpg";
+
+  const isGoogleImage = imageUrl.includes("googleusercontent.com");
+  if (isGoogleImage && imageUrl.includes("=s")) {
+    imageUrl = imageUrl.replace(/=s\d+-c/, "=s400-c");
+  }
 
   const formattedImageUrl = imageUrl.startsWith("http")
     ? imageUrl
@@ -75,6 +80,7 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
                       objectFit: "cover",
                     }}
                     priority
+                    unoptimized={isGoogleImage}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent md:bg-gradient-to-r md:from-black/70 md:via-transparent md:to-transparent"></div>
                 </div>
