@@ -5,7 +5,7 @@ import { GetMemberParams, PaginatedResponse } from "@/types";
 import { Member, Photo } from "@prisma/client";
 import { addYears } from "date-fns";
 import { getAuthUserId } from "./authActions";
-import { cache } from "react";
+import { cachedQuery, cacheKeys, redis } from "@/lib/redis";
 
 export async function getMembers({
   ageRange = "18,100",
@@ -18,154 +18,208 @@ export async function getMembers({
 }: GetMemberParams): Promise<PaginatedResponse<Member>> {
   const userId = await getAuthUserId();
 
-  const [minAge, maxAge] = ageRange.split(",");
+  const cacheKey = cacheKeys.membersList({
+    ageRange,
+    gender,
+    orderBy,
+    pageNumber,
+    pageSize,
+    withPhoto,
+    onlineOnly,
+    userId: userId || "guest",
+  });
 
-  const currentDate = new Date();
+  return cachedQuery<PaginatedResponse<Member>>(
+    cacheKey,
+    async () => {
+      const [minAge, maxAge] = ageRange.split(",");
 
-  const minDob = addYears(currentDate, -maxAge - 1);
-  const maxDob = addYears(currentDate, -minAge);
+      const currentDate = new Date();
 
-  const selectedGender = gender.split(",");
+      const minDob = addYears(currentDate, -maxAge - 1);
+      const maxDob = addYears(currentDate, -minAge);
 
-  const page = parseInt(pageNumber);
-  const limit = parseInt(pageSize);
-  const skip = (page - 1) * limit;
+      const selectedGender = gender.split(",");
 
-  const onlineThreshold = new Date();
-  onlineThreshold.setMinutes(onlineThreshold.getMinutes() - 15);
+      const page = parseInt(pageNumber);
+      const limit = parseInt(pageSize);
+      const skip = (page - 1) * limit;
 
-  let orderByField = "updated";
-  let orderDirection: "asc" | "desc" = "desc";
+      const onlineThreshold = new Date();
+      onlineThreshold.setMinutes(onlineThreshold.getMinutes() - 15);
 
-  switch (orderBy) {
-    case "newest":
-      orderByField = "created";
-      orderDirection = "desc";
-      break;
-    case "online":
-      orderByField = "updated";
-      orderDirection = "desc";
-      break;
-    case "distance":
-      orderByField = "city";
-      orderDirection = "asc";
-      break;
-    default:
-      orderByField = "updated";
-      orderDirection = "desc";
-  }
+      let orderByField = "updated";
+      let orderDirection: "asc" | "desc" = "desc";
 
-  try {
-    const whereClause = {
-      AND: [
-        { dateOfBirth: { gte: minDob } },
-        { dateOfBirth: { lte: maxDob } },
-        { gender: { in: selectedGender } },
-        ...(withPhoto === "true" ? [{ image: { not: null } }] : []),
-        ...(onlineOnly === "true"
-          ? [{ updated: { gte: onlineThreshold } }]
-          : []),
-      ],
-      NOT: {
-        userId,
-      },
-    };
+      switch (orderBy) {
+        case "newest":
+          orderByField = "created";
+          orderDirection = "desc";
+          break;
+        case "online":
+          orderByField = "updated";
+          orderDirection = "desc";
+          break;
+        case "distance":
+          orderByField = "city";
+          orderDirection = "asc";
+          break;
+        default:
+          orderByField = "updated";
+          orderDirection = "desc";
+      }
 
-    const count = await prisma.member.count({ where: whereClause });
+      try {
+        const whereClause = {
+          AND: [
+            { dateOfBirth: { gte: minDob } },
+            { dateOfBirth: { lte: maxDob } },
+            { gender: { in: selectedGender } },
+            ...(withPhoto === "true" ? [{ image: { not: null } }] : []),
+            ...(onlineOnly === "true"
+              ? [{ updated: { gte: onlineThreshold } }]
+              : []),
+          ],
+          NOT: {
+            userId,
+          },
+        };
 
-    const members = await prisma.member.findMany({
-      where: whereClause,
-      orderBy: { [orderByField]: orderDirection },
-      skip,
-      take: limit,
-    });
+        const [count, members] = await Promise.all([
+          prisma.member.count({ where: whereClause }),
+          prisma.member.findMany({
+            where: whereClause,
+            orderBy: { [orderByField]: orderDirection },
+            skip,
+            take: limit,
+          }),
+        ]);
 
-    return {
-      items: members,
-      totalCount: count,
-    };
-  } catch (error) {
-    console.error(
-      "Error fetching members:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
+        return {
+          items: members,
+          totalCount: count,
+        };
+      } catch (error) {
+        console.error(
+          "Error fetching members:",
+          error ? JSON.stringify(error) : "Unknown error"
+        );
 
-    return {
-      items: [],
-      totalCount: 0,
-    };
-  }
+        return {
+          items: [],
+          totalCount: 0,
+        };
+      }
+    },
+
+    60 * 5
+  );
 }
 
 export async function getMembersWithPhotos(memberIds: string[]) {
-  try {
-    const currentUserId = await getAuthUserId();
+  if (!memberIds.length) return {};
 
-    const photos = await prisma.photo.findMany({
-      where: {
-        member: {
-          userId: { in: memberIds },
-        },
-        ...(!memberIds.includes(currentUserId) ? { isApproved: true } : {}),
-      },
-      orderBy: { isApproved: "desc" },
-    });
+  const cacheKey = `memberPhotos:${memberIds.sort().join("-")}`;
 
-    // Group photos by userId
-    const photosByUserId = photos.reduce((acc, photo) => {
-      const member = photo.memberId;
-      if (!acc[member]) acc[member] = [];
-      acc[member].push(photo);
-      return acc;
-    }, {} as Record<string, any[]>);
+  return cachedQuery<Record<string, any[]>>(
+    cacheKey,
+    async () => {
+      try {
+        const currentUserId = await getAuthUserId();
 
-    return photosByUserId;
-  } catch (error) {
-    console.error(
-      "Error fetching member photos in batch:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
-    return {};
-  }
+        const photos = await prisma.photo.findMany({
+          where: {
+            member: {
+              userId: { in: memberIds },
+            },
+            ...(!memberIds.includes(currentUserId || "")
+              ? { isApproved: true }
+              : {}),
+          },
+          orderBy: { isApproved: "desc" },
+        });
+
+        // Group photos by userId
+        const photosByUserId = photos.reduce((acc, photo) => {
+          const member = photo.memberId;
+          if (!acc[member]) acc[member] = [];
+          acc[member].push(photo);
+          return acc;
+        }, {} as Record<string, any[]>);
+
+        return photosByUserId;
+      } catch (error) {
+        console.error(
+          "Error fetching member photos in batch:",
+          error ? JSON.stringify(error) : "Unknown error"
+        );
+        return {};
+      }
+    },
+
+    60 * 15
+  );
 }
 
-export const getMemberByUserId = cache(async (userId: string) => {
-  return prisma.member.findUnique({
-    where: {
-      userId: userId,
-    },
-    include: {
-      user: {
-        select: {
-          emailVerified: true,
+export async function getMemberByUserId(userId: string) {
+  if (!userId) return null;
+
+  const cacheKey = cacheKeys.member(userId);
+
+  return cachedQuery(
+    cacheKey,
+    async () => {
+      return prisma.member.findUnique({
+        where: {
+          userId: userId,
         },
-      },
+        include: {
+          user: {
+            select: {
+              emailVerified: true,
+            },
+          },
+        },
+      });
     },
-  });
-});
+
+    60 * 10
+  );
+}
 
 export async function getMemberPhotosByUserId(userId: string) {
-  try {
-    const currentUserId = await getAuthUserId();
-    const member = await prisma.member.findUnique({
-      where: { userId },
-      select: {
-        photos: {
-          where: currentUserId === userId ? {} : { isApproved: true },
-        },
-      },
-    });
+  if (!userId) return null;
 
-    if (!member) return null;
+  const cacheKey = cacheKeys.memberPhotos(userId);
 
-    return member.photos as Photo[];
-  } catch (error) {
-    console.error(
-      "Error fetching member photos by user ID:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
-    return null;
-  }
+  return cachedQuery<Photo[] | null>(
+    cacheKey,
+    async () => {
+      try {
+        const currentUserId = await getAuthUserId();
+        const member = await prisma.member.findUnique({
+          where: { userId },
+          select: {
+            photos: {
+              where: currentUserId === userId ? {} : { isApproved: true },
+            },
+          },
+        });
+
+        if (!member) return null;
+
+        return member.photos as Photo[];
+      } catch (error) {
+        console.error(
+          "Error fetching member photos by user ID:",
+          error ? JSON.stringify(error) : "Unknown error"
+        );
+        return null;
+      }
+    },
+
+    60 * 15
+  );
 }
 
 export async function updateLastActive() {
@@ -177,10 +231,16 @@ export async function updateLastActive() {
       return null;
     }
 
-    return prisma.member.update({
+    // Update the database
+    const result = await prisma.member.update({
       where: { userId },
       data: { updated: new Date() },
     });
+
+    // Invalidate any cache for this user's profile
+    await redis.del(cacheKeys.member(userId));
+
+    return result;
   } catch (error) {
     console.error(
       "Error updating last active:",
@@ -191,29 +251,38 @@ export async function updateLastActive() {
 }
 
 export async function getMemberPhotos(userId: string) {
-  try {
-    if (!userId) {
-      console.error("No user ID provided for fetching photos");
-      return [];
-    }
-
-    const photos = await prisma.photo.findMany({
-      where: {
-        member: {
-          userId: userId,
-        },
-      },
-      orderBy: {
-        isApproved: "desc",
-      },
-    });
-
-    return photos;
-  } catch (error) {
-    console.error(
-      "Error fetching member photos:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
+  if (!userId) {
+    console.error("No user ID provided for fetching photos");
     return [];
   }
+
+  const cacheKey = `photos:${userId}`;
+
+  return cachedQuery(
+    cacheKey,
+    async () => {
+      try {
+        const photos = await prisma.photo.findMany({
+          where: {
+            member: {
+              userId: userId,
+            },
+          },
+          orderBy: {
+            isApproved: "desc",
+          },
+        });
+
+        return photos;
+      } catch (error) {
+        console.error(
+          "Error fetching member photos:",
+          error ? JSON.stringify(error) : "Unknown error"
+        );
+        return [];
+      }
+    },
+
+    60 * 15
+  );
 }

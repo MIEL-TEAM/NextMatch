@@ -1,56 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getMemberPhotos } from "@/app/actions/memberActions";
 import { getAuthUserId } from "@/app/actions/authActions";
-import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 
-export async function GET(req: NextRequest) {
+const CACHE_TTL = 60 * 15;
+
+export async function GET(request: NextRequest) {
   try {
+    // Check authentication
     const userId = await getAuthUserId();
     if (!userId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Authentication required" }),
+      return NextResponse.json(
+        { error: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const searchParams = req.nextUrl.searchParams;
-    const memberIds = searchParams.get("ids")?.split(",") || [];
+    // Get member IDs from query
+    const searchParams = request.nextUrl.searchParams;
+    const idsParam = searchParams.get("ids");
 
-    if (memberIds.length === 0) {
-      return NextResponse.json({ photos: {} });
+    if (!idsParam) {
+      return NextResponse.json(
+        { error: "Member IDs required" },
+        { status: 400 }
+      );
     }
 
-    const photos = await prisma.photo.findMany({
-      where: {
-        memberId: { in: memberIds },
-      },
-      select: {
-        url: true,
-        id: true,
-        memberId: true,
-      },
-    });
+    const memberIds = idsParam.split(",");
+    if (memberIds.length === 0) {
+      return NextResponse.json({ photos: {} }, { status: 200 });
+    }
 
-    const photosByMemberId = photos.reduce((acc, photo) => {
-      if (!acc[photo.memberId]) {
-        acc[photo.memberId] = [];
+    const cacheKey = `photos:${userId}:${memberIds.sort().join("-")}`;
+    const cachedPhotos = await redis.get(cacheKey);
+
+    if (cachedPhotos) {
+      const parsedPhotos =
+        typeof cachedPhotos === "string"
+          ? JSON.parse(cachedPhotos)
+          : cachedPhotos;
+
+      return NextResponse.json(
+        { photos: parsedPhotos },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "public, max-age=900",
+          },
+        }
+      );
+    }
+
+    const photoPromises = memberIds.map((memberId) =>
+      getMemberPhotos(memberId).then((photos) => ({
+        memberId,
+        photos: photos.map((photo) => ({
+          url: photo.url,
+          id: photo.id,
+        })),
+      }))
+    );
+
+    const photoResults = await Promise.all(photoPromises);
+
+    const photosMap = photoResults.reduce((acc, item) => {
+      if (item.photos.length > 0) {
+        acc[item.memberId] = item.photos;
       }
-      acc[photo.memberId].push({ url: photo.url, id: photo.id });
       return acc;
     }, {} as Record<string, Array<{ url: string; id: string }>>);
 
-    memberIds.forEach((id) => {
-      if (!photosByMemberId[id]) {
-        photosByMemberId[id] = [];
-      }
-    });
+    await redis.set(cacheKey, JSON.stringify(photosMap), { ex: CACHE_TTL });
 
-    return NextResponse.json({ photos: photosByMemberId });
+    return NextResponse.json(
+      { photos: photosMap },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, max-age=900",
+        },
+      }
+    );
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("API: Error fetching member photos:", error);
-    }
-    return new NextResponse(
-      JSON.stringify({ error: "Failed to fetch member photos" }),
+    console.error("Error fetching member photos:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch member photos" },
       { status: 500 }
     );
   }

@@ -19,7 +19,6 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const isOnlineFilter =
     params.filter === "online" || params.onlineOnly === "true";
 
-  // Optimize photo fetching with batch query
   const memberIds = members.map((member) => member.userId);
   const photosByMemberId = await getMembersWithPhotos(memberIds);
 

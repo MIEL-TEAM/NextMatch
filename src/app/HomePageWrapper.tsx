@@ -13,7 +13,7 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2500);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 

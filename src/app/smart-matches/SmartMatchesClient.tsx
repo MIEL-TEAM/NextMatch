@@ -1,20 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { Member } from "@prisma/client";
 import { getSmartMatches } from "../actions/smartMatchActions";
 import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import SmartMemberCard from "../members/SmartMemberCard";
-import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import HeartLoading from "@/components/HeartLoading";
+import { motion, AnimatePresence } from "framer-motion";
+
+const SmartMemberCard = dynamic(() => import("../members/SmartMemberCard"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-64 bg-amber-50 animate-pulse rounded-lg" />
+  ),
+});
 
 type MemberPhoto = {
   url: string;
   id: string;
 };
 
-export default function SmartMatchesClient() {
+export default function OptimizedSmartMatchesClient() {
   const [members, setMembers] = useState<Member[]>([]);
   const [memberPhotos, setMemberPhotos] = useState<
     Record<string, MemberPhoto[]>
@@ -25,45 +32,63 @@ export default function SmartMatchesClient() {
   const router = useRouter();
   const pageSize = 8;
 
+  const fetchMemberPhotos = useCallback(async (members: Member[]) => {
+    try {
+      const memberIds = members.map((m) => m.id);
+      if (memberIds.length === 0) return;
+
+      const response = await fetch(
+        `/api/smart-matches/photos?ids=${memberIds.join(",")}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setMemberPhotos(data.photos);
+      }
+    } catch (error) {
+      console.error("Error fetching member photos:", error);
+    }
+  }, []);
+
+  const loadMembers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getSmartMatches(
+        page.toString(),
+        pageSize.toString()
+      );
+      setMembers(result.items);
+      setTotalCount(result.totalCount);
+
+      if (result.items.length > 0) {
+        await fetchMemberPhotos(result.items);
+      }
+    } catch (error) {
+      console.error("Error loading smart matches:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, fetchMemberPhotos]);
+
   useEffect(() => {
-    async function fetchMemberPhotos(members: Member[]) {
-      try {
-        const memberIds = members.map((m) => m.id);
-        const response = await fetch(
-          `/api/smart-matches/photos?ids=${memberIds.join(",")}`
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setMemberPhotos(data.photos);
-        }
-      } catch (error) {
-        console.error("Error fetching member photos:", error);
-      }
-    }
-
-    async function loadMembers() {
-      setLoading(true);
-      try {
-        const result = await getSmartMatches(
-          page.toString(),
-          pageSize.toString()
-        );
-        setMembers(result.items);
-        setTotalCount(result.totalCount);
-
-        if (result.items.length > 0) {
-          await fetchMemberPhotos(result.items);
-        }
-      } catch (error) {
-        console.error("Error loading smart matches:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadMembers();
-  }, [page, pageSize]);
+  }, [loadMembers]);
+
+  useEffect(() => {
+    if (page * pageSize < totalCount) {
+      const preloadNextPage = async () => {
+        try {
+          await getSmartMatches((page + 1).toString(), pageSize.toString());
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      if (totalCount - page * pageSize < pageSize * 3) {
+        preloadNextPage();
+      }
+    }
+  }, [page, pageSize, totalCount]);
 
   function handleNextPage() {
     if (page * pageSize < totalCount) {
@@ -77,20 +102,30 @@ export default function SmartMatchesClient() {
     }
   }
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
+  const container = useMemo(
+    () => ({
+      hidden: { opacity: 0 },
+      show: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.05,
+        },
       },
-    },
-  };
+    }),
+    []
+  );
 
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300 } },
-  };
+  const item = useMemo(
+    () => ({
+      hidden: { y: 20, opacity: 0 },
+      show: {
+        y: 0,
+        opacity: 1,
+        transition: { type: "spring", stiffness: 300 },
+      },
+    }),
+    []
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 py-8">
@@ -138,46 +173,46 @@ export default function SmartMatchesClient() {
             </motion.div>
           ) : members.length > 0 ? (
             <>
-              <motion.div
-                variants={container}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
-              >
-                {members.map((member) => (
-                  <motion.div key={member.id} variants={item}>
-                    <SmartMemberCard
-                      member={member}
-                      memberPhotos={memberPhotos[member.id] || []}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`page-${page}`}
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+                >
+                  {members.map((member, index) => (
+                    <motion.div key={member.id} variants={item} custom={index}>
+                      <SmartMemberCard
+                        member={member}
+                        memberPhotos={memberPhotos[member.id] || []}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
                 className="flex justify-center mt-12 gap-4"
               >
-                <motion.button
-                  whileHover={{ scale: 1.05, backgroundColor: "#FEF3C7" }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   className="px-6 py-3 border-2 border-amber-400 rounded-full hover:bg-amber-100 transition-colors disabled:opacity-50 text-orange-700 font-medium"
                   onClick={handlePrevPage}
                   disabled={page === 1}
                 >
                   הקודם
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05, backgroundColor: "#FEF3C7" }}
-                  whileTap={{ scale: 0.95 }}
+                </button>
+                <button
                   className="px-6 py-3 border-2 border-amber-400 rounded-full hover:bg-amber-100 transition-colors disabled:opacity-50 text-orange-700 font-medium"
                   onClick={handleNextPage}
                   disabled={page * pageSize >= totalCount}
                 >
                   הבא
-                </motion.button>
+                </button>
               </motion.div>
             </>
           ) : (
@@ -205,14 +240,12 @@ export default function SmartMatchesClient() {
                 עליך לבקר בפרופילים ולסמן לייקים כדי שהמערכת תלמד את ההעדפות
                 שלך. חיבורים חכמים יופיעו לאחר שתקיים מספר פעולות באפליקציה.
               </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-full hover:from-amber-500 hover:to-orange-500 transition-all font-medium shadow-md"
                 onClick={() => router.push("/members")}
               >
                 לדפדף בפרופילים
-              </motion.button>
+              </button>
             </motion.div>
           )}
         </div>

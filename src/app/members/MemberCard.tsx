@@ -6,29 +6,34 @@ import { calculateAge, transformImageUrl } from "@/lib/util";
 import { Card, CardFooter, Image } from "@nextui-org/react";
 import { Member } from "@prisma/client";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { toggleLikeMember } from "../actions/likeActions";
-import MemberImageCarousel from "@/components/MemberImageCarousel";
+import dynamic from "next/dynamic";
+
+const MemberImageCarousel = dynamic(
+  () => import("@/components/MemberImageCarousel"),
+  { ssr: false }
+);
 
 type MemberCardProps = {
   member: Member;
   likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
+  priority?: boolean;
 };
 
-export default function MemberCard({
+function MemberCard({
   member,
   likeIds,
   memberPhotos = [],
+  priority = false,
 }: MemberCardProps) {
   const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState<Array<{ url: string; id: string }>>([]);
   const processedPhotosRef = useRef(false);
 
-  // Process photos when member changes
   useEffect(() => {
-    // Only process photos once per member
     if (processedPhotosRef.current) return;
     processedPhotosRef.current = true;
 
@@ -49,7 +54,7 @@ export default function MemberCard({
     }
 
     setPhotos(processedPhotos);
-  }, [member.image, member.userId, memberPhotos]);
+  }, [member.image, memberPhotos]);
 
   async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
@@ -80,6 +85,7 @@ export default function MemberCard({
           src={transformImageUrl(imageUrl) || "/images/user.png"}
           className="w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-105"
           removeWrapper
+          loading={priority ? "eager" : "lazy"}
         />
 
         <div className="absolute top-3 right-3 z-10">
@@ -118,3 +124,5 @@ export default function MemberCard({
     </MemberImageCarousel>
   );
 }
+
+export default memo(MemberCard);
