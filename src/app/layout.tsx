@@ -80,7 +80,7 @@ export default async function RootLayout({
       "היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel!",
     applicationCategory: "Dating",
     operatingSystem: "Web",
-    logo: "https://miel-love.com/images/icons/miel.png",
+    logo: "https://miel-love.com/images/icons/Logo.png",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -92,7 +92,7 @@ export default async function RootLayout({
       <head>
         <link
           rel="icon"
-          href="/images/icons/miel.png"
+          href="https://miel-love.com/images/icons/Logo.png"
           sizes="16x16 32x32 48x48"
         />
         <link rel="shortcut icon" href="https://miel-love.com/favicon.ico" />
