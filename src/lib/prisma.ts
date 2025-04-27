@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 
-// The code global as unknown as { prisma: PrismaClient } is TypeScript syntax that casts the global object to a type that expects a prisma property of type PrismaClient. This allows you to safely access the prisma object globally.
-
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 export const prisma =

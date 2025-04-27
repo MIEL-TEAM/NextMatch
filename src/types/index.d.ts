@@ -11,6 +11,8 @@ type MessageWithSenderRecipient = Prisma.MessageGetPayload<{
     text: true;
     created: true;
     dateRead: true;
+    isStarred: true;
+    isArchived: true;
     sender: {
       select: { userId; name; image };
     };
@@ -31,6 +33,9 @@ type MessageDto = {
   recipientId?: string;
   recipientName?: string;
   recipientImage?: string | null;
+  isStarred?: boolean;
+  isArchived?: boolean;
+  currentUserId?: string;
 };
 
 type UserFilters = {

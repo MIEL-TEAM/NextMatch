@@ -110,6 +110,8 @@ model Message {
   dateRead         DateTime?
   senderDeleted    Boolean   @default(false)
   recipientDeleted Boolean   @default(false)
+  isStarred        Boolean   @default(false)
+  isArchived       Boolean   @default(false)
   Member           Member?   @relation(fields: [memberId], references: [id])
   recipient        Member?   @relation("recipient", fields: [recipientId], references: [userId])
   sender           Member?   @relation("sender", fields: [senderId], references: [userId])
@@ -153,7 +155,7 @@ model UserInteraction {
 model UserPreference {
   id             String   @id @default(cuid())
   userId         String   @unique
-  preferenceData Json // Stores learned preference vectors
+  preferenceData Json
   lastUpdated    DateTime @default(now())
   user           Member   @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }

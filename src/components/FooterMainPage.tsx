@@ -31,6 +31,7 @@ const MielFooter: FC = () => {
               width={32}
               height={32}
               className="object-contain"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
             <span className="text-2xl font-bold text-white">
               <span className="text-amber-400">M</span>iel
@@ -70,6 +71,7 @@ const MielFooter: FC = () => {
                 width={48}
                 height={48}
                 className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
           </div>
@@ -85,6 +87,7 @@ const MielFooter: FC = () => {
                   alt="Miel Heart"
                   fill
                   className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
               <p className="text-sm text-gray-400">

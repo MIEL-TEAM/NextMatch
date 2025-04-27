@@ -12,11 +12,20 @@ export default function MemberPhotoUpload() {
   const router = useRouter();
   const onAddImage = async (result: CloudinaryUploadWidgetResults) => {
     if (result.info && typeof result.info === "object") {
-      await addImage(result.info.secure_url, result.info.public_id);
-      router.refresh();
-      toast.success("התמונה הועלתה בהצלחה", {
-        style: getToastStyle(),
-      });
+      try {
+        await addImage(result.info.secure_url, result.info.public_id);
+        router.refresh();
+        toast.success("התמונה הועלתה בהצלחה", {
+          style: getToastStyle(),
+        });
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "בעיה בהעלאת התמונה",
+          {
+            style: getToastStyle(),
+          }
+        );
+      }
     } else {
       toast.error("בעיה בהעלאת התמונה", {
         style: getToastStyle(),

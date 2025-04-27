@@ -13,5 +13,7 @@ export function mapMessageToMessageDto(message: MessageWithSenderRecipient) {
     recipientId: message.recipient?.userId,
     recipientImage: message.recipient?.image,
     recipientName: message.recipient?.name,
+    isStarred: message.isStarred,
+    isArchived: message.isArchived,
   };
 }

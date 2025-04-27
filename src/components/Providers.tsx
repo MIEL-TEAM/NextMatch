@@ -50,14 +50,12 @@ export default function Providers({
   return (
     <SessionProvider>
       <NextUIProvider>
-        {/* This is essential for sonner toasts to appear */}
         <Toaster position="top-center" richColors />
         <ToastContainer
           position="bottom-right"
           hideProgressBar
           className="z-50"
         />
-        {/* Notice we're using the component now, not the hook */}
         {userId && <InterestNotification userId={userId} />}
         {children}
       </NextUIProvider>

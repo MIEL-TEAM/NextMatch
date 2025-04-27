@@ -84,6 +84,7 @@ export async function registerUser(
       dateOfBirth,
       country,
       city,
+      photos,
     } = validated.data;
     const hashedPassword = await bcrypt.hash(password, 10);
     const existingUser = await prisma.user.findUnique({
@@ -94,12 +95,21 @@ export async function registerUser(
       return { status: "error", error: "User already exists" };
     }
 
+    // Check for exactly 3 photos
+    if (!photos || photos.length !== 3) {
+      return {
+        status: "error",
+        error: "יש להעלות בדיוק 3 תמונות",
+      };
+    }
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash: hashedPassword,
         profileComplete: true,
+        image: photos[0].url, // Set first photo as main profile image
         member: {
           create: {
             name,
@@ -108,6 +118,15 @@ export async function registerUser(
             country,
             dateOfBirth: new Date(dateOfBirth),
             gender,
+            image: photos[0].url, // Set first photo as main profile image
+            // Create photos
+            photos: {
+              create: photos.map((photo) => ({
+                url: photo.url,
+                publicId: photo.publicId,
+                isApproved: false, // Photos need approval by default
+              })),
+            },
           },
         },
       },

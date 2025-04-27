@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "./authActions";
 import { PaginatedResponse } from "@/types";
 import { Member } from "@prisma/client";
-import { cachedQuery, cacheKeys, redis } from "@/lib/redis";
 
 export async function trackUserInteraction(
   targetUserId: string,
@@ -43,12 +42,6 @@ export async function trackUserInteraction(
       },
     });
 
-    const cachePattern = `smartMatches:${userId}:*`;
-    const keys = await redis.keys(cachePattern);
-    if (keys.length > 0) {
-      await redis.del(...keys);
-    }
-
     return interaction;
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
@@ -70,59 +63,49 @@ export async function getSmartMatches(
 
     const page = parseInt(pageNumber);
     const limit = parseInt(pageSize);
+    const skip = (page - 1) * limit;
 
-    const cacheKey = cacheKeys.smartMatches(userId, pageNumber, pageSize);
+    const interactions = await prisma.userInteraction.findMany({
+      where: { userId },
+      select: { targetId: true, action: true, weight: true },
+      orderBy: { timestamp: "desc" },
+    });
 
-    return await cachedQuery<PaginatedResponse<Member>>(
-      cacheKey,
-      async () => {
-        const skip = (page - 1) * limit;
+    const likedUserIds = await prisma.like.findMany({
+      where: { sourceUserId: userId },
+      select: { targetUserId: true },
+    });
 
-        const interactions = await prisma.userInteraction.findMany({
-          where: { userId },
-          select: { targetId: true, action: true, weight: true },
-          orderBy: { timestamp: "desc" },
-        });
+    const messagedUserIds = await prisma.message.findMany({
+      where: { senderId: userId },
+      select: { recipientId: true },
+    });
 
-        const likedUserIds = await prisma.like.findMany({
-          where: { sourceUserId: userId },
-          select: { targetUserId: true },
-        });
+    const interactedUserIds = [
+      ...interactions.map((i) => i.targetId),
+      ...likedUserIds.map((like) => like.targetUserId),
+      ...messagedUserIds.map((msg) => msg.recipientId),
+    ].filter(Boolean) as string[];
 
-        const messagedUserIds = await prisma.message.findMany({
-          where: { senderId: userId },
-          select: { recipientId: true },
-        });
+    if (interactedUserIds.length === 0) {
+      return { items: [], totalCount: 0 };
+    }
 
-        const interactedUserIds = [
-          ...interactions.map((i) => i.targetId),
-          ...likedUserIds.map((like) => like.targetUserId),
-          ...messagedUserIds.map((msg) => msg.recipientId),
-        ].filter(Boolean) as string[];
+    const uniqueUserIds = Array.from(new Set(interactedUserIds));
 
-        if (interactedUserIds.length === 0) {
-          return { items: [], totalCount: 0 };
-        }
-
-        const uniqueUserIds = Array.from(new Set(interactedUserIds));
-
-        const members = await prisma.member.findMany({
-          where: {
-            userId: { in: uniqueUserIds },
-          },
-          orderBy: { updated: "desc" },
-          skip,
-          take: limit,
-        });
-
-        return {
-          items: members,
-          totalCount: uniqueUserIds.length,
-        };
+    const members = await prisma.member.findMany({
+      where: {
+        userId: { in: uniqueUserIds },
       },
+      orderBy: { updated: "desc" },
+      skip,
+      take: limit,
+    });
 
-      60 * 5
-    );
+    return {
+      items: members,
+      totalCount: uniqueUserIds.length,
+    };
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
       console.error("Error getting interacted users:", error);
@@ -134,12 +117,10 @@ export async function getSmartMatches(
 export async function prefetchSmartMatches(pageSize = "12") {
   try {
     await getSmartMatches("1", pageSize);
-
     await getSmartMatches("2", pageSize);
     return true;
   } catch (error) {
     console.log(error);
-
     return false;
   }
 }

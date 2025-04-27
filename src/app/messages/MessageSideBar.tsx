@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { GoInbox } from "react-icons/go";
 import { MdOutlineOutbox } from "react-icons/md";
+import { BsStarFill, BsArchive } from "react-icons/bs";
 
 export default function MessageSideBar() {
   const unreadCount = useMessageStore((state) => state.unreadCount);
@@ -23,6 +24,18 @@ export default function MessageSideBar() {
       key: "outbox",
       label: "הודעות ששלחתי",
       icon: MdOutlineOutbox,
+      chip: false,
+    },
+    {
+      key: "starred",
+      label: "הודעות מסומנות",
+      icon: BsStarFill,
+      chip: false,
+    },
+    {
+      key: "archived",
+      label: "ארכיון",
+      icon: BsArchive,
       chip: false,
     },
   ];

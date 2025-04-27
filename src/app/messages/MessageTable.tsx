@@ -23,11 +23,15 @@ import InlineEmptyState from "@/components/EmptyState";
 type TableProps = {
   initialMessages: MessageDto[];
   nextCursor?: string;
+  isArchived?: boolean;
+  isStarred?: boolean;
 };
 
 export default function MessageTable({
   initialMessages,
   nextCursor,
+  isArchived,
+  isStarred,
 }: TableProps) {
   const {
     columns,
@@ -41,9 +45,27 @@ export default function MessageTable({
     hasMore,
     searchQuery,
     setSearchQuery,
-  } = useMessages(initialMessages, nextCursor);
+    starMessage,
+    archiveMessage,
+    isStarring,
+    isArchiving,
+    isViewArchived,
+    isViewStarred,
+  } = useMessages(initialMessages, nextCursor, isArchived, isStarred);
 
   const getImageSrc = (item: MessageDto): string | undefined => {
+    if (item.senderId === item.recipientId) {
+      return item.senderImage || undefined;
+    }
+
+    if (item.currentUserId) {
+      if (item.currentUserId === item.senderId) {
+        return item.recipientImage || undefined;
+      } else if (item.currentUserId === item.recipientId) {
+        return item.senderImage || undefined;
+      }
+    }
+
     const imageSrc = isOutbox ? item.recipientImage : item.senderImage;
     return imageSrc || undefined;
   };
@@ -52,7 +74,22 @@ export default function MessageTable({
     <div className="flex flex-col min-h-[80vh]">
       <Card className="p-4">
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-          <h1 className="text-xl font-bold mb-2 md:mb-0">שיחות</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold mb-2 md:mb-0">
+              {isViewArchived
+                ? "כל ההודעות בארכיון"
+                : isViewStarred
+                ? "כל ההודעות המסומנות"
+                : "שיחות"}
+            </h1>
+            {(isViewArchived || isViewStarred) && (
+              <p className="text-xs text-gray-500 mt-1">
+                {isViewArchived
+                  ? "מציג את כל ההודעות שעברו לארכיון"
+                  : "מציג את כל ההודעות שסומנו בכוכב"}
+              </p>
+            )}
+          </div>
           <div className="w-full md:w-64">
             <Input
               placeholder="חיפוש לפי שם או הודעה..."
@@ -144,8 +181,17 @@ export default function MessageTable({
                               columnKey={columnKey as string}
                               isOutbox={isOutbox}
                               deleteMessage={deleteMessage}
+                              starMessage={starMessage}
+                              archiveMessage={archiveMessage}
                               isDeleting={
                                 isDeleting.loading && isDeleting.id === item.id
+                              }
+                              isStarring={
+                                isStarring.loading && isStarring.id === item.id
+                              }
+                              isArchiving={
+                                isArchiving.loading &&
+                                isArchiving.id === item.id
                               }
                             />
                           </div>
@@ -163,8 +209,16 @@ export default function MessageTable({
                           columnKey={columnKey as string}
                           isOutbox={isOutbox}
                           deleteMessage={deleteMessage}
+                          starMessage={starMessage}
+                          archiveMessage={archiveMessage}
                           isDeleting={
                             isDeleting.loading && isDeleting.id === item.id
+                          }
+                          isStarring={
+                            isStarring.loading && isStarring.id === item.id
+                          }
+                          isArchiving={
+                            isArchiving.loading && isArchiving.id === item.id
                           }
                         />
                       </TableCell>

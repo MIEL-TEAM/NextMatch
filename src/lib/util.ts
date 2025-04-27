@@ -76,32 +76,13 @@ export function handleFormServerError<TFeildValues extends FieldValues>(
   }
 }
 
-export function transformImageUrl(
-  imageUrl?: string | null,
-  width?: number,
-  height?: number
-): string {
-  if (!imageUrl) return "/images/user.png";
-
+export function transformImageUrl(imageUrl?: string | null) {
+  if (!imageUrl) return null;
   if (!imageUrl.includes("cloudinary")) return imageUrl;
 
   const uploadIndex = imageUrl.indexOf("/upload/") + "/upload/".length;
 
-  let transformation = "g_faces";
-
-  if (width) {
-    transformation += `,w_${width}`;
-  }
-
-  if (height) {
-    transformation += `,h_${height}`;
-  }
-
-  transformation += ",q_auto";
-
-  transformation += ",f_auto";
-
-  transformation += "/";
+  const transformation = "g_faces/";
 
   return `${imageUrl.slice(0, uploadIndex)}${transformation}${imageUrl.slice(
     uploadIndex

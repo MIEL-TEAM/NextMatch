@@ -3,8 +3,9 @@
 import PresenceAvatar from "@/components/PresenceAvatar";
 import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
 import { MessageDto } from "@/types";
-import { clsx } from "clsx";
-import React, { useEffect, useRef } from "react";
+
+import clsx from "clsx";
+import React, { useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 
 type MessageBoxProps = {
@@ -12,13 +13,12 @@ type MessageBoxProps = {
   currentUserId: string;
 };
 
-export default function MessageBox({
-  message,
-  currentUserId,
-}: MessageBoxProps) {
+function MessageBox({ message, currentUserId }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;
   const messageEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const isLongMessage = message.text.length > 50;
 
   useEffect(() => {
     if (messageEndRef.current)
@@ -46,9 +46,19 @@ export default function MessageBox({
   });
 
   const renderMessageContent = () => (
-    <div className={messageContentClasses}>
+    <div
+      className={messageContentClasses}
+      style={isLongMessage ? { maxWidth: "450px" } : {}}
+    >
       {renderMessageHeader()}
-      <p className="text-sm py-3 text-gray-900">{message.text}</p>
+      <p
+        className={clsx("text-sm py-3 text-gray-900", {
+          "break-words whitespace-normal": isLongMessage,
+        })}
+        style={isLongMessage ? { wordBreak: "break-word" } : {}}
+      >
+        {message.text}
+      </p>
     </div>
   );
 
@@ -86,7 +96,11 @@ export default function MessageBox({
         })}
       >
         {!isCurrentUserSender && renderAvatar()}
-        <div className="flex-1 max-w-[85%] sm:max-w-[80%]">
+        <div
+          className={clsx("flex-1", {
+            "max-w-[85%] sm:max-w-[80%]": !isLongMessage,
+          })}
+        >
           {renderMessageContent()}
         </div>
         {isCurrentUserSender && renderAvatar()}
@@ -96,3 +110,5 @@ export default function MessageBox({
     </div>
   );
 }
+
+export default memo(MessageBox);

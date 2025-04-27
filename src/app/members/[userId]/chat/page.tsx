@@ -2,8 +2,13 @@ import CardInnerWrapper from "@/components/CardInnerWrapper";
 import ChatForm from "./ChatForm";
 import { getMessageThread } from "@/app/actions/messageActions";
 import { getAuthUserId } from "@/app/actions/authActions";
-import MessageList from "./MessageList";
 import { createChatId } from "@/lib/util";
+import dynamic from "next/dynamic";
+import HeartLoading from "@/components/HeartLoading";
+
+const MessageList = dynamic(() => import("./MessageList"), {
+  loading: () => <HeartLoading />,
+});
 
 type UserParamsProps = {
   params: Promise<{ userId: string }>;

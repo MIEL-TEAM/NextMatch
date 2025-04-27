@@ -6,7 +6,7 @@ import { useRef, useEffect, useCallback, useMemo } from "react";
 import useMessageStore from "./useMessageStore";
 import { newMessageToast } from "@/components/NewMessageToast";
 import { newLikeToast } from "@/components/NotificationToast";
-import { pusherClient } from "@/lib/pusher";
+import { pusherClient } from "@/lib/pusher-client";
 import { MessageDto } from "@/types";
 
 function debounce<T extends (...args: any[]) => any>(

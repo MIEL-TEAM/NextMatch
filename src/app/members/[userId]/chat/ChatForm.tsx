@@ -4,10 +4,13 @@ import { createMessgae } from "@/app/actions/messageActions";
 import { MessageSchema, messagesSchema } from "@/lib/schemas/messagesSchema";
 import { handleFormServerError } from "@/lib/util";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input } from "@nextui-org/react";
+// Import specific components instead of the entire library
+import { Button } from "@nextui-org/button";
+import { Textarea } from "@nextui-org/input";
 import { useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+
 import { HiPaperAirplane } from "react-icons/hi2";
 
 export default function ChatForm() {
@@ -40,17 +43,35 @@ export default function ChatForm() {
     }
   };
 
+  // Get the register props for the textarea
+  const textAreaProps = register("text");
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
       <div className="flex items-center gap-2 w-full">
-        <Input
+        <Textarea
           fullWidth
-          placeholder="הקלד הודעה"
+          placeholder="הקלד הודעה (Shift+Enter למעבר שורה)"
           variant="faded"
-          {...register("text")}
+          minRows={1}
+          maxRows={3}
+          name={textAreaProps.name}
+          onBlur={textAreaProps.onBlur}
+          onChange={textAreaProps.onChange}
+          ref={textAreaProps.ref}
           isInvalid={!!errors.text}
           errorMessage={!!errors.text?.message}
           className="flex-grow"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(onSubmit)();
+            }
+          }}
+          classNames={{
+            input: "resize-none py-2",
+            inputWrapper: "min-h-12",
+          }}
         />
         <Button
           type="submit"

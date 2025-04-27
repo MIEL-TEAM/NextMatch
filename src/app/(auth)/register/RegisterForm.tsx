@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import {
+  photoSchema,
   profileSchema,
   registerSchema,
   RegisterSchema,
@@ -15,10 +16,11 @@ import { useRouter } from "next/navigation";
 import { handleFormServerError } from "@/lib/util";
 import UserDetailsForm from "./UserDetailsForm";
 import ProfileForm from "./ProfileForm";
+import PhotoUploadForm from "./PhotoUploadForm";
 import SocialLogin from "../login/SocialLogin";
 import Link from "next/link";
 
-const stepSchemas = [registerSchema, profileSchema];
+const stepSchemas = [registerSchema, profileSchema, photoSchema];
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -52,6 +54,8 @@ export default function RegisterForm() {
         return <UserDetailsForm />;
       case 1:
         return <ProfileForm />;
+      case 2:
+        return <PhotoUploadForm />;
       default:
         return "Unknown step";
     }
@@ -114,16 +118,18 @@ export default function RegisterForm() {
                 </Button>
               )}
             </div>
-            <SocialLogin />
-            <div className="flex flex-col items-center space-y-2 text-sm">
-              <p className="text-neutral-600">כבר יש לך חשבון?</p>
-              <Link
-                href="/login"
-                className="hover:underline text-[#E37B27] font-medium"
-              >
-                התחבר כאן
-              </Link>
-            </div>
+            {activeStep === 0 && <SocialLogin />}
+            {activeStep === 0 && (
+              <div className="flex flex-col items-center space-y-2 text-sm">
+                <p className="text-neutral-600">כבר יש לך חשבון?</p>
+                <Link
+                  href="/login"
+                  className="hover:underline text-[#E37B27] font-medium"
+                >
+                  התחבר כאן
+                </Link>
+              </div>
+            )}
 
             <div className="flex justify-center mt-4">
               <Link

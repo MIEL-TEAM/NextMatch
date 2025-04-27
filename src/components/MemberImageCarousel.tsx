@@ -49,7 +49,7 @@ export default function MemberImageCarousel({
   const currentImage = uniqueImages[safeIndex];
 
   return (
-    <div {...handlers} className="relative group w-full h-full overflow-hidden">
+    <div {...handlers} className="relative w-full h-full overflow-hidden group">
       {children(currentImage)}
 
       {uniqueImages.length > 1 && (
@@ -60,16 +60,14 @@ export default function MemberImageCarousel({
               e.stopPropagation();
               goToIndex(currentIndex - 1);
             }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 
-              bg-black/40 backdrop-blur-sm rounded-full p-2.5
-              hover:bg-black/60 transition-all duration-300
-              opacity-0 group-hover:opacity-100
-              transform hover:scale-110 active:scale-95
-              shadow-lg hover:shadow-xl"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-40 
+              bg-black/10 hover:bg-black/30 backdrop-blur-sm rounded-full p-1.5
+              opacity-0 group-hover:opacity-100 transition-opacity duration-300
+              transform hover:scale-105 active:scale-95"
             aria-label="Previous image"
             type="button"
           >
-            <ChevronLeft className="text-white w-5 h-5" />
+            <ChevronLeft className="text-white w-4 h-4" />
           </button>
 
           <button
@@ -78,39 +76,40 @@ export default function MemberImageCarousel({
               e.stopPropagation();
               goToIndex(currentIndex + 1);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 
-              bg-black/40 backdrop-blur-sm rounded-full p-2.5
-              hover:bg-black/60 transition-all duration-300
-              opacity-0 group-hover:opacity-100
-              transform hover:scale-110 active:scale-95
-              shadow-lg hover:shadow-xl"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-40 
+              bg-black/10 hover:bg-black/30 backdrop-blur-sm rounded-full p-1.5
+              opacity-0 group-hover:opacity-100 transition-opacity duration-300
+              transform hover:scale-105 active:scale-95"
             aria-label="Next image"
             type="button"
           >
-            <ChevronRight className="text-white w-5 h-5" />
+            <ChevronRight className="text-white w-4 h-4" />
           </button>
 
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center justify-center z-50">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             {uniqueImages.map((_, idx) => (
               <button
-                key={`indicator-${_.id}-${idx}`}
+                key={idx}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   goToIndex(idx);
                 }}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                  idx === safeIndex
+                    ? "bg-white scale-125"
+                    : "bg-white/60 hover:bg-white/80"
+                }`}
                 aria-label={`Go to image ${idx + 1}`}
-                aria-current={idx === currentIndex ? "true" : "false"}
-                className="focus:outline-none mx-1"
                 type="button"
-              >
-                <div
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    idx === currentIndex ? "bg-white" : "bg-white/40"
-                  }`}
-                ></div>
-              </button>
+              />
             ))}
+          </div>
+
+          <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full z-30 text-white font-medium text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span dir="rtl">
+              {safeIndex + 1} מתוך {uniqueImages.length}
+            </span>
           </div>
         </>
       )}

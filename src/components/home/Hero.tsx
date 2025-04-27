@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import OptimizedImage from "@/components/OptimizedImage";
 
 type HeroSectionProps = {
   session: string;
@@ -38,15 +38,13 @@ export default function HeroSection({ session }: HeroSectionProps) {
         className="absolute inset-0 z-0"
       >
         <div className="relative w-full h-full">
-          <OptimizedImage
+          <Image
             src="/images/couple.png"
             alt="Couple connection"
-            className="w-full h-full object-cover z-[1] brightness-125 contrast-[0.95]"
-            width={1920}
-            height={1080}
-            priority={true}
-            removeWrapper
-            isZoomed={false}
+            fill
+            className="object-cover z-[1] brightness-125 contrast-[0.95]"
+            priority
+            sizes="100vw"
             style={{
               objectPosition: "center 25%",
             }}

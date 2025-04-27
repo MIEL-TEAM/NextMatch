@@ -32,12 +32,14 @@ export async function createMessgae(
       select: messageSelect,
     });
 
-    // Track the message interaction for smart matching
     await trackUserInteraction(recipientUserId, "message").catch((e) =>
       console.error("Failed to track message interaction:", e)
     );
 
-    const messageDto = mapMessageToMessageDto(message);
+    const messageDto = {
+      ...mapMessageToMessageDto(message),
+      currentUserId: userId,
+    };
 
     await pusherServer.trigger(
       createChatId(userId, recipientUserId),
@@ -108,9 +110,10 @@ export async function getMessageThread(recipientId: string) {
       );
     }
 
-    const messagesToReturn = messages.map((message) =>
-      mapMessageToMessageDto(message)
-    );
+    const messagesToReturn = messages.map((message) => ({
+      ...mapMessageToMessageDto(message),
+      currentUserId: userId,
+    }));
 
     return { messages: messagesToReturn, readCount };
   } catch (error) {
@@ -132,6 +135,7 @@ export async function getMessageByContainer(
       ...(container === "outbox"
         ? { senderDeleted: false }
         : { recipientDeleted: false }),
+      isArchived: false,
     };
 
     const messages = await prisma.message.findMany({
@@ -155,9 +159,11 @@ export async function getMessageByContainer(
       nextCursor = undefined;
     }
 
-    const messagesToReturn = messages.map((message) =>
-      mapMessageToMessageDto(message)
-    );
+    const messagesToReturn = messages.map((message) => ({
+      ...mapMessageToMessageDto(message),
+      currentUserId: userId,
+    }));
+
     return {
       messages: messagesToReturn,
       nextCursor,
@@ -217,11 +223,229 @@ export async function getUnreadMessageCount() {
   }
 }
 
+export async function toggleMessageStar(messageId: string) {
+  try {
+    const userId = await getAuthUserId();
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { isStarred: true, senderId: true, recipientId: true },
+    });
+
+    if (
+      !message ||
+      (message.senderId !== userId && message.recipientId !== userId)
+    ) {
+      throw new Error("Unauthorized access to message");
+    }
+
+    const updatedMessage = await prisma.message.update({
+      where: { id: messageId },
+      data: { isStarred: !message.isStarred },
+      select: messageSelect,
+    });
+
+    return mapMessageToMessageDto(updatedMessage);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function toggleMessageArchive(messageId: string) {
+  try {
+    const userId = await getAuthUserId();
+
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { senderId: true, recipientId: true, isArchived: true },
+    });
+
+    if (
+      !message ||
+      (message.senderId !== userId && message.recipientId !== userId)
+    ) {
+      throw new Error("Unauthorized access to message");
+    }
+
+    const partnerId =
+      message.senderId === userId ? message.recipientId : message.senderId;
+
+    if (!partnerId) {
+      throw new Error("Could not determine conversation partner");
+    }
+
+    await prisma.message.updateMany({
+      where: {
+        OR: [
+          { senderId: userId, recipientId: partnerId },
+
+          { recipientId: userId, senderId: partnerId },
+        ],
+      },
+      data: {
+        isArchived: !message.isArchived,
+      },
+    });
+
+    const updatedMessage = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: messageSelect,
+    });
+
+    return updatedMessage ? mapMessageToMessageDto(updatedMessage) : null;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getStarredMessages(cursor?: string, limit = 10) {
+  try {
+    const userId = await getAuthUserId();
+
+    const starredMessages = await prisma.message.findMany({
+      where: {
+        isStarred: true,
+        OR: [
+          { recipientId: userId, recipientDeleted: false },
+          { senderId: userId, senderDeleted: false },
+        ],
+        ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
+      },
+      orderBy: {
+        created: "desc",
+      },
+      select: {
+        ...messageSelect,
+        senderId: true,
+        recipientId: true,
+      },
+    });
+
+    const conversationMap = new Map<string, (typeof starredMessages)[0]>();
+
+    starredMessages.forEach((message) => {
+      const partnerId =
+        message.sender?.userId === userId
+          ? message.recipient?.userId
+          : message.sender?.userId;
+
+      if (!partnerId) return;
+
+      const key = partnerId.toString();
+      const existing = conversationMap.get(key);
+
+      if (!existing || new Date(message.created) > new Date(existing.created)) {
+        conversationMap.set(key, message);
+      }
+    });
+
+    const groupedMessages = Array.from(conversationMap.values()).sort(
+      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+    );
+
+    const paginated = groupedMessages.slice(0, limit + 1);
+
+    let nextCursor: string | undefined;
+    if (paginated.length > limit) {
+      const nextItem = paginated.pop();
+      nextCursor = nextItem?.created.toISOString();
+    } else {
+      nextCursor = undefined;
+    }
+
+    const messagesToReturn = paginated.map((message) => ({
+      ...mapMessageToMessageDto(message),
+      currentUserId: userId,
+    }));
+
+    return {
+      messages: messagesToReturn,
+      nextCursor,
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getArchivedMessages(cursor?: string, limit = 10) {
+  try {
+    const userId = await getAuthUserId();
+
+    const archivedMessages = await prisma.message.findMany({
+      where: {
+        isArchived: true,
+        OR: [
+          { recipientId: userId, recipientDeleted: false },
+          { senderId: userId, senderDeleted: false },
+        ],
+        ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
+      },
+      orderBy: {
+        created: "desc",
+      },
+      select: {
+        ...messageSelect,
+        senderId: true,
+        recipientId: true,
+      },
+    });
+
+    const conversationMap = new Map<string, (typeof archivedMessages)[0]>();
+
+    archivedMessages.forEach((message) => {
+      const partnerId =
+        message.sender?.userId === userId
+          ? message.recipient?.userId
+          : message.sender?.userId;
+
+      if (!partnerId) return;
+
+      const key = partnerId.toString();
+      const existing = conversationMap.get(key);
+
+      if (!existing || new Date(message.created) > new Date(existing.created)) {
+        conversationMap.set(key, message);
+      }
+    });
+
+    const groupedMessages = Array.from(conversationMap.values()).sort(
+      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+    );
+
+    const paginated = groupedMessages.slice(0, limit + 1);
+
+    let nextCursor: string | undefined;
+    if (paginated.length > limit) {
+      const nextItem = paginated.pop();
+      nextCursor = nextItem?.created.toISOString();
+    } else {
+      nextCursor = undefined;
+    }
+
+    const messagesToReturn = paginated.map((message) => ({
+      ...mapMessageToMessageDto(message),
+      currentUserId: userId,
+    }));
+
+    return {
+      messages: messagesToReturn,
+      nextCursor,
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 const messageSelect = {
   id: true,
   text: true,
   created: true,
   dateRead: true,
+  isStarred: true,
+  isArchived: true,
   sender: {
     select: { userId: true, name: true, image: true },
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Key, useTransition } from "react";
+import { useEffect, useState, Key, useTransition, useMemo } from "react";
 import { Tab, Tabs } from "@nextui-org/react";
 import { Member, Photo } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -13,6 +13,11 @@ import HeartLoading from "@/components/HeartLoading";
 type ListsProps = {
   members: Member[];
   likeIds: string[];
+};
+
+type ProcessedPhoto = {
+  url: string;
+  id: string;
 };
 
 const tabs = [
@@ -32,6 +37,29 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
   const [status, setStatus] = useState<"loading" | "error" | "success">(
     "loading"
   );
+
+  // Process photos once at the list level
+  const processedMembersData = useMemo(() => {
+    return membersWithPhotos.map(({ member, photos }) => {
+      const processedPhotos: ProcessedPhoto[] = [];
+
+      if (member.image) {
+        processedPhotos.push({ url: member.image, id: "profile" });
+      }
+
+      if (photos && photos.length > 0) {
+        photos.forEach((photo) => {
+          if (photo && photo.url) {
+            if (!processedPhotos.some((p) => p.url === photo.url)) {
+              processedPhotos.push({ url: photo.url, id: photo.id });
+            }
+          }
+        });
+      }
+
+      return { member, processedPhotos };
+    });
+  }, [membersWithPhotos]);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -181,7 +209,7 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
             transition={{ duration: 0.3 }}
             className="w-full"
           >
-            {membersWithPhotos.length > 0 ? (
+            {processedMembersData.length > 0 ? (
               <motion.div
                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6"
                 variants={{
@@ -196,7 +224,7 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
                 initial="hidden"
                 animate="show"
               >
-                {membersWithPhotos.map(({ member }) => (
+                {processedMembersData.map(({ member, processedPhotos }) => (
                   <motion.div
                     key={member.id}
                     variants={{
@@ -205,7 +233,11 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
                     }}
                     transition={{ duration: 0.3 }}
                   >
-                    <MemberCard member={member} likeIds={likeIds} />
+                    <MemberCard
+                      member={member}
+                      likeIds={likeIds}
+                      memberPhotos={processedPhotos}
+                    />
                   </motion.div>
                 ))}
               </motion.div>

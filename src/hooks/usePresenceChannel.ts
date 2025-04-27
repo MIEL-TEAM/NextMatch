@@ -1,7 +1,7 @@
 import { useCallback, useRef, useEffect, useMemo } from "react";
 import usePresenceStore from "./usePresenceStore";
 import { Channel, Members } from "pusher-js";
-import { pusherClient } from "@/lib/pusher";
+import { pusherClient } from "@/lib/pusher-client";
 import { updateLastActive } from "@/app/actions/memberActions";
 
 // Throttle function to limit frequency of operations

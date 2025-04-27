@@ -8,6 +8,9 @@ type MessageState = {
   add: (message: MessageDto) => void;
   remove: (id: string) => void;
   set: (messages: MessageDto[]) => void;
+  toggleStar: (id: string) => void;
+  toggleArchive: (id: string) => void;
+  updateById: (id: string, updates: Partial<MessageDto>) => void;
   updateUnreadCount: (amount: number) => void;
   resetMessages: () => void;
 };
@@ -31,6 +34,28 @@ const useMessageStore = create<MessageState>()(
           const uniqueMessages = Array.from(map.values());
           return { messages: uniqueMessages };
         }),
+      toggleStar: (id) =>
+        set((state) => ({
+          messages: state.messages.map((message) =>
+            message.id === id
+              ? { ...message, isStarred: !message.isStarred }
+              : message
+          ),
+        })),
+      toggleArchive: (id) =>
+        set((state) => ({
+          messages: state.messages.map((message) =>
+            message.id === id
+              ? { ...message, isArchived: !message.isArchived }
+              : message
+          ),
+        })),
+      updateById: (id, updates) =>
+        set((state) => ({
+          messages: state.messages.map((message) =>
+            message.id === id ? { ...message, ...updates } : message
+          ),
+        })),
       updateUnreadCount: (amount: number) =>
         set((state) => ({ unreadCount: state.unreadCount + amount })),
       resetMessages: () => set({ messages: [] }),

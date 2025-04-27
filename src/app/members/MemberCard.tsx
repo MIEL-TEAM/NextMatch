@@ -6,55 +6,23 @@ import { calculateAge, transformImageUrl } from "@/lib/util";
 import { Card, CardFooter, Image } from "@nextui-org/react";
 import { Member } from "@prisma/client";
 import Link from "next/link";
-import { useState, useEffect, useRef, memo } from "react";
+import { useState } from "react";
 import { toggleLikeMember } from "../actions/likeActions";
-import dynamic from "next/dynamic";
-
-const MemberImageCarousel = dynamic(
-  () => import("@/components/MemberImageCarousel"),
-  { ssr: false }
-);
+import MemberImageCarousel from "@/components/MemberImageCarousel";
 
 type MemberCardProps = {
   member: Member;
   likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
-  priority?: boolean;
 };
 
-function MemberCard({
+export default function MemberCard({
   member,
   likeIds,
   memberPhotos = [],
-  priority = false,
 }: MemberCardProps) {
   const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
   const [loading, setLoading] = useState(false);
-  const [photos, setPhotos] = useState<Array<{ url: string; id: string }>>([]);
-  const processedPhotosRef = useRef(false);
-
-  useEffect(() => {
-    if (processedPhotosRef.current) return;
-    processedPhotosRef.current = true;
-
-    const processedPhotos: Array<{ url: string; id: string }> = [];
-
-    if (member.image) {
-      processedPhotos.push({ url: member.image, id: "profile" });
-    }
-
-    if (memberPhotos && memberPhotos.length > 0) {
-      memberPhotos.forEach((photo) => {
-        if (photo && photo.url) {
-          if (!processedPhotos.some((p) => p.url === photo.url)) {
-            processedPhotos.push(photo);
-          }
-        }
-      });
-    }
-
-    setPhotos(processedPhotos);
-  }, [member.image, memberPhotos]);
 
   async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
@@ -85,7 +53,6 @@ function MemberCard({
           src={transformImageUrl(imageUrl) || "/images/user.png"}
           className="w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-105"
           removeWrapper
-          loading={priority ? "eager" : "lazy"}
         />
 
         <div className="absolute top-3 right-3 z-10">
@@ -112,17 +79,17 @@ function MemberCard({
     </Card>
   );
 
-  if (photos.length <= 1) {
+  if (memberPhotos.length <= 1) {
     const defaultImage =
-      photos.length === 1 ? photos[0].url : "/images/user.png";
+      memberPhotos.length === 1 ? memberPhotos[0].url : "/images/user.png";
     return renderCardContent(defaultImage);
   }
 
   return (
-    <MemberImageCarousel images={photos}>
-      {(currentImage) => renderCardContent(currentImage.url)}
-    </MemberImageCarousel>
+    <div className="group">
+      <MemberImageCarousel images={memberPhotos}>
+        {(currentImage) => renderCardContent(currentImage.url)}
+      </MemberImageCarousel>
+    </div>
   );
 }
-
-export default memo(MemberCard);

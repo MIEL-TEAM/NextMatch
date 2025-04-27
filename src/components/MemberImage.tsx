@@ -66,9 +66,25 @@ export default function MemberImage({ photo }: MemberImageProps) {
         />
       )}
       {!photo?.isApproved && role !== "ADMIN" && (
-        <div className="absolute bottom-2 w-full bg-slate-200 p-1">
-          <div className="flex justify-center text-danger font-semibold">
-            בהמתנה לאישור
+        <div className="absolute bottom-0 w-full bg-gradient-to-t from-red-600/80 to-transparent p-4 rounded-b-2xl">
+          <div className="flex flex-col items-center text-white">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8 mb-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <span className="font-semibold text-center">
+              תמונה זו ממתינה לאישור מנהל
+            </span>
           </div>
         </div>
       )}

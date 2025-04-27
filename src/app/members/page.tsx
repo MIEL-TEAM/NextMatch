@@ -19,12 +19,14 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const isOnlineFilter =
     params.filter === "online" || params.onlineOnly === "true";
 
+  // Optimize photo fetching with batch query
   const memberIds = members.map((member) => member.userId);
-  const photosByMemberId = await getMembersWithPhotos(memberIds);
+  const photosByUserId = await getMembersWithPhotos(memberIds);
 
+  // Map photos to members correctly by user ID, not member ID
   const membersWithPhotos = members.map((member) => ({
     member,
-    photos: photosByMemberId[member.userId] || [],
+    photos: photosByUserId[member.userId] || [],
   }));
 
   if (!members || (members.length === 0 && !isOnlineFilter)) {

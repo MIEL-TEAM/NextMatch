@@ -1,24 +1,22 @@
+import { Spinner } from "@nextui-org/react";
 import React from "react";
-import { AiFillDelete, AiOutlineDelete } from "react-icons/ai";
-import { PiSpinnerGap } from "react-icons/pi";
+import { CgTrash } from "react-icons/cg";
 
-type StarButtonProps = {
+type DeleteButtonProps = {
   loading: boolean;
 };
-export default function DeleteButton({ loading }: StarButtonProps) {
+
+export default function DeleteButton({ loading }: DeleteButtonProps) {
+  if (loading) {
+    return <Spinner size="sm" color="danger" aria-label="מוחק..." />;
+  }
+
   return (
-    <div className="relative hover:opacity-80 translate cursor-pointer">
-      {!loading ? (
-        <>
-          <AiOutlineDelete
-            size={32}
-            className="fill-white absolute -top-[2px] -right-[2px]"
-          />
-          <AiFillDelete size={28} className="fill-red-600" />
-        </>
-      ) : (
-        <PiSpinnerGap size={32} className="fill-white animate-spin" />
-      )}
-    </div>
+    <CgTrash
+      size={24}
+      className="text-red-500"
+      role="img"
+      aria-label="מחק תמונה"
+    />
   );
 }

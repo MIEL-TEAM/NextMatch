@@ -57,8 +57,24 @@ export const profileSchema = z.object({
     ),
 });
 
-export const combinedRegisterSchema = registerSchema.merge(profileSchema);
+// Add photo upload schema
+export const photoSchema = z.object({
+  photos: z
+    .array(
+      z.object({
+        url: z.string(),
+        publicId: z.string(),
+      })
+    )
+    .refine((photos) => photos.length === 3, {
+      message: "יש להעלות בדיוק 3 תמונות",
+    }),
+});
+
+export const combinedRegisterSchema = registerSchema
+  .merge(profileSchema)
+  .merge(photoSchema);
 
 export type ProfileSchema = z.infer<typeof profileSchema>;
-
+export type PhotoSchema = z.infer<typeof photoSchema>;
 export type RegisterSchema = z.infer<typeof combinedRegisterSchema>;

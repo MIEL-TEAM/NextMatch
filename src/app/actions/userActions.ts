@@ -48,6 +48,16 @@ export async function updateMemberProfile(
 export async function addImage(url: string, publicId: string) {
   try {
     const userId = await getAuthUserId();
+
+    const isApproved = true;
+
+    if (!isApproved) {
+      if (publicId) {
+        await cloudinary.v2.uploader.destroy(publicId);
+      }
+      throw new Error("התמונה לא עומדת במדיניות שלנו. נא להעלות תמונה אחרת.");
+    }
+
     return prisma.member.update({
       where: { userId },
       data: {
@@ -56,6 +66,7 @@ export async function addImage(url: string, publicId: string) {
             {
               url,
               publicId,
+              isApproved,
             },
           ],
         },

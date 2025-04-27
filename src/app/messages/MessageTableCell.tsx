@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageDto } from "@/types";
 import { Button, Tooltip } from "@nextui-org/react";
-import { Trash } from "lucide-react";
+import { Trash, Star, Archive } from "lucide-react";
 import { timeAgo } from "@/lib/util";
 import AppModal from "@/components/AppModal";
 
@@ -10,7 +10,11 @@ type MessageTableCellProps = {
   columnKey: string;
   isOutbox: boolean;
   deleteMessage: (message: MessageDto) => void;
+  starMessage: (message: MessageDto) => void;
+  archiveMessage: (message: MessageDto) => void;
   isDeleting: boolean;
+  isStarring: boolean;
+  isArchiving: boolean;
 };
 
 export default function MessageTableCell({
@@ -18,9 +22,14 @@ export default function MessageTableCell({
   columnKey,
   isOutbox,
   deleteMessage,
+  starMessage,
+  archiveMessage,
   isDeleting,
+  isStarring,
+  isArchiving,
 }: MessageTableCellProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isArchiveDisabled, setIsArchiveDisabled] = useState(false);
 
   const truncateText = (text: string, maxLength: number = 40) => {
     if (!text) return "";
@@ -39,6 +48,36 @@ export default function MessageTableCell({
     setIsDeleteModalOpen(true);
   };
 
+  const handleButtonClick = (event: React.MouseEvent, callback: () => void) => {
+    if (event && event.preventDefault) {
+      event.preventDefault();
+    }
+
+    if (event && event.stopPropagation) {
+      event.stopPropagation();
+    }
+    callback();
+  };
+
+  const handleArchiveClick = (e: any) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+
+    if (isArchiving || isArchiveDisabled) return;
+
+    setIsArchiveDisabled(true);
+    archiveMessage(item);
+
+    setTimeout(() => {
+      setIsArchiveDisabled(false);
+    }, 3000);
+  };
+
   const confirmDelete = () => {
     deleteMessage(item);
     setIsDeleteModalOpen(false);
@@ -48,7 +87,34 @@ export default function MessageTableCell({
     switch (columnKey) {
       case "senderName":
       case "recipientName":
-        return <span>{isOutbox ? item.recipientName : item.senderName}</span>;
+        let displayName;
+
+        if (item.senderId === item.recipientId) {
+          displayName = item.senderName;
+        } else if (item.currentUserId) {
+          if (item.currentUserId === item.senderId) {
+            displayName = item.recipientName;
+          } else if (item.currentUserId === item.recipientId) {
+            displayName = item.senderName;
+          } else {
+            displayName = isOutbox ? item.recipientName : item.senderName;
+          }
+        } else {
+          displayName = isOutbox ? item.recipientName : item.senderName;
+        }
+
+        return (
+          <span className="flex items-center gap-1">
+            {displayName}
+            {item.isStarred && (
+              <Star
+                size={14}
+                className="text-amber-500 inline"
+                fill="currentColor"
+              />
+            )}
+          </span>
+        );
 
       case "text":
         return <span className="text-gray-600">{truncateText(item.text)}</span>;
@@ -62,7 +128,40 @@ export default function MessageTableCell({
 
       case "actions":
         return (
-          <>
+          <div className="flex items-center gap-1">
+            <Tooltip content="סמן בכוכב">
+              <Button
+                isIconOnly
+                size="sm"
+                variant={item.isStarred ? "solid" : "light"}
+                color={item.isStarred ? "warning" : "default"}
+                isLoading={isStarring}
+                onPress={(e) =>
+                  handleButtonClick(e as any, () => starMessage(item))
+                }
+                className="min-w-8 h-8"
+              >
+                <Star size={16} />
+              </Button>
+            </Tooltip>
+
+            <Tooltip
+              content={item.isArchived ? "הוצא מהארכיון" : "העבר לארכיון"}
+            >
+              <Button
+                isIconOnly
+                size="sm"
+                variant={item.isArchived ? "solid" : "light"}
+                color={item.isArchived ? "primary" : "default"}
+                isLoading={isArchiving}
+                isDisabled={isArchiveDisabled}
+                onPress={handleArchiveClick}
+                className="min-w-8 h-8"
+              >
+                <Archive size={16} />
+              </Button>
+            </Tooltip>
+
             <Tooltip content="מחק שיחה">
               <Button
                 isIconOnly
@@ -104,7 +203,7 @@ export default function MessageTableCell({
                 },
               ]}
             />
-          </>
+          </div>
         );
 
       default:
