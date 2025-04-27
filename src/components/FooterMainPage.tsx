@@ -10,23 +10,13 @@ const MielFooter: FC = () => {
       className="bg-black/90 text-white py-12 mt-32 relative overflow-hidden"
       dir="rtl"
     >
-      {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400/80 via-amber-500/80 to-amber-600/80"></div>
-      <div className="absolute -top-12 right-1/2 transform translate-x-1/2 w-24 h-24 opacity-95 pointer-events-none">
-        <Image
-          src="/images/fluffy-heart.png"
-          alt="Miel Heart"
-          width={96}
-          height={96}
-          className="object-contain"
-        />
-      </div>
 
       <div className="container mx-auto px-4">
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-sm border border-amber-500/20">
             <Image
-              src="/images/Logo.png"
+              src="/images/icons/Logo.png"
               alt="Miel Heart"
               width={32}
               height={32}
@@ -66,7 +56,7 @@ const MielFooter: FC = () => {
           <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 flex items-center">
             <div className="relative">
               <Image
-                src="/images/Logo.png"
+                src="/images/icons/Logo.png"
                 alt="Miel Heart"
                 width={48}
                 height={48}
@@ -83,7 +73,7 @@ const MielFooter: FC = () => {
             <div className="mb-4 md:mb-0 flex items-center">
               <div className="relative w-5 h-5 mr-2">
                 <Image
-                  src="/images/Logo.png"
+                  src="/images/icons/Logo.png"
                   alt="Miel Heart"
                   fill
                   className="object-contain"
