@@ -4,8 +4,15 @@ import {
   fetchCurrentUserLikeIds,
   fetchLikedMembers,
 } from "../actions/likeActions";
+import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "התאמות אישיות | Miel",
+  description:
+    "צפה בכל החיבורים וההתאמות האישיות שלך, גלה את מי סימנת בלייק ומי עשוי להתאים לך.",
+};
 
 export default async function ListsPage({
   searchParams: searchParamsPromise,

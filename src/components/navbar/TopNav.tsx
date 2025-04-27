@@ -22,7 +22,7 @@ export default async function TopNav() {
   const memberLinks = [
     { href: "/members", label: "אנשים" },
     { href: "/smart-matches", label: "חיבורים חכמים" },
-    { href: "/lists", label: "קשרים" },
+    { href: "/lists", label: "התאמות" },
     { href: "/messages", label: "הודעות" },
     { href: "/premium", label: "פרימיום" },
   ];

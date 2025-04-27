@@ -5,6 +5,12 @@ import { GetMemberParams } from "@/types";
 import EmptyState from "@/components/EmptyState";
 import MembersStylePage from "@/components/memberStyles/MembersPageStyle";
 
+export const metadata = {
+  title: "מצאו התאמות חדשות | Miel",
+  description:
+    "גלו/י פרופילים חדשים ב-Miel, סננו לפי קריטריונים מותאמים אישית, וגלו התאמות פוטנציאליות שיכולות להתאים לכם. הצטרפו עכשיו לחוויית היכרות איכותית, מהירה ומותאמת אישית.",
+};
+
 type MembersPageProps = {
   searchParams: Promise<GetMemberParams>;
 };
