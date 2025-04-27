@@ -26,7 +26,7 @@ const MielFooter: FC = () => {
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-sm border border-amber-500/20">
             <Image
-              src="/images/miel.png"
+              src="/images/Logo.png"
               alt="Miel Heart"
               width={32}
               height={32}
@@ -66,7 +66,7 @@ const MielFooter: FC = () => {
           <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 flex items-center">
             <div className="relative">
               <Image
-                src="/images/miel.png"
+                src="/images/Logo.png"
                 alt="Miel Heart"
                 width={48}
                 height={48}
@@ -83,7 +83,7 @@ const MielFooter: FC = () => {
             <div className="mb-4 md:mb-0 flex items-center">
               <div className="relative w-5 h-5 mr-2">
                 <Image
-                  src="/images/miel.png"
+                  src="/images/Logo.png"
                   alt="Miel Heart"
                   fill
                   className="object-contain"
