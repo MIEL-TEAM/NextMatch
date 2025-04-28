@@ -106,8 +106,8 @@ export default function MemberImageCarousel({
             ))}
           </div>
 
-          <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full z-30 text-white font-medium text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span dir="rtl">
+          <div className="absolute top-3 left-3 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full z-30 text-white font-medium text-xs">
+            <span className="text-left">
               {safeIndex + 1} מתוך {uniqueImages.length}
             </span>
           </div>

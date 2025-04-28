@@ -64,9 +64,6 @@ export function PremiumPlanCard({
     onActivate();
   };
 
-  console.log(canceledAt);
-
-  // Format the end date for display
   const formatDate = (date: Date | null) => {
     if (!date) return "";
     return new Date(date).toLocaleDateString("he-IL");
@@ -74,7 +71,6 @@ export function PremiumPlanCard({
 
   const formattedEndDate = formatDate(premiumUntil);
 
-  // Determine card styling based on status
   const cardBorderClass = isActive
     ? isCanceled
       ? "border-2 border-orange-500"
@@ -83,7 +79,6 @@ export function PremiumPlanCard({
     ? "border-2 border-amber-400 shadow-xl"
     : "";
 
-  // Determine icon container styling based on status
   const iconContainerClass = isActive
     ? isCanceled
       ? "bg-orange-100 text-orange-500"
@@ -102,7 +97,6 @@ export function PremiumPlanCard({
             </div>
           )}
 
-          {/* Plan badges */}
           {isHighlighted && !isActive && (
             <div className="bg-amber-400 text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
               המומלץ ביותר
@@ -142,7 +136,6 @@ export function PremiumPlanCard({
         </CardBody>
 
         <CardFooter className="flex flex-col gap-2">
-          {/* Different button states based on subscription status */}
           {isActive ? (
             <>
               <div className="w-full text-center mb-2">
@@ -193,7 +186,6 @@ export function PremiumPlanCard({
               )}
             </>
           ) : (
-            // For plans the user is not subscribed to
             <Button
               color={isHighlighted ? "warning" : "primary"}
               className="w-full"

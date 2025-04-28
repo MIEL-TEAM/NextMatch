@@ -3,9 +3,10 @@
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
-import { Card, CardFooter, Image } from "@nextui-org/react";
+import { Card, CardFooter } from "@nextui-org/react";
 import { Member } from "@prisma/client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { toggleLikeMember } from "../actions/likeActions";
 import MemberImageCarousel from "@/components/MemberImageCarousel";
@@ -46,13 +47,14 @@ export default function MemberCard({
       isPressable
       className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
     >
-      <div className="relative aspect-square overflow-hidden rounded-t-lg">
+      <div className="relative aspect-square overflow-hidden rounded-t-lg group">
         <Image
-          isZoomed
           alt={member.name}
           src={transformImageUrl(imageUrl) || "/images/user.png"}
-          className="w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-105"
-          removeWrapper
+          className="w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-125"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          priority
         />
 
         <div className="absolute top-3 right-3 z-10">
