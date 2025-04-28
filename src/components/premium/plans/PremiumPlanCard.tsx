@@ -53,7 +53,6 @@ export function PremiumPlanCard({
   isActive = false,
   isPremium = false,
   isCanceled = false,
-  canceledAt = null,
   premiumUntil = null,
   onCancel,
 }: PremiumPlanCardProps) {
