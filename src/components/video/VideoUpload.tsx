@@ -29,6 +29,92 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const currentFileRef = useRef<File | null>(null);
 
+  // Convert webm to mp4 (more compatible format)
+  const convertToMP4 = useCallback(async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Create a temporary URL for the file
+        const videoURL = URL.createObjectURL(file);
+
+        // Create a video element to load the video
+        const video = document.createElement("video");
+        video.preload = "metadata";
+
+        video.onloadedmetadata = () => {
+          URL.revokeObjectURL(videoURL);
+
+          // Create a canvas and capture stream
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            throw new Error("Failed to get canvas context");
+          }
+
+          // Use MediaRecorder with mp4 codec
+          const stream = canvas.captureStream(30);
+          const mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm", // We'll convert to MP4 on server
+            videoBitsPerSecond: 2500000,
+          });
+
+          const chunks: Blob[] = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              chunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: "video/mp4" });
+            const newFile = new File(
+              [blob],
+              file.name.replace(/\.[^/.]+$/, "") + "_compressed.mp4",
+              {
+                type: "video/mp4",
+                lastModified: Date.now(),
+              }
+            );
+            resolve(newFile);
+          };
+
+          // Start recording and playing
+          mediaRecorder.start(100);
+          video.play();
+
+          // Draw frames
+          const processFrame = () => {
+            if (video.ended || video.paused) {
+              mediaRecorder.stop();
+              return;
+            }
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(processFrame);
+          };
+
+          processFrame();
+
+          video.onended = () => {
+            mediaRecorder.stop();
+          };
+        };
+
+        video.onerror = () => {
+          URL.revokeObjectURL(videoURL);
+          reject(new Error("Error loading video"));
+        };
+
+        video.src = videoURL;
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }, []);
+
   // Video compression function
   const compressVideo = useCallback(async (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
@@ -97,12 +183,12 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
             // Create a blob from all the chunks
             const blob = new Blob(chunks, { type: "video/webm" });
 
-            // Convert to File object
+            // Convert to File object - use MP4 format for better compatibility
             const compressedFile = new File(
               [blob],
-              file.name.replace(/\.[^/.]+$/, "") + "_compressed.webm",
+              file.name.replace(/\.[^/.]+$/, "") + "_compressed.mp4",
               {
-                type: "video/webm",
+                type: "video/mp4",
                 lastModified: Date.now(),
               }
             );
@@ -228,11 +314,17 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
           }
         }
 
+        // Store reference for retries
         currentFileRef.current = fileToUpload;
 
         const formData = new FormData();
         formData.append("file", fileToUpload);
         formData.append("memberId", memberId);
+
+        // Add these fields to help server properly handle the file
+        formData.append("filename", fileToUpload.name);
+        formData.append("filesize", fileToUpload.size.toString());
+        formData.append("filetype", fileToUpload.type);
 
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
@@ -258,25 +350,40 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
             }, 1500);
           } else {
             let errorMsg = "ההעלאה נכשלה";
+            let responseData = null;
+
             try {
-              const errorData = JSON.parse(xhr.responseText);
-              if (errorData.error) {
-                errorMsg = errorData.error;
+              responseData = JSON.parse(xhr.responseText);
+              if (responseData.error) {
+                errorMsg = responseData.error;
               }
             } catch {}
 
+            console.error(
+              "Upload failed with status:",
+              xhr.status,
+              "Response:",
+              xhr.responseText
+            );
+
+            // For 400 errors, try with original file if we're using compressed
+            if (xhr.status === 400 && fileToUpload !== file && retryCount < 1) {
+              console.log("Trying with original file instead of compressed");
+              setRetryCount(1);
+              setTimeout(() => {
+                handleUpload(file);
+              }, 1000);
+              return;
+            }
+
             // For 413 errors specifically, try to compress more aggressively
-            if (
-              xhr.status === 413 &&
-              !fileToUpload.name.includes("_compressed") &&
-              fileToUpload.size > 3 * 1024 * 1024
-            ) {
+            if (xhr.status === 413 && retryCount < maxRetries) {
               setRetryCount((prev) => prev + 1);
               setTimeout(async () => {
                 try {
                   setIsCompressing(true);
-                  // More aggressive compression settings are used in compressVideo
-                  const moreCompressed = await compressVideo(fileToUpload);
+                  // More aggressive compression
+                  const moreCompressed = await compressVideo(file);
                   setIsCompressing(false);
                   setUploadProgress(0);
                   // Try with more compressed file
@@ -288,16 +395,21 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
                   throw new Error("שגיאה בדחיסת הוידאו");
                 }
               }, 1000);
-            } else if (retryCount < maxRetries) {
+              return;
+            }
+
+            // General retry logic for other errors
+            if (retryCount < maxRetries) {
               setRetryCount((prev) => prev + 1);
               setTimeout(() => {
                 if (currentFileRef.current) {
                   handleUpload(currentFileRef.current);
                 }
               }, 2000 * (retryCount + 1));
-            } else {
-              throw new Error(errorMsg);
+              return;
             }
+
+            throw new Error(errorMsg);
           }
         };
 
