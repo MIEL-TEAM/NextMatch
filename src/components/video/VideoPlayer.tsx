@@ -25,11 +25,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   thumbnailUrl,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const [showThumbnail, setShowThumbnail] = useState(true);
   const [duration, setDuration] = useState<number>(0);
+  const [videoWidth, setVideoWidth] = useState(0);
+  const [videoHeight, setVideoHeight] = useState(0);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -55,6 +58,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const videoElement = videoRef.current;
 
       const handleError = () => {
+        console.error("Video error loading:", url);
         setError("Failed to load video");
         setIsLoading(false);
       };
@@ -63,6 +67,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         setIsLoading(false);
         setError(null);
         setDuration(videoElement.duration);
+
+        // Save the actual video dimensions when loaded
+        setVideoWidth(videoElement.videoWidth);
+        setVideoHeight(videoElement.videoHeight);
 
         if ((autoPlay || preview) && videoElement) {
           tryPlayVideo();
@@ -78,6 +86,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       };
     }
   }, [url, autoPlay, preview, tryPlayVideo]);
+
+  // Center the video content when dimensions change
+  useEffect(() => {
+    if (videoWidth && videoHeight && containerRef.current && videoRef.current) {
+      if (preview) {
+        // For preview mode, let's use object-fit: contain
+        videoRef.current.style.objectFit = "contain";
+      }
+    }
+  }, [videoWidth, videoHeight, preview]);
 
   useEffect(() => {
     if (preview && !isLoading && !error) {
@@ -103,7 +121,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div
-      className={`relative w-full ${className}`}
+      ref={containerRef}
+      className={`relative w-full h-full flex items-center justify-center ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -148,13 +167,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       <video
         ref={videoRef}
-        className={`w-full rounded-lg ${preview ? "object-cover h-full" : ""}`}
+        className={`max-w-full max-h-full rounded-lg ${
+          preview ? "object-contain" : "object-contain"
+        }`}
         controls={preview ? false : controls || isHovering}
         autoPlay={autoPlay}
         loop={loop || preview}
         muted={muted || preview}
         playsInline
         preload="metadata"
+        style={{ margin: "auto" }}
       >
         <source src={url} type="video/mp4" />
         <source src={url} type="video/quicktime" />
