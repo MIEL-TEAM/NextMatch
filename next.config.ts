@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lodash", "@/components/*"],
   },
 
+  serverExternalPackages: [],
+
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -55,12 +57,6 @@ const nextConfig: NextConfig = {
   },
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
-  api: {
-    bodyParser: {
-      sizeLimit: "100mb",
-    },
-    responseLimit: "100mb",
-  },
 };
 
 export default nextConfig;

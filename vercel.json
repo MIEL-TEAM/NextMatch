@@ -1,0 +1,17 @@
+{
+  "routes": [
+    {
+      "src": "/api/videos",
+      "headers": {
+        "Connection": "keep-alive",
+        "Keep-Alive": "timeout=60"
+      }
+    }
+  ],
+  "functions": {
+    "api/videos": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}
