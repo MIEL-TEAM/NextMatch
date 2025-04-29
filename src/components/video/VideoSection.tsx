@@ -78,7 +78,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
           {(!videos || videos.length === 0) && (
             <div className="text-center text-gray-500 py-4">
-              No videos uploaded yet
+              עדיין לא הועלו סרטוני פרופיל
             </div>
           )}
         </div>
