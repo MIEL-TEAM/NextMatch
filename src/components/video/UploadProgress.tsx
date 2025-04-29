@@ -8,12 +8,14 @@ interface UploadProgressProps {
   progress: number;
   onCancel: () => void;
   success: boolean;
+  isCompressing?: boolean;
 }
 
 const UploadProgress: React.FC<UploadProgressProps> = ({
   progress,
   onCancel,
   success,
+  isCompressing = false,
 }) => {
   const [displayProgress, setDisplayProgress] = useState(0);
 
@@ -51,6 +53,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   }
 
   const getStatusMessage = () => {
+    if (isCompressing) return "מדחיס את הסרטון...";
     if (displayProgress < 100) return "מעלה סרטון...";
     return "מעבד סרטון...";
   };
@@ -65,7 +68,9 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
       aria-valuemax={100}
     >
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium">מעלה סרטון</span>
+        <span className="text-sm font-medium">
+          {isCompressing ? "דחיסת סרטון" : "העלאת סרטון"}
+        </span>
         <Button
           size="sm"
           isIconOnly

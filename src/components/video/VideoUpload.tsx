@@ -24,9 +24,159 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const currentFileRef = useRef<File | null>(null);
+
+  // Video compression function
+  const compressVideo = useCallback(async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      setIsCompressing(true);
+
+      // Create video element to load the file
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      // Create a URL for the video file
+      const videoURL = URL.createObjectURL(file);
+
+      video.onloadedmetadata = async () => {
+        URL.revokeObjectURL(videoURL);
+
+        try {
+          // Calculate target dimensions (reduce size if large)
+          const origWidth = video.videoWidth;
+          const origHeight = video.videoHeight;
+
+          // Target 720p max for larger videos
+          const maxDimension = 720;
+          let targetWidth = origWidth;
+          let targetHeight = origHeight;
+
+          if (origWidth > maxDimension || origHeight > maxDimension) {
+            if (origWidth > origHeight) {
+              targetWidth = maxDimension;
+              targetHeight = Math.round(
+                (origHeight / origWidth) * maxDimension
+              );
+            } else {
+              targetHeight = maxDimension;
+              targetWidth = Math.round((origWidth / origHeight) * maxDimension);
+            }
+          }
+
+          // Create a canvas element to draw video frames
+          const canvas = document.createElement("canvas");
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+
+          // Get the canvas context for drawing
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            throw new Error("Failed to get canvas context");
+          }
+
+          // Create a MediaRecorder to record the compressed video
+          const stream = canvas.captureStream(30); // 30 FPS
+          const mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm",
+            videoBitsPerSecond: 2500000, // 2.5 Mbps
+          });
+
+          // Set up data handling
+          const chunks: Blob[] = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              chunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            // Create a blob from all the chunks
+            const blob = new Blob(chunks, { type: "video/webm" });
+
+            // Convert to File object
+            const compressedFile = new File(
+              [blob],
+              file.name.replace(/\.[^/.]+$/, "") + "_compressed.webm",
+              {
+                type: "video/webm",
+                lastModified: Date.now(),
+              }
+            );
+
+            // Check if we actually saved space
+            if (compressedFile.size < file.size) {
+              setIsCompressing(false);
+              resolve(compressedFile);
+            } else {
+              // If compression didn't help, use the original
+              setIsCompressing(false);
+              resolve(file);
+            }
+          };
+
+          // Start recording
+          mediaRecorder.start(100); // Collect data in 100ms chunks
+
+          // Play the video
+          video.currentTime = 0;
+          video.play();
+
+          // Handle the video playback and progress
+          let lastDrawnFrame = -1;
+
+          const processFrame = () => {
+            if (video.ended || video.paused) {
+              mediaRecorder.stop();
+              return;
+            }
+
+            // Only draw a new frame if the video has advanced
+            if (video.currentTime !== lastDrawnFrame) {
+              ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+              lastDrawnFrame = video.currentTime;
+
+              // Update progress (0-90%, leave 10% for final processing)
+              const progress = Math.min(
+                90,
+                Math.round((video.currentTime / video.duration) * 90)
+              );
+              setUploadProgress(progress);
+            }
+
+            requestAnimationFrame(processFrame);
+          };
+
+          processFrame();
+
+          // Handle video ended
+          video.onended = () => {
+            setTimeout(() => {
+              if (mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+              }
+              setUploadProgress(100);
+            }, 100);
+          };
+        } catch (error) {
+          setIsCompressing(false);
+          reject(error);
+        }
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(videoURL);
+        setIsCompressing(false);
+        reject(new Error("שגיאה בטעינת הוידאו לדחיסה"));
+      };
+
+      // Set the source and start loading
+      video.src = videoURL;
+    });
+  }, []);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -58,16 +208,37 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         setIsUploading(true);
         setUploadProgress(0);
         setUploadSuccess(false);
-        currentFileRef.current = file;
+
+        // Compress video if larger than 7MB
+        let fileToUpload = file;
+        if (!isCompressing && file.size > 7 * 1024 * 1024) {
+          try {
+            setIsCompressing(true);
+            fileToUpload = await compressVideo(file);
+            setIsCompressing(false);
+            // Reset progress since we'll start the actual upload now
+            setUploadProgress(0);
+          } catch (compressError) {
+            console.warn(
+              "Compression failed, using original file:",
+              compressError
+            );
+            // If compression fails, continue with the original file
+            setIsCompressing(false);
+          }
+        }
+
+        currentFileRef.current = fileToUpload;
 
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", fileToUpload);
         formData.append("memberId", memberId);
 
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
 
         xhr.open("POST", "/api/videos", true);
+        xhr.timeout = 5 * 60 * 1000; // 5 minute timeout
 
         xhr.setRequestHeader("Accept", "application/json");
 
@@ -94,7 +265,30 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
               }
             } catch {}
 
-            if (retryCount < maxRetries) {
+            // For 413 errors specifically, try to compress more aggressively
+            if (
+              xhr.status === 413 &&
+              !fileToUpload.name.includes("_compressed") &&
+              fileToUpload.size > 3 * 1024 * 1024
+            ) {
+              setRetryCount((prev) => prev + 1);
+              setTimeout(async () => {
+                try {
+                  setIsCompressing(true);
+                  // More aggressive compression settings are used in compressVideo
+                  const moreCompressed = await compressVideo(fileToUpload);
+                  setIsCompressing(false);
+                  setUploadProgress(0);
+                  // Try with more compressed file
+                  handleUpload(moreCompressed);
+                } catch (error) {
+                  console.log(error);
+
+                  setIsCompressing(false);
+                  throw new Error("שגיאה בדחיסת הוידאו");
+                }
+              }, 1000);
+            } else if (retryCount < maxRetries) {
               setRetryCount((prev) => prev + 1);
               setTimeout(() => {
                 if (currentFileRef.current) {
@@ -146,7 +340,15 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         }
       }
     },
-    [memberId, onError, onUploadComplete, retryCount, maxRetries]
+    [
+      memberId,
+      onError,
+      onUploadComplete,
+      retryCount,
+      maxRetries,
+      compressVideo,
+      isCompressing,
+    ]
   );
 
   const handleDrag = useCallback((event: React.DragEvent) => {
@@ -192,6 +394,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
       xhrRef.current = null;
     }
     setIsUploading(false);
+    setIsCompressing(false);
     setUploadProgress(0);
   }, []);
 
@@ -201,6 +404,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         progress={uploadProgress}
         onCancel={cancelUpload}
         success={uploadSuccess}
+        isCompressing={isCompressing}
       />
     );
   }
@@ -229,6 +433,9 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
           </p>
           <p className="text-xs text-gray-500 mt-1">
             MP4, MOV או AVI (מקסימום {maxSizeMB} מגה-בייט)
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            סרטונים גדולים יעברו דחיסה אוטומטית
           </p>
         </div>
         <Button
