@@ -1,3 +1,5 @@
 RUN_SEED=true npx prisma db seed
 npm run push-to-neon
 npm run seed-neon
+
+password-s3 bucket - ihR1)Mq&

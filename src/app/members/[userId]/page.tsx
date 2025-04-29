@@ -8,21 +8,34 @@ import CardInnerWrapper from "@/components/CardInnerWrapper";
 import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import InterestsSection from "@/components/interests/InterestsSection";
 import ProfileViewTracker from "@/components/ProfileViewTracker";
+import { VideoSection } from "@/components/video/VideoSection";
+import { auth } from "@/auth";
+import { getMemberVideos } from "@/app/actions/videoActions";
 
-type MemberDetailedPageProps = {
+interface MemberDetailedPageProps {
   params: Promise<{ userId: string }>;
-};
+}
 
 export default async function MemberDetailedPage({
   params,
 }: MemberDetailedPageProps) {
   const { userId } = await params;
   const member = await getMemberByUserId(userId);
+  const session = await auth();
+  const isOwnProfile = session?.user?.id === userId;
 
   if (!member) return notFound();
 
   const likeIds = await fetchCurrentUserLikeIds();
   const interests = await getUserInterestsByUserId(userId);
+  const videos = await getMemberVideos(member.id);
+
+  const formattedVideos = videos.map((video) => ({
+    ...video,
+    createdAt: video.createdAt.toISOString(),
+    updatedAt: video.updatedAt.toISOString(),
+    duration: video.duration ?? 0,
+  }));
 
   return (
     <ProfileViewTracker userId={userId}>
@@ -38,6 +51,13 @@ export default async function MemberDetailedPage({
             <ProfileHeader member={member} userId={userId} likeIds={likeIds} />
             <Divider />
             <InterestsSection interests={interests} />
+            <Divider />
+            <VideoSection
+              videos={formattedVideos}
+              memberId={member.id}
+              userId={userId}
+              isOwnProfile={isOwnProfile}
+            />
           </div>
         </div>
       </div>

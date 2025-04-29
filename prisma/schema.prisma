@@ -76,6 +76,7 @@ model Member {
   recipientMessages  Message[]         @relation("recipient")
   senderMessages     Message[]         @relation("sender")
   photos             Photo[]
+  videos             Video[]
   interests          Interest[]
   interactions       UserInteraction[] @relation("userInteractions")
   targetInteractions UserInteraction[] @relation("targetInteractions")
@@ -158,6 +159,17 @@ model UserPreference {
   preferenceData Json
   lastUpdated    DateTime @default(now())
   user           Member   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model Video {
+  id         String   @id @default(cuid())
+  url        String
+  memberId   String
+  isApproved Boolean  @default(false)
+  duration   Int? // Duration in seconds
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 enum TokenType {

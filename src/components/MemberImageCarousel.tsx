@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MemberImageCarouselProps {
   images: Array<{ url: string; id: string }>;
   children: (currentImage: { url: string; id: string }) => React.ReactNode;
+  onIndexChange?: (index: number) => void;
 }
 
 export default function MemberImageCarousel({
   images,
   children,
+  onIndexChange,
 }: MemberImageCarouselProps) {
   const uniqueImages = images.reduce((unique, img) => {
     if (!img || !img.url) return unique;
@@ -24,6 +26,12 @@ export default function MemberImageCarousel({
   }, [] as Array<{ url: string; id: string }>);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (onIndexChange) {
+      onIndexChange(currentIndex);
+    }
+  }, [currentIndex, onIndexChange]);
 
   const goToIndex = (newIndex: number) => {
     if (uniqueImages.length <= 1) return;
@@ -61,7 +69,7 @@ export default function MemberImageCarousel({
               goToIndex(currentIndex - 1);
             }}
             className="absolute left-2 top-1/2 -translate-y-1/2 z-40 
-              bg-black/10 hover:bg-black/30 backdrop-blur-sm rounded-full p-1.5
+              bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               transform hover:scale-105 active:scale-95"
             aria-label="Previous image"
@@ -77,7 +85,7 @@ export default function MemberImageCarousel({
               goToIndex(currentIndex + 1);
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 z-40 
-              bg-black/10 hover:bg-black/30 backdrop-blur-sm rounded-full p-1.5
+              bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               transform hover:scale-105 active:scale-95"
             aria-label="Next image"
@@ -85,32 +93,6 @@ export default function MemberImageCarousel({
           >
             <ChevronRight className="text-white w-4 h-4" />
           </button>
-
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            {uniqueImages.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  goToIndex(idx);
-                }}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  idx === safeIndex
-                    ? "bg-white scale-125"
-                    : "bg-white/60 hover:bg-white/80"
-                }`}
-                aria-label={`Go to image ${idx + 1}`}
-                type="button"
-              />
-            ))}
-          </div>
-
-          <div className="absolute top-3 left-3 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full z-30 text-white font-medium text-xs">
-            <span className="text-left">
-              {safeIndex + 1} מתוך {uniqueImages.length}
-            </span>
-          </div>
         </>
       )}
     </div>

@@ -23,13 +23,14 @@ function calculateAge(dateOfBirth: Date): number {
   return age;
 }
 
-interface MemberWithPhotos {
+interface MemberWithPhotosAndVideos {
   member: Member;
   photos: Array<{ url: string; id: string }>;
+  videos: Array<{ url: string; id: string }>;
 }
 
 interface MembersStylePageProps {
-  membersData: MemberWithPhotos[];
+  membersData: MemberWithPhotosAndVideos[];
   totalCount: number;
   likeIds: string[];
   isOnlineFilter?: boolean;
@@ -54,9 +55,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
 
   const membersWithImages = membersData.filter(({ member }) => {
     if (!member || !member.image) return false;
-
     if (member.image.includes("googleusercontent")) return true;
-
     return true;
   });
 
@@ -135,9 +134,14 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
 
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6">
-            {membersData.map(({ member }) => (
+            {membersData.map(({ member, photos, videos }) => (
               <div key={member.id} className="relative">
-                <MemberCard member={member} likeIds={likeIds} />
+                <MemberCard
+                  member={member}
+                  likeIds={likeIds}
+                  memberPhotos={photos}
+                  memberVideos={videos}
+                />
               </div>
             ))}
           </div>
@@ -220,7 +224,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
           animate="show"
         >
           <motion.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6">
-            {membersData.map(({ member, photos }) => (
+            {membersData.map(({ member, photos, videos }) => (
               <motion.div
                 key={member.id}
                 variants={item}
@@ -237,6 +241,7 @@ const MembersStylePage: React.FC<MembersStylePageProps> = ({
                     member={member}
                     likeIds={likeIds}
                     memberPhotos={photos}
+                    memberVideos={videos}
                   />
                 </div>
               </motion.div>

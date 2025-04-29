@@ -1,6 +1,7 @@
 import React from "react";
 import { getMembers, getMembersWithPhotos } from "../actions/memberActions";
 import { fetchCurrentUserLikeIds } from "../actions/likeActions";
+import { getMemberVideosForCards } from "../actions/videoActions";
 import { GetMemberParams } from "@/types";
 import EmptyState from "@/components/EmptyState";
 import MembersStylePage from "@/components/memberStyles/MembersPageStyle";
@@ -25,14 +26,14 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const isOnlineFilter =
     params.filter === "online" || params.onlineOnly === "true";
 
-  // Optimize photo fetching with batch query
   const memberIds = members.map((member) => member.userId);
   const photosByUserId = await getMembersWithPhotos(memberIds);
+  const videosByUserId = await getMemberVideosForCards(memberIds);
 
-  // Map photos to members correctly by user ID, not member ID
-  const membersWithPhotos = members.map((member) => ({
+  const membersWithPhotosAndVideos = members.map((member) => ({
     member,
     photos: photosByUserId[member.userId] || [],
+    videos: videosByUserId[member.userId] || [],
   }));
 
   if (!members || (members.length === 0 && !isOnlineFilter)) {
@@ -47,7 +48,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
 
   return (
     <MembersStylePage
-      membersData={membersWithPhotos}
+      membersData={membersWithPhotosAndVideos}
       totalCount={totalCount}
       likeIds={likeIds}
       isOnlineFilter={isOnlineFilter}

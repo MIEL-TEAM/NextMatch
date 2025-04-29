@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lodash", "@/components/*"],
   },
+
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -29,6 +30,17 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "profile-videos-miel.s3.amazonaws.com",
+        pathname: "/**",
+      },
+    ],
+    domains: [
+      "res.cloudinary.com",
+      "lh3.googleusercontent.com",
+      "avatars.githubusercontent.com",
+      "profile-videos-miel.s3.amazonaws.com",
     ],
   },
   webpack: (config) => {

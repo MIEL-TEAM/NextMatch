@@ -25,7 +25,7 @@ export default function MobileBlocker() {
       <div className="bg-white rounded-2xl p-8 max-w-md mx-auto shadow-xl">
         <div className="flex justify-center mb-4">
           <Image
-            src="https://miel-love.com/images/icons/miel.png"
+            src="https://miel-love.com/images/icons/Logo.png"
             alt="Miel"
             width={60}
             height={60}
