@@ -116,7 +116,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                 attributes: {
                   controlsList: "nodownload",
                   disablePictureInPicture: true,
+                  playsInline: true,
+                  crossOrigin: "anonymous",
                 },
+                forceAudio: true,
+                forceVideo: true,
               },
             }}
           />

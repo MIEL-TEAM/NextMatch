@@ -203,7 +203,11 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
             file: {
               attributes: {
                 preload: "metadata",
+                playsInline: true,
+                crossOrigin: "anonymous",
               },
+              forceAudio: true,
+              forceVideo: true,
             },
           }}
         />
