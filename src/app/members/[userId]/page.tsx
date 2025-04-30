@@ -1,4 +1,7 @@
-import { getMemberByUserId } from "@/app/actions/memberActions";
+import {
+  getMemberByUserId,
+  getMemberPhotosByUserId,
+} from "@/app/actions/memberActions";
 import { getUserInterestsByUserId } from "@/app/actions/interestsAction";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -29,6 +32,7 @@ export default async function MemberDetailedPage({
   const likeIds = await fetchCurrentUserLikeIds();
   const interests = await getUserInterestsByUserId(userId);
   const videos = await getMemberVideos(member.id);
+  const memberPhotos = await getMemberPhotosByUserId(userId);
 
   const formattedVideos = videos.map((video) => ({
     ...video,
@@ -36,6 +40,13 @@ export default async function MemberDetailedPage({
     updatedAt: video.updatedAt.toISOString(),
     duration: video.duration ?? 0,
   }));
+
+  const formattedPhotos = memberPhotos
+    ? memberPhotos.map((photo) => ({
+        url: photo.url,
+        id: photo.id,
+      }))
+    : [];
 
   return (
     <ProfileViewTracker userId={userId}>
@@ -57,6 +68,12 @@ export default async function MemberDetailedPage({
               memberId={member.id}
               userId={userId}
               isOwnProfile={isOwnProfile}
+              member={{
+                name: member.name,
+                userId: member.userId,
+                profileImageUrl: member.image || undefined,
+              }}
+              memberPhotos={formattedPhotos}
             />
           </div>
         </div>

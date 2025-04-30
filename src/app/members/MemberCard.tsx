@@ -39,6 +39,12 @@ export default function MemberCard({
     }
   }, [memberVideos, activeVideo]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
   async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -47,8 +53,8 @@ export default function MemberCard({
     try {
       await toggleLikeMember(member.userId, hasLiked);
       setHasLiked(!hasLiked);
-    } catch (error) {
-      console.error("Like toggle error:", error);
+    } catch {
+      // Error silently handled
     } finally {
       setLoading(false);
     }
@@ -57,20 +63,30 @@ export default function MemberCard({
   const toggleMute = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+
     if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+      videoRef.current.muted = newMutedState;
     }
   };
 
   const handleMouseEnter = () => {
     if (memberVideos.length > 0 && activeVideo) {
       setShowVideo(true);
+      if (videoRef.current) {
+        videoRef.current.load();
+        videoRef.current.play().catch(() => {});
+      }
     }
   };
 
   const handleMouseLeave = () => {
     setShowVideo(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
   };
 
   const renderCardContent = (imageUrl: string) => (
