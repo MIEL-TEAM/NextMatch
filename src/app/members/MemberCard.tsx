@@ -32,11 +32,6 @@ export default function MemberCard({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioConnectedRef = useRef<boolean>(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const videoPlayingRef = useRef(false);
 
   useEffect(() => {
     if (memberVideos.length > 0 && !activeVideo) {
@@ -50,35 +45,6 @@ export default function MemberCard({
     }
   }, [isMuted]);
 
-  useEffect(() => {
-    if (isHovering && videoRef.current && !videoPlayingRef.current) {
-      console.log(
-        "[AUDIO-DEBUG] MemberCard - Effect: Starting playback due to hover"
-      );
-      videoPlayingRef.current = true;
-
-      setTimeout(() => {
-        if (videoRef.current && isHovering) {
-          videoRef.current
-            .play()
-            .then(() => {
-              console.log("[AUDIO-DEBUG] MemberCard - Effect: Play succeeded");
-            })
-            .catch((err) => {
-              console.log("[AUDIO-DEBUG] MemberCard - Effect: Play error", err);
-              videoPlayingRef.current = false;
-            });
-        }
-      }, 200);
-    } else if (!isHovering && videoRef.current && videoPlayingRef.current) {
-      console.log(
-        "[AUDIO-DEBUG] MemberCard - Effect: Stopping playback due to hover end"
-      );
-      videoRef.current.pause();
-      videoPlayingRef.current = false;
-    }
-  }, [isHovering]);
-
   async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -87,8 +53,8 @@ export default function MemberCard({
     try {
       await toggleLikeMember(member.userId, hasLiked);
       setHasLiked(!hasLiked);
-    } catch {
-      // Error silently handled
+    } catch (e) {
+      console.log(e);
     } finally {
       setLoading(false);
     }
@@ -99,110 +65,28 @@ export default function MemberCard({
     e.stopPropagation();
 
     const newMutedState = !isMuted;
-    console.log(
-      "[AUDIO-DEBUG] MemberCard - Toggle mute clicked, new state:",
-      newMutedState
-    );
-    console.log(
-      "[AUDIO-DEBUG] MemberCard - Video element exists:",
-      !!videoRef.current
-    );
-    console.log("[AUDIO-DEBUG] MemberCard - Active video URL:", activeVideo);
-
     setIsMuted(newMutedState);
 
     if (videoRef.current) {
       videoRef.current.muted = newMutedState;
-      console.log(
-        "[AUDIO-DEBUG] MemberCard - Set video.muted to:",
-        newMutedState
-      );
-
-      if (!newMutedState) {
-        console.log("[AUDIO-DEBUG] MemberCard - Attempting to unmute");
-
-        try {
-          if (!audioConnectedRef.current) {
-            const AudioContext =
-              window.AudioContext || (window as any).webkitAudioContext;
-            console.log(
-              "[AUDIO-DEBUG] MemberCard - AudioContext available:",
-              !!AudioContext
-            );
-
-            if (AudioContext) {
-              if (!audioContextRef.current) {
-                audioContextRef.current = new AudioContext();
-                console.log(
-                  "[AUDIO-DEBUG] MemberCard - Created new AudioContext"
-                );
-                console.log(
-                  "[AUDIO-DEBUG] MemberCard - AudioContext state:",
-                  audioContextRef.current.state
-                );
-              } else {
-                console.log(
-                  "[AUDIO-DEBUG] MemberCard - Using existing AudioContext"
-                );
-                console.log(
-                  "[AUDIO-DEBUG] MemberCard - AudioContext state:",
-                  audioContextRef.current.state
-                );
-              }
-
-              const source = audioContextRef.current.createMediaElementSource(
-                videoRef.current
-              );
-              source.connect(audioContextRef.current.destination);
-              audioConnectedRef.current = true;
-              console.log(
-                "[AUDIO-DEBUG] MemberCard - Connected video to AudioContext"
-              );
-            }
-          } else {
-            console.log(
-              "[AUDIO-DEBUG] MemberCard - Already connected to AudioContext"
-            );
-          }
-        } catch (e) {
-          console.log("[AUDIO-DEBUG] MemberCard - AudioContext error:", e);
-          if (videoRef.current) {
-            videoRef.current.muted = false;
-            console.log(
-              "[AUDIO-DEBUG] MemberCard - Forced muted=false directly as fallback"
-            );
-          }
-        }
-      }
     }
   };
 
   const handleMouseEnter = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-
     if (memberVideos.length > 0 && activeVideo) {
-      console.log("[AUDIO-DEBUG] MemberCard - Mouse enter, showing video");
       setShowVideo(true);
-
-      hoverTimeoutRef.current = setTimeout(() => {
-        setIsHovering(true);
-      }, 100);
+      if (videoRef.current) {
+        videoRef.current.load();
+        videoRef.current.play().catch(() => {});
+      }
     }
   };
 
   const handleMouseLeave = () => {
-    console.log("[AUDIO-DEBUG] MemberCard - Mouse leave");
-
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-
     setShowVideo(false);
-    setIsHovering(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
   };
 
   const renderCardContent = (imageUrl: string) => (
@@ -218,15 +102,6 @@ export default function MemberCard({
         {showVideo && activeVideo && (
           <div className="absolute inset-0 z-40 overflow-hidden">
             <div className="relative w-full h-full">
-              {!isMuted && (
-                <audio
-                  src={activeVideo}
-                  autoPlay
-                  loop
-                  style={{ display: "none" }}
-                />
-              )}
-
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
@@ -235,7 +110,6 @@ export default function MemberCard({
                 muted={isMuted}
                 playsInline
                 preload="metadata"
-                crossOrigin="anonymous"
               >
                 <source src={activeVideo} type="video/mp4" />
                 <source src={activeVideo} type="video/quicktime" />

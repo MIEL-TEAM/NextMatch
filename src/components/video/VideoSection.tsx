@@ -51,6 +51,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const [profileImage, setProfileImage] = useState("/images/user.png");
   const [isMuted, setIsMuted] = useState(true);
   const playerRef = useRef<ReactPlayer>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const isConnectedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (memberPhotos && memberPhotos.length > 0) {
@@ -72,18 +75,57 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   };
 
   const handleVideoClick = useCallback((video: Video) => {
-    // Clear any previous errors
     setError("");
     setSelectedVideo(video);
     setIsModalOpen(true);
-
-    // Reset muted state when opening a new video
     setIsMuted(true);
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setIsMuted(true);
+
+    // Clean up audio resources
+    if (sourceNodeRef.current) {
+      try {
+        sourceNodeRef.current.disconnect();
+        sourceNodeRef.current = null;
+        isConnectedRef.current = false;
+      } catch (e) {
+        console.error("Error cleaning up audio resources:", e);
+      }
+    }
+  }, []);
+
+  const setupAudioConnection = useCallback(() => {
+    if (isConnectedRef.current) return;
+
+    if (!playerRef.current) return;
+
+    const internalPlayer =
+      playerRef.current.getInternalPlayer() as HTMLVideoElement;
+    if (!internalPlayer || internalPlayer.muted) return;
+
+    try {
+      const AudioContext =
+        window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContext) {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContext();
+        }
+
+        if (audioContextRef.current.state === "suspended") {
+          audioContextRef.current.resume();
+        }
+
+        sourceNodeRef.current =
+          audioContextRef.current.createMediaElementSource(internalPlayer);
+        sourceNodeRef.current.connect(audioContextRef.current.destination);
+        isConnectedRef.current = true;
+      }
+    } catch (e) {
+      console.error("Error setting up audio connection:", e);
+    }
   }, []);
 
   const toggleMute = useCallback(
@@ -91,24 +133,18 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
       e.stopPropagation();
       e.preventDefault();
 
-      setIsMuted((prevMuted) => !prevMuted);
+      setIsMuted((prevMuted) => {
+        const newMutedState = !prevMuted;
 
-      // Force the player to update volume settings
-      if (playerRef.current) {
-        const player = playerRef.current.getInternalPlayer();
-        if (player) {
-          try {
-            // Try to ensure audio is enabled after unmuting
-            if (isMuted && player.setVolume) {
-              player.setVolume(1.0);
-            }
-          } catch (e) {
-            console.error("Error toggling audio:", e);
-          }
+        // If unmuting, set up audio connection
+        if (!newMutedState) {
+          setupAudioConnection();
         }
-      }
+
+        return newMutedState;
+      });
     },
-    [isMuted]
+    [setupAudioConnection]
   );
 
   const formatDate = (dateString: string) => {
@@ -139,19 +175,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             playsinline
             onReady={() => {
               // Ensure volume is set properly after player is ready
-              if (!isMuted && playerRef.current) {
-                try {
-                  const player = playerRef.current.getInternalPlayer();
-                  if (player && player.setVolume) {
-                    player.setVolume(1.0);
-                  }
-                } catch (e) {
-                  console.error("Error setting volume:", e);
-                }
+              if (!isMuted) {
+                setupAudioConnection();
               }
             }}
-            onError={(e) => {
-              console.error("Video playback error:", e);
+            onError={() => {
               setError("Failed to load video. Please try again later.");
             }}
             config={{
