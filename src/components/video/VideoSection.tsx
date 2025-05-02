@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import ReactPlayer from "react-player";
 import Image from "next/image";
 import { VideoUploader } from "./VideoUpload";
@@ -50,6 +50,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profileImage, setProfileImage] = useState("/images/user.png");
   const [isMuted, setIsMuted] = useState(true); // Default to muted
+  const playerRef = useRef<ReactPlayer>(null);
+  const audioAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (memberPhotos && memberPhotos.length > 0) {
@@ -85,27 +87,45 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
       e.stopPropagation();
       e.preventDefault();
 
-      // Force sound to work by adding multiple approaches
-      setIsMuted(!isMuted);
+      const newMutedState = !isMuted;
+      console.log(
+        "[AUDIO-DEBUG] Toggle mute clicked, new state:",
+        newMutedState
+      );
 
-      // Try to directly interact with the audio element if available
-      const videoElements = document.querySelectorAll("video");
-      videoElements.forEach((video) => {
-        video.muted = !isMuted;
-        if (isMuted) {
-          // Try to force audio playback when unmuting
-          const playPromise = video.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(() => {
-              // Autoplay was prevented, try again with user gesture
-              video.muted = false;
-              video.play().catch(() => {});
-            });
+      // Simply toggle the muted state
+      setIsMuted(newMutedState);
+
+      // Log additional info for debugging
+      if (!newMutedState) {
+        console.log("[AUDIO-DEBUG] Attempting to unmute video");
+        console.log("[AUDIO-DEBUG] Selected video URL:", selectedVideo?.url);
+
+        // Check if ReactPlayer instance is available
+        if (playerRef.current) {
+          console.log("[AUDIO-DEBUG] ReactPlayer instance found");
+
+          // Check if the underlying player has audio
+          try {
+            const internalPlayer = playerRef.current.getInternalPlayer();
+            if (internalPlayer && "getAudioTracks" in internalPlayer) {
+              const audioTracks = internalPlayer.getAudioTracks();
+              console.log("[AUDIO-DEBUG] Audio tracks:", audioTracks);
+            } else {
+              console.log("[AUDIO-DEBUG] No getAudioTracks method available");
+            }
+          } catch (e) {
+            console.log("[AUDIO-DEBUG] Error accessing internal player:", e);
           }
+        } else {
+          console.log("[AUDIO-DEBUG] ReactPlayer instance not found");
         }
-      });
+      }
+
+      // Mark that we attempted to unmute
+      audioAttemptedRef.current = true;
     },
-    [isMuted]
+    [isMuted, selectedVideo]
   );
 
   const formatDate = (dateString: string) => {
@@ -129,16 +149,31 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
               src={selectedVideo.url}
               autoPlay
               style={{ display: "none" }}
+              onError={(e) =>
+                console.log("[AUDIO-DEBUG] Audio element error:", e)
+              }
+              onPlay={() =>
+                console.log("[AUDIO-DEBUG] Audio element started playing")
+              }
             />
           )}
 
           <ReactPlayer
+            ref={playerRef}
             url={selectedVideo.url}
             width="100%"
             height="100%"
             playing={true}
             controls={true}
             muted={isMuted}
+            onReady={() => console.log("[AUDIO-DEBUG] ReactPlayer ready")}
+            onPlay={() =>
+              console.log(
+                "[AUDIO-DEBUG] ReactPlayer started playing, muted:",
+                isMuted
+              )
+            }
+            onError={(e) => console.log("[AUDIO-DEBUG] ReactPlayer error:", e)}
             config={{
               file: {
                 attributes: {
@@ -156,15 +191,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
               vimeo: {
                 playerOptions: { showinfo: 0 },
               },
-            }}
-            onPlay={() => {
-              // Try to ensure audio works on play
-              if (!isMuted) {
-                const videoElements = document.querySelectorAll("video");
-                videoElements.forEach((video) => {
-                  video.muted = false;
-                });
-              }
             }}
           />
           <button

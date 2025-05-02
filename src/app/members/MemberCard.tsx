@@ -32,6 +32,8 @@ export default function MemberCard({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioConnectedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (memberVideos.length > 0 && !activeVideo) {
@@ -65,31 +67,99 @@ export default function MemberCard({
     e.stopPropagation();
 
     const newMutedState = !isMuted;
+    console.log(
+      "[AUDIO-DEBUG] MemberCard - Toggle mute clicked, new state:",
+      newMutedState
+    );
+    console.log(
+      "[AUDIO-DEBUG] MemberCard - Video element exists:",
+      !!videoRef.current
+    );
+    console.log("[AUDIO-DEBUG] MemberCard - Active video URL:", activeVideo);
+
     setIsMuted(newMutedState);
 
     // More aggressive approach to force unmuting in production
     if (videoRef.current) {
       videoRef.current.muted = newMutedState;
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Set video.muted to:",
+        newMutedState
+      );
 
       // If we're unmuting, try to force audio playback
       if (!newMutedState) {
-        // Try to force a new audio context
+        console.log("[AUDIO-DEBUG] MemberCard - Attempting to unmute");
+
+        // Try to force a new audio context only if not already connected
         try {
-          const AudioContext =
-            window.AudioContext || (window as any).webkitAudioContext;
-          if (AudioContext) {
-            const audioCtx = new AudioContext();
-            const source = audioCtx.createMediaElementSource(videoRef.current);
-            source.connect(audioCtx.destination);
+          if (!audioConnectedRef.current) {
+            const AudioContext =
+              window.AudioContext || (window as any).webkitAudioContext;
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - AudioContext available:",
+              !!AudioContext
+            );
+
+            if (AudioContext) {
+              // Create audio context only once
+              if (!audioContextRef.current) {
+                audioContextRef.current = new AudioContext();
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - Created new AudioContext"
+                );
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - AudioContext state:",
+                  audioContextRef.current.state
+                );
+              } else {
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - Using existing AudioContext"
+                );
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - AudioContext state:",
+                  audioContextRef.current.state
+                );
+              }
+
+              const source = audioContextRef.current.createMediaElementSource(
+                videoRef.current
+              );
+              source.connect(audioContextRef.current.destination);
+              audioConnectedRef.current = true;
+              console.log(
+                "[AUDIO-DEBUG] MemberCard - Connected video to AudioContext"
+              );
+            }
+          } else {
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - Already connected to AudioContext"
+            );
           }
         } catch (e) {
-          console.log(e);
+          console.log("[AUDIO-DEBUG] MemberCard - AudioContext error:", e);
+          // If there's an error, just make sure video is unmuted directly
+          if (videoRef.current) {
+            videoRef.current.muted = false;
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - Forced muted=false directly as fallback"
+            );
+          }
         }
 
         // Force playback to restart to trigger audio
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+        const playPromise = videoRef.current.play();
+        console.log("[AUDIO-DEBUG] MemberCard - Attempted to play video");
+
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() =>
+              console.log("[AUDIO-DEBUG] MemberCard - Play succeeded")
+            )
+            .catch((err) =>
+              console.log("[AUDIO-DEBUG] MemberCard - Play failed:", err)
+            );
+        }
       }
     }
   };
