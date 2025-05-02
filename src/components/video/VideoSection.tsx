@@ -73,13 +73,15 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   };
 
   const handleVideoClick = useCallback((video: Video) => {
+    console.log("[AUDIO-DEBUG] VideoSection - Video clicked:", video.url);
     setSelectedVideo(video);
     setIsModalOpen(true);
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
-    setIsMuted(true);
+    setIsMuted(true); // Reset to muted state when closing
+    console.log("[AUDIO-DEBUG] VideoSection - Modal closed, reset to muted");
   }, []);
 
   const toggleMute = useCallback(
@@ -143,9 +145,10 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     return (
       <div className="w-full h-full flex items-center justify-center bg-black">
         <div className="relative aspect-video w-full max-w-4xl">
-          {/* Fallback audio element to ensure audio works */}
-          {!isMuted && (
+          {/* Important: Only add the audio element when needed, as a direct child */}
+          {!isMuted && selectedVideo && (
             <audio
+              key={`audio-${selectedVideo.id}`}
               src={selectedVideo.url}
               autoPlay
               style={{ display: "none" }}
@@ -160,13 +163,17 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
           <ReactPlayer
             ref={playerRef}
+            key={`player-${selectedVideo?.id}`}
             url={selectedVideo.url}
             width="100%"
             height="100%"
             playing={true}
             controls={true}
             muted={isMuted}
-            onReady={() => console.log("[AUDIO-DEBUG] ReactPlayer ready")}
+            onReady={() => {
+              console.log("[AUDIO-DEBUG] ReactPlayer ready");
+              console.log("[AUDIO-DEBUG] ReactPlayer URL:", selectedVideo?.url);
+            }}
             onPlay={() =>
               console.log(
                 "[AUDIO-DEBUG] ReactPlayer started playing, muted:",

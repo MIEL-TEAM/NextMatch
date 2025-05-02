@@ -81,6 +81,7 @@ export default function MemberCard({
 
     // More aggressive approach to force unmuting in production
     if (videoRef.current) {
+      // Simply set the muted property directly
       videoRef.current.muted = newMutedState;
       console.log(
         "[AUDIO-DEBUG] MemberCard - Set video.muted to:",
@@ -147,19 +148,8 @@ export default function MemberCard({
           }
         }
 
-        // Force playback to restart to trigger audio
-        const playPromise = videoRef.current.play();
-        console.log("[AUDIO-DEBUG] MemberCard - Attempted to play video");
-
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() =>
-              console.log("[AUDIO-DEBUG] MemberCard - Play succeeded")
-            )
-            .catch((err) =>
-              console.log("[AUDIO-DEBUG] MemberCard - Play failed:", err)
-            );
-        }
+        // DO NOT try to force play here - it causes AbortError
+        // Just let the normal playback continue
       }
     }
   };
@@ -167,10 +157,18 @@ export default function MemberCard({
   const handleMouseEnter = () => {
     if (memberVideos.length > 0 && activeVideo) {
       setShowVideo(true);
-      if (videoRef.current) {
-        videoRef.current.load();
-        videoRef.current.play().catch(() => {});
-      }
+      console.log("[AUDIO-DEBUG] MemberCard - Mouse enter, showing video");
+
+      // Wait a small moment before attempting to play to ensure the video element is ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          console.log("[AUDIO-DEBUG] MemberCard - Attempting to play on hover");
+          videoRef.current.load();
+          videoRef.current.play().catch((err) => {
+            console.log("[AUDIO-DEBUG] MemberCard - Initial play error:", err);
+          });
+        }
+      }, 100);
     }
   };
 
