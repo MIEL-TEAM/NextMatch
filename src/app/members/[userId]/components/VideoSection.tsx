@@ -6,7 +6,7 @@ import { Play, Volume2, VolumeX } from "lucide-react";
 
 interface VideoSectionProps {
   videoUrl: string;
-  thumbnailUrl?: string;
+  thumbnailUrl?: string | null;
 }
 
 export default function VideoSection({

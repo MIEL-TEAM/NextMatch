@@ -31,19 +31,69 @@ export default function MemberCard({
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioConnectedRef = useRef<boolean>(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const videoPlayingRef = useRef(false);
 
+  // Set initial active video
   useEffect(() => {
+    console.log(
+      "[AUDIO-DEBUG] MemberCard - Setting initial video from props:",
+      memberVideos.length > 0
+    );
     if (memberVideos.length > 0 && !activeVideo) {
       setActiveVideo(memberVideos[0].url);
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Set active video to:",
+        memberVideos[0].url
+      );
     }
   }, [memberVideos, activeVideo]);
 
+  // Update mute state when it changes
   useEffect(() => {
+    console.log("[AUDIO-DEBUG] MemberCard - Mute state changed:", isMuted);
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Applied muted state to video element:",
+        isMuted
+      );
     }
   }, [isMuted]);
+
+  // Handle video playback based on hover state
+  useEffect(() => {
+    if (isHovering && videoRef.current && !videoPlayingRef.current) {
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Effect: Starting playback due to hover"
+      );
+      videoPlayingRef.current = true;
+
+      setTimeout(() => {
+        if (videoRef.current && isHovering) {
+          videoRef.current
+            .play()
+            .then(() => {
+              console.log("[AUDIO-DEBUG] MemberCard - Effect: Play succeeded");
+            })
+            .catch((err) => {
+              console.log("[AUDIO-DEBUG] MemberCard - Effect: Play error", err);
+              videoPlayingRef.current = false;
+            });
+        }
+      }, 200);
+    } else if (!isHovering && videoRef.current && videoPlayingRef.current) {
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Effect: Stopping playback due to hover end"
+      );
+      videoRef.current.pause();
+      videoPlayingRef.current = false;
+    }
+  }, [isHovering]);
 
   async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
@@ -53,40 +103,127 @@ export default function MemberCard({
     try {
       await toggleLikeMember(member.userId, hasLiked);
       setHasLiked(!hasLiked);
-    } catch (e) {
-      console.log(e);
+    } catch (err) {
+      console.log("[ERROR] Toggle like failed:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  const toggleMute = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const toggleMute = (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _e: React.MouseEvent
+  ) => {
+    _e.preventDefault();
+    _e.stopPropagation();
 
     const newMutedState = !isMuted;
+    console.log(
+      "[AUDIO-DEBUG] MemberCard - Toggle mute clicked, new state:",
+      newMutedState
+    );
+    console.log(
+      "[AUDIO-DEBUG] MemberCard - Video element exists:",
+      !!videoRef.current
+    );
+    console.log("[AUDIO-DEBUG] MemberCard - Active video URL:", activeVideo);
+
     setIsMuted(newMutedState);
 
     if (videoRef.current) {
       videoRef.current.muted = newMutedState;
-    }
-  };
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Set video.muted to:",
+        newMutedState
+      );
 
-  const handleMouseEnter = () => {
-    if (memberVideos.length > 0 && activeVideo) {
-      setShowVideo(true);
-      if (videoRef.current) {
-        videoRef.current.load();
-        videoRef.current.play().catch(() => {});
+      if (!newMutedState) {
+        console.log("[AUDIO-DEBUG] MemberCard - Attempting to unmute");
+
+        try {
+          if (!audioConnectedRef.current) {
+            const AudioContext =
+              window.AudioContext || (window as any).webkitAudioContext;
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - AudioContext available:",
+              !!AudioContext
+            );
+
+            if (AudioContext) {
+              if (!audioContextRef.current) {
+                audioContextRef.current = new AudioContext();
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - Created new AudioContext"
+                );
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - AudioContext state:",
+                  audioContextRef.current.state
+                );
+              } else {
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - Using existing AudioContext"
+                );
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - AudioContext state:",
+                  audioContextRef.current.state
+                );
+              }
+
+              const source = audioContextRef.current.createMediaElementSource(
+                videoRef.current
+              );
+              source.connect(audioContextRef.current.destination);
+              audioConnectedRef.current = true;
+              console.log(
+                "[AUDIO-DEBUG] MemberCard - Connected video to AudioContext"
+              );
+            }
+          } else {
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - Already connected to AudioContext"
+            );
+          }
+        } catch (e) {
+          console.log("[AUDIO-DEBUG] MemberCard - AudioContext error:", e);
+          if (videoRef.current) {
+            videoRef.current.muted = false;
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - Forced muted=false directly as fallback"
+            );
+          }
+        }
       }
     }
   };
 
-  const handleMouseLeave = () => {
-    setShowVideo(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
+  const handleMouseEnter = () => {
+    console.log("[AUDIO-DEBUG] MemberCard - Mouse enter");
+
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
+
+    if (memberVideos.length > 0 && activeVideo) {
+      console.log("[AUDIO-DEBUG] MemberCard - Mouse enter, showing video");
+      setShowVideo(true);
+
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHovering(true);
+      }, 100);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    console.log("[AUDIO-DEBUG] MemberCard - Mouse leave");
+
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
+    setShowVideo(false);
+    setIsHovering(false);
   };
 
   const renderCardContent = (imageUrl: string) => (
@@ -102,6 +239,15 @@ export default function MemberCard({
         {showVideo && activeVideo && (
           <div className="absolute inset-0 z-40 overflow-hidden">
             <div className="relative w-full h-full">
+              {!isMuted && (
+                <audio
+                  src={activeVideo}
+                  autoPlay
+                  loop
+                  style={{ display: "none" }}
+                />
+              )}
+
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
@@ -110,6 +256,7 @@ export default function MemberCard({
                 muted={isMuted}
                 playsInline
                 preload="metadata"
+                crossOrigin="anonymous"
               >
                 <source src={activeVideo} type="video/mp4" />
                 <source src={activeVideo} type="video/quicktime" />
@@ -120,6 +267,7 @@ export default function MemberCard({
                 onClick={toggleMute}
                 className="absolute bottom-2 right-2 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-md"
                 aria-label={isMuted ? "הפעל שמע" : "השתק"}
+                type="button"
               >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5 text-white" />

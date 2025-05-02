@@ -12,6 +12,7 @@ import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import InterestsSection from "@/components/interests/InterestsSection";
 import ProfileViewTracker from "@/components/ProfileViewTracker";
 import { VideoSection } from "@/components/video/VideoSection";
+import VideoSectionForProfile from "./components/VideoSection";
 import { auth } from "@/auth";
 import { getMemberVideos } from "@/app/actions/videoActions";
 
@@ -48,6 +49,11 @@ export default async function MemberDetailedPage({
       }))
     : [];
 
+  const hasSingleVideo = formattedVideos.length === 1;
+
+  const thumbnailUrl =
+    formattedPhotos.length > 0 ? formattedPhotos[0].url : member.image;
+
   return (
     <ProfileViewTracker userId={userId}>
       <div className="h-full flex flex-col overflow-hidden">
@@ -63,18 +69,37 @@ export default async function MemberDetailedPage({
             <Divider />
             <InterestsSection interests={interests} />
             <Divider />
-            <VideoSection
-              videos={formattedVideos}
-              memberId={member.id}
-              userId={userId}
-              isOwnProfile={isOwnProfile}
-              member={{
-                name: member.name,
-                userId: member.userId,
-                profileImageUrl: member.image || undefined,
-              }}
-              memberPhotos={formattedPhotos}
-            />
+
+            {hasSingleVideo && formattedVideos[0] && (
+              <CardInnerWrapper
+                header={
+                  <div className="flex items-center gap-2">
+                    <span>סרטון פרופיל</span>
+                  </div>
+                }
+                body={
+                  <VideoSectionForProfile
+                    videoUrl={formattedVideos[0].url}
+                    thumbnailUrl={thumbnailUrl}
+                  />
+                }
+              />
+            )}
+
+            {(!hasSingleVideo || isOwnProfile) && (
+              <VideoSection
+                videos={formattedVideos}
+                memberId={member.id}
+                userId={userId}
+                isOwnProfile={isOwnProfile}
+                member={{
+                  name: member.name,
+                  userId: member.userId,
+                  profileImageUrl: member.image || undefined,
+                }}
+                memberPhotos={formattedPhotos}
+              />
+            )}
           </div>
         </div>
       </div>

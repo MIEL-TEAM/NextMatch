@@ -54,27 +54,71 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const isConnectedRef = useRef<boolean>(false);
+  const videoElementRef = useRef<HTMLVideoElement | null>(null);
 
+  // Set profile image
   useEffect(() => {
+    console.log("[AUDIO-DEBUG] VideoSection (Profile) - Component mounted");
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Videos count:",
+      videos.length
+    );
+
     if (memberPhotos && memberPhotos.length > 0) {
       const photoUrl = memberPhotos[0].url;
       const transformed = transformImageUrl(photoUrl);
       if (transformed) {
         setProfileImage(transformed);
+        console.log(
+          "[AUDIO-DEBUG] VideoSection (Profile) - Set profile image:",
+          transformed
+        );
       }
     }
-  }, [memberPhotos]);
+
+    return () => {
+      console.log("[AUDIO-DEBUG] VideoSection (Profile) - Component unmounted");
+
+      // Clean up audio resources
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.disconnect();
+          sourceNodeRef.current = null;
+          isConnectedRef.current = false;
+          console.log(
+            "[AUDIO-DEBUG] VideoSection (Profile) - Cleaned up audio resources on unmount"
+          );
+        } catch (e) {
+          console.error(
+            "[ERROR] VideoSection (Profile) - Error cleaning up audio resources:",
+            e
+          );
+        }
+      }
+    };
+  }, [memberPhotos, videos]);
 
   const handleUploadComplete = () => {
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Upload complete, reloading page"
+    );
     window.location.reload();
   };
 
   const handleError = (errorMessage: string) => {
+    console.error(
+      "[ERROR] VideoSection (Profile) - Upload error:",
+      errorMessage
+    );
     setError(errorMessage);
     setTimeout(() => setError(""), 5000);
   };
 
   const handleVideoClick = useCallback((video: Video) => {
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Video clicked:",
+      video.id
+    );
     setError("");
     setSelectedVideo(video);
     setIsModalOpen(true);
@@ -82,6 +126,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   }, []);
 
   const handleCloseModal = useCallback(() => {
+    console.log("[AUDIO-DEBUG] VideoSection (Profile) - Modal closed");
     setIsModalOpen(false);
     setIsMuted(true);
 
@@ -91,54 +136,127 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         sourceNodeRef.current.disconnect();
         sourceNodeRef.current = null;
         isConnectedRef.current = false;
+        console.log(
+          "[AUDIO-DEBUG] VideoSection (Profile) - Cleaned up audio resources on modal close"
+        );
       } catch (e) {
-        console.error("Error cleaning up audio resources:", e);
+        console.error(
+          "[ERROR] VideoSection (Profile) - Error cleaning up audio resources:",
+          e
+        );
       }
     }
   }, []);
 
   const setupAudioConnection = useCallback(() => {
-    if (isConnectedRef.current) return;
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Setting up audio connection"
+    );
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Already connected:",
+      isConnectedRef.current
+    );
 
-    if (!playerRef.current) return;
+    if (isConnectedRef.current) {
+      console.log(
+        "[AUDIO-DEBUG] VideoSection (Profile) - Already connected, skipping setup"
+      );
+      return;
+    }
+
+    if (!playerRef.current) {
+      console.log(
+        "[AUDIO-DEBUG] VideoSection (Profile) - No player ref, cannot set up audio"
+      );
+      return;
+    }
 
     const internalPlayer =
       playerRef.current.getInternalPlayer() as HTMLVideoElement;
-    if (!internalPlayer || internalPlayer.muted) return;
+    videoElementRef.current = internalPlayer;
+
+    if (!internalPlayer || internalPlayer.muted) {
+      console.log(
+        "[AUDIO-DEBUG] VideoSection (Profile) - No internal player or player is muted"
+      );
+      return;
+    }
 
     try {
       const AudioContext =
         window.AudioContext || (window as any).webkitAudioContext;
+      console.log(
+        "[AUDIO-DEBUG] VideoSection (Profile) - AudioContext available:",
+        !!AudioContext
+      );
+
       if (AudioContext) {
         if (!audioContextRef.current) {
           audioContextRef.current = new AudioContext();
+          console.log(
+            "[AUDIO-DEBUG] VideoSection (Profile) - Created new AudioContext"
+          );
+          console.log(
+            "[AUDIO-DEBUG] VideoSection (Profile) - AudioContext state:",
+            audioContextRef.current.state
+          );
         }
 
         if (audioContextRef.current.state === "suspended") {
           audioContextRef.current.resume();
+          console.log(
+            "[AUDIO-DEBUG] VideoSection (Profile) - Resumed suspended AudioContext"
+          );
         }
 
         sourceNodeRef.current =
           audioContextRef.current.createMediaElementSource(internalPlayer);
         sourceNodeRef.current.connect(audioContextRef.current.destination);
         isConnectedRef.current = true;
+        console.log(
+          "[AUDIO-DEBUG] VideoSection (Profile) - Successfully connected video to AudioContext"
+        );
       }
     } catch (e) {
-      console.error("Error setting up audio connection:", e);
+      console.error(
+        "[ERROR] VideoSection (Profile) - Error setting up audio connection:",
+        e
+      );
+
+      // Fallback - try directly unmuting
+      if (internalPlayer) {
+        internalPlayer.muted = false;
+        console.log(
+          "[AUDIO-DEBUG] VideoSection (Profile) - Fallback: directly set muted=false"
+        );
+      }
     }
   }, []);
 
   const toggleMute = useCallback(
     (e: React.MouseEvent) => {
+      console.log("[AUDIO-DEBUG] VideoSection (Profile) - Toggle mute clicked");
       e.stopPropagation();
       e.preventDefault();
 
       setIsMuted((prevMuted) => {
         const newMutedState = !prevMuted;
+        console.log(
+          "[AUDIO-DEBUG] VideoSection (Profile) - New mute state:",
+          newMutedState
+        );
 
         // If unmuting, set up audio connection
         if (!newMutedState) {
+          console.log(
+            "[AUDIO-DEBUG] VideoSection (Profile) - Attempting to unmute via AudioContext"
+          );
           setupAudioConnection();
+        } else if (videoElementRef.current) {
+          videoElementRef.current.muted = true;
+          console.log(
+            "[AUDIO-DEBUG] VideoSection (Profile) - Directly muted video element"
+          );
         }
 
         return newMutedState;
@@ -159,9 +277,39 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const renderVideoModal = () => {
     if (!selectedVideo) return null;
 
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Rendering video modal for:",
+      selectedVideo.url
+    );
+    console.log(
+      "[AUDIO-DEBUG] VideoSection (Profile) - Current mute state:",
+      isMuted
+    );
+
     return (
       <div className="w-full h-full flex items-center justify-center bg-black">
         <div className="relative aspect-video w-full max-w-4xl">
+          {/* Separate audio element for iOS compatibility */}
+          {!isMuted && (
+            <audio
+              src={selectedVideo.url}
+              autoPlay
+              loop
+              style={{ display: "none" }}
+              onPlay={() =>
+                console.log(
+                  "[AUDIO-DEBUG] VideoSection (Profile) - Audio element started playing"
+                )
+              }
+              onError={(e) =>
+                console.error(
+                  "[ERROR] VideoSection (Profile) - Audio element error:",
+                  e
+                )
+              }
+            />
+          )}
+
           <ReactPlayer
             ref={playerRef}
             key={`player-${selectedVideo.id}-${isMuted ? "muted" : "unmuted"}`}
@@ -174,12 +322,27 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             volume={1.0}
             playsinline
             onReady={() => {
+              console.log(
+                "[AUDIO-DEBUG] VideoSection (Profile) - Player ready event"
+              );
               // Ensure volume is set properly after player is ready
               if (!isMuted) {
                 setupAudioConnection();
               }
             }}
-            onError={() => {
+            onPlay={() => {
+              console.log(
+                "[AUDIO-DEBUG] VideoSection (Profile) - Video started playing"
+              );
+              if (!isMuted && !isConnectedRef.current) {
+                setupAudioConnection();
+              }
+            }}
+            onError={(e) => {
+              console.error(
+                "[ERROR] VideoSection (Profile) - Video player error:",
+                e
+              );
               setError("Failed to load video. Please try again later.");
             }}
             config={{
