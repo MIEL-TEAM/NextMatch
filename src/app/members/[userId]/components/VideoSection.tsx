@@ -19,6 +19,7 @@ export default function VideoSection({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioConnectedRef = useRef<boolean>(false);
+  const hasInteractedRef = useRef<boolean>(false);
 
   // Log initial component setup
   useEffect(() => {
@@ -27,8 +28,51 @@ export default function VideoSection({
 
     return () => {
       console.log("[AUDIO-DEBUG] VideoSection - Component unmounted");
+
+      // Clean up audio context when component unmounts
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.close().catch((err) => {
+          console.log(
+            "[AUDIO-DEBUG] VideoSection - Error closing AudioContext:",
+            err
+          );
+        });
+      }
     };
   }, [videoUrl]);
+
+  // Handle document interaction
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (!hasInteractedRef.current) {
+        hasInteractedRef.current = true;
+        console.log("[AUDIO-DEBUG] VideoSection - User interaction detected");
+
+        // If AudioContext is suspended, resume it
+        if (
+          audioContextRef.current &&
+          audioContextRef.current.state === "suspended"
+        ) {
+          audioContextRef.current.resume().then(() => {
+            console.log(
+              "[AUDIO-DEBUG] VideoSection - AudioContext resumed after user interaction"
+            );
+          });
+        }
+      }
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
+  }, []);
 
   useEffect(() => {
     // Update video muted state when isMuted changes
@@ -83,6 +127,12 @@ export default function VideoSection({
             );
           }
 
+          // Resume AudioContext if it's in suspended state
+          if (audioContextRef.current.state === "suspended") {
+            audioContextRef.current.resume();
+            console.log("[AUDIO-DEBUG] VideoSection - Resumed AudioContext");
+          }
+
           const source = audioContextRef.current.createMediaElementSource(
             videoRef.current
           );
@@ -120,8 +170,11 @@ export default function VideoSection({
       return;
     }
 
+    hasInteractedRef.current = true;
+
     if (videoRef.current.paused) {
       console.log("[AUDIO-DEBUG] VideoSection - Attempting to play video");
+      videoRef.current.load(); // Force reload the video for better playback
       videoRef.current
         .play()
         .then(() => {
@@ -142,6 +195,8 @@ export default function VideoSection({
   const toggleMute = (e: React.MouseEvent) => {
     console.log("[AUDIO-DEBUG] VideoSection - Toggle mute clicked");
     e.stopPropagation();
+
+    hasInteractedRef.current = true;
 
     // If we're unmuting for the first time, set up the audio context
     if (isMuted) {
@@ -212,11 +267,16 @@ export default function VideoSection({
           muted={isMuted}
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           crossOrigin="anonymous"
-          onPlay={() =>
-            console.log("[AUDIO-DEBUG] VideoSection - Video started playing")
-          }
+          onPlay={() => {
+            console.log("[AUDIO-DEBUG] VideoSection - Video started playing");
+            setIsPlaying(true);
+          }}
+          onPause={() => {
+            console.log("[AUDIO-DEBUG] VideoSection - Video paused");
+            setIsPlaying(false);
+          }}
           onError={(e) =>
             console.log("[AUDIO-DEBUG] VideoSection - Video error:", e)
           }
@@ -231,12 +291,14 @@ export default function VideoSection({
             isPlaying && !isHovering ? "opacity-0" : "opacity-100"
           )}
         >
-          <button
-            className="h-14 w-14 rounded-full border-2 border-white bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
-            onClick={togglePlay}
-          >
-            <Play className="h-6 w-6 text-white fill-white" />
-          </button>
+          {!isPlaying && (
+            <button
+              className="h-14 w-14 rounded-full border-2 border-white bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
+              onClick={togglePlay}
+            >
+              <Play className="h-6 w-6 text-white fill-white" />
+            </button>
+          )}
         </div>
 
         <button

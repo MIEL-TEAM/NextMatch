@@ -37,6 +37,7 @@ export default function MemberCard({
   const audioConnectedRef = useRef<boolean>(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const videoPlayingRef = useRef(false);
+  const hasInteractedRef = useRef<boolean>(false);
 
   // Set initial active video
   useEffect(() => {
@@ -65,6 +66,49 @@ export default function MemberCard({
     }
   }, [isMuted]);
 
+  // Document interaction tracking
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (!hasInteractedRef.current) {
+        hasInteractedRef.current = true;
+        console.log("[AUDIO-DEBUG] MemberCard - User interaction detected");
+
+        // If AudioContext exists and is suspended, resume it
+        if (
+          audioContextRef.current &&
+          audioContextRef.current.state === "suspended"
+        ) {
+          audioContextRef.current.resume().then(() => {
+            console.log(
+              "[AUDIO-DEBUG] MemberCard - AudioContext resumed after user interaction"
+            );
+          });
+        }
+      }
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+
+      // Cleanup AudioContext on unmount
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.close().catch((err) => {
+          console.log(
+            "[AUDIO-DEBUG] MemberCard - Error closing AudioContext:",
+            err
+          );
+        });
+      }
+    };
+  }, []);
+
   // Handle video playback based on hover state
   useEffect(() => {
     if (isHovering && videoRef.current && !videoPlayingRef.current) {
@@ -75,6 +119,7 @@ export default function MemberCard({
 
       setTimeout(() => {
         if (videoRef.current && isHovering) {
+          videoRef.current.load(); // Force reload to ensure proper playback
           videoRef.current
             .play()
             .then(() => {
@@ -116,6 +161,9 @@ export default function MemberCard({
   ) => {
     _e.preventDefault();
     _e.stopPropagation();
+
+    // Mark user interaction
+    hasInteractedRef.current = true;
 
     const newMutedState = !isMuted;
     console.log(
@@ -166,6 +214,14 @@ export default function MemberCard({
                 console.log(
                   "[AUDIO-DEBUG] MemberCard - AudioContext state:",
                   audioContextRef.current.state
+                );
+              }
+
+              // Resume if suspended
+              if (audioContextRef.current.state === "suspended") {
+                audioContextRef.current.resume();
+                console.log(
+                  "[AUDIO-DEBUG] MemberCard - Resumed suspended AudioContext"
                 );
               }
 
@@ -239,6 +295,7 @@ export default function MemberCard({
         {showVideo && activeVideo && (
           <div className="absolute inset-0 z-40 overflow-hidden">
             <div className="relative w-full h-full">
+              {/* Separate audio element for iOS Safari compatibility */}
               {!isMuted && (
                 <audio
                   src={activeVideo}
@@ -255,7 +312,7 @@ export default function MemberCard({
                 loop
                 muted={isMuted}
                 playsInline
-                preload="metadata"
+                preload="auto"
                 crossOrigin="anonymous"
               >
                 <source src={activeVideo} type="video/mp4" />

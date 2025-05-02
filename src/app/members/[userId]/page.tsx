@@ -12,7 +12,7 @@ import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import InterestsSection from "@/components/interests/InterestsSection";
 import ProfileViewTracker from "@/components/ProfileViewTracker";
 import { VideoSection } from "@/components/video/VideoSection";
-import VideoSectionForProfile from "./components/VideoSection";
+import VideoPlayer from "@/components/video/VideoPlayer";
 import { auth } from "@/auth";
 import { getMemberVideos } from "@/app/actions/videoActions";
 
@@ -78,10 +78,16 @@ export default async function MemberDetailedPage({
                   </div>
                 }
                 body={
-                  <VideoSectionForProfile
-                    videoUrl={formattedVideos[0].url}
-                    thumbnailUrl={thumbnailUrl}
-                  />
+                  <div className="p-4">
+                    <VideoPlayer
+                      videoUrl={formattedVideos[0].url}
+                      thumbnailUrl={thumbnailUrl}
+                      autoPlay={false}
+                      controls={true}
+                      loop={true}
+                      muted={true}
+                    />
+                  </div>
                 }
               />
             )}
