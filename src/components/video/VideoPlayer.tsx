@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { transformImageUrl } from "@/lib/util";
 
@@ -23,234 +23,93 @@ export default function VideoPlayer({
   muted: initialMuted = true,
   className = "",
 }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(initialMuted);
   const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioConnectedRef = useRef<boolean>(false);
-  const hasInteractedRef = useRef<boolean>(false);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
 
-  // Initial setup logging
-  useEffect(() => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Component mounted");
-    console.log("[AUDIO-DEBUG] VideoPlayer - Video URL:", videoUrl);
-    console.log("[AUDIO-DEBUG] VideoPlayer - Initial settings:", {
-      autoPlay,
-      loop,
-      muted: initialMuted,
-    });
+  // Declare pauseVideo first since attemptPlayback depends on it
+  const pauseVideo = useCallback(() => {
+    if (!videoRef.current) return;
 
-    return () => {
-      console.log("[AUDIO-DEBUG] VideoPlayer - Component unmounted");
-      // Clean up audio context when component unmounts
-      if (
-        audioContextRef.current &&
-        audioContextRef.current.state !== "closed"
-      ) {
-        audioContextRef.current.close().catch((err) => {
-          console.log(
-            "[AUDIO-DEBUG] VideoPlayer - Error closing AudioContext:",
-            err
-          );
-        });
-      }
-    };
-  }, [videoUrl, autoPlay, loop, initialMuted]);
+    if (!videoRef.current.paused) {
+      videoRef.current.pause();
+    }
 
-  // Auto play if specified
+    setIsPlaying(false);
+    playPromiseRef.current = null;
+  }, []);
+
+  // Define attemptPlayback as a callback to use in useEffect
+  const attemptPlayback = useCallback(() => {
+    if (!videoRef.current) return;
+
+    // Cancel any pending play operations
+    if (playPromiseRef.current) {
+      pauseVideo();
+    }
+
+    // Reload video for better compatibility especially on iOS
+    videoRef.current.load();
+
+    // Start new play operation
+    playPromiseRef.current = videoRef.current.play();
+    playPromiseRef.current
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch((err) => {
+        console.error("Video play error:", err.message);
+        setIsPlaying(false);
+        playPromiseRef.current = null;
+      });
+  }, [pauseVideo]);
+
+  // Initial setup and autoplay handling
   useEffect(() => {
     if (autoPlay && videoRef.current) {
-      console.log("[AUDIO-DEBUG] VideoPlayer - Attempting autoplay");
-
-      const playVideo = async () => {
-        try {
-          await videoRef.current?.play();
-          console.log("[AUDIO-DEBUG] VideoPlayer - Autoplay successful");
-          setIsPlaying(true);
-        } catch (err) {
-          console.log("[AUDIO-DEBUG] VideoPlayer - Autoplay failed:", err);
-          setIsPlaying(false);
-        }
-      };
-
-      playVideo();
+      attemptPlayback();
     }
-  }, [autoPlay]);
-
-  // Handle interaction with document to enable audio
-  useEffect(() => {
-    const handleUserInteraction = () => {
-      if (!hasInteractedRef.current) {
-        hasInteractedRef.current = true;
-        console.log("[AUDIO-DEBUG] VideoPlayer - User interaction detected");
-
-        // If AudioContext is suspended, resume it
-        if (
-          audioContextRef.current &&
-          audioContextRef.current.state === "suspended"
-        ) {
-          audioContextRef.current.resume().then(() => {
-            console.log(
-              "[AUDIO-DEBUG] VideoPlayer - AudioContext resumed after user interaction"
-            );
-          });
-        }
-      }
-    };
-
-    document.addEventListener("click", handleUserInteraction);
-    document.addEventListener("touchstart", handleUserInteraction);
 
     return () => {
-      document.removeEventListener("click", handleUserInteraction);
-      document.removeEventListener("touchstart", handleUserInteraction);
+      // Clean up when component unmounts
+      pauseVideo();
     };
-  }, []);
+  }, [autoPlay, videoUrl, attemptPlayback, pauseVideo]);
 
   // Update mute state when changed
   useEffect(() => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Mute state changed:", isMuted);
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
-      console.log("[AUDIO-DEBUG] VideoPlayer - Set video.muted to:", isMuted);
 
-      // If we're unmuting, try to set up the audio context
-      if (!isMuted && !audioConnectedRef.current) {
-        setupAudioContext();
+      // For iOS, fully reload video when mute state changes
+      if (videoRef.current.paused && isPlaying) {
+        attemptPlayback();
       }
     }
-  }, [isMuted]);
-
-  // Setup audio context when unmuting for the first time
-  const setupAudioContext = () => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Setting up AudioContext");
-    console.log(
-      "[AUDIO-DEBUG] VideoPlayer - Video element exists:",
-      !!videoRef.current
-    );
-    console.log(
-      "[AUDIO-DEBUG] VideoPlayer - Already connected:",
-      audioConnectedRef.current
-    );
-
-    if (videoRef.current && !audioConnectedRef.current) {
-      try {
-        const AudioContext =
-          window.AudioContext || (window as any).webkitAudioContext;
-        console.log(
-          "[AUDIO-DEBUG] VideoPlayer - AudioContext available:",
-          !!AudioContext
-        );
-
-        if (AudioContext) {
-          if (!audioContextRef.current) {
-            audioContextRef.current = new AudioContext();
-            console.log("[AUDIO-DEBUG] VideoPlayer - Created new AudioContext");
-            console.log(
-              "[AUDIO-DEBUG] VideoPlayer - AudioContext state:",
-              audioContextRef.current.state
-            );
-          } else {
-            console.log(
-              "[AUDIO-DEBUG] VideoPlayer - Using existing AudioContext"
-            );
-            console.log(
-              "[AUDIO-DEBUG] VideoPlayer - AudioContext state:",
-              audioContextRef.current.state
-            );
-          }
-
-          // Resume AudioContext if it's in suspended state
-          if (audioContextRef.current.state === "suspended") {
-            audioContextRef.current.resume();
-            console.log("[AUDIO-DEBUG] VideoPlayer - Resumed AudioContext");
-          }
-
-          const source = audioContextRef.current.createMediaElementSource(
-            videoRef.current
-          );
-          source.connect(audioContextRef.current.destination);
-          audioConnectedRef.current = true;
-          console.log(
-            "[AUDIO-DEBUG] VideoPlayer - Connected video to AudioContext"
-          );
-        }
-      } catch (err) {
-        console.log(
-          "[AUDIO-DEBUG] VideoPlayer - Error setting up AudioContext:",
-          err
-        );
-        // If we can't use AudioContext, just unmute directly
-        if (videoRef.current) {
-          videoRef.current.muted = false;
-          console.log(
-            "[AUDIO-DEBUG] VideoPlayer - Forced muted=false directly as fallback"
-          );
-        }
-      }
-    } else if (audioConnectedRef.current) {
-      console.log(
-        "[AUDIO-DEBUG] VideoPlayer - Already connected to AudioContext"
-      );
-    }
-  };
+  }, [isMuted, isPlaying, attemptPlayback]);
 
   const togglePlay = () => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Toggle play clicked");
-    if (!videoRef.current) {
-      console.log("[AUDIO-DEBUG] VideoPlayer - No video element found");
-      return;
-    }
+    if (!videoRef.current) return;
 
     if (videoRef.current.paused) {
-      console.log("[AUDIO-DEBUG] VideoPlayer - Attempting to play video");
-
-      // Mark that user has interacted
-      hasInteractedRef.current = true;
-
-      videoRef.current
-        .play()
-        .then(() => {
-          console.log("[AUDIO-DEBUG] VideoPlayer - Play succeeded");
-          setIsPlaying(true);
-        })
-        .catch((err) => {
-          console.log("[AUDIO-DEBUG] VideoPlayer - Play error:", err);
-          setIsPlaying(false);
-        });
+      attemptPlayback();
     } else {
-      console.log("[AUDIO-DEBUG] VideoPlayer - Pausing video");
-      videoRef.current.pause();
-      setIsPlaying(false);
+      pauseVideo();
     }
   };
 
   const toggleMute = (e: React.MouseEvent) => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Toggle mute clicked");
     e.stopPropagation();
-
-    // Mark that user has interacted
-    hasInteractedRef.current = true;
-
-    // If we're unmuting for the first time, set up the audio context
-    if (isMuted) {
-      console.log("[AUDIO-DEBUG] VideoPlayer - Attempting to unmute");
-      setupAudioContext();
-    } else {
-      console.log("[AUDIO-DEBUG] VideoPlayer - Attempting to mute");
-    }
-
     setIsMuted(!isMuted);
   };
 
   const handleMouseEnter = () => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Mouse enter");
     setIsHovering(true);
   };
 
   const handleMouseLeave = () => {
-    console.log("[AUDIO-DEBUG] VideoPlayer - Mouse leave");
     setIsHovering(false);
   };
 
@@ -273,49 +132,19 @@ export default function VideoPlayer({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Audio element for iOS Safari compatibility */}
-        {!isMuted && isPlaying && (
-          <audio
-            src={videoUrl}
-            autoPlay
-            loop={loop}
-            style={{ display: "none" }}
-            onPlay={() =>
-              console.log(
-                "[AUDIO-DEBUG] VideoPlayer - Audio element started playing"
-              )
-            }
-            onError={(e) =>
-              console.log("[AUDIO-DEBUG] VideoPlayer - Audio element error:", e)
-            }
-          />
-        )}
-
         <video
           ref={videoRef}
+          className="w-full h-full object-cover"
           src={videoUrl}
           poster={posterUrl}
-          className="w-full h-full object-cover"
           muted={isMuted}
           loop={loop}
           playsInline
           preload="auto"
           crossOrigin="anonymous"
           controls={controls && isPlaying}
-          onPlay={() => {
-            console.log("[AUDIO-DEBUG] VideoPlayer - Video started playing");
-            setIsPlaying(true);
-          }}
-          onPause={() => {
-            console.log("[AUDIO-DEBUG] VideoPlayer - Video paused");
-            setIsPlaying(false);
-          }}
-          onError={(e) =>
-            console.log("[AUDIO-DEBUG] VideoPlayer - Video error:", e)
-          }
-          onLoadedMetadata={() =>
-            console.log("[AUDIO-DEBUG] VideoPlayer - Video metadata loaded")
-          }
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
         />
 
         <div
