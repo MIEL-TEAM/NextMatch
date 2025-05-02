@@ -67,8 +67,30 @@ export default function MemberCard({
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
 
+    // More aggressive approach to force unmuting in production
     if (videoRef.current) {
       videoRef.current.muted = newMutedState;
+
+      // If we're unmuting, try to force audio playback
+      if (!newMutedState) {
+        // Try to force a new audio context
+        try {
+          const AudioContext =
+            window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioContext) {
+            const audioCtx = new AudioContext();
+            const source = audioCtx.createMediaElementSource(videoRef.current);
+            source.connect(audioCtx.destination);
+          }
+        } catch (e) {
+          console.log(e);
+        }
+
+        // Force playback to restart to trigger audio
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(() => {});
+      }
     }
   };
 
@@ -102,6 +124,16 @@ export default function MemberCard({
         {showVideo && activeVideo && (
           <div className="absolute inset-0 z-40 overflow-hidden">
             <div className="relative w-full h-full">
+              {/* Fallback audio element for when video audio doesn't work */}
+              {!isMuted && (
+                <audio
+                  src={activeVideo}
+                  autoPlay
+                  loop
+                  style={{ display: "none" }}
+                />
+              )}
+
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
@@ -110,6 +142,7 @@ export default function MemberCard({
                 muted={isMuted}
                 playsInline
                 preload="metadata"
+                crossOrigin="anonymous"
               >
                 <source src={activeVideo} type="video/mp4" />
                 <source src={activeVideo} type="video/quicktime" />

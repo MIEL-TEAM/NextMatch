@@ -84,7 +84,26 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
+
+      // Force sound to work by adding multiple approaches
       setIsMuted(!isMuted);
+
+      // Try to directly interact with the audio element if available
+      const videoElements = document.querySelectorAll("video");
+      videoElements.forEach((video) => {
+        video.muted = !isMuted;
+        if (isMuted) {
+          // Try to force audio playback when unmuting
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              // Autoplay was prevented, try again with user gesture
+              video.muted = false;
+              video.play().catch(() => {});
+            });
+          }
+        }
+      });
     },
     [isMuted]
   );
@@ -104,6 +123,15 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     return (
       <div className="w-full h-full flex items-center justify-center bg-black">
         <div className="relative aspect-video w-full max-w-4xl">
+          {/* Fallback audio element to ensure audio works */}
+          {!isMuted && (
+            <audio
+              src={selectedVideo.url}
+              autoPlay
+              style={{ display: "none" }}
+            />
+          )}
+
           <ReactPlayer
             url={selectedVideo.url}
             width="100%"
@@ -122,6 +150,21 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                 forceAudio: true,
                 forceVideo: true,
               },
+              youtube: {
+                playerVars: { showinfo: 0 },
+              },
+              vimeo: {
+                playerOptions: { showinfo: 0 },
+              },
+            }}
+            onPlay={() => {
+              // Try to ensure audio works on play
+              if (!isMuted) {
+                const videoElements = document.querySelectorAll("video");
+                videoElements.forEach((video) => {
+                  video.muted = false;
+                });
+              }
             }}
           />
           <button
