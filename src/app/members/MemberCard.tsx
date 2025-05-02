@@ -34,6 +34,9 @@ export default function MemberCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioConnectedRef = useRef<boolean>(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const videoPlayingRef = useRef(false);
 
   useEffect(() => {
     if (memberVideos.length > 0 && !activeVideo) {
@@ -46,6 +49,35 @@ export default function MemberCard({
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
+
+  useEffect(() => {
+    if (isHovering && videoRef.current && !videoPlayingRef.current) {
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Effect: Starting playback due to hover"
+      );
+      videoPlayingRef.current = true;
+
+      setTimeout(() => {
+        if (videoRef.current && isHovering) {
+          videoRef.current
+            .play()
+            .then(() => {
+              console.log("[AUDIO-DEBUG] MemberCard - Effect: Play succeeded");
+            })
+            .catch((err) => {
+              console.log("[AUDIO-DEBUG] MemberCard - Effect: Play error", err);
+              videoPlayingRef.current = false;
+            });
+        }
+      }, 200);
+    } else if (!isHovering && videoRef.current && videoPlayingRef.current) {
+      console.log(
+        "[AUDIO-DEBUG] MemberCard - Effect: Stopping playback due to hover end"
+      );
+      videoRef.current.pause();
+      videoPlayingRef.current = false;
+    }
+  }, [isHovering]);
 
   async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
@@ -79,20 +111,16 @@ export default function MemberCard({
 
     setIsMuted(newMutedState);
 
-    // More aggressive approach to force unmuting in production
     if (videoRef.current) {
-      // Simply set the muted property directly
       videoRef.current.muted = newMutedState;
       console.log(
         "[AUDIO-DEBUG] MemberCard - Set video.muted to:",
         newMutedState
       );
 
-      // If we're unmuting, try to force audio playback
       if (!newMutedState) {
         console.log("[AUDIO-DEBUG] MemberCard - Attempting to unmute");
 
-        // Try to force a new audio context only if not already connected
         try {
           if (!audioConnectedRef.current) {
             const AudioContext =
@@ -103,7 +131,6 @@ export default function MemberCard({
             );
 
             if (AudioContext) {
-              // Create audio context only once
               if (!audioContextRef.current) {
                 audioContextRef.current = new AudioContext();
                 console.log(
@@ -139,7 +166,6 @@ export default function MemberCard({
           }
         } catch (e) {
           console.log("[AUDIO-DEBUG] MemberCard - AudioContext error:", e);
-          // If there's an error, just make sure video is unmuted directly
           if (videoRef.current) {
             videoRef.current.muted = false;
             console.log(
@@ -147,36 +173,36 @@ export default function MemberCard({
             );
           }
         }
-
-        // DO NOT try to force play here - it causes AbortError
-        // Just let the normal playback continue
       }
     }
   };
 
   const handleMouseEnter = () => {
-    if (memberVideos.length > 0 && activeVideo) {
-      setShowVideo(true);
-      console.log("[AUDIO-DEBUG] MemberCard - Mouse enter, showing video");
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
 
-      // Wait a small moment before attempting to play to ensure the video element is ready
-      setTimeout(() => {
-        if (videoRef.current) {
-          console.log("[AUDIO-DEBUG] MemberCard - Attempting to play on hover");
-          videoRef.current.load();
-          videoRef.current.play().catch((err) => {
-            console.log("[AUDIO-DEBUG] MemberCard - Initial play error:", err);
-          });
-        }
+    if (memberVideos.length > 0 && activeVideo) {
+      console.log("[AUDIO-DEBUG] MemberCard - Mouse enter, showing video");
+      setShowVideo(true);
+
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHovering(true);
       }, 100);
     }
   };
 
   const handleMouseLeave = () => {
-    setShowVideo(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
+    console.log("[AUDIO-DEBUG] MemberCard - Mouse leave");
+
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
+
+    setShowVideo(false);
+    setIsHovering(false);
   };
 
   const renderCardContent = (imageUrl: string) => (
@@ -192,7 +218,6 @@ export default function MemberCard({
         {showVideo && activeVideo && (
           <div className="absolute inset-0 z-40 overflow-hidden">
             <div className="relative w-full h-full">
-              {/* Fallback audio element for when video audio doesn't work */}
               {!isMuted && (
                 <audio
                   src={activeVideo}

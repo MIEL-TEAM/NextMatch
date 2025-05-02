@@ -163,23 +163,49 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
           <ReactPlayer
             ref={playerRef}
-            key={`player-${selectedVideo?.id}`}
+            key={`player-${selectedVideo.id}`}
             url={selectedVideo.url}
             width="100%"
             height="100%"
             playing={true}
             controls={true}
             muted={isMuted}
+            volume={1.0}
+            playsinline
             onReady={() => {
               console.log("[AUDIO-DEBUG] ReactPlayer ready");
-              console.log("[AUDIO-DEBUG] ReactPlayer URL:", selectedVideo?.url);
+              console.log("[AUDIO-DEBUG] ReactPlayer URL:", selectedVideo.url);
+
+              // Check volume state on ready
+              if (playerRef.current) {
+                const player = playerRef.current.getInternalPlayer();
+                if (player && "volume" in player) {
+                  console.log(
+                    "[AUDIO-DEBUG] Player volume:",
+                    (player as any).volume
+                  );
+                }
+              }
             }}
-            onPlay={() =>
+            onPlay={() => {
               console.log(
                 "[AUDIO-DEBUG] ReactPlayer started playing, muted:",
                 isMuted
-              )
-            }
+              );
+
+              // Force update volume on play
+              if (!isMuted && playerRef.current) {
+                const player = playerRef.current.getInternalPlayer();
+                if (player && "volume" in player) {
+                  try {
+                    (player as any).volume = 1.0;
+                    console.log("[AUDIO-DEBUG] Set player volume to 1.0");
+                  } catch (e) {
+                    console.log("[AUDIO-DEBUG] Error setting volume:", e);
+                  }
+                }
+              }
+            }}
             onError={(e) => console.log("[AUDIO-DEBUG] ReactPlayer error:", e)}
             config={{
               file: {
@@ -188,6 +214,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                   disablePictureInPicture: true,
                   playsInline: true,
                   crossOrigin: "anonymous",
+                  autoPlay: true,
                 },
                 forceAudio: true,
                 forceVideo: true,
