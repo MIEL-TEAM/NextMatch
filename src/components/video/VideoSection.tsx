@@ -49,9 +49,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profileImage, setProfileImage] = useState("/images/user.png");
-  const [isMuted, setIsMuted] = useState(true); // Default to muted
+  const [isMuted, setIsMuted] = useState(true);
   const playerRef = useRef<ReactPlayer>(null);
-  const audioAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (memberPhotos && memberPhotos.length > 0) {
@@ -73,15 +72,18 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   };
 
   const handleVideoClick = useCallback((video: Video) => {
-    console.log("[AUDIO-DEBUG] VideoSection - Video clicked:", video.url);
+    // Clear any previous errors
+    setError("");
     setSelectedVideo(video);
     setIsModalOpen(true);
+
+    // Reset muted state when opening a new video
+    setIsMuted(true);
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
-    setIsMuted(true); // Reset to muted state when closing
-    console.log("[AUDIO-DEBUG] VideoSection - Modal closed, reset to muted");
+    setIsMuted(true);
   }, []);
 
   const toggleMute = useCallback(
@@ -89,45 +91,24 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
       e.stopPropagation();
       e.preventDefault();
 
-      const newMutedState = !isMuted;
-      console.log(
-        "[AUDIO-DEBUG] Toggle mute clicked, new state:",
-        newMutedState
-      );
+      setIsMuted((prevMuted) => !prevMuted);
 
-      // Simply toggle the muted state
-      setIsMuted(newMutedState);
-
-      // Log additional info for debugging
-      if (!newMutedState) {
-        console.log("[AUDIO-DEBUG] Attempting to unmute video");
-        console.log("[AUDIO-DEBUG] Selected video URL:", selectedVideo?.url);
-
-        // Check if ReactPlayer instance is available
-        if (playerRef.current) {
-          console.log("[AUDIO-DEBUG] ReactPlayer instance found");
-
-          // Check if the underlying player has audio
+      // Force the player to update volume settings
+      if (playerRef.current) {
+        const player = playerRef.current.getInternalPlayer();
+        if (player) {
           try {
-            const internalPlayer = playerRef.current.getInternalPlayer();
-            if (internalPlayer && "getAudioTracks" in internalPlayer) {
-              const audioTracks = internalPlayer.getAudioTracks();
-              console.log("[AUDIO-DEBUG] Audio tracks:", audioTracks);
-            } else {
-              console.log("[AUDIO-DEBUG] No getAudioTracks method available");
+            // Try to ensure audio is enabled after unmuting
+            if (isMuted && player.setVolume) {
+              player.setVolume(1.0);
             }
           } catch (e) {
-            console.log("[AUDIO-DEBUG] Error accessing internal player:", e);
+            console.error("Error toggling audio:", e);
           }
-        } else {
-          console.log("[AUDIO-DEBUG] ReactPlayer instance not found");
         }
       }
-
-      // Mark that we attempted to unmute
-      audioAttemptedRef.current = true;
     },
-    [isMuted, selectedVideo]
+    [isMuted]
   );
 
   const formatDate = (dateString: string) => {
@@ -145,25 +126,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     return (
       <div className="w-full h-full flex items-center justify-center bg-black">
         <div className="relative aspect-video w-full max-w-4xl">
-          {/* Important: Only add the audio element when needed, as a direct child */}
-          {!isMuted && selectedVideo && (
-            <audio
-              key={`audio-${selectedVideo.id}`}
-              src={selectedVideo.url}
-              autoPlay
-              style={{ display: "none" }}
-              onError={(e) =>
-                console.log("[AUDIO-DEBUG] Audio element error:", e)
-              }
-              onPlay={() =>
-                console.log("[AUDIO-DEBUG] Audio element started playing")
-              }
-            />
-          )}
-
           <ReactPlayer
             ref={playerRef}
-            key={`player-${selectedVideo.id}`}
+            key={`player-${selectedVideo.id}-${isMuted ? "muted" : "unmuted"}`}
             url={selectedVideo.url}
             width="100%"
             height="100%"
@@ -173,40 +138,22 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             volume={1.0}
             playsinline
             onReady={() => {
-              console.log("[AUDIO-DEBUG] ReactPlayer ready");
-              console.log("[AUDIO-DEBUG] ReactPlayer URL:", selectedVideo.url);
-
-              // Check volume state on ready
-              if (playerRef.current) {
-                const player = playerRef.current.getInternalPlayer();
-                if (player && "volume" in player) {
-                  console.log(
-                    "[AUDIO-DEBUG] Player volume:",
-                    (player as any).volume
-                  );
-                }
-              }
-            }}
-            onPlay={() => {
-              console.log(
-                "[AUDIO-DEBUG] ReactPlayer started playing, muted:",
-                isMuted
-              );
-
-              // Force update volume on play
+              // Ensure volume is set properly after player is ready
               if (!isMuted && playerRef.current) {
-                const player = playerRef.current.getInternalPlayer();
-                if (player && "volume" in player) {
-                  try {
-                    (player as any).volume = 1.0;
-                    console.log("[AUDIO-DEBUG] Set player volume to 1.0");
-                  } catch (e) {
-                    console.log("[AUDIO-DEBUG] Error setting volume:", e);
+                try {
+                  const player = playerRef.current.getInternalPlayer();
+                  if (player && player.setVolume) {
+                    player.setVolume(1.0);
                   }
+                } catch (e) {
+                  console.error("Error setting volume:", e);
                 }
               }
             }}
-            onError={(e) => console.log("[AUDIO-DEBUG] ReactPlayer error:", e)}
+            onError={(e) => {
+              console.error("Video playback error:", e);
+              setError("Failed to load video. Please try again later.");
+            }}
             config={{
               file: {
                 attributes: {
@@ -214,19 +161,22 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                   disablePictureInPicture: true,
                   playsInline: true,
                   crossOrigin: "anonymous",
-                  autoPlay: true,
+                  preload: "auto",
                 },
                 forceAudio: true,
                 forceVideo: true,
-              },
-              youtube: {
-                playerVars: { showinfo: 0 },
-              },
-              vimeo: {
-                playerOptions: { showinfo: 0 },
+                // Add HLS support for better streaming
+                hlsOptions: {
+                  enableWorker: true,
+                  startLevel: 0,
+                  autoStartLoad: true,
+                  liveDurationInfinity: false,
+                },
               },
             }}
           />
+
+          {/* Sound toggle button */}
           <button
             onClick={toggleMute}
             className="absolute bottom-16 right-4 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-md"
@@ -239,6 +189,13 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
               <Volume2 className="w-5 h-5 text-white" />
             )}
           </button>
+
+          {/* Error display */}
+          {error && (
+            <div className="absolute top-0 left-0 right-0 bg-red-600 text-white p-2 text-center">
+              {error}
+            </div>
+          )}
         </div>
       </div>
     );

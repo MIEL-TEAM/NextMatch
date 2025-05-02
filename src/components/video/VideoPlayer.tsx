@@ -43,6 +43,16 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showControls, setShowControls] = useState(controls);
   const [bufferedPercentage, setBufferedPercentage] = useState(0);
 
+  // Force remounting when url changes
+  const [playerKey, setPlayerKey] = useState(`player-${Date.now()}`);
+
+  // Update player key when url changes to force reload
+  useEffect(() => {
+    setPlayerKey(`player-${url}-${Date.now()}`);
+    setIsLoading(true);
+    setError(null);
+  }, [url]);
+
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
@@ -55,6 +65,18 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
+
+    // Force update player volume
+    if (playerRef.current) {
+      const player = playerRef.current.getInternalPlayer();
+      if (player && player.volume !== undefined) {
+        try {
+          player.volume = isMuted ? 1.0 : 0.0; // Set to opposite of current state since we're toggling
+        } catch (e) {
+          console.error("Error setting volume:", e);
+        }
+      }
+    }
   };
 
   const handleMouseEnter = () => {
@@ -109,13 +131,25 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
     setIsLoading(false);
     if (playerRef.current) {
       setDuration(playerRef.current.getDuration());
+
+      // Ensure volume settings are applied
+      const player = playerRef.current.getInternalPlayer();
+      if (player && !isMuted && player.volume !== undefined) {
+        try {
+          player.volume = 1.0;
+        } catch (e) {
+          console.error("Error setting initial volume:", e);
+        }
+      }
     }
   };
 
-  const handleError = () => {
-    setError("Failed to load video");
+  const handleError = (e: any) => {
+    console.error("Video error:", e);
+    const errorMsg = "Failed to load video";
+    setError(errorMsg);
     setIsLoading(false);
-    if (onError) onError("Failed to load video");
+    if (onError) onError(errorMsg);
   };
 
   const handleProgress = (state: {
@@ -139,6 +173,7 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
       className={`relative w-full h-full flex items-center justify-center ${className} rounded-lg overflow-hidden`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      dir="ltr" /* Explicitly set direction to LTR for the video player */
     >
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-lg z-20">
@@ -184,6 +219,7 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
       >
         <ReactPlayer
           ref={playerRef}
+          key={playerKey} /* Use dynamic key to force remounting */
           url={url}
           playing={isPlaying}
           controls={false}
@@ -202,12 +238,19 @@ export const EnhancedVideoPlayer: React.FC<VideoPlayerProps> = ({
           config={{
             file: {
               attributes: {
-                preload: "metadata",
+                preload: "auto" /* Changed from metadata to auto */,
                 playsInline: true,
                 crossOrigin: "anonymous",
+                controlsList: "nodownload",
               },
               forceAudio: true,
               forceVideo: true,
+              /* Add HLS support */
+              hlsOptions: {
+                enableWorker: true,
+                startLevel: 0,
+                autoStartLoad: true,
+              },
             },
           }}
         />
