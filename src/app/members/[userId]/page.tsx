@@ -1,7 +1,4 @@
-import {
-  getMemberByUserId,
-  getMemberPhotosByUserId,
-} from "@/app/actions/memberActions";
+import { getMemberByUserId } from "@/app/actions/memberActions";
 import { getUserInterestsByUserId } from "@/app/actions/interestsAction";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -12,7 +9,6 @@ import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import InterestsSection from "@/components/interests/InterestsSection";
 import ProfileViewTracker from "@/components/ProfileViewTracker";
 import { VideoSection } from "@/components/video/VideoSection";
-import VideoPlayer from "@/components/video/VideoPlayer";
 import { auth } from "@/auth";
 import { getMemberVideos } from "@/app/actions/videoActions";
 
@@ -33,7 +29,6 @@ export default async function MemberDetailedPage({
   const likeIds = await fetchCurrentUserLikeIds();
   const interests = await getUserInterestsByUserId(userId);
   const videos = await getMemberVideos(member.id);
-  const memberPhotos = await getMemberPhotosByUserId(userId);
 
   const formattedVideos = videos.map((video) => ({
     ...video,
@@ -41,18 +36,6 @@ export default async function MemberDetailedPage({
     updatedAt: video.updatedAt.toISOString(),
     duration: video.duration ?? 0,
   }));
-
-  const formattedPhotos = memberPhotos
-    ? memberPhotos.map((photo) => ({
-        url: photo.url,
-        id: photo.id,
-      }))
-    : [];
-
-  const hasSingleVideo = formattedVideos.length === 1;
-
-  const thumbnailUrl =
-    formattedPhotos.length > 0 ? formattedPhotos[0].url : member.image;
 
   return (
     <ProfileViewTracker userId={userId}>
@@ -69,43 +52,12 @@ export default async function MemberDetailedPage({
             <Divider />
             <InterestsSection interests={interests} />
             <Divider />
-
-            {hasSingleVideo && formattedVideos[0] && (
-              <CardInnerWrapper
-                header={
-                  <div className="flex items-center gap-2">
-                    <span>סרטון פרופיל</span>
-                  </div>
-                }
-                body={
-                  <div className="p-4">
-                    <VideoPlayer
-                      videoUrl={formattedVideos[0].url}
-                      thumbnailUrl={thumbnailUrl}
-                      autoPlay={false}
-                      controls={true}
-                      loop={true}
-                      muted={true}
-                    />
-                  </div>
-                }
-              />
-            )}
-
-            {(!hasSingleVideo || isOwnProfile) && (
-              <VideoSection
-                videos={formattedVideos}
-                memberId={member.id}
-                userId={userId}
-                isOwnProfile={isOwnProfile}
-                member={{
-                  name: member.name,
-                  userId: member.userId,
-                  profileImageUrl: member.image || undefined,
-                }}
-                memberPhotos={formattedPhotos}
-              />
-            )}
+            <VideoSection
+              videos={formattedVideos}
+              memberId={member.id}
+              userId={userId}
+              isOwnProfile={isOwnProfile}
+            />
           </div>
         </div>
       </div>

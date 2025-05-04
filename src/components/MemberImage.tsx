@@ -59,7 +59,7 @@ export default function MemberImage({
           className={clsx("rounded-2xl", {
             "opacity-40": !photo?.isApproved && role !== "ADMIN",
           })}
-          priority={isPriority}
+          loading={isPriority ? "eager" : "lazy"}
         />
       ) : (
         <Image
@@ -68,7 +68,8 @@ export default function MemberImage({
           src={photo?.url || "/images/user.png"}
           alt="Image of user"
           className="object-cover rounded-2xl"
-          priority={isPriority}
+          loading={isPriority ? "eager" : "lazy"}
+          fetchPriority={isPriority ? "high" : "auto"}
         />
       )}
       {!photo?.isApproved && role !== "ADMIN" && (
@@ -138,6 +139,7 @@ export default function MemberImage({
                 )}
                 crop="fill"
                 gravity="faces"
+                loading="lazy"
               />
             ) : (
               <Image
@@ -146,7 +148,8 @@ export default function MemberImage({
                 src={photo?.url || "/images/user.png"}
                 alt="Image of user"
                 className="object-cover rounded-2xl"
-                priority={false}
+                loading="lazy"
+                fetchPriority="auto"
               />
             )}
           </>

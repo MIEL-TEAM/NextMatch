@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useReducer, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback } from "react";
+import { Button } from "@nextui-org/react";
+import { Upload, VideoIcon } from "lucide-react";
 import { VIDEO_UPLOAD_CONFIG } from "@/lib/aws-config";
 import UploadProgress from "./UploadProgress";
-import DragDropUpload from "./DragDropUpload";
-import { useVideoCompression } from "./VideoCompression";
 
 interface VideoUploaderProps {
   memberId: string;
@@ -13,228 +13,177 @@ interface VideoUploaderProps {
   maxRetries?: number;
 }
 
-interface UploaderState {
-  isUploading: boolean;
-  uploadProgress: number;
-  uploadSuccess: boolean;
-  retryCount: number;
-  currentFile: File | null;
-}
-
-type UploaderAction =
-  | { type: "START_UPLOAD"; payload: File }
-  | { type: "SET_PROGRESS"; payload: number }
-  | { type: "UPLOAD_SUCCESS" }
-  | { type: "UPLOAD_FAILURE" }
-  | { type: "INCREMENT_RETRY" }
-  | { type: "RESET_RETRY" }
-  | { type: "CANCEL_UPLOAD" };
-
-const initialUploaderState: UploaderState = {
-  isUploading: false,
-  uploadProgress: 0,
-  uploadSuccess: false,
-  retryCount: 0,
-  currentFile: null,
-};
-
-const uploaderReducer = (
-  state: UploaderState,
-  action: UploaderAction
-): UploaderState => {
-  switch (action.type) {
-    case "START_UPLOAD":
-      return {
-        ...state,
-        isUploading: true,
-        uploadProgress: 0,
-        uploadSuccess: false,
-        currentFile: action.payload,
-      };
-    case "SET_PROGRESS":
-      return {
-        ...state,
-        uploadProgress: action.payload,
-      };
-    case "UPLOAD_SUCCESS":
-      return {
-        ...state,
-        uploadSuccess: true,
-      };
-    case "UPLOAD_FAILURE":
-      return {
-        ...state,
-        isUploading: false,
-      };
-    case "INCREMENT_RETRY":
-      return {
-        ...state,
-        retryCount: state.retryCount + 1,
-      };
-    case "RESET_RETRY":
-      return {
-        ...state,
-        retryCount: 0,
-      };
-    case "CANCEL_UPLOAD":
-      return {
-        ...state,
-        isUploading: false,
-        uploadProgress: 0,
-        currentFile: null,
-      };
-    default:
-      return state;
-  }
-};
-
 export const VideoUploader: React.FC<VideoUploaderProps> = ({
   memberId,
   onUploadComplete,
   onError,
   maxRetries = 3,
 }) => {
-  const [state, dispatch] = useReducer(uploaderReducer, initialUploaderState);
-  const { compressVideo, isCompressing, compressionProgress } =
-    useVideoCompression();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const currentFileRef = useRef<File | null>(null);
 
-  useEffect(() => {
-    let successTimeout: NodeJS.Timeout;
+  const handleUpload = useCallback(
+    async (file: File) => {
+      if (!file) return;
 
-    if (state.uploadSuccess) {
-      successTimeout = setTimeout(() => {
-        onUploadComplete();
-      }, 1500);
-    }
+      const fileType = file.type.toLowerCase();
+      const fileSize = file.size;
+      const maxSizeMB = Math.floor(
+        VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024
+      );
 
-    return () => {
-      if (successTimeout) clearTimeout(successTimeout);
-    };
-  }, [state.uploadSuccess, onUploadComplete]);
+      if (fileSize > VIDEO_UPLOAD_CONFIG.maxFileSize) {
+        onError(
+          `הקובץ גדול מדי (${(fileSize / 1024 / 1024).toFixed(
+            1
+          )} מ״ב). הגודל המקסימלי המותר הוא ${maxSizeMB} מ״ב`
+        );
+        return;
+      }
 
-  const uploadToServer = useCallback(
-    async (fileToUpload: File): Promise<void> => {
-      const formData = new FormData();
-      formData.append("file", fileToUpload);
-      formData.append("memberId", memberId);
-      formData.append("filename", fileToUpload.name);
-      formData.append("filesize", fileToUpload.size.toString());
-      formData.append("filetype", fileToUpload.type);
+      if (!VIDEO_UPLOAD_CONFIG.allowedTypes.includes(fileType as any)) {
+        onError(
+          `סוג הקובץ ${fileType} אינו נתמך. נתמכים רק קבצי MP4, MOV או AVI`
+        );
+        return;
+      }
 
-      return new Promise<void>((resolve, reject) => {
+      try {
+        setIsUploading(true);
+        setUploadProgress(0);
+        setUploadSuccess(false);
+        currentFileRef.current = file;
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("memberId", memberId);
+
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
 
         xhr.open("POST", "/api/videos", true);
-        xhr.timeout = 5 * 60 * 1000;
+
         xhr.setRequestHeader("Accept", "application/json");
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const progress = Math.round((event.loaded / event.total) * 100);
-            dispatch({ type: "SET_PROGRESS", payload: progress });
+            setUploadProgress(progress);
           }
         };
 
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
+            setUploadSuccess(true);
+            setTimeout(() => {
+              setUploadSuccess(false);
+              onUploadComplete();
+            }, 1500);
           } else {
             let errorMsg = "ההעלאה נכשלה";
             try {
-              const responseData = JSON.parse(xhr.responseText);
-              if (responseData.error) {
-                errorMsg = responseData.error;
+              const errorData = JSON.parse(xhr.responseText);
+              if (errorData.error) {
+                errorMsg = errorData.error;
               }
             } catch {}
-            reject(new Error(errorMsg));
+
+            if (retryCount < maxRetries) {
+              setRetryCount((prev) => prev + 1);
+              setTimeout(() => {
+                if (currentFileRef.current) {
+                  handleUpload(currentFileRef.current);
+                }
+              }, 2000 * (retryCount + 1));
+            } else {
+              throw new Error(errorMsg);
+            }
           }
         };
 
-        xhr.onerror = () =>
-          reject(new Error("שגיאת תקשורת. בדוק את החיבור לאינטרנט ונסה שוב"));
-        xhr.ontimeout = () =>
-          reject(new Error("פעולת ההעלאה ארכה זמן רב מדי. נסה שוב מאוחר יותר"));
-        xhr.send(formData);
-      });
-    },
-    [memberId]
-  );
-
-  const handleUpload = useCallback(
-    async (file: File) => {
-      const validateFile = (file: File): boolean => {
-        const fileType = file.type.toLowerCase();
-        const fileSize = file.size;
-        const maxSizeMB = Math.floor(
-          VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024
-        );
-
-        if (fileSize > VIDEO_UPLOAD_CONFIG.maxFileSize) {
-          onError(
-            `הקובץ גדול מדי (${(fileSize / 1024 / 1024).toFixed(
-              1
-            )} מ״ב). הגודל המקסימלי המותר הוא ${maxSizeMB} מ״ב`
-          );
-          return false;
-        }
-
-        if (!VIDEO_UPLOAD_CONFIG.allowedTypes.includes(fileType as any)) {
-          onError(
-            `סוג הקובץ ${fileType} אינו נתמך. נתמכים רק קבצי MP4, MOV או AVI`
-          );
-          return false;
-        }
-
-        return true;
-      };
-
-      if (!file || !validateFile(file)) return;
-
-      try {
-        dispatch({ type: "START_UPLOAD", payload: file });
-
-        let fileToUpload = file;
-        if (file.size > 7 * 1024 * 1024) {
-          try {
-            fileToUpload = await compressVideo(file);
-            dispatch({ type: "SET_PROGRESS", payload: 0 });
-          } catch (error) {
-            console.error("Video compression failed:", error);
+        xhr.onerror = () => {
+          if (retryCount < maxRetries) {
+            setRetryCount((prev) => prev + 1);
+            setTimeout(() => {
+              if (currentFileRef.current) {
+                handleUpload(currentFileRef.current);
+              }
+            }, 2000 * (retryCount + 1));
+          } else {
+            throw new Error("שגיאת תקשורת. בדוק את החיבור לאינטרנט ונסה שוב");
           }
-        }
+        };
 
-        await uploadToServer(fileToUpload);
-        dispatch({ type: "UPLOAD_SUCCESS" });
+        xhr.ontimeout = () => {
+          if (retryCount < maxRetries) {
+            setRetryCount((prev) => prev + 1);
+            setTimeout(() => {
+              if (currentFileRef.current) {
+                handleUpload(currentFileRef.current);
+              }
+            }, 2000 * (retryCount + 1));
+          } else {
+            throw new Error("פעולת ההעלאה ארכה זמן רב מדי. נסה שוב מאוחר יותר");
+          }
+        };
+
+        xhr.send(formData);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "ההעלאה נכשלה";
-
-        if (state.retryCount < maxRetries) {
-          dispatch({ type: "INCREMENT_RETRY" });
-
-          setTimeout(() => {
-            if (state.currentFile) {
-              handleUpload(state.currentFile);
-            }
-          }, 2000 * (state.retryCount + 1));
-          return;
-        }
-
         onError(errorMessage);
-        dispatch({ type: "UPLOAD_FAILURE" });
-        dispatch({ type: "RESET_RETRY" });
+        setIsUploading(false);
+        setRetryCount(0);
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
       }
     },
-    [
-      compressVideo,
-      uploadToServer,
-      onError,
-      state.retryCount,
-      state.currentFile,
-      maxRetries,
-    ]
+    [memberId, onError, onUploadComplete, retryCount, maxRetries]
+  );
+
+  const handleDrag = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.type === "dragenter" || event.type === "dragover") {
+      setDragActive(true);
+    } else if (event.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleUpload(e.dataTransfer.files[0]);
+      }
+    },
+    [handleUpload]
+  );
+
+  const onButtonClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+        handleUpload(e.target.files[0]);
+      }
+    },
+    [handleUpload]
   );
 
   const cancelUpload = useCallback(() => {
@@ -242,21 +191,65 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
       xhrRef.current.abort();
       xhrRef.current = null;
     }
-    dispatch({ type: "CANCEL_UPLOAD" });
+    setIsUploading(false);
+    setUploadProgress(0);
   }, []);
 
-  if (state.isUploading) {
+  if (isUploading) {
     return (
       <UploadProgress
-        progress={isCompressing ? compressionProgress : state.uploadProgress}
+        progress={uploadProgress}
         onCancel={cancelUpload}
-        success={state.uploadSuccess}
-        isCompressing={isCompressing}
+        success={uploadSuccess}
       />
     );
   }
 
-  return <DragDropUpload onFileSelected={handleUpload} />;
+  const maxSizeMB = Math.floor(VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024);
+
+  return (
+    <div
+      className={`border-2 border-dashed rounded-lg p-6 transition-all ${
+        dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
+      }`}
+      onDragEnter={handleDrag}
+      onDragOver={handleDrag}
+      onDragLeave={handleDrag}
+      onDrop={handleDrop}
+      dir="rtl"
+      aria-label="אזור העלאת וידאו"
+    >
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className="bg-blue-100 p-4 rounded-full">
+          <VideoIcon className="h-8 w-8 text-blue-500" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium">
+            {dragActive ? "שחרר את הסרטון כאן" : "גרור ושחרר את הסרטון כאן"}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            MP4, MOV או AVI (מקסימום {maxSizeMB} מגה-בייט)
+          </p>
+        </div>
+        <Button
+          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          onPress={onButtonClick}
+          startContent={<Upload size={16} />}
+          aria-label="בחר וידאו מהמחשב"
+        >
+          בחר סרטון
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={VIDEO_UPLOAD_CONFIG.allowedTypes.join(",")}
+          className="hidden"
+          onChange={handleFileChange}
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
 };
 
 export default VideoUploader;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useReducer, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
@@ -19,150 +19,61 @@ type MemberCardProps = {
   memberVideos?: Array<{ url: string; id: string }>;
 };
 
-interface MemberCardState {
-  hasLiked: boolean;
-  loading: boolean;
-  showVideo: boolean;
-  activeVideo: string | null;
-  currentIndex: number;
-  isMuted: boolean;
-}
-
-type MemberCardAction =
-  | { type: "SET_LIKED"; payload: boolean }
-  | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SHOW_VIDEO"; payload: boolean }
-  | { type: "SET_ACTIVE_VIDEO"; payload: string }
-  | { type: "SET_INDEX"; payload: number }
-  | { type: "TOGGLE_MUTE" }
-  | { type: "TOGGLE_LIKE" };
-
-const memberCardReducer = (
-  state: MemberCardState,
-  action: MemberCardAction
-): MemberCardState => {
-  switch (action.type) {
-    case "SET_LIKED":
-      return { ...state, hasLiked: action.payload };
-    case "SET_LOADING":
-      return { ...state, loading: action.payload };
-    case "SHOW_VIDEO":
-      return { ...state, showVideo: action.payload };
-    case "SET_ACTIVE_VIDEO":
-      return { ...state, activeVideo: action.payload };
-    case "SET_INDEX":
-      return { ...state, currentIndex: action.payload };
-    case "TOGGLE_MUTE":
-      return { ...state, isMuted: !state.isMuted };
-    case "TOGGLE_LIKE":
-      return { ...state, hasLiked: !state.hasLiked };
-    default:
-      return state;
-  }
-};
-
 export default function MemberCard({
   member,
   likeIds,
   memberPhotos = [],
   memberVideos = [],
 }: MemberCardProps) {
-  const [state, dispatch] = useReducer(memberCardReducer, {
-    hasLiked: likeIds.includes(member.userId),
-    loading: false,
-    showVideo: false,
-    activeVideo: null,
-    currentIndex: 0,
-    isMuted: true,
-  });
-
+  const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
+  const [loading, setLoading] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const playPromiseRef = useRef<Promise<void> | null>(null);
-
-  const handleIndexChange = useCallback((index: number) => {
-    dispatch({ type: "SET_INDEX", payload: index });
-  }, []);
 
   useEffect(() => {
-    if (memberVideos.length > 0 && !state.activeVideo) {
-      dispatch({ type: "SET_ACTIVE_VIDEO", payload: memberVideos[0].url });
+    if (memberVideos.length > 0 && !activeVideo) {
+      setActiveVideo(memberVideos[0].url);
     }
-  }, [memberVideos, state.activeVideo]);
+  }, [memberVideos, activeVideo]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = state.isMuted;
-    }
-  }, [state.isMuted]);
-
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    return () => {
-      if (videoElement && !videoElement.paused) {
-        videoElement.pause();
-      }
-    };
-  }, []);
-
-  const playVideo = () => {
-    if (!videoRef.current || !state.showVideo) return;
-
-    if (playPromiseRef.current) {
-      videoRef.current.pause();
-    }
-
-    playPromiseRef.current = videoRef.current.play();
-    playPromiseRef.current.catch(() => {
-      playPromiseRef.current = null;
-    });
-  };
-
-  const pauseVideo = () => {
-    if (!videoRef.current) return;
-
-    if (!videoRef.current.paused) {
-      videoRef.current.pause();
-    }
-
-    playPromiseRef.current = null;
-  };
-
-  async function handleToggleLike(e: React.MouseEvent) {
+  async function toggleLike(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    dispatch({ type: "SET_LOADING", payload: true });
+    setLoading(true);
 
     try {
-      await toggleLikeMember(member.userId, state.hasLiked);
-      dispatch({ type: "TOGGLE_LIKE" });
-    } catch (err) {
-      console.log(err);
+      await toggleLikeMember(member.userId, hasLiked);
+      setHasLiked(!hasLiked);
+    } catch (error) {
+      console.error("Like toggle error:", error);
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
+      setLoading(false);
     }
   }
 
-  const toggleMute = (_e: React.MouseEvent) => {
-    _e.preventDefault();
-    _e.stopPropagation();
-    dispatch({ type: "TOGGLE_MUTE" });
+  const toggleMute = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
   };
 
   const handleMouseEnter = () => {
-    if (memberVideos.length > 0 && state.activeVideo) {
-      dispatch({ type: "SHOW_VIDEO", payload: true });
-      setTimeout(() => {
-        playVideo();
-      }, 100);
+    if (memberVideos.length > 0 && activeVideo) {
+      setShowVideo(true);
     }
   };
 
   const handleMouseLeave = () => {
-    pauseVideo();
-    dispatch({ type: "SHOW_VIDEO", payload: false });
+    setShowVideo(false);
   };
 
-  const renderCardContent = (imageUrl: string, isPriority: boolean = false) => (
+  const renderCardContent = (imageUrl: string) => (
     <Card
       as={Link}
       href={`/members/${member.userId}`}
@@ -172,26 +83,29 @@ export default function MemberCard({
       onMouseLeave={handleMouseLeave}
     >
       <div className="relative aspect-square overflow-hidden rounded-t-lg group">
-        {state.showVideo && state.activeVideo && (
+        {showVideo && activeVideo && (
           <div className="absolute inset-0 z-40 overflow-hidden">
             <div className="relative w-full h-full">
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
-                src={state.activeVideo}
-                muted={state.isMuted}
+                autoPlay
                 loop
+                muted={isMuted}
                 playsInline
-                preload="auto"
-                crossOrigin="anonymous"
-              />
+                preload="metadata"
+              >
+                <source src={activeVideo} type="video/mp4" />
+                <source src={activeVideo} type="video/quicktime" />
+                <source src={activeVideo} type="video/x-msvideo" />
+                הדפדפן שלך אינו תומך בתג וידאו.
+              </video>
               <button
                 onClick={toggleMute}
                 className="absolute bottom-2 right-2 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-md"
-                aria-label={state.isMuted ? "הפעל שמע" : "השתק"}
-                type="button"
+                aria-label={isMuted ? "הפעל שמע" : "השתק"}
               >
-                {state.isMuted ? (
+                {isMuted ? (
                   <VolumeX className="w-5 h-5 text-white" />
                 ) : (
                   <Volume2 className="w-5 h-5 text-white" />
@@ -205,12 +119,12 @@ export default function MemberCard({
           alt={member.name}
           src={transformImageUrl(imageUrl) || "/images/user.png"}
           className={`w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-110 ${
-            state.showVideo ? "opacity-0" : "opacity-100"
+            showVideo ? "opacity-0" : "opacity-100"
           }`}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          loading={isPriority ? "eager" : "lazy"}
-          priority={isPriority}
+          loading="eager"
+          fetchPriority="auto"
         />
 
         <div className="absolute top-2 right-2 z-50">
@@ -219,18 +133,18 @@ export default function MemberCard({
 
         <div className="absolute top-2 left-2 z-50 flex gap-1 items-center">
           <LikeButton
-            loading={state.loading}
-            toggleLike={handleToggleLike}
-            hasLiked={state.hasLiked}
+            loading={loading}
+            toggleLike={toggleLike}
+            hasLiked={hasLiked}
           />
-          {memberVideos.length > 0 && state.showVideo && (
+          {memberVideos.length > 0 && showVideo && (
             <button
               onClick={toggleMute}
               className="bg-black/70 hover:bg-black/90 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-lg ring-2 ring-blue-400/60 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/80"
-              aria-label={state.isMuted ? "הפעל שמע" : "השתק"}
+              aria-label={isMuted ? "הפעל שמע" : "השתק"}
               type="button"
             >
-              {state.isMuted ? (
+              {isMuted ? (
                 <VolumeX className="w-5 h-5 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
               ) : (
                 <Volume2 className="w-5 h-5 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
@@ -258,7 +172,7 @@ export default function MemberCard({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {memberVideos.length > 0 && !state.showVideo && (
+            {memberVideos.length > 0 && !showVideo && (
               <div className="bg-white/20 backdrop-blur-[1px] rounded-md p-1 flex items-center justify-center border border-white/10">
                 <div className="relative w-4 h-4">
                   <div className="absolute inset-0 animate-ping rounded-full bg-white/30"></div>
@@ -269,7 +183,7 @@ export default function MemberCard({
               </div>
             )}
 
-            {memberVideos.length > 0 && state.showVideo && (
+            {memberVideos.length > 0 && showVideo && (
               <div className="bg-white/20 backdrop-blur-[1px] rounded-md p-1 flex items-center justify-center border border-white/10">
                 <div className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center">
                   <Play className="w-2.5 h-2.5 text-white" fill="white" />
@@ -280,7 +194,7 @@ export default function MemberCard({
             {memberPhotos.length > 1 && (
               <div className="flex items-center bg-white/20 backdrop-blur-[1px] rounded-md px-1.5 py-0.5 border border-white/10">
                 <span className="text-white text-[10px] font-medium tracking-tight">
-                  {state.currentIndex + 1}/{memberPhotos.length}
+                  {currentIndex + 1}/{memberPhotos.length}
                 </span>
               </div>
             )}
@@ -293,19 +207,16 @@ export default function MemberCard({
   if (memberPhotos.length <= 1) {
     const defaultImage =
       memberPhotos.length === 1 ? memberPhotos[0].url : "/images/user.png";
-    return renderCardContent(defaultImage, true);
+    return renderCardContent(defaultImage);
   }
 
   return (
     <div className="group">
       <MemberImageCarousel
         images={memberPhotos}
-        onIndexChange={handleIndexChange}
-        prioritizeFirstImage={true}
+        onIndexChange={setCurrentIndex}
       >
-        {(currentImage, isPriority) =>
-          renderCardContent(currentImage.url, isPriority)
-        }
+        {(currentImage) => renderCardContent(currentImage.url)}
       </MemberImageCarousel>
     </div>
   );

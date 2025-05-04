@@ -84,7 +84,7 @@ export default function Filter() {
                 filters={filters}
                 clientLoaded={clientLoaded}
                 isPending={isPending}
-                selectWithPhoto={selectWithPhoto} // Fix: Pass the function directly
+                selectWithPhoto={selectWithPhoto}
                 totalCount={totalCount}
               />
             </motion.div>
