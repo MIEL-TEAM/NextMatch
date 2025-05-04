@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Progress, Button } from "@nextui-org/react";
 import { X, Check } from "lucide-react";
 
@@ -17,27 +17,6 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   success,
   isCompressing = false,
 }) => {
-  const [displayProgress, setDisplayProgress] = useState(0);
-
-  useEffect(() => {
-    if (Math.abs(progress - displayProgress) < 3) {
-      setDisplayProgress(progress);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setDisplayProgress((prev) => {
-        if (prev === progress) return prev;
-
-        const diff = progress - prev;
-        const increment = Math.sign(diff) * Math.min(Math.abs(diff), 2);
-        return prev + increment;
-      });
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, [progress, displayProgress]);
-
   if (success) {
     return (
       <div
@@ -52,18 +31,12 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
     );
   }
 
-  const getStatusMessage = () => {
-    if (isCompressing) return "מדחיס את הסרטון...";
-    if (displayProgress < 100) return "מעלה סרטון...";
-    return "מעבד סרטון...";
-  };
-
   return (
     <div
       className="border rounded-lg p-4 bg-white shadow-sm"
       dir="rtl"
       role="progressbar"
-      aria-valuenow={displayProgress}
+      aria-valuenow={progress}
       aria-valuemin={0}
       aria-valuemax={100}
     >
@@ -83,14 +56,20 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
         </Button>
       </div>
       <Progress
-        value={displayProgress}
-        color={displayProgress < 100 ? "primary" : "success"}
+        value={progress}
+        color={progress < 100 ? "primary" : "success"}
         className="mb-2"
         showValueLabel={true}
-        valueLabel={`${displayProgress}%`}
+        valueLabel={`${progress}%`}
         aria-label="התקדמות העלאה"
       />
-      <p className="text-xs text-gray-500">{getStatusMessage()}</p>
+      <p className="text-xs text-gray-500">
+        {isCompressing
+          ? "מדחיס את הסרטון..."
+          : progress < 100
+          ? "מעלה סרטון..."
+          : "מעבד סרטון..."}
+      </p>
     </div>
   );
 };

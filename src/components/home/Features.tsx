@@ -109,11 +109,11 @@ export default function FeaturesSection() {
                 <div className="w-full h-full relative">
                   <Image
                     src="/images/couple.jpg"
-                    alt="Couple Connection"
+                    alt="Happy couple demonstrating relationship success"
                     fill
                     className="object-cover object-center"
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    priority
+                    loading="lazy"
                   />
 
                   <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />

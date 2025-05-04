@@ -1,72 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useReducer, useCallback } from "react";
 
-interface CompressionOptions {
-  maxDimension?: number;
-  videoBitsPerSecond?: number;
-  fps?: number;
-  preserveAudio?: boolean;
+// Define state interface
+interface CompressionState {
+  isCompressing: boolean;
+  compressionProgress: number;
 }
 
-export const useVideoCompression = () => {
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [compressionProgress, setCompressionProgress] = useState(0);
+// Define action types
+type CompressionAction =
+  | { type: "START_COMPRESSION" }
+  | { type: "PROGRESS"; payload: number }
+  | { type: "COMPLETE_COMPRESSION" };
 
-  /**
-   * Compression function that currently returns the original file to preserve audio
-   * options is kept in the signature for future implementation of actual compression
-   */
-  const compressVideo = async (
-    file: File,
-    options: CompressionOptions = {}
-  ): Promise<File> => {
-    return new Promise((resolve) => {
-      console.log("[VIDEO-DEBUG] Starting compression with options:", options);
-      console.log("[VIDEO-DEBUG] Original file:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
-
-      setIsCompressing(true);
-      setCompressionProgress(0);
-
-      const isProd =
-        typeof window !== "undefined" &&
-        window.location.hostname !== "localhost" &&
-        window.location.hostname !== "127.0.0.1";
-
-      const shouldPreserveAudio = isProd || options.preserveAudio !== false;
-      console.log("[VIDEO-DEBUG] Environment:", {
-        isProd,
-        shouldPreserveAudio,
-      });
-
-      const simulateProgress = () => {
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress += 5;
-          setCompressionProgress(Math.min(progress, 100));
-          if (progress >= 100) {
-            clearInterval(interval);
-            setIsCompressing(false);
-            console.log(
-              "[VIDEO-DEBUG] Compression complete, returning original file"
-            );
-            resolve(file);
-          }
-        }, 100);
+// Define reducer function
+const compressionReducer = (
+  state: CompressionState,
+  action: CompressionAction
+): CompressionState => {
+  switch (action.type) {
+    case "START_COMPRESSION":
+      return {
+        ...state,
+        isCompressing: true,
+        compressionProgress: 0,
       };
+    case "PROGRESS":
+      return {
+        ...state,
+        compressionProgress: action.payload,
+      };
+    case "COMPLETE_COMPRESSION":
+      return {
+        ...state,
+        isCompressing: false,
+        compressionProgress: 100,
+      };
+    default:
+      return state;
+  }
+};
 
-      simulateProgress();
+export const useVideoCompression = () => {
+  // Initialize state with reducer
+  const [state, dispatch] = useReducer(compressionReducer, {
+    isCompressing: false,
+    compressionProgress: 0,
+  });
+
+  // Enhanced compressVideo function with useCallback to prevent unnecessary recreation
+  const compressVideo = useCallback(async (file: File): Promise<File> => {
+    if (file.size <= 7 * 1024 * 1024) {
+      // Skip compression for small files
+      return file;
+    }
+
+    dispatch({ type: "START_COMPRESSION" });
+
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10; // Faster simulation
+        dispatch({ type: "PROGRESS", payload: Math.min(progress, 100) });
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          dispatch({ type: "COMPLETE_COMPRESSION" });
+          resolve(file);
+        }
+      }, 50);
     });
-  };
+  }, []);
 
   return {
     compressVideo,
-    isCompressing,
-    compressionProgress,
+    isCompressing: state.isCompressing,
+    compressionProgress: state.compressionProgress,
   };
 };
 

@@ -94,6 +94,7 @@ export default function MobileBlocker() {
               width={60}
               height={60}
               className="rounded-full bg-white/30 p-2 shadow-lg"
+              loading="lazy"
             />
           </div>
 

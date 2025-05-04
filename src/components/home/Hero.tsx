@@ -40,7 +40,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
         <div className="relative w-full h-full">
           <Image
             src="/images/couple.png"
-            alt="Couple connection"
+            alt="Couple connecting on Miel dating platform"
             fill
             className="object-cover z-[1] brightness-125 contrast-[0.95]"
             priority

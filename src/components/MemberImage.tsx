@@ -14,9 +14,13 @@ import AppModal from "./AppModal";
 
 type MemberImageProps = {
   photo: Photo | null;
+  isPriority?: boolean;
 };
 
-export default function MemberImage({ photo }: MemberImageProps) {
+export default function MemberImage({
+  photo,
+  isPriority = false,
+}: MemberImageProps) {
   const role = useRole();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -54,7 +58,7 @@ export default function MemberImage({ photo }: MemberImageProps) {
           className={clsx("rounded-2xl", {
             "opacity-40": !photo?.isApproved && role !== "ADMIN",
           })}
-          priority
+          priority={isPriority}
         />
       ) : (
         <Image
@@ -132,7 +136,6 @@ export default function MemberImage({ photo }: MemberImageProps) {
                 )}
                 crop="fill"
                 gravity="faces"
-                priority
               />
             ) : (
               <Image

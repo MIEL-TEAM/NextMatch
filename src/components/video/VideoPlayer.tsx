@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useReducer, useRef, useEffect } from "react";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { transformImageUrl } from "@/lib/util";
+import ReactPlayer from "react-player";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -12,7 +13,49 @@ interface VideoPlayerProps {
   controls?: boolean;
   muted?: boolean;
   className?: string;
+  onPlay?: () => void;
+  onPause?: () => void;
 }
+
+// Define the state interface
+interface VideoPlayerState {
+  isPlaying: boolean;
+  isMuted: boolean;
+  isHovering: boolean;
+  isReady: boolean;
+}
+
+// Define action types and action interface
+type VideoPlayerAction =
+  | { type: "PLAY" }
+  | { type: "PAUSE" }
+  | { type: "TOGGLE_PLAY" }
+  | { type: "TOGGLE_MUTE" }
+  | { type: "SET_HOVERING"; payload: boolean }
+  | { type: "SET_READY"; payload: boolean };
+
+// Reducer function
+const videoPlayerReducer = (
+  state: VideoPlayerState,
+  action: VideoPlayerAction
+): VideoPlayerState => {
+  switch (action.type) {
+    case "PLAY":
+      return { ...state, isPlaying: true };
+    case "PAUSE":
+      return { ...state, isPlaying: false };
+    case "TOGGLE_PLAY":
+      return { ...state, isPlaying: !state.isPlaying };
+    case "TOGGLE_MUTE":
+      return { ...state, isMuted: !state.isMuted };
+    case "SET_HOVERING":
+      return { ...state, isHovering: action.payload };
+    case "SET_READY":
+      return { ...state, isReady: action.payload };
+    default:
+      return state;
+  }
+};
 
 export default function VideoPlayer({
   videoUrl,
@@ -22,138 +65,112 @@ export default function VideoPlayer({
   controls = true,
   muted: initialMuted = true,
   className = "",
+  onPlay,
+  onPause,
 }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(initialMuted);
-  const [isHovering, setIsHovering] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playPromiseRef = useRef<Promise<void> | null>(null);
+  // Initialize the reducer with default state
+  const [state, dispatch] = useReducer(videoPlayerReducer, {
+    isPlaying: autoPlay,
+    isMuted: initialMuted,
+    isHovering: false,
+    isReady: false,
+  });
 
-  // Declare pauseVideo first since attemptPlayback depends on it
-  const pauseVideo = useCallback(() => {
-    if (!videoRef.current) return;
+  const playerRef = useRef<ReactPlayer>(null);
 
-    if (!videoRef.current.paused) {
-      videoRef.current.pause();
-    }
-
-    setIsPlaying(false);
-    playPromiseRef.current = null;
-  }, []);
-
-  // Define attemptPlayback as a callback to use in useEffect
-  const attemptPlayback = useCallback(() => {
-    if (!videoRef.current) return;
-
-    // Cancel any pending play operations
-    if (playPromiseRef.current) {
-      pauseVideo();
-    }
-
-    // Reload video for better compatibility especially on iOS
-    videoRef.current.load();
-
-    // Start new play operation
-    playPromiseRef.current = videoRef.current.play();
-    playPromiseRef.current
-      .then(() => {
-        setIsPlaying(true);
-      })
-      .catch((err) => {
-        console.error("Video play error:", err.message);
-        setIsPlaying(false);
-        playPromiseRef.current = null;
-      });
-  }, [pauseVideo]);
-
-  // Initial setup and autoplay handling
+  // Handle autoplay when component mounts
   useEffect(() => {
-    if (autoPlay && videoRef.current) {
-      attemptPlayback();
+    if (autoPlay && playerRef.current) {
+      dispatch({ type: "PLAY" });
     }
 
+    // Cleanup on unmount
     return () => {
-      // Clean up when component unmounts
-      pauseVideo();
-    };
-  }, [autoPlay, videoUrl, attemptPlayback, pauseVideo]);
-
-  // Update mute state when changed
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-
-      // For iOS, fully reload video when mute state changes
-      if (videoRef.current.paused && isPlaying) {
-        attemptPlayback();
+      if (state.isPlaying) {
+        dispatch({ type: "PAUSE" });
       }
-    }
-  }, [isMuted, isPlaying, attemptPlayback]);
+    };
+  }, [autoPlay, state.isPlaying]);
 
+  // Handle play event
+  const handlePlay = () => {
+    dispatch({ type: "PLAY" });
+    onPlay?.();
+  };
+
+  // Handle pause event
+  const handlePause = () => {
+    dispatch({ type: "PAUSE" });
+    onPause?.();
+  };
+
+  // Handle toggle play
   const togglePlay = () => {
-    if (!videoRef.current) return;
+    if (!state.isReady) return;
 
-    if (videoRef.current.paused) {
-      attemptPlayback();
+    dispatch({ type: "TOGGLE_PLAY" });
+    if (!state.isPlaying) {
+      playerRef.current?.getInternalPlayer()?.play();
+      onPlay?.();
     } else {
-      pauseVideo();
+      playerRef.current?.getInternalPlayer()?.pause();
+      onPause?.();
     }
   };
 
+  // Handle toggle mute
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMuted(!isMuted);
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-  };
-
-  // Helper function to combine class names conditionally
-  const cn = (...classes: (string | boolean | undefined)[]) => {
-    return classes.filter(Boolean).join(" ");
+    dispatch({ type: "TOGGLE_MUTE" });
   };
 
   // Get poster URL for video if available
-  const thumbnailTransformed = thumbnailUrl
-    ? transformImageUrl(thumbnailUrl)
-    : null;
-  const posterUrl = thumbnailTransformed || undefined;
+  const posterUrl = thumbnailUrl ? transformImageUrl(thumbnailUrl) : undefined;
 
   return (
-    <div className={cn("overflow-hidden", className)}>
+    <div className={`overflow-hidden ${className}`}>
       <div
         className="relative aspect-video w-full overflow-hidden rounded-md cursor-pointer"
         onClick={togglePlay}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={() => dispatch({ type: "SET_HOVERING", payload: true })}
+        onMouseLeave={() => dispatch({ type: "SET_HOVERING", payload: false })}
       >
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          src={videoUrl}
-          poster={posterUrl}
-          muted={isMuted}
-          loop={loop}
-          playsInline
-          preload="auto"
-          crossOrigin="anonymous"
-          controls={controls && isPlaying}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
+        <div className="absolute inset-0 w-full h-full">
+          <ReactPlayer
+            ref={playerRef}
+            url={videoUrl}
+            playing={state.isPlaying}
+            loop={loop}
+            muted={state.isMuted}
+            width="100%"
+            height="100%"
+            playsinline
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onReady={() => dispatch({ type: "SET_READY", payload: true })}
+            onError={(e) => console.error("Video play error:", e)}
+            config={{
+              file: {
+                attributes: {
+                  poster: posterUrl,
+                  preload: "auto",
+                  crossOrigin: "anonymous",
+                  className: "w-full h-full object-cover",
+                },
+                forceVideo: true,
+              },
+            }}
+            style={{ objectFit: "cover" }}
+            controls={controls && state.isPlaying}
+          />
+        </div>
 
         <div
-          className={cn(
-            "absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-[1px] transition-opacity duration-300",
-            isPlaying && !isHovering ? "opacity-0" : "opacity-100"
-          )}
+          className={`absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-[1px] transition-opacity duration-300 ${
+            state.isPlaying && !state.isHovering ? "opacity-0" : "opacity-100"
+          }`}
         >
-          {!isPlaying && (
+          {!state.isPlaying && (
             <button
               className="h-14 w-14 rounded-full border-2 border-white bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
               onClick={togglePlay}
@@ -167,10 +184,10 @@ export default function VideoPlayer({
         <button
           onClick={toggleMute}
           className="absolute bottom-3 right-3 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-md"
-          aria-label={isMuted ? "הפעל שמע" : "השתק"}
+          aria-label={state.isMuted ? "הפעל שמע" : "השתק"}
           type="button"
         >
-          {isMuted ? (
+          {state.isMuted ? (
             <VolumeX className="w-5 h-5 text-white" />
           ) : (
             <Volume2 className="w-5 h-5 text-white" />

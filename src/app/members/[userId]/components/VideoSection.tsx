@@ -14,7 +14,6 @@ export default function VideoSectionForProfile({
   thumbnailUrl,
   children,
 }: VideoSectionProps) {
-  // If there's a video but no children, show the video player
   if (singleVideoUrl && !children) {
     return (
       <div className="w-full">
@@ -31,7 +30,6 @@ export default function VideoSectionForProfile({
     );
   }
 
-  // If there are children (such as upload controls), render them
   if (children) {
     return (
       <div className="w-full p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
@@ -40,6 +38,5 @@ export default function VideoSectionForProfile({
     );
   }
 
-  // If there's no video and no children, don't render anything
   return null;
 }

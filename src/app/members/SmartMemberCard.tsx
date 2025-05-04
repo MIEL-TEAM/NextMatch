@@ -161,8 +161,10 @@ export default function SmartMemberCard({
   }
 
   return (
-    <MemberImageCarousel images={photos}>
-      {(currentImage) => renderCardContent(currentImage.url)}
-    </MemberImageCarousel>
+    <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl">
+      <MemberImageCarousel images={photos} prioritizeFirstImage={true}>
+        {(currentImage) => renderCardContent(currentImage.url)}
+      </MemberImageCarousel>
+    </div>
   );
 }

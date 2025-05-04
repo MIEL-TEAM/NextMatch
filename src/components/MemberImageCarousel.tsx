@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSwipeable } from "react-swipeable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -8,6 +8,7 @@ interface MemberImageCarouselProps {
   images: Array<{ url: string; id: string }>;
   children: (currentImage: { url: string; id: string }) => React.ReactNode;
   onIndexChange?: (index: number) => void;
+  prioritizeFirstImage?: boolean;
 }
 
 export default function MemberImageCarousel({
@@ -26,9 +27,11 @@ export default function MemberImageCarousel({
   }, [] as Array<{ url: string; id: string }>);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const prevIndexRef = useRef(currentIndex);
 
   useEffect(() => {
-    if (onIndexChange) {
+    if (onIndexChange && prevIndexRef.current !== currentIndex) {
+      prevIndexRef.current = currentIndex;
       onIndexChange(currentIndex);
     }
   }, [currentIndex, onIndexChange]);

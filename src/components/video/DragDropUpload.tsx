@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useReducer, useRef, useCallback } from "react";
 import { Button } from "@nextui-org/react";
 import { Upload, VideoIcon } from "lucide-react";
 import { VIDEO_UPLOAD_CONFIG } from "@/lib/aws-config";
@@ -10,11 +10,35 @@ interface DragDropUploadProps {
   disabled?: boolean;
 }
 
+interface DragDropState {
+  dragActive: boolean;
+}
+
+type DragDropAction = { type: "SET_DRAG_ACTIVE"; payload: boolean };
+
+const dragDropReducer = (
+  state: DragDropState,
+  action: DragDropAction
+): DragDropState => {
+  switch (action.type) {
+    case "SET_DRAG_ACTIVE":
+      return {
+        ...state,
+        dragActive: action.payload,
+      };
+    default:
+      return state;
+  }
+};
+
 const DragDropUpload: React.FC<DragDropUploadProps> = ({
   onFileSelected,
   disabled = false,
 }) => {
-  const [dragActive, setDragActive] = useState(false);
+  const [state, dispatch] = useReducer(dragDropReducer, {
+    dragActive: false,
+  });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = useCallback(
@@ -25,9 +49,9 @@ const DragDropUpload: React.FC<DragDropUploadProps> = ({
       if (disabled) return;
 
       if (event.type === "dragenter" || event.type === "dragover") {
-        setDragActive(true);
+        dispatch({ type: "SET_DRAG_ACTIVE", payload: true });
       } else if (event.type === "dragleave") {
-        setDragActive(false);
+        dispatch({ type: "SET_DRAG_ACTIVE", payload: false });
       }
     },
     [disabled]
@@ -37,7 +61,7 @@ const DragDropUpload: React.FC<DragDropUploadProps> = ({
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      setDragActive(false);
+      dispatch({ type: "SET_DRAG_ACTIVE", payload: false });
 
       if (disabled) return;
 
@@ -67,7 +91,7 @@ const DragDropUpload: React.FC<DragDropUploadProps> = ({
   return (
     <div
       className={`border-2 border-dashed rounded-lg p-6 transition-all ${
-        dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
+        state.dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
       } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       onDragEnter={handleDrag}
       onDragOver={handleDrag}
@@ -82,7 +106,9 @@ const DragDropUpload: React.FC<DragDropUploadProps> = ({
         </div>
         <div className="text-center">
           <p className="text-sm font-medium">
-            {dragActive ? "שחרר את הסרטון כאן" : "גרור ושחרר את הסרטון כאן"}
+            {state.dragActive
+              ? "שחרר את הסרטון כאן"
+              : "גרור ושחרר את הסרטון כאן"}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             MP4, MOV או AVI (מקסימום {maxSizeMB} מגה-בייט)

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useReducer, useRef, useCallback, useEffect } from "react";
 import { VIDEO_UPLOAD_CONFIG } from "@/lib/aws-config";
 import UploadProgress from "./UploadProgress";
 import DragDropUpload from "./DragDropUpload";
@@ -13,27 +13,110 @@ interface VideoUploaderProps {
   maxRetries?: number;
 }
 
+interface UploaderState {
+  isUploading: boolean;
+  uploadProgress: number;
+  uploadSuccess: boolean;
+  retryCount: number;
+  currentFile: File | null;
+}
+
+type UploaderAction =
+  | { type: "START_UPLOAD"; payload: File }
+  | { type: "SET_PROGRESS"; payload: number }
+  | { type: "UPLOAD_SUCCESS" }
+  | { type: "UPLOAD_FAILURE" }
+  | { type: "INCREMENT_RETRY" }
+  | { type: "RESET_RETRY" }
+  | { type: "CANCEL_UPLOAD" };
+
+const uploaderReducer = (
+  state: UploaderState,
+  action: UploaderAction
+): UploaderState => {
+  switch (action.type) {
+    case "START_UPLOAD":
+      return {
+        ...state,
+        isUploading: true,
+        uploadProgress: 0,
+        uploadSuccess: false,
+        currentFile: action.payload,
+      };
+    case "SET_PROGRESS":
+      return {
+        ...state,
+        uploadProgress: action.payload,
+      };
+    case "UPLOAD_SUCCESS":
+      return {
+        ...state,
+        uploadSuccess: true,
+      };
+    case "UPLOAD_FAILURE":
+      return {
+        ...state,
+        isUploading: false,
+      };
+    case "INCREMENT_RETRY":
+      return {
+        ...state,
+        retryCount: state.retryCount + 1,
+      };
+    case "RESET_RETRY":
+      return {
+        ...state,
+        retryCount: 0,
+      };
+    case "CANCEL_UPLOAD":
+      return {
+        ...state,
+        isUploading: false,
+        uploadProgress: 0,
+        currentFile: null,
+      };
+    default:
+      return state;
+  }
+};
+
 export const VideoUploader: React.FC<VideoUploaderProps> = ({
   memberId,
   onUploadComplete,
   onError,
   maxRetries = 3,
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [state, dispatch] = useReducer(uploaderReducer, {
+    isUploading: false,
+    uploadProgress: 0,
+    uploadSuccess: false,
+    retryCount: 0,
+    currentFile: null,
+  });
+
   const { compressVideo, isCompressing, compressionProgress } =
     useVideoCompression();
   const xhrRef = useRef<XMLHttpRequest | null>(null);
-  const currentFileRef = useRef<File | null>(null);
+
+  useEffect(() => {
+    let successTimeout: NodeJS.Timeout;
+
+    if (state.uploadSuccess) {
+      successTimeout = setTimeout(() => {
+        onUploadComplete();
+      }, 1500);
+    }
+
+    return () => {
+      if (successTimeout) clearTimeout(successTimeout);
+    };
+  }, [state.uploadSuccess, onUploadComplete]);
 
   const uploadToServer = useCallback(
     async (fileToUpload: File) => {
       const formData = new FormData();
       formData.append("file", fileToUpload);
       formData.append("memberId", memberId);
-
       formData.append("filename", fileToUpload.name);
       formData.append("filesize", fileToUpload.size.toString());
       formData.append("filetype", fileToUpload.type);
@@ -44,13 +127,12 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
 
         xhr.open("POST", "/api/videos", true);
         xhr.timeout = 5 * 60 * 1000;
-
         xhr.setRequestHeader("Accept", "application/json");
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const progress = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(progress);
+            dispatch({ type: "SET_PROGRESS", payload: progress });
           }
         };
 
@@ -65,19 +147,14 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
                 errorMsg = responseData.error;
               }
             } catch {}
-
             reject(new Error(errorMsg));
           }
         };
 
-        xhr.onerror = () => {
+        xhr.onerror = () =>
           reject(new Error("שגיאת תקשורת. בדוק את החיבור לאינטרנט ונסה שוב"));
-        };
-
-        xhr.ontimeout = () => {
+        xhr.ontimeout = () =>
           reject(new Error("פעולת ההעלאה ארכה זמן רב מדי. נסה שוב מאוחר יותר"));
-        };
-
         xhr.send(formData);
       });
     },
@@ -115,77 +192,46 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
       if (!file || !validateFile(file)) return;
 
       try {
-        setIsUploading(true);
-        setUploadProgress(0);
-        setUploadSuccess(false);
-
-        currentFileRef.current = file;
+        dispatch({ type: "START_UPLOAD", payload: file });
 
         let fileToUpload = file;
         if (file.size > 7 * 1024 * 1024) {
           try {
             fileToUpload = await compressVideo(file);
-            setUploadProgress(0);
-          } catch {
-            // Silently continue with original file if compression fails
+            dispatch({ type: "SET_PROGRESS", payload: 0 });
+          } catch (error) {
+            console.log(error);
           }
         }
 
         await uploadToServer(fileToUpload);
-
-        setUploadSuccess(true);
-        setTimeout(() => {
-          setUploadSuccess(false);
-          onUploadComplete();
-        }, 1500);
+        dispatch({ type: "UPLOAD_SUCCESS" });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "ההעלאה נכשלה";
 
-        if (
-          error instanceof Error &&
-          error.message.includes("413") &&
-          retryCount < maxRetries
-        ) {
-          setRetryCount((prev) => prev + 1);
-          setTimeout(async () => {
-            try {
-              const moreCompressed = await compressVideo(file, {
-                maxDimension: 480,
-                videoBitsPerSecond: 1000000,
-              });
-              setUploadProgress(0);
+        if (state.retryCount < maxRetries) {
+          dispatch({ type: "INCREMENT_RETRY" });
 
-              handleUpload(moreCompressed);
-            } catch {
-              onError("שגיאה בדחיסת הוידאו");
-              setIsUploading(false);
-            }
-          }, 1000);
-          return;
-        }
-
-        if (retryCount < maxRetries) {
-          setRetryCount((prev) => prev + 1);
           setTimeout(() => {
-            if (currentFileRef.current) {
-              handleUpload(currentFileRef.current);
+            if (state.currentFile) {
+              handleUpload(state.currentFile);
             }
-          }, 2000 * (retryCount + 1));
+          }, 2000 * (state.retryCount + 1));
           return;
         }
 
         onError(errorMessage);
-        setIsUploading(false);
-        setRetryCount(0);
+        dispatch({ type: "UPLOAD_FAILURE" });
+        dispatch({ type: "RESET_RETRY" });
       }
     },
     [
       compressVideo,
       uploadToServer,
       onError,
-      onUploadComplete,
-      retryCount,
+      state.retryCount,
+      state.currentFile,
       maxRetries,
     ]
   );
@@ -195,16 +241,15 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
       xhrRef.current.abort();
       xhrRef.current = null;
     }
-    setIsUploading(false);
-    setUploadProgress(0);
+    dispatch({ type: "CANCEL_UPLOAD" });
   }, []);
 
-  if (isUploading) {
+  if (state.isUploading) {
     return (
       <UploadProgress
-        progress={isCompressing ? compressionProgress : uploadProgress}
+        progress={isCompressing ? compressionProgress : state.uploadProgress}
         onCancel={cancelUpload}
-        success={uploadSuccess}
+        success={state.uploadSuccess}
         isCompressing={isCompressing}
       />
     );
