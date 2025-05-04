@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useReducer, useRef, useEffect } from "react";
+import React, { useReducer, useRef, useEffect, useCallback } from "react";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { transformImageUrl } from "@/lib/util";
 import ReactPlayer from "react-player";
@@ -17,24 +17,23 @@ interface VideoPlayerProps {
   onPause?: () => void;
 }
 
-// Define the state interface
 interface VideoPlayerState {
   isPlaying: boolean;
   isMuted: boolean;
   isHovering: boolean;
   isReady: boolean;
+  hasInteracted: boolean;
 }
 
-// Define action types and action interface
 type VideoPlayerAction =
   | { type: "PLAY" }
   | { type: "PAUSE" }
   | { type: "TOGGLE_PLAY" }
   | { type: "TOGGLE_MUTE" }
   | { type: "SET_HOVERING"; payload: boolean }
-  | { type: "SET_READY"; payload: boolean };
+  | { type: "SET_READY"; payload: boolean }
+  | { type: "SET_INTERACTED"; payload: boolean };
 
-// Reducer function
 const videoPlayerReducer = (
   state: VideoPlayerState,
   action: VideoPlayerAction
@@ -52,6 +51,8 @@ const videoPlayerReducer = (
       return { ...state, isHovering: action.payload };
     case "SET_READY":
       return { ...state, isReady: action.payload };
+    case "SET_INTERACTED":
+      return { ...state, hasInteracted: action.payload };
     default:
       return state;
   }
@@ -68,23 +69,43 @@ export default function VideoPlayer({
   onPlay,
   onPause,
 }: VideoPlayerProps) {
-  // Initialize the reducer with default state
   const [state, dispatch] = useReducer(videoPlayerReducer, {
     isPlaying: autoPlay,
     isMuted: initialMuted,
     isHovering: false,
     isReady: false,
+    hasInteracted: false,
   });
 
   const playerRef = useRef<ReactPlayer>(null);
+  const unmountedRef = useRef(false);
 
-  // Handle autoplay when component mounts
+  // Track user interaction to enable audio later
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (!state.hasInteracted && !unmountedRef.current) {
+        dispatch({ type: "SET_INTERACTED", payload: true });
+      }
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+    document.addEventListener("touchstart", handleUserInteraction);
+    document.addEventListener("keydown", handleUserInteraction);
+
+    return () => {
+      unmountedRef.current = true;
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+      document.removeEventListener("keydown", handleUserInteraction);
+    };
+  }, [state.hasInteracted]);
+
+  // Handle autoplay
   useEffect(() => {
     if (autoPlay && playerRef.current) {
       dispatch({ type: "PLAY" });
     }
 
-    // Cleanup on unmount
     return () => {
       if (state.isPlaying) {
         dispatch({ type: "PAUSE" });
@@ -92,37 +113,108 @@ export default function VideoPlayer({
     };
   }, [autoPlay, state.isPlaying]);
 
-  // Handle play event
-  const handlePlay = () => {
+  useEffect(() => {
+    if (playerRef.current && state.hasInteracted && !initialMuted) {
+      const internalPlayer = playerRef.current.getInternalPlayer();
+      if (internalPlayer) {
+        try {
+          internalPlayer.muted = false;
+          internalPlayer.volume = 1.0;
+        } catch (e) {
+          console.warn("Could not unmute video:", e);
+        }
+      }
+    }
+  }, [state.hasInteracted, initialMuted]);
+
+  const handlePlay = useCallback(() => {
     dispatch({ type: "PLAY" });
     onPlay?.();
-  };
+  }, [onPlay]);
 
-  // Handle pause event
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     dispatch({ type: "PAUSE" });
     onPause?.();
-  };
+  }, [onPause]);
 
-  // Handle toggle play
-  const togglePlay = () => {
+  const getInternalPlayer = useCallback(() => {
+    return playerRef.current?.getInternalPlayer() as HTMLVideoElement | null;
+  }, []);
+
+  const togglePlay = useCallback(() => {
     if (!state.isReady) return;
 
     dispatch({ type: "TOGGLE_PLAY" });
-    if (!state.isPlaying) {
-      playerRef.current?.getInternalPlayer()?.play();
-      onPlay?.();
-    } else {
-      playerRef.current?.getInternalPlayer()?.pause();
-      onPause?.();
-    }
-  };
+    dispatch({ type: "SET_INTERACTED", payload: true });
 
-  // Handle toggle mute
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatch({ type: "TOGGLE_MUTE" });
-  };
+    const internalPlayer = getInternalPlayer();
+    if (!internalPlayer) return;
+
+    if (!state.isPlaying) {
+      try {
+        const playPromise = internalPlayer.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              if (!state.isMuted && state.hasInteracted && internalPlayer) {
+                internalPlayer.muted = false;
+                internalPlayer.volume = 1.0;
+              }
+            })
+            .catch(() => {
+              // Autoplay was prevented, try muted playback
+              if (internalPlayer) {
+                internalPlayer.muted = true;
+                internalPlayer.play().catch((e) => {
+                  console.error("Failed to play video:", e);
+                });
+              }
+            });
+        }
+        onPlay?.();
+      } catch (error) {
+        console.error("Error playing video:", error);
+      }
+    } else {
+      try {
+        if (!internalPlayer.paused) {
+          internalPlayer.pause();
+        }
+        onPause?.();
+      } catch (error) {
+        console.error("Error pausing video:", error);
+      }
+    }
+  }, [
+    state.isReady,
+    state.isPlaying,
+    state.isMuted,
+    state.hasInteracted,
+    getInternalPlayer,
+    onPlay,
+    onPause,
+  ]);
+
+  const toggleMute = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      dispatch({ type: "TOGGLE_MUTE" });
+      dispatch({ type: "SET_INTERACTED", payload: true });
+
+      const internalPlayer = getInternalPlayer();
+      if (internalPlayer) {
+        try {
+          internalPlayer.muted = !state.isMuted;
+          if (!state.isMuted) {
+            internalPlayer.volume = 1.0;
+          }
+        } catch (error) {
+          console.error("Error toggling mute:", error);
+        }
+      }
+    },
+    [state.isMuted, getInternalPlayer]
+  );
 
   // Get poster URL for video if available
   const posterUrl = thumbnailUrl ? transformImageUrl(thumbnailUrl) : undefined;
@@ -148,12 +240,12 @@ export default function VideoPlayer({
             onPlay={handlePlay}
             onPause={handlePause}
             onReady={() => dispatch({ type: "SET_READY", payload: true })}
-            onError={(e) => console.error("Video play error:", e)}
+            onError={(e) => console.error("Video error:", e)}
             config={{
               file: {
                 attributes: {
                   poster: posterUrl,
-                  preload: "auto",
+                  preload: "metadata",
                   crossOrigin: "anonymous",
                   className: "w-full h-full object-cover",
                 },
@@ -169,12 +261,14 @@ export default function VideoPlayer({
           className={`absolute inset-0 flex flex-col items-center justify-center bg-black/20 backdrop-blur-[1px] transition-opacity duration-300 ${
             state.isPlaying && !state.isHovering ? "opacity-0" : "opacity-100"
           }`}
+          aria-hidden={state.isPlaying && !state.isHovering}
         >
           {!state.isPlaying && (
             <button
               className="h-14 w-14 rounded-full border-2 border-white bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
               onClick={togglePlay}
               type="button"
+              aria-label="Play video"
             >
               <Play className="h-6 w-6 text-white fill-white" />
             </button>

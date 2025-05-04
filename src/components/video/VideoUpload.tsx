@@ -30,6 +30,14 @@ type UploaderAction =
   | { type: "RESET_RETRY" }
   | { type: "CANCEL_UPLOAD" };
 
+const initialUploaderState: UploaderState = {
+  isUploading: false,
+  uploadProgress: 0,
+  uploadSuccess: false,
+  retryCount: 0,
+  currentFile: null,
+};
+
 const uploaderReducer = (
   state: UploaderState,
   action: UploaderAction
@@ -86,14 +94,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   onError,
   maxRetries = 3,
 }) => {
-  const [state, dispatch] = useReducer(uploaderReducer, {
-    isUploading: false,
-    uploadProgress: 0,
-    uploadSuccess: false,
-    retryCount: 0,
-    currentFile: null,
-  });
-
+  const [state, dispatch] = useReducer(uploaderReducer, initialUploaderState);
   const { compressVideo, isCompressing, compressionProgress } =
     useVideoCompression();
   const xhrRef = useRef<XMLHttpRequest | null>(null);
@@ -113,7 +114,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   }, [state.uploadSuccess, onUploadComplete]);
 
   const uploadToServer = useCallback(
-    async (fileToUpload: File) => {
+    async (fileToUpload: File): Promise<void> => {
       const formData = new FormData();
       formData.append("file", fileToUpload);
       formData.append("memberId", memberId);
@@ -200,7 +201,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
             fileToUpload = await compressVideo(file);
             dispatch({ type: "SET_PROGRESS", payload: 0 });
           } catch (error) {
-            console.log(error);
+            console.error("Video compression failed:", error);
           }
         }
 
