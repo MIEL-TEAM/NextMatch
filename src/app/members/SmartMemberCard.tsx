@@ -105,7 +105,7 @@ export default function SmartMemberCard({
     router.push(`/members/${member.userId}`);
   };
 
-  const renderCardContent = (imageUrl: string) => (
+  const renderCardContent = (imageUrl: string, isPriority: boolean = false) => (
     <Card
       isPressable
       className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
@@ -118,6 +118,7 @@ export default function SmartMemberCard({
           src={transformImageUrl(imageUrl) || "/images/user.png"}
           className="w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-105"
           removeWrapper
+          loading={isPriority ? "eager" : "lazy"}
         />
 
         <div
@@ -157,13 +158,15 @@ export default function SmartMemberCard({
   if (photos.length <= 1) {
     const defaultImage =
       photos.length === 1 ? photos[0].url : "/images/user.png";
-    return renderCardContent(defaultImage);
+    return renderCardContent(defaultImage, true);
   }
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl">
       <MemberImageCarousel images={photos} prioritizeFirstImage={true}>
-        {(currentImage) => renderCardContent(currentImage.url)}
+        {(currentImage, isPriority) =>
+          renderCardContent(currentImage.url, isPriority)
+        }
       </MemberImageCarousel>
     </div>
   );

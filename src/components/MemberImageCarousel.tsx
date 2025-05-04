@@ -6,7 +6,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MemberImageCarouselProps {
   images: Array<{ url: string; id: string }>;
-  children: (currentImage: { url: string; id: string }) => React.ReactNode;
+  children: (
+    currentImage: { url: string; id: string },
+    isPriority: boolean
+  ) => React.ReactNode;
   onIndexChange?: (index: number) => void;
   prioritizeFirstImage?: boolean;
 }
@@ -15,6 +18,7 @@ export default function MemberImageCarousel({
   images,
   children,
   onIndexChange,
+  prioritizeFirstImage = false,
 }: MemberImageCarouselProps) {
   const uniqueImages = images.reduce((unique, img) => {
     if (!img || !img.url) return unique;
@@ -53,15 +57,19 @@ export default function MemberImageCarousel({
   });
 
   if (uniqueImages.length === 0) {
-    return children({ url: "/images/user.png", id: "default" });
+    return children(
+      { url: "/images/user.png", id: "default" },
+      prioritizeFirstImage
+    );
   }
 
   const safeIndex = Math.min(currentIndex, uniqueImages.length - 1);
   const currentImage = uniqueImages[safeIndex];
+  const isPriority = prioritizeFirstImage && currentIndex === 0;
 
   return (
     <div {...handlers} className="relative w-full h-full overflow-hidden group">
-      {children(currentImage)}
+      {children(currentImage, isPriority)}
 
       {uniqueImages.length > 1 && (
         <>

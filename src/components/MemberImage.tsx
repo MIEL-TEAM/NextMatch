@@ -2,7 +2,8 @@
 
 import { Photo } from "@prisma/client";
 import { CldImage } from "next-cloudinary";
-import { Button, Image, useDisclosure } from "@nextui-org/react";
+import { Button, useDisclosure } from "@nextui-org/react";
+import Image from "next/image";
 import React from "react";
 import clsx from "clsx";
 import { useRole } from "@/hooks/useRole";
@@ -63,10 +64,11 @@ export default function MemberImage({
       ) : (
         <Image
           width={300}
-          height={""}
+          height={300}
           src={photo?.url || "/images/user.png"}
           alt="Image of user"
-          className="object-cover"
+          className="object-cover rounded-2xl"
+          priority={isPriority}
         />
       )}
       {!photo?.isApproved && role !== "ADMIN" && (
@@ -140,10 +142,11 @@ export default function MemberImage({
             ) : (
               <Image
                 width={750}
-                height={""}
+                height={750}
                 src={photo?.url || "/images/user.png"}
                 alt="Image of user"
-                className="object-cover"
+                className="object-cover rounded-2xl"
+                priority={false}
               />
             )}
           </>

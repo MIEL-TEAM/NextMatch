@@ -162,7 +162,7 @@ export default function MemberCard({
     dispatch({ type: "SHOW_VIDEO", payload: false });
   };
 
-  const renderCardContent = (imageUrl: string) => (
+  const renderCardContent = (imageUrl: string, isPriority: boolean = false) => (
     <Card
       as={Link}
       href={`/members/${member.userId}`}
@@ -209,7 +209,8 @@ export default function MemberCard({
           }`}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          loading="lazy"
+          loading={isPriority ? "eager" : "lazy"}
+          priority={isPriority}
         />
 
         <div className="absolute top-2 right-2 z-50">
@@ -292,7 +293,7 @@ export default function MemberCard({
   if (memberPhotos.length <= 1) {
     const defaultImage =
       memberPhotos.length === 1 ? memberPhotos[0].url : "/images/user.png";
-    return renderCardContent(defaultImage);
+    return renderCardContent(defaultImage, true);
   }
 
   return (
@@ -302,7 +303,9 @@ export default function MemberCard({
         onIndexChange={handleIndexChange}
         prioritizeFirstImage={true}
       >
-        {(currentImage) => renderCardContent(currentImage.url)}
+        {(currentImage, isPriority) =>
+          renderCardContent(currentImage.url, isPriority)
+        }
       </MemberImageCarousel>
     </div>
   );

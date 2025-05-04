@@ -2,6 +2,7 @@
 
 import React from "react";
 import VideoPlayer from "@/components/video/VideoPlayer";
+import { optimizeS3VideoUrl } from "@/lib/audio-helpers";
 
 interface VideoSectionProps {
   singleVideoUrl?: string | null;
@@ -14,11 +15,16 @@ export default function VideoSectionForProfile({
   thumbnailUrl,
   children,
 }: VideoSectionProps) {
-  if (singleVideoUrl && !children) {
+  // Optimize the video URL for better audio support if it exists
+  const optimizedVideoUrl = singleVideoUrl
+    ? optimizeS3VideoUrl(singleVideoUrl)
+    : null;
+
+  if (optimizedVideoUrl && !children) {
     return (
       <div className="w-full">
         <VideoPlayer
-          videoUrl={singleVideoUrl}
+          videoUrl={optimizedVideoUrl}
           thumbnailUrl={thumbnailUrl}
           autoPlay={false}
           controls={true}

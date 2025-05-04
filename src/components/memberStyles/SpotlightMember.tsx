@@ -79,7 +79,8 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
                       height: "100%",
                       objectFit: "cover",
                     }}
-                    loading="lazy"
+                    loading="eager"
+                    priority={true}
                     unoptimized={isGoogleImage}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent md:bg-gradient-to-r md:from-black/70 md:via-transparent md:to-transparent"></div>

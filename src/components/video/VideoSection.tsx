@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useReducer, useCallback, memo, useEffect } from "react";
+import React, {
+  useReducer,
+  useCallback,
+  memo,
+  useEffect,
+  useMemo,
+} from "react";
 import Image from "next/image";
 import { VideoUploader } from "./VideoUpload";
 import CardInnerWrapper from "../CardInnerWrapper";
 import AppModal from "../AppModal";
 import { Film, PlayCircle, Calendar, Eye } from "lucide-react";
 import { transformImageUrl } from "@/lib/util";
+import { optimizeS3VideoUrl } from "@/lib/audio-helpers";
 import VideoPlayer from "./VideoPlayer";
 
 interface Video {
@@ -32,10 +39,11 @@ interface VideoSectionProps {
 }
 
 interface VideoSectionState {
-  error: string;
+  error: string | null;
   selectedVideo: Video | null;
+  selectedVideoUrl: string | null;
   isModalOpen: boolean;
-  profileImage: string;
+  profileImage: string | null;
 }
 
 type VideoSectionAction =
@@ -43,13 +51,15 @@ type VideoSectionAction =
   | { type: "CLEAR_ERROR" }
   | { type: "SELECT_VIDEO"; payload: Video }
   | { type: "CLOSE_MODAL" }
-  | { type: "SET_PROFILE_IMAGE"; payload: string };
+  | { type: "SET_PROFILE_IMAGE"; payload: string }
+  | { type: "OPEN_VIDEO_MODAL"; payload: string };
 
 const initialState: VideoSectionState = {
-  error: "",
+  error: null,
   selectedVideo: null,
+  selectedVideoUrl: null,
   isModalOpen: false,
-  profileImage: "/images/user.png",
+  profileImage: null,
 };
 
 const videoSectionReducer = (
@@ -60,7 +70,7 @@ const videoSectionReducer = (
     case "SET_ERROR":
       return { ...state, error: action.payload };
     case "CLEAR_ERROR":
-      return { ...state, error: "" };
+      return { ...state, error: null };
     case "SELECT_VIDEO":
       return {
         ...state,
@@ -75,9 +85,34 @@ const videoSectionReducer = (
       };
     case "SET_PROFILE_IMAGE":
       return { ...state, profileImage: action.payload };
+    case "OPEN_VIDEO_MODAL":
+      return {
+        ...state,
+        selectedVideo: null,
+        selectedVideoUrl: action.payload,
+        isModalOpen: true,
+      };
     default:
       return state;
   }
+};
+
+// Helper function to format video duration
+const formatDuration = (durationInSeconds?: number): string => {
+  if (!durationInSeconds) return "00:00";
+  const minutes = Math.floor(durationInSeconds / 60);
+  const seconds = Math.floor(durationInSeconds % 60);
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
+// Format date for videos
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("he-IL", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  }).format(date);
 };
 
 const VideoCard = memo(
@@ -92,32 +127,30 @@ const VideoCard = memo(
     memberName?: string;
     onClick: (video: Video) => void;
   }) => {
-    const formatDate = useCallback((dateString: string) => {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("he-IL", {
-        day: "numeric",
-        month: "numeric",
-        year: "numeric",
-      }).format(date);
-    }, []);
+    const formattedDuration = useMemo(() => {
+      return formatDuration(video.duration);
+    }, [video.duration]);
 
-    const formattedDuration = video.duration
-      ? `${Math.floor(video.duration / 60)}:${String(
-          Math.floor(video.duration % 60)
-        ).padStart(2, "0")}`
-      : "00:17";
+    const handleVideoClick = () => {
+      // Create an optimized version of the video with our audio helper
+      const optimizedVideo = {
+        ...video,
+        url: optimizeS3VideoUrl(video.url),
+      };
+      onClick(optimizedVideo);
+    };
 
     return (
       <div
         className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
-        onClick={() => onClick(video)}
+        onClick={handleVideoClick}
         tabIndex={0}
         role="button"
         aria-label={`צפה בסרטון מ-${formatDate(video.createdAt)}`}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onClick(video);
+            handleVideoClick();
           }
         }}
       >
@@ -198,31 +231,53 @@ export const VideoSection: React.FC<VideoSectionProps> = memo(
       dispatch({ type: "CLOSE_MODAL" });
     }, []);
 
+    const openVideoModal = useCallback((url: string) => {
+      const optimizedUrl = optimizeS3VideoUrl(url);
+      dispatch({
+        type: "OPEN_VIDEO_MODAL",
+        payload: optimizedUrl,
+      });
+    }, []);
+
     const renderVideoModal = useCallback(() => {
-      if (!state.selectedVideo) return null;
+      if (!state.isModalOpen) return null;
 
-      return (
-        <div className="w-full h-full flex items-center justify-center bg-black">
-          <div className="relative aspect-video w-full max-w-4xl">
-            <VideoPlayer
-              videoUrl={state.selectedVideo.url}
-              autoPlay={true}
-              controls={true}
-            />
+      const videoUrl =
+        state.selectedVideoUrl ||
+        (state.selectedVideo ? state.selectedVideo.url : null);
 
-            {state.error && (
-              <div
-                className="absolute top-0 left-0 right-0 bg-red-600 text-white p-2 text-center"
-                role="alert"
-                aria-live="assertive"
-              >
-                {state.error}
-              </div>
-            )}
+      if (!videoUrl) return null;
+
+      const modalBody = (
+        <div className="relative aspect-video w-full">
+          <VideoPlayer
+            videoUrl={videoUrl}
+            autoPlay={true}
+            controls={true}
+            muted={false}
+            className="production-video-player"
+          />
+          <div className="text-white text-center mt-2 text-sm">
+            לחץ על הנגן לשמיעת קול
           </div>
         </div>
       );
-    }, [state.selectedVideo, state.error]);
+
+      return (
+        <AppModal
+          isOpen={state.isModalOpen}
+          onClose={handleCloseModal}
+          body={modalBody}
+          imageModal={true}
+          size="md"
+        />
+      );
+    }, [
+      state.isModalOpen,
+      state.selectedVideo,
+      state.selectedVideoUrl,
+      handleCloseModal,
+    ]);
 
     const renderEmptyState = useCallback(
       () => (
@@ -289,7 +344,7 @@ export const VideoSection: React.FC<VideoSectionProps> = memo(
                   <VideoCard
                     key={video.id}
                     video={video}
-                    profileImage={state.profileImage}
+                    profileImage={state.profileImage || "/images/user.png"}
                     memberName={member?.name}
                     onClick={handleVideoClick}
                   />

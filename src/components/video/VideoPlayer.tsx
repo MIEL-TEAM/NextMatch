@@ -4,6 +4,12 @@ import React, { useReducer, useRef, useEffect, useCallback } from "react";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { transformImageUrl } from "@/lib/util";
 import ReactPlayer from "react-player";
+import {
+  initializeAudio,
+  isAudioLikelyBlocked,
+  optimizeS3VideoUrl,
+  detectUserInteraction,
+} from "@/lib/audio-helpers";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -82,22 +88,12 @@ export default function VideoPlayer({
 
   // Track user interaction to enable audio later
   useEffect(() => {
-    const handleUserInteraction = () => {
+    // Use the new audio helper for interaction detection
+    return detectUserInteraction(() => {
       if (!state.hasInteracted && !unmountedRef.current) {
         dispatch({ type: "SET_INTERACTED", payload: true });
       }
-    };
-
-    document.addEventListener("click", handleUserInteraction);
-    document.addEventListener("touchstart", handleUserInteraction);
-    document.addEventListener("keydown", handleUserInteraction);
-
-    return () => {
-      unmountedRef.current = true;
-      document.removeEventListener("click", handleUserInteraction);
-      document.removeEventListener("touchstart", handleUserInteraction);
-      document.removeEventListener("keydown", handleUserInteraction);
-    };
+    });
   }, [state.hasInteracted]);
 
   // Handle autoplay
@@ -137,9 +133,33 @@ export default function VideoPlayer({
     onPause?.();
   }, [onPause]);
 
+  // Get internal player (enhanced with better error handling for production)
   const getInternalPlayer = useCallback(() => {
-    return playerRef.current?.getInternalPlayer() as HTMLVideoElement | null;
+    try {
+      return playerRef.current?.getInternalPlayer() as HTMLVideoElement | null;
+    } catch (e) {
+      console.warn("Could not access internal player:", e);
+      return null;
+    }
   }, []);
+
+  // Enhanced for production - explicitly set playback properties
+  useEffect(() => {
+    // Try to set audio properties directly when player becomes ready
+    if (state.isReady && state.hasInteracted && !state.isMuted) {
+      const internalPlayer = getInternalPlayer();
+      if (internalPlayer) {
+        try {
+          // Use the new initializeAudio helper
+          initializeAudio(internalPlayer).catch((e) => {
+            console.warn("Audio initialization failed:", e);
+          });
+        } catch (e) {
+          console.warn("Failed to prepare audio in production:", e);
+        }
+      }
+    }
+  }, [state.isReady, state.hasInteracted, state.isMuted, getInternalPlayer]);
 
   const togglePlay = useCallback(() => {
     if (!state.isReady) return;
@@ -219,6 +239,12 @@ export default function VideoPlayer({
   // Get poster URL for video if available
   const posterUrl = thumbnailUrl ? transformImageUrl(thumbnailUrl) : undefined;
 
+  // Optimize S3 URL for audio compatibility
+  const optimizedVideoUrl = optimizeS3VideoUrl(videoUrl);
+
+  // Detect if audio might be blocked
+  const audioMightBeBlocked = isAudioLikelyBlocked();
+
   return (
     <div className={`overflow-hidden ${className}`}>
       <div
@@ -230,7 +256,7 @@ export default function VideoPlayer({
         <div className="absolute inset-0 w-full h-full">
           <ReactPlayer
             ref={playerRef}
-            url={videoUrl}
+            url={optimizedVideoUrl}
             playing={state.isPlaying}
             loop={loop}
             muted={state.isMuted}
@@ -239,17 +265,49 @@ export default function VideoPlayer({
             playsinline
             onPlay={handlePlay}
             onPause={handlePause}
-            onReady={() => dispatch({ type: "SET_READY", payload: true })}
+            onReady={() => {
+              dispatch({ type: "SET_READY", payload: true });
+              // Attempt to initialize audio on ready for production
+              if (state.hasInteracted && !state.isMuted) {
+                const player = getInternalPlayer();
+                if (player) {
+                  try {
+                    player.muted = false;
+                    player.volume = 1.0;
+                  } catch (e) {
+                    console.warn("Could not initialize audio:", e);
+                  }
+                }
+              }
+            }}
             onError={(e) => console.error("Video error:", e)}
             config={{
               file: {
                 attributes: {
                   poster: posterUrl,
-                  preload: "metadata",
+                  preload: "auto", // Changed from metadata to auto for production
                   crossOrigin: "anonymous",
                   className: "w-full h-full object-cover",
                 },
                 forceVideo: true,
+                forceAudio: true, // Force audio initialization for production
+                hlsOptions: {
+                  // Add HLS options for better streaming from S3
+                  enableWorker: true,
+                  autoStartLoad: true,
+                  startLevel: 0,
+                  // Enhanced S3 streaming configs
+                  maxBufferLength: 30,
+                  maxMaxBufferLength: 60,
+                  fragLoadingMaxRetry: 5,
+                  fragLoadingRetryDelay: 1000,
+                  manifestLoadingMaxRetry: 4,
+                  manifestLoadingRetryDelay: 500,
+                  xhrSetup: (xhr: XMLHttpRequest) => {
+                    // Add CORS headers for S3 compatibility
+                    xhr.withCredentials = false;
+                  },
+                },
               },
             }}
             style={{ objectFit: "cover" }}
@@ -268,7 +326,7 @@ export default function VideoPlayer({
               className="h-14 w-14 rounded-full border-2 border-white bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all"
               onClick={togglePlay}
               type="button"
-              aria-label="Play video"
+              aria-label="הפעל וידאו ושמע"
             >
               <Play className="h-6 w-6 text-white fill-white" />
             </button>
@@ -287,6 +345,13 @@ export default function VideoPlayer({
             <Volume2 className="w-5 h-5 text-white" />
           )}
         </button>
+
+        {/* Add a production audio notice based on audio might be blocked check */}
+        {(!state.hasInteracted || audioMightBeBlocked) && (
+          <div className="absolute top-0 left-0 right-0 bg-black/70 text-white text-xs text-center py-1">
+            לחץ כאן להפעלת סאונד
+          </div>
+        )}
       </div>
     </div>
   );
