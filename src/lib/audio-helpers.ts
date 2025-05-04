@@ -28,6 +28,7 @@ export const initializeAudio = (
             resolve();
           })
           .catch((error) => {
+            console.warn("Autoplay prevented, trying muted playback:", error);
             videoElement.muted = true;
             videoElement
               .play()
@@ -80,8 +81,8 @@ export const optimizeS3VideoUrl = (url: string): string => {
     }
 
     return urlObj.toString();
-  } catch (e) {
-    console.error("Error optimizing S3 URL:", e);
+  } catch (error) {
+    console.error("Error optimizing S3 URL:", error);
     return url;
   }
 };

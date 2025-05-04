@@ -231,14 +231,6 @@ export const VideoSection: React.FC<VideoSectionProps> = memo(
       dispatch({ type: "CLOSE_MODAL" });
     }, []);
 
-    const openVideoModal = useCallback((url: string) => {
-      const optimizedUrl = optimizeS3VideoUrl(url);
-      dispatch({
-        type: "OPEN_VIDEO_MODAL",
-        payload: optimizedUrl,
-      });
-    }, []);
-
     const renderVideoModal = useCallback(() => {
       if (!state.isModalOpen) return null;
 
