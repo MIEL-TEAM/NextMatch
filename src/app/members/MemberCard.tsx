@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
@@ -10,7 +10,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import MemberImageCarousel from "@/components/MemberImageCarousel";
-import { Play, Volume2, VolumeX } from "lucide-react";
+import { Play, VolumeX, Volume2 } from "lucide-react";
+import MiniPlayer from "@/components/video/MiniPlayer";
 
 type MemberCardProps = {
   member: Member;
@@ -25,13 +26,13 @@ export default function MemberCard({
   memberPhotos = [],
   memberVideos = [],
 }: MemberCardProps) {
-  const [hasLiked, setHasLiked] = useState(likeIds.includes(member.userId));
-  const [loading, setLoading] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const [hasLiked, setHasLiked] = useState<boolean>(likeIds.includes(member.userId));
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showVideo, setShowVideo] = useState<boolean>(false);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isMuted, setIsMuted] = useState<boolean>(true);
+  const [videoError, setVideoError] = useState<boolean>(false);
 
   useEffect(() => {
     if (memberVideos.length > 0 && !activeVideo) {
@@ -39,7 +40,11 @@ export default function MemberCard({
     }
   }, [memberVideos, activeVideo]);
 
-  async function toggleLike(e: React.MouseEvent) {
+  useEffect(() => {
+    setVideoError(false);
+  }, [activeVideo]);
+
+  const toggleLike = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
@@ -52,28 +57,39 @@ export default function MemberCard({
     } finally {
       setLoading(false);
     }
-  }
+  }, [member.userId, hasLiked]);
 
-  const toggleMute = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
 
-  const handleMouseEnter = () => {
+  const handleMuteToggle = useCallback((muted: boolean) => {
+    setIsMuted(muted);
+  }, []);
+
+
+  const handleMouseEnter = useCallback(() => {
     if (memberVideos.length > 0 && activeVideo) {
       setShowVideo(true);
     }
-  };
+  }, [memberVideos.length, activeVideo]);
 
-  const handleMouseLeave = () => {
+
+  const handleMouseLeave = useCallback(() => {
     setShowVideo(false);
-  };
+  }, []);
 
-  const renderCardContent = (imageUrl: string) => (
+
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+    setShowVideo(false);
+  }, []);
+
+
+  const toggleMute = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleMuteToggle(!isMuted);
+  }, [isMuted, handleMuteToggle]);
+
+  const renderCardContent = useCallback((imageUrl: string) => (
     <Card
       as={Link}
       href={`/members/${member.userId}`}
@@ -83,34 +99,19 @@ export default function MemberCard({
       onMouseLeave={handleMouseLeave}
     >
       <div className="relative aspect-square overflow-hidden rounded-t-lg group">
-        {showVideo && activeVideo && (
+        {showVideo && activeVideo && !videoError && (
           <div className="absolute inset-0 z-40 overflow-hidden">
-            <div className="relative w-full h-full">
-              <video
-                ref={videoRef}
-                className="w-full h-full object-cover"
-                autoPlay
-                loop
-                muted={isMuted}
-                playsInline
-                preload="metadata"
-              >
-                <source src={activeVideo} type="video/mp4" />
-                <source src={activeVideo} type="video/quicktime" />
-                <source src={activeVideo} type="video/x-msvideo" />
-                הדפדפן שלך אינו תומך בתג וידאו.
-              </video>
-              <button
-                onClick={toggleMute}
-                className="absolute bottom-2 right-2 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-md"
-                aria-label={isMuted ? "הפעל שמע" : "השתק"}
-              >
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5 text-white" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-white" />
-                )}
-              </button>
+            <div className="absolute inset-0 w-full h-full">
+              <MiniPlayer
+                url={activeVideo}
+                initMuted={isMuted}
+                onMuteToggle={handleMuteToggle}
+                className="absolute inset-0"
+                onError={handleVideoError}
+                loop={true}
+                playbackRate={1.0}
+                forceShowMuteControls={false}
+              />
             </div>
           </div>
         )}
@@ -118,9 +119,8 @@ export default function MemberCard({
         <Image
           alt={member.name}
           src={transformImageUrl(imageUrl) || "/images/user.png"}
-          className={`w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-110 ${
-            showVideo ? "opacity-0" : "opacity-100"
-          }`}
+          className={`w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-110 ${showVideo ? "opacity-0" : "opacity-100"
+            }`}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           loading="eager"
@@ -137,11 +137,12 @@ export default function MemberCard({
             toggleLike={toggleLike}
             hasLiked={hasLiked}
           />
+
           {memberVideos.length > 0 && showVideo && (
             <button
               onClick={toggleMute}
               className="bg-black/70 hover:bg-black/90 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-lg ring-2 ring-blue-400/60 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/80"
-              aria-label={isMuted ? "הפעל שמע" : "השתק"}
+              aria-label={isMuted ? "Unmute" : "Mute"}
               type="button"
             >
               {isMuted ? (
@@ -202,7 +203,24 @@ export default function MemberCard({
         </CardFooter>
       </div>
     </Card>
-  );
+  ), [
+    member,
+    handleMouseEnter,
+    handleMouseLeave,
+    showVideo,
+    activeVideo,
+    videoError,
+    isMuted,
+    handleMuteToggle,
+    handleVideoError,
+    loading,
+    toggleLike,
+    hasLiked,
+    toggleMute,
+    memberVideos.length,
+    memberPhotos.length,
+    currentIndex
+  ]);
 
   if (memberPhotos.length <= 1) {
     const defaultImage =

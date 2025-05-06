@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import Image from "next/image";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import ReactPlayer from "react-player";
+import VideoControls from "./VideoControls";
+import VideoThumbnail from "./VideoThumbnail";
 
 interface VideoPlayerProps {
   url: string;
@@ -12,6 +14,11 @@ interface VideoPlayerProps {
   className?: string;
   preview?: boolean;
   thumbnailUrl?: string;
+  light?: boolean;
+  pip?: boolean;
+  aspectRatio?: "square" | "video" | string;
+  onReady?: () => void;
+  onError?: (error: any) => void;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -19,157 +26,249 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   autoPlay = false,
   controls = true,
   loop = false,
-  muted = false,
+  muted = true,
   className = "",
   preview = false,
   thumbnailUrl,
+  light = false,
+  pip = false,
+  aspectRatio = "video",
+  onReady,
+  onError,
 }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(muted);
+  const [isReady, setIsReady] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isHovering, setIsHovering] = useState(false);
-  const [showThumbnail, setShowThumbnail] = useState(true);
-  const [duration, setDuration] = useState<number>(0);
+  const [showControls, setShowControls] = useState<boolean>(controls);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [duration, setDuration] = useState<number | null>(null);
+  const playerRef = useRef<ReactPlayer | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hasUserInteracted = useRef<boolean>(false);
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
+  // Aspect ratio style
+  const aspectRatioClass =
+    aspectRatio === "square"
+      ? "aspect-square"
+      : aspectRatio === "video"
+        ? "aspect-video"
+        : "";
 
-  const tryPlayVideo = useCallback(() => {
-    if (videoRef.current) {
-      if (preview) {
-        videoRef.current.muted = true;
-      }
-
-      videoRef.current.play().catch((err) => {
-        console.warn("Video play failed:", err);
-      });
+  // Handle autoplay with muted state
+  const safePlay = useCallback((): void => {
+    setPlaying(true);
+    // If we need to play and are not ready for unmuted, stay muted
+    if (!hasUserInteracted.current) {
+      setIsMuted(true);
     }
-  }, [videoRef, preview]);
+  }, []);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.load();
-      const videoElement = videoRef.current;
+  // Handle ready state
+  const handleReady = useCallback((): void => {
+    setIsReady(true);
+    setError(null);
 
-      const handleError = () => {
-        setError("Failed to load video");
-        setIsLoading(false);
-      };
-
-      const handleLoadedData = () => {
-        setIsLoading(false);
-        setError(null);
-        setDuration(videoElement.duration);
-
-        if ((autoPlay || preview) && videoElement) {
-          tryPlayVideo();
+    // Get duration if available
+    if (playerRef.current) {
+      try {
+        const playerDuration = playerRef.current.getDuration();
+        if (
+          !isNaN(playerDuration) &&
+          isFinite(playerDuration) &&
+          playerDuration > 0
+        ) {
+          setDuration(playerDuration);
         }
-      };
-
-      videoElement.addEventListener("error", handleError);
-      videoElement.addEventListener("loadeddata", handleLoadedData);
-
-      return () => {
-        videoElement.removeEventListener("error", handleError);
-        videoElement.removeEventListener("loadeddata", handleLoadedData);
-      };
+      } catch (e) {
+        console.log(e)
+      }
     }
-  }, [url, autoPlay, preview, tryPlayVideo]);
 
+    // Autoplay if requested
+    if (autoPlay) {
+      safePlay();
+    }
+
+    if (onReady) onReady();
+  }, [autoPlay, onReady, safePlay]);
+
+  // Handle errors
+  const handleError = useCallback((error: any): void => {
+    setError("Failed to load video");
+    setIsReady(true); // Mark as ready to remove loading indicator
+
+    if (onError) {
+      onError(error);
+    }
+  }, [onError]);
+
+  // Toggle play/pause
+  const togglePlay = useCallback((e?: React.MouseEvent): void => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    setPlaying(prevPlaying => !prevPlaying);
+    hasUserInteracted.current = true;
+  }, []);
+
+  // Handle video click
+  const handleVideoClick = useCallback(
+    (e: React.MouseEvent): void => {
+      if (controls) togglePlay(e);
+    },
+    [controls, togglePlay]
+  );
+
+  // Toggle mute
+  const toggleMute = useCallback((e?: React.MouseEvent): void => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    hasUserInteracted.current = true;
+    setIsMuted(prevMuted => !prevMuted);
+  }, []);
+
+  // Toggle fullscreen
+  const toggleFullscreen = useCallback((e: React.MouseEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!containerRef.current) return;
+
+    if (!document.fullscreenElement) {
+      containerRef.current
+        .requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch((error) => {
+          console.log(error)
+        });
+    } else {
+      document
+        .exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch((error) => {
+          console.log(error)
+        });
+    }
+  }, []);
+
+  // Update fullscreen state
   useEffect(() => {
-    if (preview && !isLoading && !error) {
-      tryPlayVideo();
-    }
-  }, [preview, isLoading, error, tryPlayVideo]);
+    const handleFullscreenChange = (): void => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-    setShowThumbnail(false);
-    if (!preview && videoRef.current) {
-      tryPlayVideo();
-    }
-  };
+  // Control visibility
+  const handleMouseEnter = useCallback((): void => {
+    if (controls) setShowControls(true);
+  }, [controls]);
 
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setShowThumbnail(true);
-    if (!preview && videoRef.current) {
-      videoRef.current.pause();
-    }
-  };
+  const handleMouseLeave = useCallback((): void => {
+    if (controls && !preview && !playing) setShowControls(false);
+  }, [controls, preview, playing]);
 
   return (
     <div
-      className={`relative w-full ${className}`}
+      ref={containerRef}
+      className={`relative overflow-hidden rounded-lg ${aspectRatioClass} ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={handleVideoClick}
     >
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 rounded-lg">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      )}
-
+      {/* Error message */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-100 bg-opacity-50 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-red-100 bg-opacity-50 rounded-lg z-50">
           <div className="text-red-600 text-sm px-4 py-2 bg-white rounded shadow">
             {error}
-            <div className="text-xs mt-1 text-gray-500">URL: {url}</div>
-          </div>
-        </div>
-      )}
-
-      {showThumbnail && thumbnailUrl && !isLoading && !error && (
-        <div className="absolute inset-0">
-          <Image
-            src={thumbnailUrl}
-            alt="תמונת ממוזערת"
-            className="w-full h-full object-cover rounded-lg"
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-black bg-opacity-50 rounded-full p-3">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M8 5v14l11-7z" />
-              </svg>
+            <div className="text-xs mt-1 text-gray-500 truncate max-w-xs">
+              URL: {url}
             </div>
           </div>
         </div>
       )}
 
-      <video
-        ref={videoRef}
-        className={`w-full rounded-lg ${preview ? "object-cover h-full" : ""}`}
-        controls={preview ? false : controls || isHovering}
-        autoPlay={autoPlay}
-        loop={loop || preview}
-        muted={muted || preview}
-        playsInline
-        preload="metadata"
-      >
-        <source src={url} type="video/mp4" />
-        <source src={url} type="video/quicktime" />
-        <source src={url} type="video/x-msvideo" />
-        הדפדפן שלך אינו תומך בתג וידאו.
-      </video>
-
-      {isHovering && !error && !isLoading && !preview && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2 text-white text-xs">
-          <div className="flex justify-between items-center">
-            <span>תצוגה מקדימה</span>
-            {duration > 0 && <span>{formatDuration(duration)}</span>}
-          </div>
+      {/* Loading indicator */}
+      {!isReady && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-40">
+          <div className="w-12 h-12 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
         </div>
+      )}
+
+      {/* Thumbnail or video player */}
+      {light && !playing ? (
+        <VideoThumbnail
+          thumbnailUrl={thumbnailUrl}
+          onPlayClick={() => {
+            hasUserInteracted.current = true;
+            safePlay();
+          }}
+        />
+      ) : (
+        <ReactPlayer
+          ref={playerRef}
+          url={url}
+          width="100%"
+          height="100%"
+          playing={playing}
+          controls={false}
+          loop={loop || preview}
+          muted={isMuted}
+          volume={1}
+          pip={pip}
+          onReady={handleReady}
+          onError={handleError}
+          playsinline
+          config={{
+            file: {
+              attributes: {
+                preload: "auto",
+                controlsList: "nodownload",
+                disablePictureInPicture: !pip,
+                style: { objectFit: "cover" },
+              },
+              forceVideo: true,
+            },
+            youtube: {
+              playerVars: {
+                modestbranding: 1,
+                playsinline: 1,
+                controls: 0,
+                showinfo: 0,
+                rel: 0,
+                iv_load_policy: 3,
+              },
+            },
+          }}
+          style={{
+            objectFit: "cover",
+            backgroundColor: "#000",
+          }}
+        />
+      )}
+
+      {/* Custom controls */}
+      {showControls && !preview && !error && (
+        <VideoControls
+          playing={playing}
+          isMuted={isMuted}
+          isFullscreen={isFullscreen}
+          duration={duration}
+          togglePlay={togglePlay}
+          toggleMute={toggleMute}
+          toggleFullscreen={toggleFullscreen}
+        />
       )}
     </div>
   );
 };
+
+export default VideoPlayer;

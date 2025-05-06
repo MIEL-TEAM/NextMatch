@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import { Progress, Button } from "@nextui-org/react";
 import { X, Check } from "lucide-react";
 
@@ -15,8 +15,9 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   onCancel,
   success,
 }) => {
-  const [displayProgress, setDisplayProgress] = useState(0);
+  const [displayProgress, setDisplayProgress] = useState<number>(0);
 
+  // Smoothly animate progress changes
   useEffect(() => {
     if (Math.abs(progress - displayProgress) < 3) {
       setDisplayProgress(progress);
@@ -36,6 +37,16 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
     return () => clearInterval(interval);
   }, [progress, displayProgress]);
 
+  const getStatusMessage = useCallback((): string => {
+    if (displayProgress < 100) return "מעלה סרטון...";
+    return "מעבד סרטון...";
+  }, [displayProgress]);
+
+  const handleCancel = useCallback((e: React.MouseEvent): void => {
+    e.preventDefault();
+    onCancel();
+  }, [onCancel]);
+
   if (success) {
     return (
       <div
@@ -49,11 +60,6 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
       </div>
     );
   }
-
-  const getStatusMessage = () => {
-    if (displayProgress < 100) return "מעלה סרטון...";
-    return "מעבד סרטון...";
-  };
 
   return (
     <div
@@ -70,7 +76,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
           size="sm"
           isIconOnly
           variant="light"
-          onPress={onCancel}
+          onPress={() => handleCancel}
           aria-label="ביטול העלאה"
           className="focus:ring-2 focus:ring-blue-500"
         >
@@ -90,4 +96,5 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   );
 };
 
-export default UploadProgress;
+// Memoize component to prevent unnecessary re-renders
+export default memo(UploadProgress);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, memo } from "react";
 import { Button } from "@nextui-org/react";
 import { Upload, VideoIcon } from "lucide-react";
 import { VIDEO_UPLOAD_CONFIG } from "@/lib/aws-config";
@@ -19,38 +19,44 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   onError,
   maxRetries = 3,
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragActive, setDragActive] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [dragActive, setDragActive] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const currentFileRef = useRef<File | null>(null);
 
+  // File validation
+  const validateFile = useCallback((file: File): string | null => {
+    const fileType = file.type.toLowerCase();
+    const fileSize = file.size;
+    const maxSizeMB = Math.floor(
+      VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024
+    );
+
+    if (fileSize > VIDEO_UPLOAD_CONFIG.maxFileSize) {
+      return `הקובץ גדול מדי (${(fileSize / 1024 / 1024).toFixed(
+        1
+      )} מ״ב). הגודל המקסימלי המותר הוא ${maxSizeMB} מ״ב`;
+    }
+
+    if (!VIDEO_UPLOAD_CONFIG.allowedTypes.includes(fileType as any)) {
+      return `סוג הקובץ ${fileType} אינו נתמך. נתמכים רק קבצי MP4, MOV או AVI`;
+    }
+
+    return null;
+  }, []);
+
+  // Handle upload with retry logic
   const handleUpload = useCallback(
     async (file: File) => {
       if (!file) return;
 
-      const fileType = file.type.toLowerCase();
-      const fileSize = file.size;
-      const maxSizeMB = Math.floor(
-        VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024
-      );
-
-      if (fileSize > VIDEO_UPLOAD_CONFIG.maxFileSize) {
-        onError(
-          `הקובץ גדול מדי (${(fileSize / 1024 / 1024).toFixed(
-            1
-          )} מ״ב). הגודל המקסימלי המותר הוא ${maxSizeMB} מ״ב`
-        );
-        return;
-      }
-
-      if (!VIDEO_UPLOAD_CONFIG.allowedTypes.includes(fileType as any)) {
-        onError(
-          `סוג הקובץ ${fileType} אינו נתמך. נתמכים רק קבצי MP4, MOV או AVI`
-        );
+      const errorMessage = validateFile(file);
+      if (errorMessage) {
+        onError(errorMessage);
         return;
       }
 
@@ -68,7 +74,6 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         xhrRef.current = xhr;
 
         xhr.open("POST", "/api/videos", true);
-
         xhr.setRequestHeader("Accept", "application/json");
 
         xhr.upload.onprogress = (event) => {
@@ -92,7 +97,9 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
               if (errorData.error) {
                 errorMsg = errorData.error;
               }
-            } catch {}
+            } catch {
+              // Silent parse error
+            }
 
             if (retryCount < maxRetries) {
               setRetryCount((prev) => prev + 1);
@@ -146,10 +153,11 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         }
       }
     },
-    [memberId, onError, onUploadComplete, retryCount, maxRetries]
+    [memberId, onError, onUploadComplete, retryCount, maxRetries, validateFile]
   );
 
-  const handleDrag = useCallback((event: React.DragEvent) => {
+  // Drag event handlers
+  const handleDrag = useCallback((event: React.DragEvent): void => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -160,8 +168,9 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
     }
   }, []);
 
+  // Drop handler
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    (e: React.DragEvent): void => {
       e.preventDefault();
       e.stopPropagation();
       setDragActive(false);
@@ -173,12 +182,14 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
     [handleUpload]
   );
 
-  const onButtonClick = useCallback(() => {
+  // File input button click handler
+  const onButtonClick = useCallback((): void => {
     fileInputRef.current?.click();
   }, []);
 
+  // File input change handler
   const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>): void => {
       if (e.target.files && e.target.files[0]) {
         handleUpload(e.target.files[0]);
       }
@@ -186,7 +197,8 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
     [handleUpload]
   );
 
-  const cancelUpload = useCallback(() => {
+  // Upload cancel handler
+  const cancelUpload = useCallback((): void => {
     if (xhrRef.current) {
       xhrRef.current.abort();
       xhrRef.current = null;
@@ -252,4 +264,4 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   );
 };
 
-export default VideoUploader;
+export default memo(VideoUploader);
