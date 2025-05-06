@@ -3,6 +3,14 @@ import { auth } from "@/auth";
 import { uploadVideoToS3 } from "@/lib/video-upload";
 import { prisma } from "@/lib/prisma";
 
+// Configure API route to handle large file uploads
+export const config = {
+  api: {
+    bodyParser: false, // Disable the built-in bodyParser to handle large files
+    responseLimit: '100mb',
+  },
+};
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();

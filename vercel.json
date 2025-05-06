@@ -13,5 +13,15 @@
       "memory": 1024,
       "maxDuration": 60
     }
+  },
+  "cli": {
+    "functions": {
+      "includeFiles": "app/api/videos/**"
+    }
+  },
+  "build": {
+    "env": {
+      "NEXT_PRIVATE_STANDALONE": "true"
+    }
   }
 }

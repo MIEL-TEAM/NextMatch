@@ -3,17 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lodash", "@/components/*"],
+    largePageDataBytes: 128 * 1024, 
   },
 
   serverExternalPackages: [],
-
-
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb', 
-    },
-    responseLimit: '100mb',
-  },
 
   images: {
     formats: ["image/avif", "image/webp"],
