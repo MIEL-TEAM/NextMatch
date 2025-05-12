@@ -17,7 +17,6 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
 }) => {
   const [displayProgress, setDisplayProgress] = useState<number>(0);
 
-  // Smoothly animate progress changes
   useEffect(() => {
     if (Math.abs(progress - displayProgress) < 3) {
       setDisplayProgress(progress);
@@ -42,10 +41,13 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
     return "מעבד סרטון...";
   }, [displayProgress]);
 
-  const handleCancel = useCallback((e: React.MouseEvent): void => {
-    e.preventDefault();
-    onCancel();
-  }, [onCancel]);
+  const handleCancel = useCallback(
+    (e: React.MouseEvent): void => {
+      e.preventDefault();
+      onCancel();
+    },
+    [onCancel]
+  );
 
   if (success) {
     return (

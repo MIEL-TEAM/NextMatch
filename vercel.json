@@ -2,22 +2,13 @@
   "routes": [
     {
       "src": "/api/videos",
-      "headers": {
-        "Connection": "keep-alive",
-        "Keep-Alive": "timeout=60",
-        "x-vercel-max-body-size": "100mb"
-      }
+      "dest": "/api/videos"
     }
   ],
   "functions": {
-    "app/api/videos/route.ts": {
+    "api/videos/route.ts": {
       "memory": 1024,
       "maxDuration": 60
-    }
-  },
-  "build": {
-    "env": {
-      "NEXT_PRIVATE_STANDALONE": "true"
     }
   }
 }
