@@ -106,14 +106,13 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                   </p>
 
                   <div className="relative aspect-video overflow-hidden rounded">
-                    {/* Use light mode with a play overlay to avoid autoplay issues */}
                     <VideoPlayer
                       key={video.id}
                       url={video.url}
                       controls={false}
-                      muted={true}
-                      autoPlay={false}
-                      light={true}
+                      muted={!userInteracted}
+                      autoPlay={userInteracted}
+                      light={!userInteracted}
                       preview={true}
                       className="w-full h-full"
                       aspectRatio="video"
@@ -138,13 +137,21 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             body={
               selectedVideo && (
                 <div className="flex items-center justify-center w-full h-full p-4">
-                  <div className="w-full max-w-md" style={{ aspectRatio: 'auto' }}>
+                  <div
+                    className="w-full max-w-md"
+                    style={{ aspectRatio: "auto" }}
+                  >
                     <video
                       src={selectedVideo.url}
                       controls
                       autoPlay
                       muted={false}
-                      style={{ width: '100%', height: 'auto', objectFit: 'contain', borderRadius: '12px' }}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        objectFit: "contain",
+                        borderRadius: "12px",
+                      }}
                       onLoadedMetadata={handleVideoReady}
                     />
                   </div>
@@ -154,8 +161,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             imageModal={true}
             size="full"
           />
-
-
         </div>
       }
     />
