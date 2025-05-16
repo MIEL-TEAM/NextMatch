@@ -33,31 +33,26 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [userInteracted, setUserInteracted] = useState<boolean>(false);
 
-  // Handle upload completion
   const handleUploadComplete = useCallback((): void => {
     window.location.reload();
   }, []);
 
-  // Handle error display with auto-clear
   const handleError = useCallback((errorMessage: string): void => {
     setError(errorMessage);
     setTimeout(() => setError(""), 5000);
   }, []);
 
-  // Handle video selection
   const handleVideoClick = useCallback((video: Video): void => {
     setSelectedVideo(video);
     setIsModalOpen(true);
-    setUserInteracted(true); // User has interacted by clicking
+    setUserInteracted(true);
   }, []);
 
-  // Handle modal close
   const handleCloseModal = useCallback((): void => {
     setIsModalOpen(false);
     setTimeout(() => setSelectedVideo(null), 300);
   }, []);
 
-  // Format date for display
   const formatDate = useCallback((dateString: string): string => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("he-IL", {
@@ -67,7 +62,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     }).format(date);
   }, []);
 
-  // Handle video player ready event
   const handleVideoReady = useCallback((): void => {
     if (userInteracted) {
     }

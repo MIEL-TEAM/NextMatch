@@ -45,6 +45,7 @@ model User {
   member               Member?
   Transaction          Transaction[]
   accounts             Account[]
+  hasSeenMembersIntro  Boolean       @default(false)
 }
 
 model Interest {

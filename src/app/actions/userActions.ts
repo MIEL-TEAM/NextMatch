@@ -131,3 +131,29 @@ export async function deleteImage(photo: Photo) {
     throw error;
   }
 }
+
+export async function markIntroAsSeen(): Promise<ActionResult<boolean>> {
+  try {
+    const userId = await getAuthUserId();
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { hasSeenMembersIntro: true },
+    });
+
+    return { status: "success", data: true };
+  } catch (error) {
+    console.error(error);
+    return { status: "error", error: "Something went wrong" };
+  }
+}
+
+export async function getUserIntroSeen(): Promise<boolean> {
+  const userId = await getAuthUserId();
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { hasSeenMembersIntro: true },
+  });
+
+  return user?.hasSeenMembersIntro ?? false;
+}

@@ -37,8 +37,11 @@ export default function InterestNotification({
   }, [userId, hasCheckedInterests]);
 
   useEffect(() => {
-    if (!userId || !hasCheckedInterests || hasShownNotificationRef.current)
-      return;
+    const dismissedUntil = localStorage.getItem(
+      `interestsDismissedUntil_${userId}`
+    );
+
+    if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
 
     if (hasInterests) {
       return;
@@ -65,10 +68,19 @@ export default function InterestNotification({
                     size="sm"
                     variant="light"
                     color="default"
-                    onPress={() => toast.dismiss(t)}
+                    onPress={() => {
+                      const THIRTY_MIN = 30 * 60 * 1000;
+                      localStorage.setItem(
+                        `interestsDismissedUntil_${userId}`,
+                        (Date.now() + THIRTY_MIN).toString()
+                      );
+
+                      toast.dismiss(t);
+                    }}
                   >
                     אחר כך
                   </Button>
+
                   <Button
                     size="sm"
                     color="warning"

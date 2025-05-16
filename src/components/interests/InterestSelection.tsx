@@ -21,11 +21,9 @@ export default function InterestSelection({
   selectedInterests,
   onChange,
 }: InterestSelectionProps) {
-  // Check if inside a form context
   const formContext = useFormContext();
   const isInForm = !!formContext;
 
-  // Initialize selected state based on props or form
   const [selected, setSelected] = useState<string[]>(() => {
     if (selectedInterests) return selectedInterests;
     if (isInForm) return formContext.getValues("interests") || [];
@@ -36,7 +34,6 @@ export default function InterestSelection({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
-  // Update selected when props change
   useEffect(() => {
     if (selectedInterests) {
       setSelected(selectedInterests);
@@ -50,12 +47,10 @@ export default function InterestSelection({
 
     setSelected(newSelected);
 
-    // Update form if in form context
     if (isInForm) {
       formContext.setValue("interests", newSelected);
     }
 
-    // Call onChange prop if provided
     if (onChange) {
       onChange(newSelected);
     }

@@ -14,10 +14,12 @@ export type Interest = {
 
 type InterestsSectionProps = {
   interests?: Interest[];
+  isOwnProfile?: boolean;
 };
 
 export default function InterestsSection({
   interests = [],
+  isOwnProfile = false,
 }: InterestsSectionProps) {
   const interestsByCategory = interests.reduce((acc, interest) => {
     const category = interest.category || "other";
@@ -32,7 +34,15 @@ export default function InterestsSection({
     return (
       <Card className="p-4 shadow-sm">
         <h2 className="text-xl font-bold mb-3 text-secondary">תחומי עניין</h2>
-        <p className="text-gray-500 text-sm">לא צוינו תחומי עניין</p>
+        <p className="text-gray-500 text-sm mb-3">לא צוינו תחומי עניין</p>
+        {isOwnProfile && (
+          <a
+            href="/interests"
+            className="inline-block px-4 py-2 cursor-pointer bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-full transition"
+          >
+            הוסף עכשיו
+          </a>
+        )}
       </Card>
     );
   }

@@ -7,7 +7,6 @@ import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import SmartMemberCard from "../members/SmartMemberCard";
 import { motion } from "framer-motion";
-import HeartLoading from "@/components/HeartLoading";
 
 type MemberPhoto = {
   url: string;
@@ -132,9 +131,9 @@ export default function SmartMatchesClient() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col justify-center items-center h-64"
+              className="text-orange-600 text-lg font-semibold"
             >
-              <HeartLoading />
+              טוען התאמות חכמות...
             </motion.div>
           ) : members.length > 0 ? (
             <>

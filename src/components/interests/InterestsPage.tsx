@@ -1,6 +1,5 @@
 "use client";
 
-// app/profile/edit/interests/client.tsx
 import React, { useState } from "react";
 import { Card, CardBody, CardHeader, Button } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
@@ -29,7 +28,6 @@ export default function EditInterestsClient({
 
   const handleSubmit = async () => {
     try {
-      // Convert interest IDs to the full interest objects
       const interestObjects = selectedInterests.map((id) => {
         const interest = availableInterests.find((i) => i.id === id);
         if (!interest) {
@@ -52,7 +50,7 @@ export default function EditInterestsClient({
     <div className="max-w-4xl mx-auto p-4">
       <Card className="w-full">
         <CardHeader className="flex flex-col items-start px-6 py-4" dir="rtl">
-          <h1 className="text-2xl font-bold">עריכת תחומי עניין</h1>
+          <h1 className="text-2xl font-bold">הוספת תחומי עניין</h1>
           <p className="text-sm text-gray-500">
             בחר תחומי עניין כדי שנוכל לחבר אותך עם אנשים בעלי תחומי עניין דומים
           </p>

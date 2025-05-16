@@ -4,7 +4,8 @@ import { fetchCurrentUserLikeIds } from "../actions/likeActions";
 import { getMemberVideosForCards } from "../actions/videoActions";
 import { GetMemberParams } from "@/types";
 import EmptyState from "@/components/EmptyState";
-import MembersStylePage from "@/components/memberStyles/MembersPageStyle";
+import { getUserIntroSeen } from "../actions/userActions";
+import MembersLayout from "@/components/memberStyles/MembersLayout";
 
 export const metadata = {
   title: "מצאו התאמות חדשות | Miel",
@@ -22,6 +23,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const params = await searchParams;
   const { items: members, totalCount } = await getMembers(params);
   const likeIds = await fetchCurrentUserLikeIds();
+  const hasSeenIntro = await getUserIntroSeen();
 
   const isOnlineFilter =
     params.filter === "online" || params.onlineOnly === "true";
@@ -47,12 +49,13 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   }
 
   return (
-    <MembersStylePage
+    <MembersLayout
       membersData={membersWithPhotosAndVideos}
       totalCount={totalCount}
       likeIds={likeIds}
       isOnlineFilter={isOnlineFilter}
       noResults={members.length === 0}
+      hasSeenIntro={hasSeenIntro}
     />
   );
 }

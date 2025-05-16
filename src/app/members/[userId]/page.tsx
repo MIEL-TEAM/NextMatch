@@ -50,7 +50,10 @@ export default async function MemberDetailedPage({
             />
             <ProfileHeader member={member} userId={userId} likeIds={likeIds} />
             <Divider />
-            <InterestsSection interests={interests} />
+            <InterestsSection
+              interests={interests}
+              isOwnProfile={isOwnProfile}
+            />
             <Divider />
             <VideoSection
               videos={formattedVideos}
