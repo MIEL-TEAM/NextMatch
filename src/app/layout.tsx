@@ -5,7 +5,6 @@ import Providers from "@/components/Providers";
 import TopNav from "@/components/navbar/TopNav";
 import { auth } from "@/auth";
 import MielLayout from "./mielLayout";
-import MobileBlocker from "@/components/MobileBlocker";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -115,7 +114,6 @@ export default async function RootLayout({
       </head>
       <body>
         <Providers userId={userId} profileComplete={profileComplete}>
-          <MobileBlocker />
           <TopNav />
           <MielLayout>{children}</MielLayout>
         </Providers>

@@ -36,12 +36,14 @@ export default function InterestsSection({
         <h2 className="text-xl font-bold mb-3 text-secondary">תחומי עניין</h2>
         <p className="text-gray-500 text-sm mb-3">לא צוינו תחומי עניין</p>
         {isOwnProfile && (
-          <a
-            href="/interests"
-            className="inline-block px-4 py-2 cursor-pointer bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-full transition"
-          >
-            הוסף עכשיו
-          </a>
+          <div className="flex justify-center mt-4">
+            <a
+              href="/interests"
+              className="px-6 py-2 text-white text-sm font-semibold rounded-full shadow-md transition-all duration-200 bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] hover:brightness-105"
+            >
+              הוסף עכשיו
+            </a>
+          </div>
         )}
       </Card>
     );

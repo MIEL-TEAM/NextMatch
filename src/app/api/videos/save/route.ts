@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,19 +9,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "לא מורשה" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { fileUrl, memberId } = body;
+    const { url, memberId } = await req.json();
 
-    if (!fileUrl || !memberId) {
-      return NextResponse.json(
-        { error: "חסרים פרטי קובץ או זיהוי חבר" },
-        { status: 400 }
-      );
+    if (!url || !memberId) {
+      return NextResponse.json({ error: "Missing data" }, { status: 400 });
     }
 
     const video = await prisma.video.create({
       data: {
-        url: fileUrl,
+        url,
         memberId,
         duration: 0,
         isApproved: true,
@@ -30,9 +26,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(video, { status: 201 });
   } catch (error) {
-    console.error("Error saving video:", error);
+    console.error("Error saving video metadata:", error);
     return NextResponse.json(
-      { error: "שגיאה בשמירת פרטי וידאו" },
+      { error: "שגיאה בשמירת הווידאו" },
       { status: 500 }
     );
   }

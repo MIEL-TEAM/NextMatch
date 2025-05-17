@@ -34,7 +34,6 @@ export default function FeaturesSection() {
     },
   ];
 
-  // Variants for staggered animations
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -54,7 +53,10 @@ export default function FeaturesSection() {
   };
 
   return (
-    <section className="py-20 container mx-auto max-w-7xl px-6 overflow-hidden">
+    <section
+      id="features-section"
+      className="py-20 container mx-auto max-w-7xl px-6 overflow-hidden"
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -122,7 +124,6 @@ export default function FeaturesSection() {
                 </div>
               </div>
 
-              {/* Content with improved text shadow for better readability */}
               <div className="relative z-20 text-white text-center mt-auto mb-10 backdrop-blur-sm bg-black/10 p-6 rounded-xl border border-white/10 shadow-lg">
                 <h3 className="text-2xl font-bold mb-4 drop-shadow-lg">
                   {feature.title}

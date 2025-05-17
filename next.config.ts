@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lodash", "@/components/*"],
-    largePageDataBytes: 128 * 1024, 
+    largePageDataBytes: 128 * 1024,
   },
 
   serverExternalPackages: [],
@@ -59,7 +59,6 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
   assetPrefix: undefined,
-  optimizeFonts: true,
   poweredByHeader: false,
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback, memo } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@nextui-org/react";
 import { Upload, VideoIcon } from "lucide-react";
 import { VIDEO_UPLOAD_CONFIG } from "@/lib/aws-config";
@@ -10,31 +10,25 @@ interface VideoUploaderProps {
   memberId: string;
   onUploadComplete: () => void;
   onError: (message: string) => void;
-  maxRetries?: number;
 }
 
 export const VideoUploader: React.FC<VideoUploaderProps> = ({
   memberId,
   onUploadComplete,
   onError,
-  maxRetries = 3,
 }) => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
-  const [retryCount, setRetryCount] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
-  const currentFileRef = useRef<File | null>(null);
 
   // File validation
   const validateFile = useCallback((file: File): string | null => {
     const fileType = file.type.toLowerCase();
     const fileSize = file.size;
-    const maxSizeMB = Math.floor(
-      VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024
-    );
+    const maxSizeMB = Math.floor(VIDEO_UPLOAD_CONFIG.maxFileSize / 1024 / 1024);
 
     if (fileSize > VIDEO_UPLOAD_CONFIG.maxFileSize) {
       return `הקובץ גדול מדי (${(fileSize / 1024 / 1024).toFixed(
@@ -49,11 +43,9 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
     return null;
   }, []);
 
-  // Handle upload with retry logic
-  const handleUpload = useCallback(
+  // Server-based upload using FormData
+  const handleServerUpload = useCallback(
     async (file: File) => {
-      if (!file) return;
-
       const errorMessage = validateFile(file);
       if (errorMessage) {
         onError(errorMessage);
@@ -64,18 +56,17 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         setIsUploading(true);
         setUploadProgress(0);
         setUploadSuccess(false);
-        currentFileRef.current = file;
 
+        // Create form data
         const formData = new FormData();
         formData.append("file", file);
         formData.append("memberId", memberId);
 
+        // Create XHR request to track progress
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
 
-        xhr.open("POST", "/api/videos", true);
-        xhr.setRequestHeader("Accept", "application/json");
-
+        // Track upload progress
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const progress = Math.round((event.loaded / event.total) * 100);
@@ -83,77 +74,42 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
           }
         };
 
+        // Handle completion
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            setUploadSuccess(true);
-            setTimeout(() => {
-              setUploadSuccess(false);
-              onUploadComplete();
-            }, 1500);
-          } else {
-            let errorMsg = "ההעלאה נכשלה";
             try {
-              const errorData = JSON.parse(xhr.responseText);
-              if (errorData.error) {
-                errorMsg = errorData.error;
-              }
-            } catch {
-              // Silent parse error
+              const response = JSON.parse(xhr.responseText);
+              console.log("Upload success response:", response);
+              setUploadSuccess(true);
+              setTimeout(onUploadComplete, 1500);
+            } catch (e) {
+              console.error("Error parsing response:", e);
+              onError("ההעלאה הושלמה אך התגובה לא תקינה");
             }
-
-            if (retryCount < maxRetries) {
-              setRetryCount((prev) => prev + 1);
-              setTimeout(() => {
-                if (currentFileRef.current) {
-                  handleUpload(currentFileRef.current);
-                }
-              }, 2000 * (retryCount + 1));
-            } else {
-              throw new Error(errorMsg);
-            }
+          } else {
+            console.error("Upload failed with status:", xhr.status);
+            onError(`ההעלאה נכשלה: ${xhr.status}`);
           }
+          setIsUploading(false);
         };
 
+        // Handle errors
         xhr.onerror = () => {
-          if (retryCount < maxRetries) {
-            setRetryCount((prev) => prev + 1);
-            setTimeout(() => {
-              if (currentFileRef.current) {
-                handleUpload(currentFileRef.current);
-              }
-            }, 2000 * (retryCount + 1));
-          } else {
-            throw new Error("שגיאת תקשורת. בדוק את החיבור לאינטרנט ונסה שוב");
-          }
+          console.error("Network error during upload");
+          onError("שגיאת רשת בעת העלאה");
+          setIsUploading(false);
         };
 
-        xhr.ontimeout = () => {
-          if (retryCount < maxRetries) {
-            setRetryCount((prev) => prev + 1);
-            setTimeout(() => {
-              if (currentFileRef.current) {
-                handleUpload(currentFileRef.current);
-              }
-            }, 2000 * (retryCount + 1));
-          } else {
-            throw new Error("פעולת ההעלאה ארכה זמן רב מדי. נסה שוב מאוחר יותר");
-          }
-        };
-
+        // Send request
+        xhr.open("POST", "/api/videos/upload", true);
         xhr.send(formData);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "ההעלאה נכשלה";
-        onError(errorMessage);
+        console.error("Upload error:", error);
+        onError(error instanceof Error ? error.message : "שגיאה לא ידועה");
         setIsUploading(false);
-        setRetryCount(0);
-      } finally {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
       }
     },
-    [memberId, onError, onUploadComplete, retryCount, maxRetries, validateFile]
+    [memberId, onError, onUploadComplete, validateFile]
   );
 
   // Drag event handlers
@@ -176,10 +132,10 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
       setDragActive(false);
 
       if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        handleUpload(e.dataTransfer.files[0]);
+        handleServerUpload(e.dataTransfer.files[0]);
       }
     },
-    [handleUpload]
+    [handleServerUpload]
   );
 
   // File input button click handler
@@ -191,10 +147,10 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>): void => {
       if (e.target.files && e.target.files[0]) {
-        handleUpload(e.target.files[0]);
+        handleServerUpload(e.target.files[0]);
       }
     },
-    [handleUpload]
+    [handleServerUpload]
   );
 
   // Upload cancel handler
@@ -264,4 +220,4 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   );
 };
 
-export default memo(VideoUploader);
+export default VideoUploader;

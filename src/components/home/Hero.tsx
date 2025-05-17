@@ -29,8 +29,21 @@ export default function HeroSection({ session }: HeroSectionProps) {
     }
   }, [animationComplete, taglines.length]);
 
+  const scrollToFeatures = (e: React.MouseEvent<HTMLButtonElement>): void => {
+    e.preventDefault();
+    const featuresSection = document.getElementById("features-section");
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="relative h-screen w-full overflow-hidden">
+      <style jsx global>{`
+        .text-shadow-xl {
+          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+        }
+      `}</style>
       <motion.div
         initial={{ scale: 1.05, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -42,7 +55,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
             src="/images/couple.png"
             alt="Couple connecting on Miel dating platform"
             fill
-            className="object-cover z-[1] brightness-125 contrast-[0.95]"
+            className="object-cover z-[1] brightness-[0.95] contrast-[0.95]"
             priority
             sizes="100vw"
             style={{
@@ -50,32 +63,32 @@ export default function HeroSection({ session }: HeroSectionProps) {
             }}
           />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent z-[2]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/20 to-transparent z-[2]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-amber-900/5 to-amber-700/10 mix-blend-overlay z-[2]"></div>
+          <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-transparent z-[2]" />
+          <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-transparent z-[2]" />
+          <div className="hidden sm:block absolute inset-0 bg-gradient-to-b from-amber-900/5 to-amber-700/5 mix-blend-overlay z-[2]" />
         </div>
       </motion.div>
 
       <div className="relative z-10 h-full">
-        <div className="w-full bg-gradient-to-b from-black/80 to-transparent pt-8 pb-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-16 lg:px-24 flex flex-col items-end">
+        <div className="w-full sm:bg-gradient-to-b sm:from-black/80 sm:to-transparent pt-8 pb-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-16 lg:px-24 flex flex-col items-center sm:items-end">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1 }}
-              className="w-full md:w-3/4 lg:w-2/3"
+              className="w-full sm:w-3/4 lg:w-2/3 sm:ml-auto text-shadow-xl"
             >
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="flex flex-col items-end"
+                className="flex flex-col items-center sm:items-end"
               >
                 <motion.h1
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.5 }}
-                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-white text-right mb-2"
+                  className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-white text-center sm:text-right mb-2 drop-shadow-[0_5px_5px_rgba(0,0,0,0.7)] shadow-black"
                   style={{ direction: "rtl" }}
                   onAnimationComplete={() => setAnimationComplete(true)}
                 >
@@ -84,9 +97,11 @@ export default function HeroSection({ session }: HeroSectionProps) {
                       initial={{ width: 0 }}
                       animate={{ width: "100%" }}
                       transition={{ duration: 0.8, delay: 1.3 }}
-                      className="absolute -bottom-2 sm:-bottom-3 right-0 h-3 sm:h-5 bg-amber-400 -z-10"
+                      className="absolute -bottom-2 sm:-bottom-3 left-0 right-0 sm:right-0 sm:left-auto mx-auto sm:mx-0 h-3 sm:h-5 bg-orange-500 sm:bg-amber-400 -z-10 w-full sm:w-auto max-w-md sm:max-w-none"
                     />
-                    <div className="whitespace-nowrap">הדייט האחרון שלך.</div>
+                    <div className="whitespace-nowrap text-shadow-xl">
+                      הדייט האחרון שלך.
+                    </div>
                   </div>
                 </motion.h1>
               </motion.div>
@@ -94,9 +109,8 @@ export default function HeroSection({ session }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Centered Taglines */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="h-12 relative w-64 sm:w-96">
+          <div className="h-12 relative w-72 sm:w-96 text-shadow-xl">
             {taglines.map((tagline, index) => (
               <motion.div
                 key={index}
@@ -111,7 +125,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                 }`}
               >
                 <p
-                  className="text-lg sm:text-xl md:text-2xl text-amber-200 font-light drop-shadow-md text-center whitespace-nowrap"
+                  className="text-xl sm:text-xl md:text-2xl text-white font-medium sm:font-light drop-shadow-[0_4px_4px_rgba(0,0,0,0.7)] shadow-black text-center whitespace-nowrap"
                   style={{ direction: "rtl" }}
                 >
                   {tagline}
@@ -122,19 +136,19 @@ export default function HeroSection({ session }: HeroSectionProps) {
         </div>
 
         <div className="absolute bottom-0 w-full px-4 sm:px-6 md:px-16 lg:px-24 pb-20 sm:pb-24">
-          <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-end">
+          <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-center sm:items-end">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="md:w-1/2 mb-8 md:mb-0 order-2 md:order-1"
+              className="w-full md:w-1/2 mb-12 md:mb-0 order-2 md:order-1"
             >
               {session === "guest" ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 1 }}
-                  className="flex flex-col sm:flex-row gap-4"
+                  className="flex flex-row justify-center sm:justify-start gap-4 mt-12"
                   style={{ direction: "rtl" }}
                 >
                   <Link href="/register">
@@ -145,7 +159,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                         boxShadow: "0 15px 30px -10px rgba(251, 146, 60, 0.3)",
                       }}
                       whileTap={{ scale: 0.97 }}
-                      className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-xl text-base sm:text-lg font-medium relative overflow-hidden"
+                      className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-full shadow-xl text-lg font-medium relative overflow-hidden"
                     >
                       <span className="relative z-10">התחל עכשיו</span>
                       <motion.div
@@ -160,25 +174,25 @@ export default function HeroSection({ session }: HeroSectionProps) {
                       />
                     </motion.button>
                   </Link>
-                  <Link href="/about">
-                    <motion.button
-                      whileHover={{
-                        scale: 1.03,
-                        y: -2,
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                      }}
-                      whileTap={{ scale: 0.97 }}
-                      className="w-full sm:w-auto bg-transparent text-white border-2 border-white/60 px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-lg backdrop-blur-sm text-base sm:text-lg font-medium"
-                    >
-                      למה Miel?
-                    </motion.button>
-                  </Link>
+                  <motion.button
+                    onClick={scrollToFeatures}
+                    whileHover={{
+                      scale: 1.03,
+                      y: -2,
+                      backgroundColor: "rgba(255,255,255,0.15)",
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                    className="bg-transparent text-white border-2 border-white/60 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full shadow-lg backdrop-blur-sm text-lg font-medium"
+                  >
+                    למה Miel?
+                  </motion.button>
                 </motion.div>
               ) : (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 1 }}
+                  className="flex justify-center sm:justify-start mt-12"
                   style={{ direction: "rtl" }}
                 >
                   <Link href="/members">
@@ -212,10 +226,10 @@ export default function HeroSection({ session }: HeroSectionProps) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.5 }}
-              className="md:w-2/5 order-1 md:order-2"
+              className="w-full md:w-2/5 order-1 md:order-2"
             >
               <div
-                className="text-right rounded-2xl overflow-hidden shadow-2xl"
+                className="text-right rounded-2xl overflow-hidden shadow-2xl mx-auto sm:mx-0 max-w-lg md:max-w-none"
                 style={{ direction: "rtl" }}
               >
                 <div className="bg-gradient-to-r from-amber-500/90 to-orange-600/90 px-5 py-3">
@@ -223,7 +237,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.7 }}
-                    className="text-xl sm:text-2xl md:text-3xl font-bold text-white"
+                    className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-md shadow-black"
                   >
                     ליצור חיבורים משמעותיים
                   </motion.h2>
@@ -234,7 +248,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                   transition={{ duration: 0.8, delay: 0.9 }}
                   className="bg-white/15 backdrop-blur-lg p-5 border-t border-white/20"
                 >
-                  <p className="text-white text-base sm:text-lg leading-relaxed">
+                  <p className="text-white text-base sm:text-lg leading-relaxed drop-shadow-md shadow-black">
                     ב-Miel אנחנו מאמינים שכל אחד שמחפש אהבה צריך למצוא אותה.
                     האלגוריתם החכם שלנו מחבר בין אנשים שבאמת מתאימים, כדי שתוכלו
                     לצאת לדייטים משמעותיים - ולא להישאר באפליקציה.
