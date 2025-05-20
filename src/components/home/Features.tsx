@@ -11,46 +11,22 @@ export default function FeaturesSection() {
     {
       title: "חיבורים אמיתיים",
       description:
-        "האלגוריתם שלנו מתמקד בהתאמות אמיתיות ומשמעותיות, לא רק במראה חיצוני. אנחנו מחפשים את החיבור העמוק שיוביל לקשר אמיתי.",
-      image: "/images/real-connections.jpg",
+        "האלגוריתם שלנו מתמקד בהתאמות אמיתיות ומשמעותיות, לא רק במראה חיצוני.",
     },
     {
       title: "פרטיות מתקדמת",
       description:
-        "הפרטיות שלך חשובה לנו. אנחנו משתמשים בטכנולוגיות אבטחה מתקדמות כדי להגן על המידע האישי שלך ולתת לך שליטה מלאה על הפרופיל.",
-      image: "/images/privacy.jpg",
+        "הפרטיות שלך חשובה לנו. עם טכנולוגיות אבטחה מתקדמות, אתה בשליטה.",
     },
     {
       title: "התאמות חכמות",
-      description:
-        "השתמשנו במחקר מבוסס מדע כדי לפתח אלגוריתם שמבין באמת מה חשוב בקשרים ארוכי טווח, ומתאים לך את האנשים הנכונים.",
-      image: "/images/smart-matching.jpg",
+      description: "פיתחנו אלגוריתם שמבין לעומק מה חשוב בקשרים יציבים ועמוקים.",
     },
     {
       title: "חוויה מדהימה",
-      description:
-        "ממשק משתמש אינטואיטיבי ויפה, ללא הסחות דעת מיותרות. המיקוד שלנו הוא בך ובמסע שלך למצוא אהבה אמיתית.",
-      image: "/images/user-experience.jpg",
+      description: "ממשק יפה ונעים. נטול רעש, מלא רגש. כאן בשבילך ובשביל אהבה.",
     },
   ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-    },
-  };
 
   return (
     <section
@@ -60,8 +36,8 @@ export default function FeaturesSection() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
         className="text-center mb-16"
       >
         <h2
@@ -74,131 +50,88 @@ export default function FeaturesSection() {
             <div className="absolute -bottom-1 left-0 right-0 h-3 bg-amber-300/60 -z-10 rounded-full" />
           </span>
         </h2>
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-2xl p-5 shadow-lg max-w-3xl mx-auto"
+        <p
+          className="text-xl text-gray-700 max-w-2xl mx-auto"
+          style={{ direction: "rtl" }}
         >
-          <p className="text-xl text-gray-700" style={{ direction: "rtl" }}>
-            בנינו את Miel על בסיס מחקר מתקדם על מערכות יחסים, כדי לעזור לך למצוא
-            קשר אמיתי
-          </p>
-        </motion.div>
+          בנינו את Miel על בסיס מחקר מתקדם על מערכות יחסים כדי לעזור לך למצוא
+          קשר אמיתי
+        </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-        <motion.div
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
-          initial={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-xl backdrop-blur-sm border border-amber-200/30"
-        >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-xl border border-amber-100">
+          <Image
+            src="/images/couple.jpg"
+            alt="Connection example"
+            fill
+            className="object-cover object-center"
+            priority
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <div
+              className="w-full h-full"
+              style={{
+                WebkitMaskImage:
+                  "radial-gradient(circle at 45% 30%, rgba(0,0,0,0) 30%, rgba(0,0,0,1) 48%)",
+                WebkitMaskRepeat: "no-repeat",
+                WebkitMaskSize: "cover",
+                backgroundColor: "rgba(0,0,0,0.95)",
+              }}
+            />
+          </div>
+
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-center px-6 z-20">
+            <motion.h3
+              key={activeFeature}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="text-2xl font-semibold text-white drop-shadow-md"
+            >
+              {features[activeFeature].title}
+            </motion.h3>
+            <motion.p
+              key={activeFeature + "-desc"}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="text-white/90 mt-2 max-w-sm mx-auto text-base leading-relaxed drop-shadow-sm"
+            >
+              {features[activeFeature].description}
+            </motion.p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4" style={{ direction: "rtl" }}>
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0 }}
-              animate={{
-                opacity: activeFeature === index ? 1 : 0,
-                scale: activeFeature === index ? 1 : 0.95,
-              }}
-              transition={{ duration: 0.5 }}
-              className="absolute inset-0 flex items-center justify-center p-8"
+              whileHover={{ scale: 1.02 }}
+              className={`cursor-pointer p-5 rounded-xl border transition-all duration-300 shadow-sm ${
+                activeFeature === index
+                  ? "bg-gradient-to-r from-amber-100 to-orange-100 border-amber-300"
+                  : "bg-white hover:bg-orange-50 border-white/30"
+              }`}
+              onClick={() => setActiveFeature(index)}
             >
-              <div className="absolute inset-0">
-                <div className="w-full h-full relative">
-                  <Image
-                    src="/images/couple.jpg"
-                    alt="Happy couple demonstrating relationship success"
-                    fill
-                    className="object-cover object-center"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    loading="lazy"
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-                </div>
-              </div>
-
-              <div className="relative z-20 text-white text-center mt-auto mb-10 backdrop-blur-sm bg-black/10 p-6 rounded-xl border border-white/10 shadow-lg">
-                <h3 className="text-2xl font-bold mb-4 drop-shadow-lg">
-                  {feature.title}
-                </h3>
-                <div className="w-16 h-1 bg-amber-400 mx-auto mb-4 rounded-full"></div>
-                <p className="max-w-xs mx-auto text-white drop-shadow-md">
-                  {feature.description}
-                </p>
-              </div>
+              <h4 className="text-lg font-semibold text-gray-900">
+                {feature.title}
+              </h4>
+              <p className="text-sm text-gray-600 mt-1">
+                {feature.description}
+              </p>
+              {activeFeature === index && (
+                <motion.div
+                  layoutId="active-line"
+                  className="mt-3 h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                />
+              )}
             </motion.div>
           ))}
-        </motion.div>
-
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="flex flex-col justify-center"
-          style={{ direction: "rtl" }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="backdrop-blur-sm bg-white/5 border border-amber-200/20 rounded-2xl p-6 shadow-lg mb-8"
-          >
-            <h3 className="text-2xl md:text-3xl font-bold mb-1 text-gray-900">
-              מה הופך את Miel לייחודי?
-            </h3>
-          </motion.div>
-
-          <div className="space-y-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                whileHover={{ x: 5 }}
-                className={`cursor-pointer rounded-2xl transition-all duration-300 backdrop-blur-sm overflow-hidden ${
-                  activeFeature === index
-                    ? "bg-gradient-to-r from-amber-100/80 to-orange-100/80 shadow-lg border border-amber-300/30"
-                    : "bg-white/5 border border-white/10 hover:bg-white/10"
-                }`}
-                onClick={() => setActiveFeature(index)}
-              >
-                <div className="p-6 flex items-start gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      activeFeature === index
-                        ? "bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg"
-                        : "bg-black/5 backdrop-blur-sm border border-white/10"
-                    } transition-all duration-300`}
-                  >
-                    <div className="w-6 h-6 border-t-2 border-r-2 border-white/80 rounded-tr-md transform rotate-45"></div>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xl font-semibold mb-2 text-gray-900">
-                      {feature.title}
-                    </h4>
-                    <p className="text-gray-700">{feature.description}</p>
-                  </div>
-                </div>
-                {activeFeature === index && (
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 0.5 }}
-                    className="h-1 bg-gradient-to-r from-amber-400 to-orange-500"
-                  />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

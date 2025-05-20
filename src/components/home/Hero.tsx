@@ -110,7 +110,12 @@ export default function HeroSection({ session }: HeroSectionProps) {
   );
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
+    <motion.section
+      className="relative h-screen w-full overflow-hidden"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+    >
       <div className="absolute inset-0 z-0">
         <div className="relative w-full h-full bg-gradient-to-b from-black/40 to-black/20">
           {isClient && (
@@ -208,6 +213,6 @@ export default function HeroSection({ session }: HeroSectionProps) {
           </div>
         )}
       </div>
-    </section>
+    </motion.section>
   );
 }
