@@ -29,11 +29,13 @@
     }
   },
   "include": [
+    "video.d.ts",
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/app/actions/intresestsAction.ys"
+    "src/app/actions/intresestsAction.ys",
+    " video.config.js"
   ],
   "exclude": [
     "node_modules"

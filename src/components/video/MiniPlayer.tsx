@@ -31,12 +31,12 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const [isMuted, setIsMuted] = useState<boolean>(initMuted);
   const [isReady, setIsReady] = useState<boolean>(false);
   const playerRef = useRef<ReactPlayer | null>(null);
-  
+
   // Handle ready state
   const handleReady = (): void => {
     setIsReady(true);
     setPlaying(true);
-    
+
     // Set playback rate using ReactPlayer's API
     if (playerRef.current) {
       const player = playerRef.current.getInternalPlayer();
@@ -44,28 +44,28 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
         player.playbackRate = playbackRate;
       }
     }
-    
+
     if (onReady) onReady();
   };
-  
+
   // Handle errors
   const handleError = (error: any): void => {
     if (onError) onError(error);
   };
-  
+
   // Handle mute toggle using ReactPlayer's API
   const handleMuteToggle = (e: React.MouseEvent): void => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const newMuteState = !isMuted;
     setIsMuted(newMuteState);
-    
+
     if (onMuteToggle) {
       onMuteToggle(newMuteState);
     }
   };
-  
+
   // Sync parent component's mute state with internal state
   useEffect(() => {
     setIsMuted(initMuted);

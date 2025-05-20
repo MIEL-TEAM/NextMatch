@@ -81,7 +81,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setDuration(playerDuration);
         }
       } catch (e) {
-        console.log(e)
+        console.log(e);
       }
     }
 
@@ -94,14 +94,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, [autoPlay, onReady, safePlay]);
 
   // Handle errors
-  const handleError = useCallback((error: any): void => {
-    setError("Failed to load video");
-    setIsReady(true); // Mark as ready to remove loading indicator
+  const handleError = useCallback(
+    (error: any): void => {
+      setError("Failed to load video");
+      setIsReady(true); // Mark as ready to remove loading indicator
 
-    if (onError) {
-      onError(error);
-    }
-  }, [onError]);
+      if (onError) {
+        onError(error);
+      }
+    },
+    [onError]
+  );
 
   // Toggle play/pause
   const togglePlay = useCallback((e?: React.MouseEvent): void => {
@@ -110,7 +113,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       e.stopPropagation();
     }
 
-    setPlaying(prevPlaying => !prevPlaying);
+    setPlaying((prevPlaying) => !prevPlaying);
     hasUserInteracted.current = true;
   }, []);
 
@@ -130,7 +133,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
 
     hasUserInteracted.current = true;
-    setIsMuted(prevMuted => !prevMuted);
+    setIsMuted((prevMuted) => !prevMuted);
   }, []);
 
   // Toggle fullscreen
@@ -145,14 +148,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         .requestFullscreen()
         .then(() => setIsFullscreen(true))
         .catch((error) => {
-          console.log(error)
+          console.log(error);
         });
     } else {
       document
         .exitFullscreen()
         .then(() => setIsFullscreen(false))
         .catch((error) => {
-          console.log(error)
+          console.log(error);
         });
     }
   }, []);
