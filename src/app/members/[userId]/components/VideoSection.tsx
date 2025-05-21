@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { VideoPlayer } from "@/components/video/VideoPlayer";
-import { VideoUploader } from "@/components/video/VideoUpload";
+import VideoPlayer from "@/components/video/VideoPlayer";
+import VideoUploader from "@/components/video/VideoUpload";
 import CardInnerWrapper from "@/components/CardInnerWrapper";
 import AppModal from "@/components/AppModal";
 import { PlayCircle } from "lucide-react";
@@ -67,7 +67,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         <div className="relative aspect-video w-full max-w-3xl mx-auto">
           <VideoPlayer
             url={selectedVideo.url}
-            controls={true}
             autoPlay={true}
             className="w-auto h-auto max-w-full max-h-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           />
@@ -113,8 +112,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                       <VideoPlayer
                         key={video.id}
                         url={video.url}
-                        controls={false}
+                        autoPlay={false}
                         muted={true}
+                        aspectRatio="video"
                         className="w-auto h-auto max-w-full max-h-full"
                       />
                     </div>

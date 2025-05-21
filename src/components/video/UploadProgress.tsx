@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { Progress, Button } from "@nextui-org/react";
-import { X, Check } from "lucide-react";
+import { X, Check, Video } from "lucide-react";
 
 interface UploadProgressProps {
   progress: number;
@@ -16,49 +16,58 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   success,
 }) => {
   const [displayProgress, setDisplayProgress] = useState<number>(0);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    if (Math.abs(progress - displayProgress) < 3) {
-      setDisplayProgress(progress);
-      return;
+    setDisplayProgress(progress);
+  }, [progress]);
+
+  useEffect(() => {
+    if (success) {
+      setShowSuccess(true);
     }
-
-    const interval = setInterval(() => {
-      setDisplayProgress((prev) => {
-        if (prev === progress) return prev;
-
-        const diff = progress - prev;
-        const increment = Math.sign(diff) * Math.min(Math.abs(diff), 2);
-        return prev + increment;
-      });
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, [progress, displayProgress]);
+  }, [success]);
 
   const getStatusMessage = useCallback((): string => {
-    if (displayProgress < 100) return "מעלה סרטון...";
-    return "מעבד סרטון...";
+    if (displayProgress < 100) return "מעלה את הסרטון שלך...";
+    return "מעבד את הסרטון...";
   }, [displayProgress]);
 
-  const handleCancel = useCallback(
-    (e: React.MouseEvent): void => {
-      e.preventDefault();
-      onCancel();
-    },
-    [onCancel]
-  );
+  const handleCancel = useCallback(() => {
+    onCancel();
+  }, [onCancel]);
 
-  if (success) {
+  if (showSuccess) {
     return (
-      <div
-        className="flex items-center justify-center bg-green-100 text-green-700 p-4 rounded-lg animate-fadeIn"
-        dir="rtl"
-        role="alert"
-        aria-live="polite"
-      >
-        <Check size={20} className="ml-2" />
-        <span>ההעלאה הושלמה בהצלחה!</span>
+      <div className="bg-green-50 border border-green-200 p-4 rounded-lg text-green-800 flex flex-col gap-2 animate-fadeIn shadow-sm relative">
+        <button
+          onClick={() => setShowSuccess(false)}
+          className="absolute top-2 right-2 text-green-600 hover:text-green-800 transition-colors"
+          aria-label="סגור"
+        >
+          <X size={18} />
+        </button>
+        <div className="flex items-center gap-2">
+          <Check size={20} />
+          <span className="font-medium">ההעלאה הושלמה בהצלחה!</span>
+        </div>
+        <div className="text-sm text-green-700 leading-snug">
+          הסרטון נוסף לפרופיל שלך.
+          <br />
+          ניתן לצפות בו עכשיו בתחתית העמוד, או לחזור מאוחר יותר לבדוק.
+        </div>
+        <Button
+          onPress={() =>
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            })
+          }
+          className="bg-green-600 text-white hover:bg-green-700 w-fit mt-3"
+          startContent={<Video size={16} />}
+        >
+          גלול לסרטון
+        </Button>
       </div>
     );
   }
@@ -78,7 +87,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
           size="sm"
           isIconOnly
           variant="light"
-          onPress={() => handleCancel}
+          onPress={handleCancel}
           aria-label="ביטול העלאה"
           className="focus:ring-2 focus:ring-blue-500"
         >
@@ -93,10 +102,9 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
         valueLabel={`${displayProgress}%`}
         aria-label="התקדמות העלאה"
       />
-      <p className="text-xs text-gray-500">{getStatusMessage()}</p>
+      <p className="text-xs text-gray-500 mt-1">{getStatusMessage()}</p>
     </div>
   );
 };
 
-// Memoize component to prevent unnecessary re-renders
 export default memo(UploadProgress);

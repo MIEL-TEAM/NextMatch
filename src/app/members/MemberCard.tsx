@@ -11,15 +11,14 @@ import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import MemberImageCarousel from "@/components/MemberImageCarousel";
 import { Play, VolumeX, Volume2 } from "lucide-react";
-import MiniPlayer from "@/components/video/MiniPlayer";
 
-type MemberCardProps = {
+interface MemberCardProps {
   member: Member;
   likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
   memberVideos?: Array<{ url: string; id: string }>;
   onLike?: (memberId: string) => void;
-};
+}
 
 export default function MemberCard({
   member,
@@ -70,10 +69,6 @@ export default function MemberCard({
     [member.userId, hasLiked, onLike]
   );
 
-  const handleMuteToggle = useCallback((muted: boolean) => {
-    setIsMuted(muted);
-  }, []);
-
   const handleMouseEnter = useCallback(() => {
     if (memberVideos.length > 0 && activeVideo) {
       setShowVideo(true);
@@ -89,14 +84,11 @@ export default function MemberCard({
     setShowVideo(false);
   }, []);
 
-  const toggleMute = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handleMuteToggle(!isMuted);
-    },
-    [isMuted, handleMuteToggle]
-  );
+  const toggleMute = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsMuted((prev) => !prev);
+  }, []);
 
   const renderCardContent = useCallback(
     (imageUrl: string) => (
@@ -104,25 +96,28 @@ export default function MemberCard({
         as={Link}
         href={`/members/${member.userId}`}
         isPressable
-        className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
+        className={`w-full h-full shadow-lg hover:shadow-xl transition-shadow ${memberVideos.length > 0 ? "ring-2 ring-pink-500/40" : ""}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div className="relative aspect-square overflow-hidden rounded-t-lg group">
+          {memberVideos.length > 0 && (
+            <span className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-md z-50">
+              חדש 🎬
+            </span>
+          )}
+
           {showVideo && activeVideo && !videoError && (
             <div className="absolute inset-0 z-40 overflow-hidden">
-              <div className="absolute inset-0 w-full h-full">
-                <MiniPlayer
-                  url={activeVideo}
-                  initMuted={isMuted}
-                  onMuteToggle={handleMuteToggle}
-                  className="absolute inset-0"
-                  onError={handleVideoError}
-                  loop={true}
-                  playbackRate={1.0}
-                  forceShowMuteControls={false}
-                />
-              </div>
+              <video
+                src={activeVideo}
+                className="w-full h-full object-cover"
+                autoPlay
+                loop
+                muted={isMuted}
+                playsInline
+                onError={handleVideoError}
+              />
             </div>
           )}
 
@@ -223,7 +218,6 @@ export default function MemberCard({
       activeVideo,
       videoError,
       isMuted,
-      handleMuteToggle,
       handleVideoError,
       loading,
       toggleLike,

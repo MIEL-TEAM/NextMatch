@@ -132,7 +132,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
               objectPosition: "center 30%",
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/20 z-10" />
         </div>
       </div>
 

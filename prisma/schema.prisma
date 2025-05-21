@@ -82,6 +82,8 @@ model Member {
   interactions       UserInteraction[] @relation("userInteractions")
   targetInteractions UserInteraction[] @relation("targetInteractions")
   preference         UserPreference?
+  videoUrl           String?           @db.Text
+  videoUploadedAt    DateTime?
 }
 
 model Photo {
