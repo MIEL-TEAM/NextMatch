@@ -30,8 +30,13 @@ export default async function MemberDetailedPage({
   const likeIds = await fetchCurrentUserLikeIds();
   const interests = await getUserInterestsByUserId(userId);
 
-  // Fetch member's videos using the server action
   const memberVideos = await getMemberVideos(member.id);
+
+  const formattedVideos = memberVideos.map((video) => ({
+    url: video.url,
+    id: video.id,
+    createdAt: video.createdAt.toISOString(),
+  }));
 
   return (
     <ProfileViewTracker userId={userId}>
@@ -80,7 +85,7 @@ export default async function MemberDetailedPage({
                 <Divider />
                 <VideoUploadSection
                   memberId={member.id}
-                  existingVideos={memberVideos}
+                  existingVideos={formattedVideos}
                 />
               </>
             )}

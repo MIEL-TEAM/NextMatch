@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { Progress, Button } from "@nextui-org/react";
-import { X, Check, Video } from "lucide-react";
+import { X } from "lucide-react";
 
 interface UploadProgressProps {
   progress: number;
@@ -13,20 +13,12 @@ interface UploadProgressProps {
 const UploadProgress: React.FC<UploadProgressProps> = ({
   progress,
   onCancel,
-  success,
 }) => {
   const [displayProgress, setDisplayProgress] = useState<number>(0);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     setDisplayProgress(progress);
   }, [progress]);
-
-  useEffect(() => {
-    if (success) {
-      setShowSuccess(true);
-    }
-  }, [success]);
 
   const getStatusMessage = useCallback((): string => {
     if (displayProgress < 100) return "מעלה את הסרטון שלך...";
@@ -36,41 +28,6 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   const handleCancel = useCallback(() => {
     onCancel();
   }, [onCancel]);
-
-  if (showSuccess) {
-    return (
-      <div className="bg-green-50 border border-green-200 p-4 rounded-lg text-green-800 flex flex-col gap-2 animate-fadeIn shadow-sm relative">
-        <button
-          onClick={() => setShowSuccess(false)}
-          className="absolute top-2 right-2 text-green-600 hover:text-green-800 transition-colors"
-          aria-label="סגור"
-        >
-          <X size={18} />
-        </button>
-        <div className="flex items-center gap-2">
-          <Check size={20} />
-          <span className="font-medium">ההעלאה הושלמה בהצלחה!</span>
-        </div>
-        <div className="text-sm text-green-700 leading-snug">
-          הסרטון נוסף לפרופיל שלך.
-          <br />
-          ניתן לצפות בו עכשיו בתחתית העמוד, או לחזור מאוחר יותר לבדוק.
-        </div>
-        <Button
-          onPress={() =>
-            window.scrollTo({
-              top: document.body.scrollHeight,
-              behavior: "smooth",
-            })
-          }
-          className="bg-green-600 text-white hover:bg-green-700 w-fit mt-3"
-          startContent={<Video size={16} />}
-        >
-          גלול לסרטון
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div

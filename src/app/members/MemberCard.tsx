@@ -96,7 +96,7 @@ export default function MemberCard({
         as={Link}
         href={`/members/${member.userId}`}
         isPressable
-        className={`w-full h-full shadow-lg hover:shadow-xl transition-shadow ${memberVideos.length > 0 ? "ring-2 ring-pink-500/40" : ""}`}
+        className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

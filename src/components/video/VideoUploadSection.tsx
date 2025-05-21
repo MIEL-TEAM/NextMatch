@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 import VideoUploader from "@/components/video/VideoUpload";
-import VideoPlayer from "@/components/video/VideoPlayer";
+import UploadStatusView from "@/components/video/UploadStatusView";
+import VideoManagerActions from "@/components/video/VideoManagerActions";
 import { toast } from "sonner";
-import { Button } from "@nextui-org/react";
-import { RefreshCw, Trash2 } from "lucide-react";
+import { Button, Spinner } from "@nextui-org/react";
 
 interface VideoUploadSectionProps {
   memberId: string;
-  existingVideos?: Array<{ url: string; id: string }>;
+  existingVideos?: Array<{ url: string; id: string; createdAt?: string }>;
 }
 
 export default function VideoUploadSection({
@@ -20,34 +20,42 @@ export default function VideoUploadSection({
   const [videoUrl, setVideoUrl] = useState<string | null>(
     videos.length > 0 ? videos[0].url : null
   );
+  const [createdAt, setCreatedAt] = useState<string | null>(
+    videos.length > 0 ? videos[0].createdAt || null : null
+  );
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(
     videos.length > 0 ? videos[0].id : null
   );
+
   const [isReplacing, setIsReplacing] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [justUploaded, setJustUploaded] = useState(false);
+  const [justDeleted, setJustDeleted] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleUploadComplete = async (fileUrl: string) => {
     try {
       const response = await fetch("/api/videos/save-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          memberId,
-          videoUrl: fileUrl,
-        }),
+        body: JSON.stringify({ memberId, videoUrl: fileUrl }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save video");
-      }
+      if (!response.ok) throw new Error("Failed to save video");
 
       const data = await response.json();
+      const now = new Date().toISOString();
+
       setVideoUrl(fileUrl);
+      setCreatedAt(now);
       setCurrentVideoId(data.videoId);
-      setVideos([{ url: fileUrl, id: data.videoId }]);
+      setVideos([{ url: fileUrl, id: data.videoId, createdAt: now }]);
       setIsReplacing(false);
+      setJustUploaded(true);
       toast.success("הסרטון הועלה בהצלחה! 🎉");
     } catch (error) {
-      console.error("Error saving video:", error);
+      console.error(error);
       toast.error("שגיאה בשמירת הסרטון");
     }
   };
@@ -57,70 +65,65 @@ export default function VideoUploadSection({
   };
 
   const handleDeleteVideo = async () => {
-    if (!confirm("האם אתה בטוח שברצונך למחוק את הסרטון?")) return;
-
+    setIsDeleting(true);
     try {
       const response = await fetch(
         `/api/videos/delete?videoId=${currentVideoId}&memberId=${memberId}`,
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to delete video");
-      }
+      if (!response.ok) throw new Error("Failed to delete video");
 
       setVideoUrl(null);
       setCurrentVideoId(null);
       setVideos([]);
+      setJustDeleted(true);
+      setIsDeleteModalOpen(false);
       toast.success("הסרטון נמחק בהצלחה");
     } catch (error) {
-      console.error("Error deleting video:", error);
+      console.error(error);
       toast.error("שגיאה במחיקת הסרטון");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  if (justUploaded || justDeleted) {
+    return (
+      <UploadStatusView
+        status={justUploaded ? "uploaded" : "deleted"}
+        onReset={() => {
+          setJustUploaded(false);
+          setJustDeleted(false);
+        }}
+      />
+    );
+  }
+
   if (videoUrl && !isReplacing) {
     return (
-      <div className="p-4 border border-dashed border-amber-300 rounded-xl bg-white shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-amber-600">הסרטון שלך</h3>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="light"
-              onPress={() => setIsReplacing(true)}
-              startContent={<RefreshCw size={16} />}
-              className="text-amber-600 hover:text-amber-700"
-            >
-              החלף סרטון
-            </Button>
-            <Button
-              size="sm"
-              variant="light"
-              color="danger"
-              onPress={handleDeleteVideo}
-              startContent={<Trash2 size={16} />}
-            >
-              מחק
-            </Button>
+      <div className="p-4 border border-dashed border-amber-300 rounded-xl bg-white shadow-sm text-center">
+        <h3 className="text-lg font-semibold text-amber-600 mb-2">
+          הסרטון שלך
+        </h3>
+
+        {isDeleting ? (
+          <div className="flex flex-col items-center justify-center py-4">
+            <Spinner color="warning" size="md" />
+            <p className="text-amber-600 mt-2">מוחק...</p>
           </div>
-        </div>
-
-        <div className="rounded-lg overflow-hidden shadow-md">
-          <VideoPlayer
-            url={videoUrl}
-            aspectRatio="video"
-            autoPlay={false}
-            loop={true}
-            muted={false}
+        ) : (
+          <VideoManagerActions
+            videoUrl={videoUrl}
+            createdAt={createdAt}
+            onReplace={() => setIsReplacing(true)}
+            onDelete={handleDeleteVideo}
+            isVideoModalOpen={isVideoModalOpen}
+            setVideoModalOpen={setIsVideoModalOpen}
+            isDeleteModalOpen={isDeleteModalOpen}
+            setDeleteModalOpen={setIsDeleteModalOpen}
           />
-        </div>
-
-        <p className="text-sm text-neutral-600 mt-3 text-center">
-          הסרטון שלך זמין כעת בפרופיל ובעמוד החברים! 🎬
-        </p>
+        )}
       </div>
     );
   }
