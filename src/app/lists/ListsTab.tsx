@@ -253,8 +253,8 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
                     {selectedTab === "source"
                       ? "❤️"
                       : selectedTab === "target"
-                      ? "😍"
-                      : "💞"}
+                        ? "😍"
+                        : "💞"}
                   </div>
                   <h3 className="text-xl font-semibold text-orange-600 mb-3">
                     אין עדיין לייקים

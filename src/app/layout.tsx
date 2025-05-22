@@ -6,6 +6,7 @@ import TopNav from "@/components/navbar/TopNav";
 import { auth } from "@/auth";
 import MielLayout from "./mielLayout";
 import { Toaster } from "sonner";
+import ReactQueryProvider from "@/components/ReactQueryProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://miel-love.com"),
@@ -113,10 +114,12 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        <Providers userId={userId} profileComplete={profileComplete}>
-          <TopNav />
-          <MielLayout>{children}</MielLayout>
-        </Providers>
+        <ReactQueryProvider>
+          <Providers userId={userId} profileComplete={profileComplete}>
+            <TopNav />
+            <MielLayout>{children}</MielLayout>
+          </Providers>
+        </ReactQueryProvider>
 
         <Toaster position="top-center" richColors expand={true} />
       </body>

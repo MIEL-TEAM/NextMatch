@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Member } from "@prisma/client";
-import { getSmartMatches } from "../actions/smartMatchActions";
 import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import SmartMemberCard from "../members/SmartMemberCard";
 import { motion } from "framer-motion";
+import AppModal from "@/components/AppModal";
+import { useSmartMatches } from "@/hooks/useSmartMatches";
 
 type MemberPhoto = {
   url: string;
@@ -14,15 +15,41 @@ type MemberPhoto = {
 };
 
 export default function SmartMatchesClient() {
-  const [members, setMembers] = useState<Member[]>([]);
   const [memberPhotos, setMemberPhotos] = useState<
     Record<string, MemberPhoto[]>
   >({});
-  const [loading, setLoading] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<string>("");
   const router = useRouter();
   const pageSize = 8;
+
+  const { data, isLoading, isError, refetch } = useSmartMatches(page, pageSize);
+  const memoizedMembers = useMemo(() => data?.items || [], [data?.items]);
+  const totalCount = data?.totalCount || 0;
+
+  const handleRefreshClick = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/smart-matches/refresh-ai", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setModalContent("✅ ניתוח העדפות עודכן בהצלחה!");
+        refetch();
+      } else {
+        setModalContent("❌ שגיאה בעדכון ניתוח.");
+      }
+    } catch (err) {
+      console.log(err);
+      setModalContent("❌ שגיאה ברשת או בשרת.");
+    } finally {
+      setRefreshing(false);
+      setModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     async function fetchMemberPhotos(members: Member[]) {
@@ -31,7 +58,6 @@ export default function SmartMatchesClient() {
         const response = await fetch(
           `/api/smart-matches/photos?ids=${memberIds.join(",")}`
         );
-
         if (response.ok) {
           const data = await response.json();
           setMemberPhotos(data.photos);
@@ -41,28 +67,10 @@ export default function SmartMatchesClient() {
       }
     }
 
-    async function loadMembers() {
-      setLoading(true);
-      try {
-        const result = await getSmartMatches(
-          page.toString(),
-          pageSize.toString()
-        );
-        setMembers(result.items);
-        setTotalCount(result.totalCount);
-
-        if (result.items.length > 0) {
-          await fetchMemberPhotos(result.items);
-        }
-      } catch (error) {
-        console.error("Error loading smart matches:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (memoizedMembers.length > 0) {
+      fetchMemberPhotos(memoizedMembers);
     }
-
-    loadMembers();
-  }, [page, pageSize]);
+  }, [memoizedMembers]);
 
   function handleNextPage() {
     if (page * pageSize < totalCount) {
@@ -93,6 +101,11 @@ export default function SmartMatchesClient() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 py-8">
+      <AppModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        body={<p className="text-center text-sm">{modalContent}</p>}
+      />
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -101,33 +114,42 @@ export default function SmartMatchesClient() {
       >
         <div className="flex flex-col items-center">
           <motion.div
-            className="relative mb-6 flex items-center"
+            className="mb-6 flex flex-col items-center gap-4"
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl font-bold mb-2 text-orange-800">
+            <h1 className="text-4xl font-bold text-orange-800">
               החיבורים החכמים שלך
             </h1>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -right-10 top-0"
+            <motion.button
+              onClick={handleRefreshClick}
+              disabled={refreshing}
+              className="px-6 py-2 bg-orange-400 text-white rounded-full hover:bg-orange-500 transition"
             >
-              <Sparkles className="h-8 w-8 text-amber-400" />
-            </motion.div>
+              {refreshing ? "מרענן..." : "🔄 רענון ניתוח העדפות"}
+            </motion.button>
           </motion.div>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-center text-orange-700 mb-10 max-w-xl"
+            className="text-center text-orange-700 mb-6 max-w-xl"
           >
             התאמות אישיות שלומדות מההעדפות וההתנהגות שלך
           </motion.p>
 
-          {loading ? (
+          {isError && (
+            <div className="text-red-600 text-sm text-center mb-6">
+              שגיאה בטעינת התאמות.{" "}
+              <button onClick={() => refetch()} className="underline">
+                נסה שוב
+              </button>
+            </div>
+          )}
+
+          {isLoading ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -135,15 +157,15 @@ export default function SmartMatchesClient() {
             >
               טוען התאמות חכמות...
             </motion.div>
-          ) : members.length > 0 ? (
+          ) : memoizedMembers.length > 0 ? (
             <>
               <motion.div
                 variants={container}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-stretch"
               >
-                {members.map((member) => (
+                {memoizedMembers.map((member) => (
                   <motion.div key={member.id} variants={item}>
                     <SmartMemberCard
                       member={member}

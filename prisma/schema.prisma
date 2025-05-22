@@ -86,6 +86,12 @@ model Member {
   videoUploadedAt    DateTime?
 }
 
+model UserProfileAnalysis {
+  userId    String   @id
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
 model Photo {
   id         String  @id @default(cuid())
   url        String

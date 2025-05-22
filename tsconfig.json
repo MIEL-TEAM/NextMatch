@@ -35,7 +35,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/app/actions/intresestsAction.ys",
-    " video.config.js"
+    " video.config.js",
+    "src/hooks/ודקןלקן"
   ],
   "exclude": [
     "node_modules"

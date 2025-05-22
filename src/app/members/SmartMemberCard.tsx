@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 type SmartMemberCardProps = {
-  member: Member;
+  member: Member & { matchReason?: string };
   memberPhotos?: Array<{ url: string; id: string }>;
 };
 
@@ -124,9 +124,6 @@ export default function SmartMemberCard({
         <div
           className="absolute top-3 right-3 z-10"
           onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
         >
           <LikeButton
             loading={loading}
@@ -139,17 +136,25 @@ export default function SmartMemberCard({
           <PresenceDot member={member} />
         </div>
 
-        <CardFooter className="flex justify-between bg-black overflow-hidden absolute bottom-0 z-10 bg-dark-gradient w-full rounded-b-lg p-2">
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
+          <span className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] text-white text-xs font-medium px-2 py-1 rounded-full shadow-md">
+            🍯 מבוסס AI
+          </span>
+        </div>
+
+        <CardFooter className="flex flex-col items-start justify-between gap-2 bg-black/70 absolute bottom-0 z-10 w-full p-3">
           <div className="flex flex-col text-white">
             <span className="font-semibold text-sm">
               {member.name}, {calculateAge(member.dateOfBirth)}
             </span>
-            <span className="text-xs">{member.city}</span>
+            <span className="text-xs text-white/80">{member.city}</span>
           </div>
 
-          <div className="px-2 pb-1 rounded-full bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27]">
-            <span className="text-xs text-white font-medium">התאמה חכמה</span>
-          </div>
+          {member.matchReason && (
+            <div className="bg-amber-100 text-orange-800 text-xs rounded-xl px-3 py-1 shadow-inner w-full">
+              ✨ {member.matchReason}
+            </div>
+          )}
         </CardFooter>
       </div>
     </Card>
@@ -162,12 +167,14 @@ export default function SmartMemberCard({
   }
 
   return (
-    <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl">
-      <MemberImageCarousel images={photos} prioritizeFirstImage={true}>
-        {(currentImage, isPriority) =>
-          renderCardContent(currentImage.url, isPriority)
-        }
-      </MemberImageCarousel>
+    <div className="flex flex-col justify-between h-full min-h-[100%]">
+      <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl">
+        <MemberImageCarousel images={photos} prioritizeFirstImage={true}>
+          {(currentImage, isPriority) =>
+            renderCardContent(currentImage.url, isPriority)
+          }
+        </MemberImageCarousel>
+      </div>
     </div>
   );
 }
