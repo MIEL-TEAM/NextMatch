@@ -8,6 +8,7 @@ import { PremiumPlansGrid } from "@/components/premium/plans/PremiumPlansGrid";
 import { SuccessMessage } from "@/components/premium/shared/SuccessMessage";
 import { CancelSubscriptionModal } from "@/components/premium/modals/CancelSubscriptionModal";
 import { getAllFeatures } from "@/components/premium/features/createFeaturesList";
+import { usePremiumFeaturesQuery } from "@/hooks/usePremiumFeaturesQuery";
 import {
   activatePremium,
   getPremiumStatus,
@@ -27,6 +28,10 @@ export default function PremiumPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const features = getAllFeatures();
+
+  // Use React Query hook for premium features
+  const { data: premiumFeaturesData, isLoading: premiumFeaturesLoading } =
+    usePremiumFeaturesQuery();
 
   // Loading states
   const [initialLoading, setInitialLoading] = useState(true);
@@ -229,6 +234,27 @@ export default function PremiumPage() {
     checkPremiumStatus();
   }, [checkPremiumStatus]);
 
+  // Use React Query data when available
+  useEffect(() => {
+    if (premiumFeaturesData && !initialLoading) {
+      // Update premium status based on React Query data
+      if (premiumFeaturesData.isActive) {
+        setIsPremium(true);
+        // Only update if we don't already have more detailed info
+        if (!premiumInfo) {
+          setPremiumInfo({
+            premiumUntil: premiumFeaturesData.expiresAt
+              ? new Date(premiumFeaturesData.expiresAt)
+              : null,
+            boostsAvailable: 10, // Default value if not available from the query
+            activePlan: "popular", // Default value
+            canceledAt: null,
+          });
+        }
+      }
+    }
+  }, [premiumFeaturesData, initialLoading, premiumInfo]);
+
   // Clear URL parameters after handling them
   useEffect(() => {
     const hasParams = searchParams.toString().length > 0;
@@ -364,7 +390,7 @@ export default function PremiumPage() {
     }
   }, []);
 
-  if (initialLoading) {
+  if (initialLoading || premiumFeaturesLoading) {
     return <HeartLoading />;
   }
 

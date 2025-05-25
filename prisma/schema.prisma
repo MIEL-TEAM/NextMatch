@@ -46,6 +46,8 @@ model User {
   Transaction          Transaction[]
   accounts             Account[]
   hasSeenMembersIntro  Boolean       @default(false)
+  viewedProfiles       ProfileView[] @relation("ViewerProfileViews")
+  profileViewers       ProfileView[] @relation("ViewedProfileViews")
 }
 
 model Interest {
@@ -175,10 +177,24 @@ model Video {
   url        String
   memberId   String
   isApproved Boolean  @default(false)
-  duration   Int? // Duration in seconds
+  duration   Int?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model ProfileView {
+  id       String   @id @default(cuid())
+  viewerId String
+  viewedId String
+  viewedAt DateTime @default(now())
+  seen     Boolean  @default(false)
+
+  viewer User @relation("ViewerProfileViews", fields: [viewerId], references: [id])
+  viewed User @relation("ViewedProfileViews", fields: [viewedId], references: [id])
+
+  @@unique([viewerId, viewedId])
+  @@index([viewedId])
 }
 
 enum TokenType {

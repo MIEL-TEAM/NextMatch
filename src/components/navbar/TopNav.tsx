@@ -12,7 +12,8 @@ import { auth } from "@/auth";
 import UserMenu from "./UserMenu";
 import { getUserInfoForNav } from "@/app/actions/userActions";
 import FiltersWrapper from "./FiltersWrapper";
-import MobileNav from "./MobileMenu";
+import MobileMenu from "./MobileMenu";
+import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 
 export default async function TopNav() {
   const session = await auth();
@@ -45,11 +46,13 @@ export default async function TopNav() {
             "uppercase",
             "data-[active=true]:text-yellow-200",
           ],
-          brand: "",
-          content: "",
         }}
       >
-        <NavbarBrand as={Link} href="/" className="flex items-center space-x-3">
+        <NavbarBrand
+          as={Link}
+          href="/home"
+          className="flex items-center space-x-3"
+        >
           <div className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white/60 backdrop-blur-md shadow-xl border border-white/50 transition-all duration-[1500ms] ease-out hover:shadow-2xl">
             <Image
               src="/images/icons/Logo.png"
@@ -77,39 +80,38 @@ export default async function TopNav() {
             ))}
         </NavbarContent>
 
-        <NavbarContent justify="end" className="gap-2">
+        <NavbarContent justify="end" className="gap-3 items-center">
           {userInfo ? (
             <>
+              <ProfileViewsButton />
               <UserMenu userInfo={userInfo} userId={userId || undefined} />
             </>
           ) : (
-            <>
-              <div className="hidden sm:flex gap-2">
-                <Button
-                  as={Link}
-                  href="/login"
-                  variant="bordered"
-                  className="text-white"
-                >
-                  כניסה
-                </Button>
-                <Button
-                  as={Link}
-                  href="/register"
-                  variant="bordered"
-                  className="text-white"
-                >
-                  הרשמה
-                </Button>
-              </div>
-            </>
+            <div className="hidden sm:flex gap-2">
+              <Button
+                as={Link}
+                href="/login"
+                variant="bordered"
+                className="text-white"
+              >
+                כניסה
+              </Button>
+              <Button
+                as={Link}
+                href="/register"
+                variant="bordered"
+                className="text-white"
+              >
+                הרשמה
+              </Button>
+            </div>
           )}
         </NavbarContent>
       </Navbar>
 
       <FiltersWrapper />
 
-      {session && <MobileNav userId={userId} />}
+      {session && <MobileMenu userId={userId} />}
     </>
   );
 }

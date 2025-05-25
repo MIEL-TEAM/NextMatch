@@ -19,6 +19,8 @@ import MessageTableCell from "./MessageTableCell";
 import { useMessages } from "@/hooks/useMessages";
 import { Search, MessageSquare } from "lucide-react";
 import InlineEmptyState from "@/components/EmptyState";
+import { useMessagesQuery } from "@/hooks/useMessagesQuery";
+import { useSearchParams } from "next/navigation";
 
 type TableProps = {
   initialMessages: MessageDto[];
@@ -33,6 +35,11 @@ export default function MessageTable({
   isArchived,
   isStarred,
 }: TableProps) {
+  const searchParams = useSearchParams();
+  const container = searchParams.get("container") || "inbox";
+
+  useMessagesQuery(container);
+
   const {
     columns,
     isDeleting,
@@ -79,8 +86,8 @@ export default function MessageTable({
               {isViewArchived
                 ? "כל ההודעות בארכיון"
                 : isViewStarred
-                ? "כל ההודעות המסומנות"
-                : "שיחות"}
+                  ? "כל ההודעות המסומנות"
+                  : "שיחות"}
             </h1>
             {(isViewArchived || isViewStarred) && (
               <p className="text-xs text-gray-500 mt-1">

@@ -9,6 +9,7 @@ import { getMemberPhotos } from "../actions/memberActions";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import HeartLoading from "@/components/HeartLoading";
+import { useLikedMembersQuery } from "@/hooks/useLikedMembersQuery";
 
 type ListsProps = {
   members: Member[];
@@ -26,7 +27,10 @@ const tabs = [
   { id: "mutual", label: "לייקים הדדיים", icon: "💞" },
 ];
 
-export default function ListsTab({ members, likeIds }: ListsProps) {
+export default function ListsTab({
+  members: initialMembers,
+  likeIds: initialLikeIds,
+}: ListsProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -38,7 +42,13 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
     "loading"
   );
 
-  // Process photos once at the list level
+  const selectedTab = searchParams.get("type") || tabs[0].id;
+  const { data, isLoading, isError } = useLikedMembersQuery(selectedTab);
+
+  // בחירת המקור הנכון לנתונים - מ-query או מהפרופס הראשוניים
+  const members = data?.members || initialMembers;
+  const likeIds = data?.likeIds || initialLikeIds;
+
   const processedMembersData = useMemo(() => {
     return membersWithPhotos.map(({ member, photos }) => {
       const processedPhotos: ProcessedPhoto[] = [];
@@ -91,7 +101,9 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
     });
   };
 
-  const selectedTab = searchParams.get("type") || tabs[0].id;
+  // משתמשים בסטטוס הנוכחי או בסטטוס מ-React Query
+  const currentStatus =
+    isLoading && !data ? "loading" : isError ? "error" : status;
 
   const getEmptyMessage = () => {
     switch (selectedTab) {
@@ -180,13 +192,13 @@ export default function ListsTab({ members, likeIds }: ListsProps) {
         </motion.div>
       </div>
 
-      {status === "loading" ? (
+      {currentStatus === "loading" ? (
         <div className="flex flex-col items-center justify-center vertical-center py-10">
           <div className="w-32 h-32 mb-2">
             <HeartLoading />
           </div>
         </div>
-      ) : status === "error" ? (
+      ) : currentStatus === "error" ? (
         <motion.div
           className="text-center bg-red-50 border border-red-200 rounded-lg p-6 my-8"
           initial={{ opacity: 0, scale: 0.9 }}

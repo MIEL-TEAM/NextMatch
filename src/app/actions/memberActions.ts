@@ -122,17 +122,20 @@ export async function getMembersWithPhotos(memberIds: string[]) {
       orderBy: { isApproved: "desc" },
     });
 
-    const photosByUserId = photosWithMembers.reduce((acc, photo) => {
-      const userId = photo.member.userId;
-      if (!acc[userId]) acc[userId] = [];
+    const photosByUserId = photosWithMembers.reduce(
+      (acc, photo) => {
+        const userId = photo.member.userId;
+        if (!acc[userId]) acc[userId] = [];
 
-      acc[userId].push({
-        url: photo.url,
-        id: photo.id,
-      });
+        acc[userId].push({
+          url: photo.url,
+          id: photo.id,
+        });
 
-      return acc;
-    }, {} as Record<string, Array<{ url: string; id: string }>>);
+        return acc;
+      },
+      {} as Record<string, Array<{ url: string; id: string }>>
+    );
 
     return photosByUserId;
   } catch (error) {

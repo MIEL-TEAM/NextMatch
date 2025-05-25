@@ -60,13 +60,19 @@ type PaginatedResponse<T> = {
   totalCount: number;
 };
 
-type GetMemberParams = {
-  filter: string;
+export type GetMemberParams = {
+  filter?: string;
+  ageMin?: string;
+  ageMax?: string;
   ageRange?: string;
   gender?: string;
-  pageNumber?: string;
+  page?: string;
   pageSize?: string;
+  pageNumber?: string;
   orderBy?: string;
+  sort?: string;
   withPhoto?: string;
   onlineOnly?: string;
+  city?: string;
+  interests?: string[];
 };

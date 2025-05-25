@@ -41,10 +41,10 @@ export async function updatePremiumStatusFromStripe(sessionId: string) {
     const months = monthsStr
       ? parseInt(monthsStr, 10)
       : planId === "basic"
-      ? 1
-      : planId === "popular"
-      ? 3
-      : 12;
+        ? 1
+        : planId === "popular"
+          ? 3
+          : 12;
     const boosts = planId === "basic" ? 5 : planId === "popular" ? 10 : 15;
 
     const premiumUntil = add(new Date(), { months });

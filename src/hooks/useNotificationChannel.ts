@@ -49,14 +49,11 @@ export const useNotificationChannel = (
         pathname === "/messages" && searchParams.get("container") !== "outbox";
       const isInChat = pathname === `/members/${message.senderId}/chat`;
 
-      // Only add to state if in messages page
       if (isInMessages) {
         addMessage(message);
         pendingUnreadUpdatesRef.current += 1;
         debouncedUpdateUnreadCount(pendingUnreadUpdatesRef.current);
-      }
-      // Only show toast if not in chat with this user
-      else if (!isInChat) {
+      } else if (!isInChat) {
         newMessageToast(message);
         pendingUnreadUpdatesRef.current += 1;
         debouncedUpdateUnreadCount(pendingUnreadUpdatesRef.current);
@@ -90,3 +87,61 @@ export const useNotificationChannel = (
     };
   }, [userId, handleNewMessage, handleNewLike, profileComplete]);
 };
+
+interface UseNotificationChannelOptions {
+  channel: string;
+  event: string;
+  callback: () => void | Promise<void>;
+}
+
+export function useSimpleNotificationChannel({
+  channel,
+  event,
+  callback,
+}: UseNotificationChannelOptions) {
+  useEffect(() => {
+    if (!channel || !event || !callback) return;
+
+    const pusherChannel = pusherClient.subscribe(channel);
+    pusherChannel.bind(event, callback);
+
+    return () => {
+      pusherChannel.unbind(event, callback);
+      pusherClient.unsubscribe(channel);
+    };
+  }, [channel, event, callback]);
+}
+
+export function useProfileViewsRealtime(userId: string, onNewView: () => void) {
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = pusherClient.subscribe(`private-${userId}`);
+
+    channel.bind(
+      "profile-viewed",
+      (data: { viewerId: string; timestamp: string }) => {
+        if (data.viewerId && data.viewerId !== userId) {
+          onNewView();
+        }
+      }
+    );
+
+    return () => {
+      channel.unbind("profile-viewed");
+      pusherClient.unsubscribe(`private-${userId}`);
+    };
+  }, [userId, onNewView]);
+}
+
+export function useNotificationSound() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playSound = useCallback(() => {
+    audioRef.current?.play().catch(() => {
+      // Silent catch for browsers that block autoplay
+    });
+  }, []);
+
+  return { audioRef, playSound };
+}
