@@ -89,8 +89,8 @@ export default function AnimatedBackground() {
                 i % 3 === 0
                   ? "bg-amber-300/5"
                   : i % 3 === 1
-                  ? "bg-orange-300/5"
-                  : "bg-rose-300/5"
+                    ? "bg-orange-300/5"
+                    : "bg-rose-300/5"
               } 
               blur-xl`}
           />

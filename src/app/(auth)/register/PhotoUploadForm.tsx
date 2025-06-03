@@ -213,10 +213,10 @@ export default function PhotoUploadForm() {
               {uploading
                 ? "מעלה תמונה..."
                 : photos.length === 0
-                ? "הוסף תמונה 1 מתוך 3"
-                : photos.length === 1
-                ? "הוסף תמונה 2 מתוך 3"
-                : "הוסף תמונה 3 מתוך 3"}
+                  ? "הוסף תמונה 1 מתוך 3"
+                  : photos.length === 1
+                    ? "הוסף תמונה 2 מתוך 3"
+                    : "הוסף תמונה 3 מתוך 3"}
             </span>
           </CldUploadButton>
         </div>

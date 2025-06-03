@@ -6,6 +6,7 @@ import { Member, Photo } from "@prisma/client";
 import { addYears } from "date-fns";
 import { getAuthUserId } from "./authActions";
 import { cache } from "react";
+import { ensureMember } from "@/lib/prismaHelpers";
 
 export async function getMembers({
   ageRange = "18,100",
@@ -124,6 +125,7 @@ export async function getMembersWithPhotos(memberIds: string[]) {
 
     const photosByUserId = photosWithMembers.reduce(
       (acc, photo) => {
+        if (!photo.member) return acc;
         const userId = photo.member.userId;
         if (!acc[userId]) acc[userId] = [];
 
@@ -196,21 +198,14 @@ export async function getMemberPhotosByUserId(userId: string) {
 export async function updateLastActive() {
   try {
     const userId = await getAuthUserId();
-
-    if (!userId) {
-      console.error("No authenticated user found");
-      return null;
-    }
+    await ensureMember(userId);
 
     return prisma.member.update({
       where: { userId },
       data: { updated: new Date() },
     });
   } catch (error) {
-    console.error(
-      "Error updating last active:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
+    console.error("Error updating last active:", error);
     return null;
   }
 }
@@ -245,16 +240,11 @@ export async function getMemberPhotos(userId: string) {
 export async function updateUserActivity() {
   try {
     const userId = await getAuthUserId();
-
-    if (!userId) {
-      return null;
-    }
+    await ensureMember(userId);
 
     return prisma.member.update({
       where: { userId },
-      data: {
-        updated: new Date(),
-      },
+      data: { updated: new Date() },
     });
   } catch (error) {
     console.error("Error updating user activity:", error);

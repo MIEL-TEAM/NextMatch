@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Member } from "@prisma/client";
+import { differenceInHours } from "date-fns";
+import { useMemo } from "react";
 
 interface SpotlightMemberProps {
   spotlight: Member | null;
@@ -22,20 +24,35 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
 }) => {
   const router = useRouter();
 
+  const imageUrlRaw = spotlight?.image || "/images/placeholder.jpg";
+  const isGoogleImage =
+    imageUrlRaw.includes("googleusercontent.com") && imageUrlRaw.includes("=s");
+  const imageUrl = imageUrlRaw.startsWith("http")
+    ? isGoogleImage
+      ? imageUrlRaw.replace(/=s\d+-c/, "=s400-c")
+      : imageUrlRaw
+    : imageUrlRaw.startsWith("/")
+      ? imageUrlRaw
+      : `/${imageUrlRaw}`;
+
+  const titleLabel = useMemo(() => {
+    if (!spotlight) return "";
+    const hoursSinceJoined = differenceInHours(
+      new Date(),
+      new Date(spotlight.created)
+    );
+    const isFemale = spotlight.gender === "female";
+
+    if (hoursSinceJoined < 24)
+      return isFemale ? "הצטרפה ממש עכשיו ✨" : "הצטרף ממש עכשיו ✨";
+    if (hoursSinceJoined < 72)
+      return isFemale ? "פנים חדשות בקהילה 💛" : "חדש בקהילה 💛";
+    if (hoursSinceJoined < 168)
+      return isFemale ? "מישהי חדשה באתר 👋" : "מישהו חדש באתר 👋";
+    return isFemale ? "שווה להכיר 💫" : "שווה להכיר 💫";
+  }, [spotlight]);
+
   if (!spotlight || !membersData.length) return null;
-
-  let imageUrl = spotlight.image || "/images/placeholder.jpg";
-
-  const isGoogleImage = imageUrl.includes("googleusercontent.com");
-  if (isGoogleImage && imageUrl.includes("=s")) {
-    imageUrl = imageUrl.replace(/=s\d+-c/, "=s400-c");
-  }
-
-  const formattedImageUrl = imageUrl.startsWith("http")
-    ? imageUrl
-    : imageUrl.startsWith("/")
-    ? imageUrl
-    : `/${imageUrl}`;
 
   return (
     <div className="max-w-4xl mx-auto mb-10 sm:mb-16 relative">
@@ -68,7 +85,7 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
               >
                 <div className="absolute inset-0">
                   <Image
-                    src={formattedImageUrl}
+                    src={imageUrl}
                     alt={spotlight.name || "Profile image"}
                     className="object-cover"
                     width={600}
@@ -89,8 +106,7 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
               <div className="p-3 sm:p-4 md:p-8 w-full md:w-2/3 text-right flex flex-col justify-center">
                 <div className="flex items-center m-0 justify-between">
                   <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-orange-600 mb-1 sm:mb-2 flex items-center">
-                    הצטרפו לאחרונה
-                    <span className="mr-1">✨</span>
+                    {titleLabel}
                   </h3>
                   <div className="flex gap-x-1 overflow-hidden">
                     {membersData.slice(0, 5).map((_, idx) => (

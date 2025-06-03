@@ -1,3 +1,4 @@
+/* Updated MemberCard.tsx with mobile performance & accessibility improvements */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -91,7 +92,7 @@ export default function MemberCard({
   }, []);
 
   const renderCardContent = useCallback(
-    (imageUrl: string) => (
+    (imageUrl: string, isPriority: boolean) => (
       <Card
         as={Link}
         href={`/members/${member.userId}`}
@@ -116,6 +117,7 @@ export default function MemberCard({
                 loop
                 muted={isMuted}
                 playsInline
+                preload="metadata"
                 onError={handleVideoError}
               />
             </div>
@@ -129,8 +131,9 @@ export default function MemberCard({
             }`}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            loading="eager"
-            fetchPriority="auto"
+            loading={isPriority ? "eager" : "lazy"}
+            fetchPriority={isPriority ? "high" : "low"}
+            priority={isPriority}
           />
 
           <div className="absolute top-2 right-2 z-50">
@@ -142,13 +145,14 @@ export default function MemberCard({
               loading={loading}
               toggleLike={toggleLike}
               hasLiked={hasLiked}
+              aria-label={hasLiked ? "בטל לייק" : "הוסף לייק"}
             />
 
             {memberVideos.length > 0 && showVideo && (
               <button
                 onClick={toggleMute}
                 className="bg-black/70 hover:bg-black/90 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-lg ring-2 ring-blue-400/60 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/80"
-                aria-label={isMuted ? "Unmute" : "Mute"}
+                aria-label={isMuted ? "בטל השתקה" : "השתק וידאו"}
                 type="button"
               >
                 {isMuted ? (
@@ -232,7 +236,7 @@ export default function MemberCard({
   if (memberPhotos.length <= 1) {
     const defaultImage =
       memberPhotos.length === 1 ? memberPhotos[0].url : "/images/user.png";
-    return renderCardContent(defaultImage);
+    return renderCardContent(defaultImage, true);
   }
 
   return (
@@ -240,8 +244,11 @@ export default function MemberCard({
       <MemberImageCarousel
         images={memberPhotos}
         onIndexChange={setCurrentIndex}
+        prioritizeFirstImage
       >
-        {(currentImage) => renderCardContent(currentImage.url)}
+        {(currentImage, isPriority) =>
+          renderCardContent(currentImage.url, isPriority)
+        }
       </MemberImageCarousel>
     </div>
   );

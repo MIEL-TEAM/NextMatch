@@ -20,15 +20,16 @@ export default function MemberImageCarousel({
   onIndexChange,
   prioritizeFirstImage = false,
 }: MemberImageCarouselProps) {
-  const uniqueImages = images.reduce((unique, img) => {
-    if (!img || !img.url) return unique;
-
-    if (!unique.some((item) => item.url === img.url)) {
-      unique.push(img);
-    }
-
-    return unique;
-  }, [] as Array<{ url: string; id: string }>);
+  const uniqueImages = images.reduce(
+    (unique, img) => {
+      if (!img || !img.url) return unique;
+      if (!unique.some((item) => item.url === img.url)) {
+        unique.push(img);
+      }
+      return unique;
+    },
+    [] as Array<{ url: string; id: string }>
+  );
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const prevIndexRef = useRef(currentIndex);
@@ -83,7 +84,7 @@ export default function MemberImageCarousel({
               bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               transform hover:scale-105 active:scale-95"
-            aria-label="Previous image"
+            aria-label="תמונה קודמת"
             type="button"
           >
             <ChevronLeft className="text-white w-4 h-4" />
@@ -99,7 +100,7 @@ export default function MemberImageCarousel({
               bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               transform hover:scale-105 active:scale-95"
-            aria-label="Next image"
+            aria-label="תמונה הבאה"
             type="button"
           >
             <ChevronRight className="text-white w-4 h-4" />

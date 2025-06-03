@@ -36,8 +36,13 @@ export default function RegisterForm() {
     handleSubmit,
     setError,
     getValues,
+    watch,
     formState: { errors, isValid, isSubmitting },
   } = methods;
+
+  const photos = watch("photos") || [];
+  const isLastStep = activeStep === stepSchemas.length - 1;
+  const isSubmitDisabled = isLastStep ? photos.length !== 3 : !isValid;
 
   async function onSubmit() {
     const result = await registerUser(getValues());
@@ -101,7 +106,7 @@ export default function RegisterForm() {
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <Button
                 isLoading={isSubmitting}
-                isDisabled={!isValid}
+                isDisabled={isSubmitDisabled}
                 fullWidth
                 className="bg-[#E37B27] text-white hover:bg-[#FFB547] py-2 sm:py-3 text-base sm:text-lg"
                 type="submit"

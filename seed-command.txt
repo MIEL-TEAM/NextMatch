@@ -1,5 +1,6 @@
 RUN_SEED=true npx prisma db seed
 npm run push-to-neon
 npm run seed-neon
+npm run ngrok
 
 password-s3 bucket - ihR1)Mq&

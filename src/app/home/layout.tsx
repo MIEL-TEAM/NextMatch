@@ -1,4 +1,3 @@
-// app/home/layout.tsx
 import HomePageWrapper from "@/app/HomePageWrapper";
 
 export default function HomeLayout({

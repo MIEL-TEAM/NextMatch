@@ -5,39 +5,36 @@ import {
   MemberEditSchema,
 } from "@/lib/schemas/memberEditSchema";
 import { ActionResult } from "@/types";
-import { Member, Photo } from "@prisma/client";
+import { Photo } from "@prisma/client";
 import { getAuthUserId } from "./authActions";
 import { prisma } from "@/lib/prisma";
 import { cloudinary } from "@/lib/cloudinary";
+import { ensureMember } from "@/lib/prismaHelpers";
 
 export async function updateMemberProfile(
   data: MemberEditSchema,
   nameUpdated: boolean
-): Promise<ActionResult<Member>> {
+): Promise<ActionResult<any>> {
   try {
     const userId = await getAuthUserId();
-    const validate = memberEditSchema.safeParse(data);
+    await ensureMember(userId);
 
-    if (!validate.success)
+    const validate = memberEditSchema.safeParse(data);
+    if (!validate.success) {
       return { status: "error", error: validate.error.errors };
+    }
+
     const { name, description, city, country } = validate.data;
 
     if (nameUpdated) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { name },
-      });
+      await prisma.user.update({ where: { id: userId }, data: { name } });
     }
 
     const member = await prisma.member.update({
       where: { userId },
-      data: {
-        name,
-        description,
-        city,
-        country,
-      },
+      data: { name, description, city, country },
     });
+
     return { status: "success", data: member };
   } catch (error) {
     console.log(error);
@@ -48,41 +45,30 @@ export async function updateMemberProfile(
 export async function addImage(url: string, publicId: string) {
   try {
     const userId = await getAuthUserId();
+    const member = await ensureMember(userId);
 
-    const isApproved = true;
-
-    if (!isApproved) {
-      if (publicId) {
-        await cloudinary.v2.uploader.destroy(publicId);
-      }
-      throw new Error("התמונה לא עומדת במדיניות שלנו. נא להעלות תמונה אחרת.");
-    }
-
-    return prisma.member.update({
-      where: { userId },
+    return prisma.photo.create({
       data: {
-        photos: {
-          create: [
-            {
-              url,
-              publicId,
-              isApproved,
-            },
-          ],
-        },
+        url,
+        publicId,
+        isApproved: false,
+        memberId: member.id,
       },
     });
   } catch (error) {
-    console.log(error);
+    console.log("❌ שגיאה בהעלאת תמונה:", error);
     throw error;
   }
 }
 
 export async function setMainImage(photo: Photo) {
-  if (!photo.isApproved)
+  if (!photo.isApproved) {
     throw new Error("רק תמונות מאושרות יכולות להיות מוגדרות כתמונה ראשית");
+  }
   try {
     const userId = await getAuthUserId();
+    await ensureMember(userId);
+
     await prisma.user.update({
       where: { id: userId },
       data: { image: photo.url },
@@ -114,6 +100,8 @@ export async function getUserInfoForNav() {
 export async function deleteImage(photo: Photo) {
   try {
     const userId = await getAuthUserId();
+    await ensureMember(userId);
+
     if (photo.publicId) {
       await cloudinary.v2.uploader.destroy(photo.publicId);
     }
