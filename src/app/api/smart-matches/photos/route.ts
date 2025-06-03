@@ -30,13 +30,17 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const photosByMemberId = photos.reduce((acc, photo) => {
-      if (!acc[photo.memberId]) {
-        acc[photo.memberId] = [];
+    const photosByMemberId = photos.reduce<
+      Record<string, Array<{ url: string; id: string }>>
+    >((acc, photo) => {
+      if (photo.memberId) {
+        if (!acc[photo.memberId]) {
+          acc[photo.memberId] = [];
+        }
+        acc[photo.memberId].push({ url: photo.url, id: photo.id });
       }
-      acc[photo.memberId].push({ url: photo.url, id: photo.id });
       return acc;
-    }, {} as Record<string, Array<{ url: string; id: string }>>);
+    }, {});
 
     memberIds.forEach((id) => {
       if (!photosByMemberId[id]) {
