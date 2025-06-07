@@ -13,7 +13,7 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -27,13 +27,11 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
       opacity: 1,
       transition: {
         pathLength: {
-          duration: 2,
+          duration: 0.8,
           ease: "easeInOut",
         },
         opacity: {
-          duration: 1,
-          repeat: 1,
-          repeatType: "reverse",
+          duration: 0.6,
         },
       },
     },
@@ -46,16 +44,16 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
           key="loading"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
           className="fixed inset-0 bg-gradient-to-b from-orange-50 to-amber-100 z-50 flex flex-col justify-center items-center"
         >
           <div className="text-center px-4">
             <motion.svg
               viewBox="0 0 32 32"
-              className="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80 mx-auto"
-              initial={{ scale: 0.8 }}
+              className="w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 mx-auto"
+              initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.3 }}
             >
               <motion.path
                 d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
@@ -72,19 +70,19 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
             </motion.svg>
 
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="mt-6 text-2xl md:text-3xl lg:text-4xl font-bold text-orange-600 mb-2"
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="mt-4 text-xl md:text-2xl lg:text-3xl font-bold text-orange-600 mb-2"
             >
               ברוכים הבאים
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.8 }}
-              className="text-lg md:text-xl lg:text-2xl text-orange-800 max-w-md md:max-w-lg lg:max-w-xl mx-auto"
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="text-md md:text-lg lg:text-xl text-orange-800 max-w-md md:max-w-lg lg:max-w-xl mx-auto"
             >
               לדור החדש של הדייטינג
             </motion.p>
@@ -95,7 +93,7 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
           key="content"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="w-full"
         >
           {children}

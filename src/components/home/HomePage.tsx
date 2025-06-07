@@ -6,27 +6,43 @@ import FeaturesSection from "@/components/home/Features";
 import MielFooter from "../FooterMainPage";
 import TestimonialsSection from "../TestimonialsSectionFeedbacks";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export type MielHomePageProps = {
   session: string;
 };
 
+// Dynamically import AnimatedBackground with no SSR
 const AnimatedBackground = dynamic(
   () => import("@/components/home/AnimatedBackground"),
   {
     ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50" />
+    ),
   }
 );
 
 export default function MielHomePage({ session }: MielHomePageProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Small delay to ensure smooth initial render
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <motion.div
       className="relative w-full overflow-x-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.4, ease: "easeOut" }} // Reduced from 0.6 to 0.4
     >
-      <AnimatedBackground />
+      {mounted && <AnimatedBackground />}
 
       <div className="relative z-10 flex flex-col min-h-screen">
         <main className="flex-grow">

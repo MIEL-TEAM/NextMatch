@@ -60,10 +60,10 @@ const TaglineDisplay = memo(
       <AnimatePresence mode="wait">
         <motion.p
           key={currentTagline}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.4 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.3 }}
           className="text-lg md:text-xl text-white font-medium drop-shadow-md text-center whitespace-nowrap"
           style={{ direction: "rtl" }}
         >
@@ -78,9 +78,14 @@ TaglineDisplay.displayName = "TaglineDisplay";
 export default function HeroSection({ session }: HeroSectionProps) {
   const [currentTagline, setCurrentTagline] = useState(0);
   const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   const taglines = [
@@ -91,12 +96,12 @@ export default function HeroSection({ session }: HeroSectionProps) {
   ];
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !mounted) return;
     const interval = setInterval(() => {
       setCurrentTagline((prev) => (prev + 1) % taglines.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [isClient, taglines.length]);
+  }, [isClient, taglines.length, mounted]);
 
   const scrollToFeatures = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -112,9 +117,9 @@ export default function HeroSection({ session }: HeroSectionProps) {
   return (
     <motion.section
       className="relative h-screen w-full overflow-hidden"
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className="absolute inset-0 z-0">
         <div className="relative w-full h-full bg-gradient-to-b from-black/40 to-black/20">
@@ -124,8 +129,8 @@ export default function HeroSection({ session }: HeroSectionProps) {
             fill
             className="object-cover brightness-95"
             priority
-            sizes="100vw"
-            quality={80}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+            quality={75}
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAAEAAQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD+/iiiigD/2Q=="
             style={{
@@ -148,7 +153,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
         </div>
 
         <div className="flex justify-center items-center my-auto">
-          {isClient && (
+          {isClient && mounted && (
             <TaglineDisplay
               taglines={taglines}
               currentTagline={currentTagline}
@@ -156,9 +161,9 @@ export default function HeroSection({ session }: HeroSectionProps) {
           )}
         </div>
 
-        <div className="w-full flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
           <div className="w-full md:w-1/2 flex flex-col items-center md:items-start order-2 md:order-1">
-            {isClient && session === "guest" ? (
+            {isClient && mounted && session === "guest" ? (
               <div
                 className="flex flex-row justify-center md:justify-start gap-4 flex-wrap"
                 style={{ direction: "rtl" }}
@@ -170,7 +175,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                   למה Miel?
                 </ActionButton>
               </div>
-            ) : (
+            ) : isClient && mounted ? (
               <div
                 className="flex justify-center md:justify-start"
                 style={{ direction: "rtl" }}
@@ -179,7 +184,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                   גלה. תתחבר. תתאהב.
                 </ActionButton>
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="w-full md:w-2/5 order-1 md:order-2">
@@ -203,7 +208,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
           </div>
         </div>
 
-        {isClient && (
+        {isClient && mounted && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-40">
             <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
               <div className="w-1.5 h-3 bg-white/50 rounded-full mt-2 animate-bounce" />
