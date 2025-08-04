@@ -12,7 +12,8 @@ export async function GET(req: Request) {
     ageMax: searchParams.get("ageMax") || undefined,
     ageRange: searchParams.get("ageRange") || undefined,
     gender: searchParams.get("gender") || undefined,
-    page: searchParams.get("page") || undefined,
+    pageNumber:
+      searchParams.get("pageNumber") || searchParams.get("page") || undefined,
     pageSize: searchParams.get("pageSize") || undefined,
     sort: searchParams.get("sort") || undefined,
     withPhoto: searchParams.get("withPhoto") || undefined,

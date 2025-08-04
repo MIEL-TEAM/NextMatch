@@ -189,7 +189,7 @@ export async function createCheckoutSession(formData: FormData) {
       process.env.NEXT_PUBLIC_APP_URL?.includes("localhost");
 
     const baseUrl = isLocalhost
-      ? "http://localhost:3001" // Ensure this matches your local dev port
+      ? "http://localhost:3000" // Ensure this matches your local dev port
       : process.env.NEXT_PUBLIC_APP_URL || "https://miel-love.com";
 
     // Explicitly log the base URL for debugging

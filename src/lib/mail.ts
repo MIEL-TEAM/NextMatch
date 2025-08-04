@@ -8,7 +8,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 
   if (process.env.NODE_ENV === "development") {
     // Running locally
-    verificationLink = `http://localhost:3001/verify-email?token=${token}`;
+    verificationLink = `http://localhost:3000/verify-email?token=${token}`;
   } else {
     // Running in production
     verificationLink = `${baseUrl}/verify-email?token=${token}`;

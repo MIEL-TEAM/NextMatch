@@ -10,10 +10,10 @@ export const useMembersQuery = (params: URLSearchParams) => {
     interests: params.getAll("interests") || [],
     onlineOnly: params.get("onlineOnly") === "true" ? "true" : "false",
     sort: params.get("sort") || "latest",
-    page: params.get("page") || "1",
+    pageNumber: params.get("pageNumber") || params.get("page") || "1",
   };
 
-  const queryKey = ["members", JSON.stringify(queryObj)];
+  const queryKey = ["members", queryObj];
 
   return useQuery({
     queryKey,

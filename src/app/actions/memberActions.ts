@@ -18,7 +18,18 @@ export async function getMembers({
   onlineOnly = "false",
 }: GetMemberParams): Promise<PaginatedResponse<Member>> {
   try {
-    const userId = await getAuthUserId();
+    let userId: string | null = null;
+
+    try {
+      userId = await getAuthUserId();
+    } catch (error) {
+      console.error(
+        "Error fetching current user ID:",
+        error ? JSON.stringify(error) : "Unknown error"
+      );
+      userId = null;
+    }
+
     const [minAge, maxAge] = ageRange.split(",");
 
     const currentDate = new Date();
@@ -66,9 +77,7 @@ export async function getMembers({
           ? [{ updated: { gte: onlineThreshold } }]
           : []),
       ],
-      NOT: {
-        userId,
-      },
+      ...(userId ? { NOT: { userId } } : {}),
     };
 
     const [count, members] = await Promise.all([
@@ -102,14 +111,24 @@ export async function getMembersWithPhotos(memberIds: string[]) {
   if (!memberIds.length) return {};
 
   try {
-    const currentUserId = await getAuthUserId();
+    let currentUserId: string | null = null;
+
+    try {
+      currentUserId = await getAuthUserId();
+    } catch (error) {
+      console.error(
+        "Error fetching current user ID:",
+        error ? JSON.stringify(error) : "Unknown error"
+      );
+      currentUserId = null;
+    }
 
     const photosWithMembers = await prisma.photo.findMany({
       where: {
         member: {
           userId: { in: memberIds },
         },
-        ...(!memberIds.includes(currentUserId || "")
+        ...(currentUserId && !memberIds.includes(currentUserId)
           ? { isApproved: true }
           : {}),
       },
@@ -138,7 +157,6 @@ export async function getMembersWithPhotos(memberIds: string[]) {
       },
       {} as Record<string, Array<{ url: string; id: string }>>
     );
-
     return photosByUserId;
   } catch (error) {
     console.error(
@@ -170,7 +188,18 @@ export async function getMemberPhotosByUserId(userId: string) {
   try {
     if (!userId) return null;
 
-    const currentUserId = await getAuthUserId();
+    let currentUserId: string | null = null;
+
+    try {
+      currentUserId = await getAuthUserId();
+    } catch (error) {
+      console.error(
+        "Error fetching current user ID:",
+        error ? JSON.stringify(error) : "Unknown error"
+      );
+      currentUserId = null;
+    }
+
     const member = await prisma.member.findUnique({
       where: { userId },
       select: {

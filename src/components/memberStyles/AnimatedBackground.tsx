@@ -1,50 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 
 const AnimatedBackground = () => {
-  const [backgroundCircles, setBackgroundCircles] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const circles = Array.from({ length: 6 }).map((_, index) => ({
-      id: `circle-${index}`,
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      width: `${Math.random() * 300 + 100}px`,
-      height: `${Math.random() * 300 + 100}px`,
-      xMovement: Math.random() * 50 - 25,
-      yMovement: Math.random() * 50 - 25,
-      duration: Math.random() * 10 + 20,
-    }));
+    const checkMobile = () => window.innerWidth < 768;
+    setIsMobile(checkMobile());
 
-    setBackgroundCircles(circles);
+    const handleResize = () => setIsMobile(checkMobile());
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 -z-10">
-      {backgroundCircles.map((circle) => (
-        <motion.div
-          key={circle.id}
-          className="absolute rounded-full bg-orange-400/5"
-          style={{
-            top: circle.top,
-            left: circle.left,
-            width: circle.width,
-            height: circle.height,
-          }}
-          animate={{
-            x: [0, circle.xMovement],
-            y: [0, circle.yMovement],
-          }}
-          transition={{
-            duration: circle.duration,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+      {!isMobile && (
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-amber-200/20 rounded-full blur-3xl"></div>
+        </div>
+      )}
     </div>
   );
 };

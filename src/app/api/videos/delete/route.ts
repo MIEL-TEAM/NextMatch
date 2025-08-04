@@ -51,7 +51,6 @@ export async function DELETE(request: NextRequest) {
           Key: key,
         })
       );
-      console.log(`Deleted from S3: ${key}`);
     } catch (s3Error) {
       console.error("Error deleting from S3:", s3Error);
     }

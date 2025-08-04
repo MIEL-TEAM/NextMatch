@@ -19,7 +19,6 @@ export async function analyzeUserBehaviorWithAI(
   const oneDayAgo = new Date(Date.now() - 1000 * 60 * 60 * 24);
 
   if (!options?.forceRefresh && existing && existing.updatedAt > oneDayAgo) {
-    console.log("🧊 שימוש ב־cache");
     return existing.content;
   }
 
@@ -87,6 +86,5 @@ ${
     },
   });
 
-  console.log("✅ ניתוח חדש נשמר ל־userId:", userId);
   return result;
 }
