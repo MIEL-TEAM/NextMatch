@@ -1,4 +1,3 @@
-/* Updated MemberCard.tsx with mobile performance & accessibility improvements */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";

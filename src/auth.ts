@@ -31,4 +31,8 @@ export const {
   adapter: PrismaAdapter(prisma) as any,
   session: { strategy: "jwt" },
   ...authConfig,
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
 });

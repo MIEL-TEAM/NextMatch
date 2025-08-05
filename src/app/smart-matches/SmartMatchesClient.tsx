@@ -163,10 +163,14 @@ export default function SmartMatchesClient() {
                 variants={container}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-stretch"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch"
               >
                 {memoizedMembers.map((member) => (
-                  <motion.div key={member.id} variants={item}>
+                  <motion.div
+                    key={member.id}
+                    variants={item}
+                    className="smart-member-card-container"
+                  >
                     <SmartMemberCard
                       member={member}
                       memberPhotos={memberPhotos[member.id] || []}

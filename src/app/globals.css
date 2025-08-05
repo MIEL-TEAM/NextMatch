@@ -13,6 +13,52 @@
   .page-size-box {
     @apply cursor-pointer border-2 hover:bg-gray-100 flex items-center justify-center rounded-lg shadow-sm min-w-[36px] w-9 h-9 text-sm;
   }
+
+  /* Smart Member Card Styles */
+  .smart-member-card {
+    min-height: 400px;
+    max-height: 500px;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+  }
+
+  .smart-member-card-container {
+    min-height: 400px;
+    max-height: 500px;
+    height: 100%;
+    width: 100%;
+  }
+
+  .smart-member-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Ensure cards maintain aspect ratio on all devices */
+  @media (max-width: 768px) {
+    .smart-member-card {
+      min-height: 350px;
+      max-height: 450px;
+    }
+
+    .smart-member-card-container {
+      min-height: 350px;
+      max-height: 450px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .smart-member-card {
+      min-height: 300px;
+      max-height: 400px;
+    }
+
+    .smart-member-card-container {
+      min-height: 300px;
+      max-height: 400px;
+    }
+  }
 }
 
 /* toast style */

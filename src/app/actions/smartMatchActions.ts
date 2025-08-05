@@ -66,7 +66,6 @@ export async function getSmartMatches(
     const limit = parseInt(pageSize);
     const skip = (page - 1) * limit;
 
-    // הגבלת שליפות לפי מספר
     const [interactions, likedUserIds, messagedUserIds] = await Promise.all([
       prisma.userInteraction.findMany({
         where: { userId },
@@ -99,7 +98,6 @@ export async function getSmartMatches(
 
     const uniqueUserIds = Array.from(new Set(interactedUserIds));
 
-    // שאילתת חברים
     const members = await prisma.member.findMany({
       where: {
         userId: { in: uniqueUserIds },
@@ -148,10 +146,23 @@ export async function getSmartMatches(
       [];
 
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: gptPrompt }],
-      });
+      const completion = await openai.chat.completions
+        .create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: gptPrompt }],
+        })
+        .catch((error) => {
+          console.error("OpenAI API Error in getSmartMatches:", error);
+          return {
+            choices: [
+              {
+                message: {
+                  content: "[]",
+                },
+              },
+            ],
+          };
+        });
 
       const raw = completion.choices[0].message.content || "[]";
       const firstBrace = raw.indexOf("[");
@@ -161,6 +172,7 @@ export async function getSmartMatches(
       gptMatches = JSON.parse(json);
     } catch (error) {
       console.error("❌ GPT דירוג נכשל:", error);
+      gptMatches = [];
     }
 
     const scoreMap = new Map<string, number>();
@@ -201,11 +213,15 @@ export async function prefetchSmartMatches(pageSize = "12") {
 export async function getUserLikes(userId: string) {
   const likes = await prisma.like.findMany({
     where: { sourceUserId: userId },
-    select: { targetUserId: true },
-    take: 50,
+    select: {
+      targetUserId: true,
+    },
+    take: 100,
   });
 
   const targetIds = likes.map((like) => like.targetUserId);
+
+  if (targetIds.length === 0) return [];
 
   const users = await prisma.member.findMany({
     where: {
@@ -215,7 +231,15 @@ export async function getUserLikes(userId: string) {
       id: true,
       dateOfBirth: true,
       city: true,
-      interests: true,
+      country: true,
+      gender: true,
+      description: true,
+      interests: {
+        select: {
+          name: true,
+          category: true,
+        },
+      },
     },
   });
 
@@ -228,14 +252,30 @@ export async function getUserMessages(userId: string) {
     select: {
       text: true,
       created: true,
+      recipientId: true,
     },
     orderBy: {
       created: "desc" as const,
     },
-    take: 20,
+    take: 50,
   });
 
-  return messages;
+  const recipientIds = messages
+    .map((m) => m.recipientId)
+    .filter((id): id is string => id !== null);
+  const recipients = await prisma.member.findMany({
+    where: { userId: { in: recipientIds } },
+    select: { userId: true, name: true, gender: true },
+  });
+
+  return messages.map((message) => ({
+    ...message,
+    recipientName:
+      recipients.find((r) => r.userId === message.recipientId)?.name || "משתמש",
+    recipientGender:
+      recipients.find((r) => r.userId === message.recipientId)?.gender ||
+      "לא צוין",
+  }));
 }
 
 export async function getUserInteractions(userId: string) {
@@ -245,18 +285,28 @@ export async function getUserInteractions(userId: string) {
       target: {
         select: {
           name: true,
+          gender: true,
+          city: true,
+          dateOfBirth: true,
         },
       },
     },
     orderBy: {
       timestamp: "desc",
     },
-    take: 30,
+    take: 100,
   });
 
   return interactions.map((i) => ({
     targetName: i.target?.name || "משתמש",
+    targetGender: i.target?.gender || "לא צוין",
+    targetCity: i.target?.city || "לא צוין",
+    targetAge: i.target?.dateOfBirth
+      ? new Date().getFullYear() - new Date(i.target.dateOfBirth).getFullYear()
+      : null,
     duration: i.duration || 0,
     action: i.action,
+    timestamp: i.timestamp,
+    weight: i.weight || 1.0,
   }));
 }

@@ -108,18 +108,20 @@ export default function SmartMemberCard({
   const renderCardContent = (imageUrl: string, isPriority: boolean = false) => (
     <Card
       isPressable
-      className="w-full h-full shadow-lg hover:shadow-xl transition-shadow"
+      className="w-full h-full smart-member-card shadow-lg hover:shadow-xl transition-shadow"
       onPress={handleProfileClick}
     >
-      <div className="relative aspect-square overflow-hidden rounded-t-lg">
-        <Image
-          isZoomed
-          alt={member.name}
-          src={transformImageUrl(imageUrl) || "/images/user.png"}
-          className="w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-105"
-          removeWrapper
-          loading={isPriority ? "eager" : "lazy"}
-        />
+      <div className="relative w-full h-full smart-member-card overflow-hidden rounded-t-lg">
+        <div className="absolute inset-0">
+          <Image
+            isZoomed
+            alt={member.name}
+            src={transformImageUrl(imageUrl) || "/images/user.png"}
+            className="smart-member-card-image transition-all duration-500 ease-in-out transform group-hover:scale-105"
+            removeWrapper
+            loading={isPriority ? "eager" : "lazy"}
+          />
+        </div>
 
         <div
           className="absolute top-3 right-3 z-10"
@@ -167,8 +169,8 @@ export default function SmartMemberCard({
   }
 
   return (
-    <div className="flex flex-col justify-between h-full min-h-[100%]">
-      <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl">
+    <div className="flex flex-col justify-between h-full smart-member-card-container">
+      <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl smart-member-card">
         <MemberImageCarousel images={photos} prioritizeFirstImage={true}>
           {(currentImage, isPriority) =>
             renderCardContent(currentImage.url, isPriority)
