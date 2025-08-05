@@ -8,7 +8,7 @@
     "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "prisma generate && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "push-to-neon": "DATABASE_URL='postgresql://neondb_owner:npg_jxJrT2o4yRml@ep-flat-firefly-a20pcr1d.eu-central-1.aws.neon.tech/neondb?sslmode=require' npx prisma db push",
     "seed-neon": "DATABASE_URL='postgresql://neondb_owner:npg_jxJrT2o4yRml@ep-flat-firefly-a20pcr1d.eu-central-1.aws.neon.tech/neondb?sslmode=require' RUN_SEED=true npx prisma db seed"
   },
