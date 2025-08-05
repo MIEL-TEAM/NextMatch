@@ -92,15 +92,12 @@ export default async function RootLayout({
       <head>
         <link
           rel="icon"
-          href="https://miel-love.com/images/icons/Logo.png"
+          href="/images/icons/Logo.png"
           sizes="16x16 32x32 48x48"
         />
-        <link rel="shortcut icon" href="https://miel-love.com/favicon.ico" />
-        <link
-          rel="apple-touch-icon"
-          href="https://miel-love.com/images/icons/apple-touch-icon.png"
-        />
-        <link rel="manifest" href="https://miel-love.com/manifest.json" />
+        <link rel="shortcut icon" href="/images/icons/Logo.png" />
+        <link rel="apple-touch-icon" href="/images/icons/Logo.png" />
+        <link rel="manifest" href="/manifest.json" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -108,6 +105,12 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Miel" />
+        <meta name="application-name" content="Miel" />
+        <meta name="theme-color" content="#F97316" />
+        <meta name="msapplication-TileColor" content="#F97316" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}

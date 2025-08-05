@@ -8,11 +8,29 @@
   "theme_color": "#F97316",
   "dir": "rtl",
   "lang": "he",
+  "scope": "/",
+  "orientation": "portrait",
+  "categories": ["dating", "social", "lifestyle"],
   "icons": [
     {
-      "src": "/images/icons/miel.png",
+      "src": "/images/icons/Logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/miel.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/social-share.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide"
     }
   ]
 }
