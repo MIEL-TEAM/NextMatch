@@ -235,7 +235,9 @@ export default function MemberCard({
 
   if (memberPhotos.length <= 1) {
     const defaultImage =
-      memberPhotos.length === 1 ? memberPhotos[0].url : "/images/user.png";
+      memberPhotos.length === 1
+        ? memberPhotos[0].url
+        : member.image || "/images/user.png";
     return renderCardContent(defaultImage, true);
   }
 
