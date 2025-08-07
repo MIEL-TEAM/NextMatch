@@ -40,13 +40,26 @@ export const useFilters = () => {
     startTransition(() => {
       const searchParams = new URLSearchParams();
 
-      if (gender && gender.length > 0)
-        searchParams.set("gender", gender.join(","));
-      if (ageRange) searchParams.set("ageRange", ageRange.toString());
-      if (orderBy) searchParams.set("orderBy", orderBy);
+      // Always set gender - if empty, use default
+      const genderParam =
+        gender && gender.length > 0 ? gender.join(",") : "male,female";
+      searchParams.set("gender", genderParam);
+
+      // Always set ageRange - if empty, use default
+      const ageRangeParam =
+        ageRange && ageRange.length === 2
+          ? `${ageRange[0]},${ageRange[1]}`
+          : "18,100";
+      searchParams.set("ageRange", ageRangeParam);
+
+      // Always set orderBy
+      searchParams.set("orderBy", orderBy || "updated");
+
+      // Always set pageSize and pageNumber
       if (pageSize) searchParams.set("pageSize", pageSize.toString());
       if (pageNumber) searchParams.set("pageNumber", pageNumber.toString());
 
+      // Always set withPhoto
       searchParams.set("withPhoto", withPhoto.toString());
 
       router.replace(`${pathname}?${searchParams}`);

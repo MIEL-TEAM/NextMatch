@@ -105,7 +105,6 @@ const nextConfig: NextConfig = {
     return config;
   },
   productionBrowserSourceMaps: false,
-  reactStrictMode: true,
   assetPrefix: undefined,
   poweredByHeader: false,
 };

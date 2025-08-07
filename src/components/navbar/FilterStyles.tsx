@@ -85,8 +85,8 @@ export default function FilterContent({
           size="sm"
           minValue={18}
           maxValue={100}
-          defaultValue={filters.ageRange}
-          onChangeEnd={(value) => {
+          value={filters.ageRange}
+          onChange={(value) => {
             const ageValues = Array.isArray(value) ? value : [value, value];
             selectAge(ageValues);
           }}

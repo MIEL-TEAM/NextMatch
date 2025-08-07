@@ -84,8 +84,8 @@ const MielFooter: FC = () => {
                 />
               </div>
               <p className="text-sm text-gray-400">
-                © 2024 <span className="text-amber-400 font-medium">Miel</span>,
-                כל הזכויות שמורות.
+                © 2024 <span className="text-amber-400 font-medium">Miel</span>
+                , כל הזכויות שמורות.
               </p>
             </div>
 

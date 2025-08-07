@@ -12,7 +12,6 @@ export type MielHomePageProps = {
   session: string;
 };
 
-// Dynamically import AnimatedBackground with no SSR
 const AnimatedBackground = dynamic(
   () => import("@/components/home/AnimatedBackground"),
   {
@@ -27,7 +26,6 @@ export default function MielHomePage({ session }: MielHomePageProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Small delay to ensure smooth initial render
     const timer = setTimeout(() => {
       setMounted(true);
     }, 100);
@@ -40,7 +38,7 @@ export default function MielHomePage({ session }: MielHomePageProps) {
       className="relative w-full overflow-x-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }} // Reduced from 0.6 to 0.4
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
       {mounted && <AnimatedBackground />}
 

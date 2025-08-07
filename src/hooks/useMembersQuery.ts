@@ -2,15 +2,26 @@ import { useQuery } from "@tanstack/react-query";
 import type { GetMemberParams } from "@/types";
 
 export const useMembersQuery = (params: URLSearchParams) => {
+  // Get all parameters from URL
+  const ageRange = params.get("ageRange");
+  const gender = params.get("gender");
+  const withPhoto = params.get("withPhoto");
+  const orderBy = params.get("orderBy");
+
   const queryObj: GetMemberParams = {
     filter: params.get("filter") || "all",
     ageMin: params.get("ageMin") || undefined,
     ageMax: params.get("ageMax") || undefined,
+    ageRange: ageRange || "18,100",
+    gender: gender || "male,female",
+    withPhoto: withPhoto || "false",
+    orderBy: orderBy || "updated",
     city: params.get("city") || undefined,
     interests: params.getAll("interests") || [],
     onlineOnly: params.get("onlineOnly") === "true" ? "true" : "false",
     sort: params.get("sort") || "latest",
     pageNumber: params.get("pageNumber") || params.get("page") || "1",
+    pageSize: params.get("pageSize") || "12",
   };
 
   const queryKey = ["members", queryObj];

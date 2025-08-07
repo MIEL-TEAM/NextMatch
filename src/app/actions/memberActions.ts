@@ -14,7 +14,7 @@ export async function getMembers({
   orderBy = "updated",
   pageNumber = "1",
   pageSize = "12",
-  withPhoto = "true",
+  withPhoto = "false",
   onlineOnly = "false",
 }: GetMemberParams): Promise<PaginatedResponse<Member>> {
   try {
@@ -81,9 +81,17 @@ export async function getMembers({
     };
 
     const [count, members] = await Promise.all([
-      prisma.member.count({ where: whereClause }),
+      prisma.member.count({
+        where: whereClause,
+      }),
       prisma.member.findMany({
         where: whereClause,
+        include: {
+          photos: {
+            where: { isApproved: true },
+            take: 1,
+          },
+        },
         orderBy: { [orderByField]: orderDirection },
         skip,
         take: limit,

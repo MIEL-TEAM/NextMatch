@@ -6,18 +6,25 @@ import type { GetMemberParams } from "@/types";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
+  // Get all search parameters with better handling
+  const ageRange = searchParams.get("ageRange");
+  const gender = searchParams.get("gender");
+  const withPhoto = searchParams.get("withPhoto");
+  const orderBy = searchParams.get("orderBy");
+
   const params: GetMemberParams = {
     filter: searchParams.get("filter") || "all",
     ageMin: searchParams.get("ageMin") || undefined,
     ageMax: searchParams.get("ageMax") || undefined,
-    ageRange: searchParams.get("ageRange") || undefined,
-    gender: searchParams.get("gender") || undefined,
+    ageRange: ageRange || "18,100",
+    gender: gender || "male,female",
     pageNumber:
-      searchParams.get("pageNumber") || searchParams.get("page") || undefined,
-    pageSize: searchParams.get("pageSize") || undefined,
+      searchParams.get("pageNumber") || searchParams.get("page") || "1",
+    pageSize: searchParams.get("pageSize") || "12",
+    orderBy: orderBy || "updated",
     sort: searchParams.get("sort") || undefined,
-    withPhoto: searchParams.get("withPhoto") || undefined,
-    onlineOnly: searchParams.get("onlineOnly") || undefined,
+    withPhoto: withPhoto || "false",
+    onlineOnly: searchParams.get("onlineOnly") || "false",
     city: searchParams.get("city") || undefined,
     interests: searchParams.getAll("interests"),
   };

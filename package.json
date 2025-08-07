@@ -9,8 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "vercel-build": "prisma generate && prisma db push --force-reset && next build",
-    "push-to-neon": "DATABASE_URL='postgresql://neondb_owner:npg_jxJrT2o4yRml@ep-flat-firefly-a20pcr1d.eu-central-1.aws.neon.tech/neondb?sslmode=require' npx prisma db push",
-    "seed-neon": "DATABASE_URL='postgresql://neondb_owner:npg_jxJrT2o4yRml@ep-flat-firefly-a20pcr1d.eu-central-1.aws.neon.tech/neondb?sslmode=require' RUN_SEED=true npx prisma db seed"
+    "push-to-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' npx prisma db push",
+    "seed-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' RUN_SEED=true npx prisma db seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
