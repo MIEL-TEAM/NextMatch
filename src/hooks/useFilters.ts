@@ -1,5 +1,4 @@
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Selection } from "@nextui-org/react";
 import { useState, useEffect, useTransition } from "react";
 import { FaMale, FaFemale } from "react-icons/fa";
@@ -9,6 +8,7 @@ import usePaginationStore from "./usePaginationStore";
 export const useFilters = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const currentSearchParams = useSearchParams();
   const [clientLoaded, setClientLoaded] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -38,7 +38,8 @@ export const useFilters = () => {
 
   useEffect(() => {
     startTransition(() => {
-      const searchParams = new URLSearchParams();
+      // Start from existing params to preserve location and other flags
+      const searchParams = new URLSearchParams(currentSearchParams.toString());
 
       // Always set gender - if empty, use default
       const genderParam =
@@ -62,7 +63,13 @@ export const useFilters = () => {
       // Always set withPhoto
       searchParams.set("withPhoto", withPhoto.toString());
 
-      router.replace(`${pathname}?${searchParams}`);
+      const newUrl = `${pathname}?${searchParams.toString()}`;
+      const currentUrl = `${pathname}?${currentSearchParams.toString()}`;
+
+      // Avoid redundant replace if nothing changed
+      if (newUrl !== currentUrl) {
+        router.replace(newUrl);
+      }
     });
   }, [
     ageRange,
@@ -70,6 +77,7 @@ export const useFilters = () => {
     orderBy,
     pathname,
     router,
+    currentSearchParams,
     pageNumber,
     pageSize,
     withPhoto,

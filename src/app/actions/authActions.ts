@@ -85,6 +85,9 @@ export async function registerUser(
       country,
       city,
       photos,
+      preferredGenders,
+      preferredAgeMin,
+      preferredAgeMax,
     } = validated.data;
     const hashedPassword = await bcrypt.hash(password, 10);
     const existingUser = await prisma.user.findUnique({
@@ -110,6 +113,10 @@ export async function registerUser(
         passwordHash: hashedPassword,
         profileComplete: true,
         image: photos[0].url, // Set first photo as main profile image
+        // Save user preferences
+        preferredGenders,
+        preferredAgeMin,
+        preferredAgeMax,
         member: {
           create: {
             name,

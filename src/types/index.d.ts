@@ -75,4 +75,10 @@ export type GetMemberParams = {
   onlineOnly?: string;
   city?: string;
   interests?: string[];
+  // Location parameters
+  userLat?: string;
+  userLon?: string;
+  distance?: string; // "5,50" = 5-50km range
+  sortByDistance?: string; // "true" | "false"
+  includeSelf?: string; // "true" | "false" — include current user's member in results
 };

@@ -57,6 +57,38 @@ export const profileSchema = z.object({
     ),
 });
 
+// Add preferences schema
+export const preferencesSchema = z
+  .object({
+    preferredGenders: z
+      .union([z.array(z.enum(["male", "female"])), z.string()])
+      .transform((val) => {
+        if (Array.isArray(val)) {
+          return val.join(",");
+        }
+        return val;
+      })
+      .pipe(
+        z.string().min(1, {
+          message: "בחר לפחות אפשרות אחת",
+        })
+      ),
+    preferredAgeMin: z
+      .number()
+      .min(18, { message: "גיל מינימלי הוא 18" })
+      .max(100, { message: "גיל מקסימלי הוא 100" })
+      .default(18),
+    preferredAgeMax: z
+      .number()
+      .min(18, { message: "גיל מינימלי הוא 18" })
+      .max(100, { message: "גיל מקסימלי הוא 100" })
+      .default(100),
+  })
+  .refine((data) => data.preferredAgeMax >= data.preferredAgeMin, {
+    message: "גיל מקסימלי חייב להיות גדול או שווה לגיל המינימלי",
+    path: ["preferredAgeMax"],
+  });
+
 // Add photo upload schema
 export const photoSchema = z.object({
   photos: z
@@ -73,8 +105,10 @@ export const photoSchema = z.object({
 
 export const combinedRegisterSchema = registerSchema
   .merge(profileSchema)
-  .merge(photoSchema);
+  .merge(photoSchema)
+  .and(preferencesSchema);
 
 export type ProfileSchema = z.infer<typeof profileSchema>;
+export type PreferencesSchema = z.infer<typeof preferencesSchema>;
 export type PhotoSchema = z.infer<typeof photoSchema>;
 export type RegisterSchema = z.infer<typeof combinedRegisterSchema>;

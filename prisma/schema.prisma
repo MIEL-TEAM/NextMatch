@@ -27,27 +27,33 @@ model Account {
 }
 
 model User {
-  id                   String        @id @default(cuid())
+  id                   String    @id @default(cuid())
   name                 String?
-  email                String?       @unique
+  email                String?   @unique
   emailVerified        DateTime?
   passwordHash         String?
   image                String?
-  profileComplete      Boolean       @default(false)
-  role                 Role          @default(MEMBER)
-  boostsAvailable      Int           @default(0)
-  isPremium            Boolean       @default(false)
+  profileComplete      Boolean   @default(false)
+  role                 Role      @default(MEMBER)
+  boostsAvailable      Int       @default(0)
+  isPremium            Boolean   @default(false)
   premiumUntil         DateTime?
-  boostsUsed           Int           @default(0)
-  canceledAt           DateTime?     @db.Timestamp(6)
+  boostsUsed           Int       @default(0)
+  canceledAt           DateTime? @db.Timestamp(6)
   stripeSubscriptionId String?
   stripeCustomerId     String?
-  member               Member?
-  Transaction          Transaction[]
-  accounts             Account[]
-  hasSeenMembersIntro  Boolean       @default(false)
-  viewedProfiles       ProfileView[] @relation("ViewerProfileViews")
-  profileViewers       ProfileView[] @relation("ViewedProfileViews")
+
+  // Dating Preferences
+  preferredGenders String? @default("male,female") // "male", "female", or "male,female"
+  preferredAgeMin  Int?    @default(18)
+  preferredAgeMax  Int?    @default(100)
+
+  member              Member?
+  Transaction         Transaction[]
+  accounts            Account[]
+  hasSeenMembersIntro Boolean       @default(false)
+  viewedProfiles      ProfileView[] @relation("ViewerProfileViews")
+  profileViewers      ProfileView[] @relation("ViewedProfileViews")
 }
 
 model Interest {
@@ -72,6 +78,14 @@ model Member {
   country            String
   image              String?
   boostedUntil       DateTime?
+  
+  // Location fields
+  latitude           Float?            // GPS coordinates
+  longitude          Float?
+  locationUpdatedAt  DateTime?         // When location was last updated
+  locationEnabled    Boolean           @default(false) // User opted in for location
+  maxDistance        Int?              @default(50)    // Max distance preference in KM
+  
   sourceLikes        Like[]            @relation("source")
   targetLikes        Like[]            @relation("target")
   user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)

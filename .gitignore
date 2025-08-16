@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+.jest-cache/
+*.lcov
 
 # next.js
 /.next/

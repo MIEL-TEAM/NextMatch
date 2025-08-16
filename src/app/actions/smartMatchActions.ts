@@ -5,6 +5,7 @@ import { getAuthUserId } from "./authActions";
 import { PaginatedResponse } from "@/types";
 import { Member } from "@prisma/client";
 import { OpenAI } from "openai";
+import { addYears } from "date-fns";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -98,9 +99,44 @@ export async function getSmartMatches(
 
     const uniqueUserIds = Array.from(new Set(interactedUserIds));
 
+    // Get user preferences for filtering
+    const userPreferences = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        preferredGenders: true,
+        preferredAgeMin: true,
+        preferredAgeMax: true,
+      },
+    });
+
+    // Build filter conditions based on user preferences
+    let genderFilter = {};
+    let ageFilter = {};
+
+    if (userPreferences?.preferredGenders) {
+      const preferredGenders = userPreferences.preferredGenders.split(",");
+      genderFilter = { gender: { in: preferredGenders } };
+    }
+
+    if (userPreferences?.preferredAgeMin && userPreferences?.preferredAgeMax) {
+      const currentDate = new Date();
+      const minDob = addYears(
+        currentDate,
+        -userPreferences.preferredAgeMax - 1
+      );
+      const maxDob = addYears(currentDate, -userPreferences.preferredAgeMin);
+
+      ageFilter = {
+        dateOfBirth: {
+          gte: minDob,
+          lte: maxDob,
+        },
+      };
+    }
+
     const members = await prisma.member.findMany({
       where: {
-        userId: { in: uniqueUserIds },
+        AND: [{ userId: { in: uniqueUserIds } }, genderFilter, ageFilter],
       },
       include: {
         interests: true,

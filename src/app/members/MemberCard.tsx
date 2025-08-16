@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
+import { formatDistance } from "@/lib/locationUtils";
 import { Card, CardFooter } from "@nextui-org/react";
 import { Member } from "@prisma/client";
 import Link from "next/link";
@@ -13,7 +14,7 @@ import MemberImageCarousel from "@/components/MemberImageCarousel";
 import { Play, VolumeX, Volume2 } from "lucide-react";
 
 interface MemberCardProps {
-  member: Member;
+  member: Member & { distance?: number };
   likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
   memberVideos?: Array<{ url: string; id: string }>;
@@ -175,6 +176,11 @@ export default function MemberCard({
                 <span className="text-xs text-white/80 font-medium">
                   {calculateAge(member.dateOfBirth)}
                 </span>
+                {member.distance !== undefined && (
+                  <span className="text-xs text-white/90 font-medium bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/10">
+                    📍 {formatDistance(member.distance)}
+                  </span>
+                )}
               </div>
               <span className="font-semibold text-sm text-white">
                 {member.name}
