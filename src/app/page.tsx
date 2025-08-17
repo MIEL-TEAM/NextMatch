@@ -5,6 +5,7 @@ import { Session } from "next-auth";
 
 export default async function HomePage() {
   const session: Session | null = await auth();
+  console.log("session", session);
 
   return (
     <HomePageWrapper>
