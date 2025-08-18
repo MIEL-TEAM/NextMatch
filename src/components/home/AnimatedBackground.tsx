@@ -42,7 +42,7 @@ export default function AnimatedBackground() {
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50" />
+      {/* הסרתי את הרקע הלבן - רק glassmorphism! */}
 
       {!isMobile && (
         <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-amber-200 to-orange-200 mix-blend-overlay" />

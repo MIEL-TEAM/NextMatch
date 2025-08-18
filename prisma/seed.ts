@@ -4,12 +4,35 @@ import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+  "תל אביב": { lat: 32.0853, lng: 34.7818 },
+  חיפה: { lat: 32.794, lng: 34.9896 },
+  ירושלים: { lat: 31.7683, lng: 35.2137 },
+  אילת: { lat: 29.5577, lng: 34.9519 },
+  "רמת גן": { lat: 32.0684, lng: 34.8248 },
+  נתניה: { lat: 32.3328, lng: 34.86 },
+  חולון: { lat: 32.0188, lng: 34.7795 },
+  אשדוד: { lat: 31.8044, lng: 34.6503 },
+};
+
 async function seedMembers() {
   await Promise.all(
     membersData.map(async (member) => {
+      const cityLocation = cityCoordinates[member.city];
+
       await prisma.user.upsert({
         where: { email: member.email },
-        update: {},
+        update: {
+          member: {
+            update: {
+              latitude: cityLocation?.lat || null,
+              longitude: cityLocation?.lng || null,
+              locationEnabled: cityLocation ? true : false,
+              locationUpdatedAt: cityLocation ? new Date() : null,
+              maxDistance: 50,
+            },
+          },
+        },
         create: {
           email: member.email,
           emailVerified: new Date(),
@@ -28,6 +51,12 @@ async function seedMembers() {
               description: member.description,
               country: member.country,
               image: member.image,
+
+              latitude: cityLocation?.lat || null,
+              longitude: cityLocation?.lng || null,
+              locationEnabled: cityLocation ? true : false,
+              locationUpdatedAt: cityLocation ? new Date() : null,
+              maxDistance: 50,
               photos: {
                 create: {
                   url: member.image,

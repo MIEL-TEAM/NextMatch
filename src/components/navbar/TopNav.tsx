@@ -1,19 +1,6 @@
-import {
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  Link,
-  Button,
-} from "@nextui-org/react";
-import Image from "next/image";
-
-import NavLink from "./NavLink";
 import { auth } from "@/auth";
-import UserMenu from "./UserMenu";
 import { getUserInfoForNav } from "@/app/actions/userActions";
-import FiltersWrapper from "./FiltersWrapper";
-import MobileMenu from "./MobileMenu";
-import ProfileViewsButton from "../profile-view/ProfileViewsButton";
+import TopNavClient from "./TopNavClient";
 
 export default async function TopNav() {
   const session = await auth();
@@ -35,83 +22,11 @@ export default async function TopNav() {
   const links = session?.user?.role === "ADMIN" ? adminLinks : memberLinks;
 
   return (
-    <>
-      <Navbar
-        maxWidth="xl"
-        className="bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27]"
-        classNames={{
-          item: [
-            "text-xl",
-            "text-white",
-            "uppercase",
-            "data-[active=true]:text-yellow-200",
-          ],
-        }}
-      >
-        <NavbarBrand
-          as={Link}
-          href="/home"
-          className="flex items-center space-x-3"
-        >
-          <div className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white/60 backdrop-blur-md shadow-xl border border-white/50 transition-all duration-[1500ms] ease-out hover:shadow-2xl">
-            <Image
-              src="/images/icons/Logo.png"
-              width={35}
-              height={35}
-              alt="logo png"
-              className="object-contain animate-bounce-slow transition-transform duration-[2000ms] ease-in-out hover:scale-105 w-auto h-auto"
-            />
-          </div>
-
-          <div className="ml-4 font-bold text-3xl flex">
-            <span className="text-white font-reddit font-normal drop-shadow-md tracking-wide m-4">
-              Miel
-            </span>
-          </div>
-        </NavbarBrand>
-
-        <NavbarContent
-          className="hidden sm:flex gap-4 font-rubik"
-          justify="center"
-        >
-          {session &&
-            links.map((item) => (
-              <NavLink key={item.href} href={item.href} label={item.label} />
-            ))}
-        </NavbarContent>
-
-        <NavbarContent justify="end" className="gap-3 items-center">
-          {userInfo ? (
-            <>
-              <ProfileViewsButton />
-              <UserMenu userInfo={userInfo} userId={userId || undefined} />
-            </>
-          ) : (
-            <div className="hidden sm:flex gap-2">
-              <Button
-                as={Link}
-                href="/login"
-                variant="bordered"
-                className="text-white"
-              >
-                כניסה
-              </Button>
-              <Button
-                as={Link}
-                href="/register"
-                variant="bordered"
-                className="text-white"
-              >
-                הרשמה
-              </Button>
-            </div>
-          )}
-        </NavbarContent>
-      </Navbar>
-
-      <FiltersWrapper />
-
-      {session && <MobileMenu userId={userId} />}
-    </>
+    <TopNavClient
+      session={session}
+      userInfo={userInfo}
+      userId={userId}
+      links={links}
+    />
   );
 }

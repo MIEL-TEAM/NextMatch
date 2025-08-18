@@ -15,6 +15,16 @@ export default function MielLayout({ children }: MielLayoutProps) {
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // בדיקה אם זה עמוד auth או דף הבית
+  const isAuthPage =
+    pathname.includes("/login") ||
+    pathname.includes("/register") ||
+    pathname.includes("/forgot-password") ||
+    pathname.includes("/reset-password") ||
+    pathname.includes("/verify-email");
+
+  const isHomePage = pathname === "/" || pathname === "/home";
+
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = 0;
@@ -24,7 +34,11 @@ export default function MielLayout({ children }: MielLayoutProps) {
   return (
     <div
       ref={containerRef}
-      className="bg-gradient-to-b from-amber-50 to-orange-50 fixed inset-0 overflow-auto"
+      className={`fixed inset-0 overflow-auto ${
+        isHomePage
+          ? "bg-transparent"
+          : "bg-gradient-to-b from-amber-50 to-orange-50"
+      }`}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -41,7 +55,11 @@ export default function MielLayout({ children }: MielLayoutProps) {
         />
       </div>
 
-      <main className="relative z-10 pt-14">{children}</main>
+      <main
+        className={`relative z-10 ${isAuthPage || isHomePage ? "" : "pt-14"}`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

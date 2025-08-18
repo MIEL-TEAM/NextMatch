@@ -143,7 +143,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
 
       <div className="relative z-10 h-full flex flex-col justify-between p-4 md:p-8">
         <div
-          className="pt-16 md:pt-20 text-center md:text-right"
+          className="text-center md:text-right pt-8 md:pt-12"
           style={{ direction: "rtl" }}
         >
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 drop-shadow-lg relative inline-block">

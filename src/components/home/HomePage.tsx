@@ -16,9 +16,7 @@ const AnimatedBackground = dynamic(
   () => import("@/components/home/AnimatedBackground"),
   {
     ssr: false,
-    loading: () => (
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50" />
-    ),
+    loading: () => <div className="fixed inset-0 z-0 bg-transparent" />,
   }
 );
 
