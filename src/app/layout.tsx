@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import MielLayout from "./mielLayout";
 import { Toaster } from "sonner";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
+import MobileBlocker from "@/components/MobileBlocker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://miel-love.com"),
@@ -119,8 +120,11 @@ export default async function RootLayout({
       <body>
         <ReactQueryProvider>
           <Providers userId={userId} profileComplete={profileComplete}>
-            <TopNav />
-            <MielLayout>{children}</MielLayout>
+            <MobileBlocker />
+            <div className="hidden lg:block">
+              <TopNav />
+              <MielLayout>{children}</MielLayout>
+            </div>
           </Providers>
         </ReactQueryProvider>
 
