@@ -47,3 +47,4 @@ videos/*
 !videos/*.ts
 public/_next-video
 .env*.local
+.env.local
