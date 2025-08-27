@@ -27,7 +27,7 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
       opacity: 1,
       transition: {
         pathLength: {
-          duration: 1.2,
+          duration: 1.2 * 1.5,
           ease: "easeInOut",
         },
         opacity: {

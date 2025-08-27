@@ -15,7 +15,7 @@ export function calculateDistance(
   lat2: number,
   lon2: number
 ): number {
-  const R = 6371; // Earth's radius in kilometers
+  const R = 6371;
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
 
@@ -29,7 +29,7 @@ export function calculateDistance(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
 
-  return Math.round(distance * 10) / 10; // Round to 1 decimal place
+  return Math.round(distance * 10) / 10;
 }
 
 function toRadians(degrees: number): number {
@@ -40,11 +40,11 @@ export function getCurrentLocation(
   options: PositionOptions = {
     enableHighAccuracy: true,
     timeout: 10000,
-    maximumAge: 300000, // 5 minutes
+    maximumAge: 300000,
   }
 ): Promise<LocationPermissionResult> {
   return new Promise((resolve) => {
-    if (!navigator.geolocation) {
+    if (typeof window === "undefined" || !navigator?.geolocation) {
       resolve({
         granted: false,
         error: "הדפדפן לא תומך במיקום GPS",
@@ -88,7 +88,7 @@ export function getCurrentLocation(
 }
 
 export async function checkLocationPermission(): Promise<boolean> {
-  if (!navigator.permissions) {
+  if (typeof window === "undefined" || !navigator?.permissions) {
     return false;
   }
 

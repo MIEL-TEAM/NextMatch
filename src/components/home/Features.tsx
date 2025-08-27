@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Image from "next/image";
 
@@ -12,19 +12,23 @@ export default function FeaturesSection() {
       title: "חיבורים אמיתיים",
       description:
         "האלגוריתם שלנו מתמקד בהתאמות אמיתיות ומשמעותיות, לא רק במראה חיצוני.",
+      image: "/images/couple.jpg",
     },
     {
       title: "פרטיות מתקדמת",
       description:
         "הפרטיות שלך חשובה לנו. עם טכנולוגיות אבטחה מתקדמות, אתה בשליטה.",
+      image: "/images/features-images/one.jpg",
     },
     {
       title: "התאמות חכמות",
       description: "פיתחנו אלגוריתם שמבין לעומק מה חשוב בקשרים יציבים ועמוקים.",
+      image: "/images/features-images/two.jpg",
     },
     {
       title: "חוויה מדהימה",
       description: "ממשק יפה ונעים. נטול רעש, מלא רגש. כאן בשבילך ובשביל אהבה.",
+      image: "/images/features-images/three.jpg",
     },
   ];
 
@@ -61,14 +65,25 @@ export default function FeaturesSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-xl border border-amber-100">
-          <Image
-            src="/images/couple.jpg"
-            alt="Connection example"
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeFeature}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={features[activeFeature].image}
+                alt={features[activeFeature].title}
+                fill
+                className="object-cover object-center"
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </motion.div>
+          </AnimatePresence>
 
           <div className="absolute inset-0 z-10 pointer-events-none">
             <div

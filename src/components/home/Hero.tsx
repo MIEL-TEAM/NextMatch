@@ -34,9 +34,6 @@ const ActionButton = memo(
         onClick={onClick}
       >
         {children}
-        {primary && (
-          <div className="hidden md:block absolute top-0 -left-20 w-10 h-full bg-white/20 transform rotate-12 -skew-x-12" />
-        )}
       </motion.button>
     );
 
@@ -99,7 +96,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
     if (!isClient || !mounted) return;
     const interval = setInterval(() => {
       setCurrentTagline((prev) => (prev + 1) % taglines.length);
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [isClient, taglines.length, mounted]);
 
@@ -147,18 +144,17 @@ export default function HeroSection({ session }: HeroSectionProps) {
           style={{ direction: "rtl" }}
         >
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 drop-shadow-lg relative inline-block">
-            הדייט האחרון שלך.
-            <div className="h-1.5 md:h-2 bg-orange-500 md:bg-amber-400 mt-1 w-full md:max-w-xs md:ml-auto absolute bottom-0 left-0 right-0" />
+            הדייט שישנה את חייך.
+            <div className="h-1.5 md:h-2 bg-orange-500 md:bg-amber-400 mt-1 w-full md:max-w-xs md:ml-auto" />
+            {isClient && mounted && (
+              <div className="mt-4 flex justify-center">
+                <TaglineDisplay
+                  taglines={taglines}
+                  currentTagline={currentTagline}
+                />
+              </div>
+            )}
           </h1>
-        </div>
-
-        <div className="flex justify-center items-center my-auto">
-          {isClient && mounted && (
-            <TaglineDisplay
-              taglines={taglines}
-              currentTagline={currentTagline}
-            />
-          )}
         </div>
 
         <div className="w-full flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
@@ -169,7 +165,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                 style={{ direction: "rtl" }}
               >
                 <ActionButton href="/register" primary>
-                  התחל עכשיו
+                  הירשם בחינם
                 </ActionButton>
                 <ActionButton onClick={scrollToFeatures}>
                   למה Miel?
@@ -199,9 +195,9 @@ export default function HeroSection({ session }: HeroSectionProps) {
               </div>
               <div className="p-4">
                 <p className="text-white text-sm md:text-base">
-                  ב-Miel אנחנו מאמינים שכל אחד שמחפש אהבה צריך למצוא אותה.
+                  ב-Miel אנחנu מאמינים שכל אחד שמחפש אהבה צריך למצוא אותה.
                   האלגוריתם החכם שלנו מחבר בין אנשים שבאמת מתאימים, כדי שתוכלו
-                  לצאות לדייטים משמעותיים - ולא להישאר באפליקציה.
+                  לצאת לדייטים משמעותיים - ולא להישאר באפליקציה.
                 </p>
               </div>
             </div>

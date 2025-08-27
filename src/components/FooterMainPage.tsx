@@ -1,116 +1,145 @@
 "use client";
 
-import { FC } from "react";
 import Link from "next/link";
+import React from "react";
 import Image from "next/image";
+import { BsFacebook, BsInstagram, BsTiktok } from "react-icons/bs";
 
-const MielFooter: FC = () => {
+const MielFooter = () => {
   return (
-    <footer
-      className="bg-black/90 text-white py-12 mt-32 relative overflow-hidden"
-      dir="rtl"
-    >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400/80 via-amber-500/80 to-amber-600/80"></div>
-
-      <div className="container mx-auto px-4">
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-sm border border-amber-500/20">
-            <Image
-              src="/images/icons/Logo.png"
-              alt="Miel Heart"
-              width={32}
-              height={32}
-              className="object-contain"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              loading="lazy"
-            />
-            <span className="text-2xl font-bold text-white">
-              <span className="text-amber-400">M</span>iel
-            </span>
-          </div>
-        </div>
-
-        <div className="mb-12">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-amber-400">
-              רווקים ורווקות, הקשיבו: מיאל היא אפליקציית ההיכרויות היחידה שבאמת
-              דואגת לכם
-            </h2>
-            <p className="text-gray-300 mb-6 leading-relaxed">
-              עם מיאל, המרחב הדיגיטלי להיכרויות נראה שונה לגמרי. בניגוד
-              לאפליקציות אחרות שגורמות להתמכרות, אנחנו מציעים חוויה שמתמקדת
-              באיכות במקום בכמות. בין אם אתם מחפשים קשר רציני, חברויות חדשות, או
-              סתם להכיר אנשים מעניינים, מיאל כאן כדי לעזור לכם למצוא חיבורים
-              אמיתיים.
-            </p>
-            <p className="text-gray-300 leading-relaxed">
-              מיאל היא לא עוד אפליקציית היכרויות. המטרה שלנו היא לעזור לכם למצוא
-              התאמות איכותיות שבאמת מתאימות לכם, ולא לגרום לכם להעביר שעות
-              בסוויפים אינסופיים. בין אם אתם מהקהילה הגאה, מחפשים קשר רציני, או
-              רוצים להרחיב את המעגל החברתי, מיאל כאן בשבילכם.
-            </p>
-          </div>
-        </div>
-
-        {/* New colorful divider */}
-        <div className="relative py-8 mb-8">
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 flex items-center">
-            <div className="relative">
-              <Image
-                src="/images/icons/Logo.png"
-                alt="Miel Heart"
-                width={48}
-                height={48}
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                loading="lazy"
-              />
-            </div>
-          </div>
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></div>
-        </div>
-
-        <div className="border-t border-gray-800 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0 flex items-center">
-              <div className="relative w-5 h-5 mr-2">
+    <>
+      <footer
+        className="bg-white text-gray-900 border-t border-gray-200"
+        style={{ fontFamily: "Wix Madefor Text, sans-serif" }}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-16" dir="rtl">
+          <div className="grid grid-cols-4 gap-8 mb-12">
+            <div className="col-span-1 max-w-xs">
+              <div className="flex items-center gap-2 mb-6">
                 <Image
                   src="/images/icons/Logo.png"
-                  alt="Miel Heart"
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  loading="lazy"
+                  alt="Miel Logo"
+                  width={28}
+                  height={28}
                 />
+                <span className="text-2xl font-bold">Miel</span>
               </div>
-              <p className="text-sm text-gray-400">
-                © 2024 <span className="text-amber-400 font-medium">Miel</span>
-                , כל הזכויות שמורות.
+              <p className="text-gray-600 leading-relaxed text-lg mb-8">
+                מיאל היא אפליקציית ההכרויות שמביאה חיבורים אמיתיים לעולם
+                הדיגיטלי. אצלנו לא תמצאו סווייפים אינסופיים אלא היכרות אמיתית,
+                קשרים איכותיים וחוויה שמכבדת אתכם ואת הזמן שלכם.
               </p>
+              <div className="flex gap-4">
+                <Link
+                  href="https://www.instagram.com/miel.dating?igsh=a2xybDhqbHd3a3h5&utm_source=qr"
+                  className="text-gray-400 hover:text-amber-500 transition-colors"
+                >
+                  <BsInstagram size={24} color="#000" />
+                </Link>
+                <Link
+                  href="https://www.instagram.com/miel.dating?igsh=a2xybDhqbHd3a3h5&utm_source=qr"
+                  className="text-gray-400 hover:text-amber-500 transition-colors"
+                >
+                  <BsFacebook size={24} color="#000" />
+                </Link>
+                <Link
+                  href="https://www.instagram.com/miel.dating?igsh=a2xybDhqbHd3a3h5&utm_source=qr"
+                  className="text-gray-400 hover:text-amber-500 transition-colors"
+                >
+                  <BsTiktok size={24} color="#000" />
+                </Link>
+              </div>
             </div>
 
-            <nav>
-              <ul className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2">
+            <div className="text-left">
+              <h3 className="text-gray-900 font-semibold mb-6 text-base tracking-wide uppercase">
+                האפליקציה
+              </h3>
+              <ul className="space-y-4 text-base">
+                <li>
+                  <Link
+                    href="#"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    איך זה עובד
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    סיפורי הצלחה
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/premium"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    מסלולי פרימיום
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    הורדה לאייפון/אנדרואיד
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="text-left">
+              <h3 className="text-gray-900 font-semibold mb-6 text-base tracking-wide uppercase">
+                משאבים
+              </h3>
+              <ul className="space-y-4 text-base">
                 <li>
                   <Link
                     href="/faq"
-                    className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
                   >
-                    שאלות נפוצות
+                    שאלות ותשובות
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/safety-tips"
-                    className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                    href="#"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
                   >
-                    טיפים לבטיחות
+                    בלוג וטיפים לדייטים
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    תמיכה טכנית
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    צור קשר
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="text-left">
+              <h3 className="text-gray-900 font-semibold mb-6 text-base tracking-wide uppercase">
+                מידע משפטי
+              </h3>
+              <ul className="space-y-4 text-base">
                 <li>
                   <Link
                     href="/terms"
-                    className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     תנאי שימוש
                   </Link>
@@ -118,25 +147,32 @@ const MielFooter: FC = () => {
                 <li>
                   <Link
                     href="/privacy"
-                    className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     מדיניות פרטיות
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/contact"
-                    className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                    href="/safety-tips"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
                   >
-                    צור קשר
+                    אבטחת מידע
                   </Link>
                 </li>
               </ul>
-            </nav>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6">
+            <p className="text-sm text-gray-500">
+              © 2025 <span className="text-amber-600 font-semibold">Miel</span>{" "}
+              Inc. כל הזכויות שמורות.
+            </p>
           </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 };
 

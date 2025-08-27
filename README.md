@@ -45,9 +45,9 @@ NEXTAUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# GitHub OAuth
-GITHUB_CLIENT_ID="your-github-client-id"
-GITHUB_CLIENT_SECRET="your-github-client-secret"
+# Facebook OAuth
+FACEBOOK_CLIENT_ID="your-facebook-client-id"
+FACEBOOK_CLIENT_SECRET="your-facebook-client-secret"
 
 # AWS S3 (for video uploads)
 AWS_ACCESS_KEY_ID="your-aws-access-key"
@@ -118,7 +118,7 @@ src/
 
 ## 🎯 Key Features
 
-- **Authentication**: Google, GitHub, Email/Password
+- **Authentication**: Google, Facebook, Email/Password
 - **Profile Management**: Photos, bio, interests
 - **Matching System**: Smart matching algorithm
 - **Real-time Chat**: Pusher integration
@@ -294,4 +294,5 @@ Remember to:
 - ✅ Communicate with the team
 
 **Welcome to the Miel team! 🍯**
+
 # Force deployment update
