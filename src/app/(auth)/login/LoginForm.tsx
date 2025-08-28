@@ -4,7 +4,6 @@ import { signInUser } from "@/app/actions/authActions";
 import { loginSchema, LoginSchema } from "@/lib/schemas/loginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Card, CardBody, CardHeader, Input } from "@nextui-org/react";
-import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
@@ -16,7 +15,6 @@ import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -30,8 +28,6 @@ export default function LoginForm() {
   async function onSubmit(data: LoginSchema) {
     const result = await signInUser(data);
     if (result.status === "success") {
-      router.push("/members");
-      router.refresh();
     } else {
       toast.error(result.error as string, {
         style: {
@@ -55,7 +51,6 @@ export default function LoginForm() {
           />
         </div>
 
-        {/* Right Column - Form */}
         <div className="lg:w-1/2 p-6 sm:p-8">
           <CardHeader className="flex flex-col items-center justify-center text-[#E37B27]">
             <div className="flex flex-col gap-2 items-center text-center">

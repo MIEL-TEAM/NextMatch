@@ -39,7 +39,15 @@ const MembersLayout: React.FC<Props> = ({
 
   const [activeFilter, setActiveFilter] = useState(initialFilter);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showIntro, setShowIntro] = useState(!hasSeenIntro);
+  const [showIntro, setShowIntro] = useState(() => {
+    // Check localStorage first to prevent flash
+    if (typeof window !== "undefined") {
+      const hasSeenLocal =
+        localStorage.getItem("hasSeenMembersIntro") === "true";
+      return !hasSeenIntro && !hasSeenLocal;
+    }
+    return !hasSeenIntro;
+  });
   const [showMotivation, setShowMotivation] = useState(false);
   const [likes, setLikes] = useState<string[]>(likeIds);
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
@@ -62,9 +70,14 @@ const MembersLayout: React.FC<Props> = ({
   }, [membersWithImages.length]);
 
   const handleDismissIntro = async () => {
-    await fetch("/api/user/intro", { method: "POST" });
+    // Update localStorage immediately to prevent re-showing
     localStorage.setItem("hasSeenMembersIntro", "true");
     setShowIntro(false);
+
+    // Update database in background without waiting
+    fetch("/api/user/intro", { method: "POST" }).catch((error) => {
+      console.error("Failed to update intro status:", error);
+    });
   };
 
   const handleLike = (memberId: string) => {

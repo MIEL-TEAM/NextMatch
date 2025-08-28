@@ -1,56 +1,69 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useMembersQuery } from "@/hooks/useMembersQuery";
 import MembersLayout from "@/components/memberStyles/MembersLayout";
 import EmptyState from "@/components/EmptyState";
 import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useCallback, useRef } from "react";
 import LocationPermissionModal from "@/components/LocationPermissionModal";
+import HeartLoading from "@/components/HeartLoading";
 import {
   checkLocationPermission,
   getCurrentLocation,
 } from "@/lib/locationUtils";
 
+type LoadingState = "initial" | "location" | "data" | "ready";
+
 export default function MembersClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const query = useMembersQuery(searchParams);
+  const pathname = usePathname();
   const [likeIds, setLikeIds] = useState<string[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [locationProcessed, setLocationProcessed] = useState(false);
-  const [isProcessingLocation, setIsProcessingLocation] = useState(false);
+  const [loadingState, setLoadingState] = useState<LoadingState>("initial");
+  const [loadingMessage, setLoadingMessage] = useState("מאתר מיקום...");
+  const locationProcessedRef = useRef(false);
+  const mountedRef = useRef(true);
 
+  const userLat = searchParams.get("userLat");
+  const userLon = searchParams.get("userLon");
+  const hasLocationParams = Boolean(userLat && userLon);
+
+  // Enable query when ready
+  const queryEnabled = loadingState === "data" || hasLocationParams;
+  const query = useMembersQuery(searchParams, { enabled: queryEnabled });
+
+  // Fetch likes immediately
   useEffect(() => {
-    fetchCurrentUserLikeIds().then(setLikeIds);
+    fetchCurrentUserLikeIds()
+      .then((ids) => {
+        if (mountedRef.current) {
+          setLikeIds(ids);
+        }
+      })
+      .catch(console.warn);
+
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
+  // Handle location setup
   useEffect(() => {
-    console.log("🚀 MembersClient useEffect triggered", {
-      locationProcessed,
-      userLat: searchParams.get("userLat"),
-      userLon: searchParams.get("userLon"),
-    });
+    if (locationProcessedRef.current) return;
 
-    if (locationProcessed) {
-      return;
-    }
+    const handleLocationSetup = async () => {
+      if (hasLocationParams) {
+        setLoadingState("data");
+        setLoadingMessage("טוען פרופילים...");
+        locationProcessedRef.current = true;
+        return;
+      }
 
-    const userLat = searchParams.get("userLat");
-    const userLon = searchParams.get("userLon");
-    const hasLocationParams = Boolean(userLat && userLon);
+      setLoadingState("location");
+      setLoadingMessage("מאתר מיקום...");
 
-    if (hasLocationParams) {
-      setLocationProcessed(true);
-      return;
-    }
-
-    setLocationProcessed(true);
-    setIsProcessingLocation(true);
-
-    // Auto-get location with smooth loading
-    (async () => {
       try {
         const hasPermission = await checkLocationPermission();
 
@@ -58,80 +71,86 @@ export default function MembersClient() {
           const location = await getCurrentLocation();
 
           if (location.granted && location.coordinates) {
+            setLoadingMessage("מאתרים חברים בקרבתך...");
+
             const params = new URLSearchParams(searchParams.toString());
             params.set("userLat", location.coordinates.latitude.toString());
             params.set("userLon", location.coordinates.longitude.toString());
             params.set("sortByDistance", "true");
-            const newUrl = `/members?${params.toString()}`;
 
-            // Add a small delay for smooth transition
-            setTimeout(() => {
-              router.replace(newUrl);
-              setIsProcessingLocation(false);
-            }, 800);
+            router.replace(`${pathname}?${params.toString()}`, {
+              scroll: false,
+            });
           } else {
-            setIsProcessingLocation(false);
-            setShowLocationModal(true);
+            setLoadingState("data");
+            setLoadingMessage("טוען פרופילים...");
           }
         } else {
-          setIsProcessingLocation(false);
           setShowLocationModal(true);
+          setLoadingState("data");
+          setLoadingMessage("טוען פרופילים...");
         }
       } catch (error) {
-        console.log("💥 Location error:", error);
-        setIsProcessingLocation(false);
-        setShowLocationModal(true);
+        console.warn("Location error:", error);
+        setLoadingState("data");
+        setLoadingMessage("טוען פרופילים...");
       }
-    })();
-  }, [searchParams, router, locationProcessed]);
 
-  // Show heart loading during location processing
-  if (isProcessingLocation) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="flex flex-col items-center">
-          <div className="w-24 h-24 mb-4">
-            <svg viewBox="0 0 32 32" className="w-full h-full">
-              <motion.path
-                d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
-                C30,20.335,16,28.261,16,28.261z"
-                stroke="#FF8A00"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="rgba(255, 138, 0, 0.3)"
-                initial={{ pathLength: 0, opacity: 0.2 }}
-                animate={{
-                  pathLength: 1,
-                  opacity: 1,
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  pathLength: { duration: 1.5, ease: "easeInOut" },
-                  opacity: { duration: 0.8 },
-                  scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                }}
-              />
-            </svg>
-          </div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-lg text-orange-600 font-medium text-center"
-          >
-            מאתרים חברים בקרבתך...
-          </motion.p>
-        </div>
-      </div>
-    );
+      locationProcessedRef.current = true;
+    };
+
+    handleLocationSetup();
+  }, [hasLocationParams, searchParams, router, pathname]);
+
+  const handleLocationGranted = useCallback(
+    (coordinates: { latitude: number; longitude: number }) => {
+      setLoadingMessage("מאתרים חברים בקרבתך...");
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("userLat", coordinates.latitude.toString());
+      params.set("userLon", coordinates.longitude.toString());
+      params.set("sortByDistance", "true");
+
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      setShowLocationModal(false);
+    },
+    [searchParams, router, pathname]
+  );
+
+  // Update state when location params arrive
+  useEffect(() => {
+    if (hasLocationParams && loadingState === "location") {
+      setLoadingState("data");
+      setLoadingMessage("טוען פרופילים...");
+    }
+  }, [hasLocationParams, loadingState]);
+
+  // Update loading message based on query state
+  useEffect(() => {
+    if (query.isLoading && loadingState === "data") {
+      setLoadingMessage("טוען פרופילים...");
+    }
+  }, [query.isLoading, loadingState]);
+
+  if (loadingState === "initial") {
+    return null;
   }
 
-  if (query.isLoading && !query.isFetchedAfterMount) return null;
+  if (loadingState === "location") {
+    return <HeartLoading message="מאתרים חברים בקרבתך" />;
+  }
 
-  if (query.isError) return <EmptyState message="שגיאה בטעינה" />;
+  if (query.isLoading && !query.data) {
+    return <HeartLoading message="טוען פרופילים" />;
+  }
 
-  if (!query.data) return <EmptyState message="שגיאה בטעינה" />;
+  if (query.isError) {
+    return <EmptyState message="שגיאה בטעינה" />;
+  }
+
+  if (!query.data) {
+    return <HeartLoading message="טוען פרופילים..." />;
+  }
 
   const { data, totalCount } = query.data;
   const isOnlineFilter =
@@ -161,26 +180,8 @@ export default function MembersClient() {
 
       <LocationPermissionModal
         isOpen={showLocationModal}
-        onClose={() => {
-          setShowLocationModal(false);
-        }}
-        onLocationGranted={(coordinates) => {
-          console.log("✅ Location granted from modal:", coordinates);
-          setShowLocationModal(false);
-          setIsProcessingLocation(true);
-
-          // Add location params and redirect with smooth transition
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("userLat", coordinates.latitude.toString());
-          params.set("userLon", coordinates.longitude.toString());
-          params.set("sortByDistance", "true");
-          const newUrl = `/members?${params.toString()}`;
-
-          setTimeout(() => {
-            router.replace(newUrl);
-            setIsProcessingLocation(false);
-          }, 800);
-        }}
+        onClose={() => setShowLocationModal(false)}
+        onLocationGranted={handleLocationGranted}
       />
     </>
   );

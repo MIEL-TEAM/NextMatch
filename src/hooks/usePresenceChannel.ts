@@ -1,10 +1,9 @@
-import { useCallback, useRef, useEffect, useMemo } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import usePresenceStore from "./usePresenceStore";
 import { Channel, Members } from "pusher-js";
 import { pusherClient } from "@/lib/pusher-client";
 import { updateLastActive } from "@/app/actions/memberActions";
 
-// Throttle function to limit frequency of operations
 function throttle<T extends (...args: any[]) => any>(
   func: T,
   delay: number
@@ -50,8 +49,8 @@ export const usePresenceChannel = (
     [remove]
   );
 
-  const throttledUpdateLastActive = useMemo(() => {
-    return throttle(async () => {
+  const throttledUpdateLastActive = useCallback(() => {
+    const throttledFn = throttle(async () => {
       try {
         await updateLastActive();
       } catch (error) {
@@ -60,6 +59,7 @@ export const usePresenceChannel = (
         }
       }
     }, 30000);
+    return throttledFn();
   }, []);
 
   useEffect(() => {

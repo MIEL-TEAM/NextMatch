@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
 import { Channel } from "pusher-js";
 import { useRef, useEffect, useCallback, useMemo } from "react";
 import useMessageStore from "./useMessageStore";
@@ -30,8 +29,6 @@ export const useNotificationChannel = (
   profileComplete: boolean
 ) => {
   const channelRef = useRef<Channel | null>(null);
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const addMessage = useMessageStore((state) => state.add);
   const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
   const pendingUnreadUpdatesRef = useRef(0);
@@ -45,9 +42,14 @@ export const useNotificationChannel = (
 
   const handleNewMessage = useCallback(
     (message: MessageDto) => {
+      const currentPath = window.location.pathname;
+      const currentSearch = window.location.search;
+      const searchParams = new URLSearchParams(currentSearch);
+
       const isInMessages =
-        pathname === "/messages" && searchParams.get("container") !== "outbox";
-      const isInChat = pathname === `/members/${message.senderId}/chat`;
+        currentPath === "/messages" &&
+        searchParams.get("container") !== "outbox";
+      const isInChat = currentPath === `/members/${message.senderId}/chat`;
 
       if (isInMessages) {
         addMessage(message);
@@ -59,7 +61,7 @@ export const useNotificationChannel = (
         debouncedUpdateUnreadCount(pendingUnreadUpdatesRef.current);
       }
     },
-    [addMessage, pathname, searchParams, debouncedUpdateUnreadCount]
+    [addMessage, debouncedUpdateUnreadCount]
   );
 
   const handleNewLike = useCallback(
@@ -138,9 +140,7 @@ export function useNotificationSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playSound = useCallback(() => {
-    audioRef.current?.play().catch(() => {
-      // Silent catch for browsers that block autoplay
-    });
+    audioRef.current?.play().catch(() => {});
   }, []);
 
   return { audioRef, playSound };

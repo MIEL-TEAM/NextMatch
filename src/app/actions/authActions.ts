@@ -20,25 +20,8 @@ export async function signInUser(
   data: LoginSchema
 ): Promise<ActionResult<string>> {
   try {
-    const existingUser = await getUserByEmail(data.email);
-
-    if (!existingUser || !existingUser.email)
-      return { status: "error", error: "פרטי התחברות שגויים" };
-
-    if (!existingUser.emailVerified) {
-      const token = await generateToken(
-        existingUser.email,
-        TokenType.VERIFICATION
-      );
-
-      await sendVerificationEmail(token.email, token.token);
-
-      return {
-        status: "error",
-        error: "אנא אמת את כתובת האימייל שלך לפני ההתחברות",
-      };
-    }
-
+    // Let NextAuth handle the user validation in auth.config.ts
+    // This eliminates the duplicate getUserByEmail call
     const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
@@ -51,7 +34,11 @@ export async function signInUser(
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { status: "error", error: "פרטי התחברות שגויים" };
+          // Extract the actual error message from auth.config.ts
+          return {
+            status: "error",
+            error: error.cause?.err?.message || "פרטי התחברות שגויים",
+          };
         default:
           return { status: "error", error: "הייתה תקלה, ננסה שוב?" };
       }

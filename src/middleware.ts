@@ -1,3 +1,4 @@
+// Fixed middleware.ts - Optimized for fewer redirects
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
 import { authRoutes, publicRoutes } from "./routes";
@@ -12,6 +13,7 @@ export default auth((req) => {
   const isAdmin = req.auth?.user.role === "ADMIN";
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
 
+  // Early returns for performance
   if (isPublic || isAdmin) {
     return NextResponse.next();
   }
@@ -20,17 +22,25 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 
+  // Handle auth routes
   if (isAuthRoutes) {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/members", nextUrl));
+      // ✅ Redirect to members with preserved search params if any
+      const membersUrl = new URL("/members", nextUrl);
+      if (nextUrl.searchParams.toString()) {
+        membersUrl.search = nextUrl.searchParams.toString();
+      }
+      return NextResponse.redirect(membersUrl);
     }
     return NextResponse.next();
   }
 
-  if (!isPublic && !isLoggedIn) {
+  // Handle unauthenticated users
+  if (!isLoggedIn) {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
+  // Handle incomplete profiles
   if (
     isLoggedIn &&
     !isProfileComplete &&

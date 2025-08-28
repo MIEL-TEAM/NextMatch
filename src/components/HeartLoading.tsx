@@ -2,7 +2,11 @@
 
 import { motion } from "framer-motion";
 
-export default function HeartLoading() {
+interface HeartLoadingProps {
+  message: string;
+}
+
+export default function HeartLoading({ message }: HeartLoadingProps) {
   const heartDrawingVariants = {
     hidden: {
       pathLength: 0,
@@ -57,7 +61,7 @@ export default function HeartLoading() {
           transition={{ delay: 1, duration: 1 }}
           className="mt-4 text-lg text-gray-700"
         >
-          בטעינה...
+          {message}
         </motion.p>
       </motion.div>
     </div>

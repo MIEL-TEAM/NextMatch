@@ -15,6 +15,11 @@ export const {
       if (user) {
         token.profileComplete = user.profileComplete;
         token.role = user.role;
+        console.log("🔑 JWT CALLBACK - USER LOGIN:", {
+          userId: user.id,
+          email: user.email,
+          profileComplete: user.profileComplete,
+        });
       }
 
       return token;
@@ -24,12 +29,29 @@ export const {
         session.user.id = token.sub;
         session.user.profileComplete = token.profileComplete as boolean;
         session.user.role = token.role as Role;
+
+        const now = Date.now();
+        const globalAny = global as any;
+        if (
+          !globalAny.lastSessionLog ||
+          now - globalAny.lastSessionLog > 5000
+        ) {
+          console.log("🎫 SESSION CALLBACK:", {
+            userId: session.user.id,
+            email: session.user.email,
+            profileComplete: session.user.profileComplete,
+          });
+          globalAny.lastSessionLog = now;
+        }
       }
       return session;
     },
   },
   adapter: PrismaAdapter(prisma) as any,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60,
+  },
   ...authConfig,
   pages: {
     signIn: "/login",

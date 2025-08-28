@@ -42,12 +42,21 @@ export default {
 
           const user = await getUserByEmail(email);
 
+          // Comprehensive validation in one place
+          if (!user || !user.email) {
+            throw new Error("פרטי התחברות שגויים");
+          }
+
+          if (!user.emailVerified) {
+            throw new Error("אנא אמת את כתובת האימייל שלך לפני ההתחברות");
+          }
+
           if (
-            !user ||
             !user.passwordHash ||
             !(await compare(password, user.passwordHash))
-          )
-            return null;
+          ) {
+            throw new Error("פרטי התחברות שגויים");
+          }
 
           return user;
         }
