@@ -391,7 +391,7 @@ export default function PremiumPage() {
   }, []);
 
   if (initialLoading || premiumFeaturesLoading) {
-    return <HeartLoading />;
+    return <HeartLoading message="טוען מידע premium..." />;
   }
 
   const isCanceled = !!premiumInfo?.canceledAt;

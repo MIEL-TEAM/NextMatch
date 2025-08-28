@@ -4,7 +4,7 @@ import HeartLoading from "@/components/HeartLoading";
 export default function Loading() {
   return (
     <div className="flex justify-center items-center vertical-center">
-      <HeartLoading />
+      <HeartLoading message="טוען פרופיל..." />
     </div>
   );
 }

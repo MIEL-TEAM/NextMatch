@@ -1,5 +1,5 @@
 import HeartLoading from "@/components/HeartLoading";
 
 export default function Loading() {
-  return <HeartLoading />;
+  return <HeartLoading message="טוען..." />;
 }

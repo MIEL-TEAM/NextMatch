@@ -22,7 +22,7 @@ export default function MembersClient() {
   const [likeIds, setLikeIds] = useState<string[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [loadingState, setLoadingState] = useState<LoadingState>("initial");
-  const [loadingMessage, setLoadingMessage] = useState("מאתר מיקום...");
+
   const locationProcessedRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -56,13 +56,12 @@ export default function MembersClient() {
     const handleLocationSetup = async () => {
       if (hasLocationParams) {
         setLoadingState("data");
-        setLoadingMessage("טוען פרופילים...");
+
         locationProcessedRef.current = true;
         return;
       }
 
       setLoadingState("location");
-      setLoadingMessage("מאתר מיקום...");
 
       try {
         const hasPermission = await checkLocationPermission();
@@ -71,8 +70,6 @@ export default function MembersClient() {
           const location = await getCurrentLocation();
 
           if (location.granted && location.coordinates) {
-            setLoadingMessage("מאתרים חברים בקרבתך...");
-
             const params = new URLSearchParams(searchParams.toString());
             params.set("userLat", location.coordinates.latitude.toString());
             params.set("userLon", location.coordinates.longitude.toString());
@@ -83,17 +80,14 @@ export default function MembersClient() {
             });
           } else {
             setLoadingState("data");
-            setLoadingMessage("טוען פרופילים...");
           }
         } else {
           setShowLocationModal(true);
           setLoadingState("data");
-          setLoadingMessage("טוען פרופילים...");
         }
       } catch (error) {
         console.warn("Location error:", error);
         setLoadingState("data");
-        setLoadingMessage("טוען פרופילים...");
       }
 
       locationProcessedRef.current = true;
@@ -104,8 +98,6 @@ export default function MembersClient() {
 
   const handleLocationGranted = useCallback(
     (coordinates: { latitude: number; longitude: number }) => {
-      setLoadingMessage("מאתרים חברים בקרבתך...");
-
       const params = new URLSearchParams(searchParams.toString());
       params.set("userLat", coordinates.latitude.toString());
       params.set("userLon", coordinates.longitude.toString());
@@ -121,14 +113,12 @@ export default function MembersClient() {
   useEffect(() => {
     if (hasLocationParams && loadingState === "location") {
       setLoadingState("data");
-      setLoadingMessage("טוען פרופילים...");
     }
   }, [hasLocationParams, loadingState]);
 
   // Update loading message based on query state
   useEffect(() => {
     if (query.isLoading && loadingState === "data") {
-      setLoadingMessage("טוען פרופילים...");
     }
   }, [query.isLoading, loadingState]);
 

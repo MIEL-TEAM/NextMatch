@@ -195,7 +195,7 @@ export default function ListsTab({
       {currentStatus === "loading" ? (
         <div className="flex flex-col items-center justify-center vertical-center py-10">
           <div className="w-32 h-32 mb-2">
-            <HeartLoading />
+            <HeartLoading message="טוען..." />
           </div>
         </div>
       ) : currentStatus === "error" ? (

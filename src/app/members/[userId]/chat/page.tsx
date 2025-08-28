@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import HeartLoading from "@/components/HeartLoading";
 
 const MessageList = dynamic(() => import("./MessageList"), {
-  loading: () => <HeartLoading />,
+  loading: () => <HeartLoading message="טוען הודעות..." />,
 });
 
 type UserParamsProps = {
