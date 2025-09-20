@@ -76,14 +76,14 @@ export const useNotificationChannel = (
     if (!channelRef.current) {
       channelRef.current = pusherClient.subscribe(`private-${userId}`);
       channelRef.current.bind("message:new", handleNewMessage);
-      channelRef.current.bind("like:new", handleNewLike);
+      // channelRef.current.bind("like:new", handleNewLike); // מועבר למאזין החגיגה
     }
 
     return () => {
       if (channelRef.current && channelRef.current.subscribed) {
         channelRef.current.unsubscribe();
         channelRef.current.unbind("message:new", handleNewMessage);
-        channelRef.current.unbind("like:new", handleNewLike);
+        // channelRef.current.unbind("like:new", handleNewLike); // מועבר למאזין החגיגה
         channelRef.current = null;
       }
     };

@@ -44,11 +44,68 @@ export async function toggleLikeMember(
         console.error("Failed to track like interaction:", e)
       );
 
-      await pusherServer.trigger(`private-${targetUserId}`, "like:new", {
-        name: like.sourceMember.name,
-        image: like.sourceMember.image,
-        userId: like.sourceMember.userId,
+      // בדיקה אם זה לייק הדדי
+      const mutualLike = await prisma.like.findUnique({
+        where: {
+          sourceUserId_targetUserId: {
+            sourceUserId: targetUserId,
+            targetUserId: userId,
+          },
+        },
       });
+
+      if (mutualLike) {
+        // קבלת מגדר המשתמש הנוכחי ומגדר המשתמש המתאים
+        const [currentUser, targetUser] = await Promise.all([
+          prisma.member.findUnique({
+            where: { userId },
+            select: { gender: true },
+          }),
+          prisma.member.findUnique({
+            where: { userId: targetUserId },
+            select: { gender: true },
+          }),
+        ]);
+
+        // קבלת שמות המשתמשים
+        const targetMember = await prisma.member.findUnique({
+          where: { userId: targetUserId },
+          select: { name: true, image: true },
+        });
+
+        // 🎉 התאמה הדדית! שלח אירוע מיוחד לשני המשתמשים
+        await Promise.all([
+          // למשתמש הראשון - שם המשתמש השני
+          pusherServer.trigger(`private-${userId}`, "mutual-match", {
+            matchedUser: {
+              name: targetMember?.name || "משתמש",
+              image: targetMember?.image,
+              userId: targetUserId,
+            },
+            currentUserGender: currentUser?.gender || "female", // ברירת מחדל נקבה
+            type: "mutual-like",
+            timestamp: new Date().toISOString(),
+          }),
+          // למשתמש השני - שם המשתמש הראשון
+          pusherServer.trigger(`private-${targetUserId}`, "mutual-match", {
+            matchedUser: {
+              name: like.sourceMember.name,
+              image: like.sourceMember.image,
+              userId: userId,
+            },
+            currentUserGender: targetUser?.gender || "female", // ברירת מחדל נקבה
+            type: "mutual-like",
+            timestamp: new Date().toISOString(),
+          }),
+        ]);
+      } else {
+        // לייק רגיל
+        await pusherServer.trigger(`private-${targetUserId}`, "like:new", {
+          name: like.sourceMember.name,
+          image: like.sourceMember.image,
+          userId: like.sourceMember.userId,
+        });
+      }
     }
 
     return { success: true };
