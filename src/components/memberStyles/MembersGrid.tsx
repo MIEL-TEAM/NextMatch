@@ -17,7 +17,7 @@ interface Props {
   membersData: MemberWithMedia[];
   likeIds: string[];
   totalCount: number;
-  onLike: (memberId: string) => void;
+  onLike: (memberId: string, isLiked: boolean) => void;
 }
 
 const MembersGrid: React.FC<Props> = ({

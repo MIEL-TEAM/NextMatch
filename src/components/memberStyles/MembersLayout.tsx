@@ -24,6 +24,7 @@ interface Props {
   isOnlineFilter: boolean;
   noResults: boolean;
   hasSeenIntro: boolean;
+  onLikeUpdate?: (memberId: string, isLiked: boolean) => void;
 }
 
 const MembersLayout: React.FC<Props> = ({
@@ -33,11 +34,20 @@ const MembersLayout: React.FC<Props> = ({
   isOnlineFilter,
   noResults,
   hasSeenIntro,
+  onLikeUpdate,
 }) => {
   const searchParams = useSearchParams();
   const initialFilter = searchParams.get("filter") || "all";
 
   const [activeFilter, setActiveFilter] = useState(initialFilter);
+
+  // Sync activeFilter with URL changes
+  useEffect(() => {
+    const currentFilter = searchParams.get("filter") || "all";
+    if (currentFilter !== activeFilter) {
+      setActiveFilter(currentFilter);
+    }
+  }, [searchParams, activeFilter]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showIntro, setShowIntro] = useState(() => {
     // Check localStorage first to prevent flash
@@ -80,13 +90,17 @@ const MembersLayout: React.FC<Props> = ({
     });
   };
 
-  const handleLike = (memberId: string) => {
-    if (!likes.includes(memberId)) {
+  const handleLike = (memberId: string, isLiked: boolean) => {
+    if (isLiked && !likes.includes(memberId)) {
       setLikes((prev) => [...prev, memberId]);
-
       setShowMotivation(true);
       setTimeout(() => setShowMotivation(false), 3500);
+    } else if (!isLiked && likes.includes(memberId)) {
+      setLikes((prev) => prev.filter((id) => id !== memberId));
     }
+
+    // Notify parent component
+    onLikeUpdate?.(memberId, isLiked);
   };
 
   return (

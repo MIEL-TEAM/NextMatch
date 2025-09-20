@@ -51,9 +51,10 @@ model User {
   member              Member?
   Transaction         Transaction[]
   accounts            Account[]
-  hasSeenMembersIntro Boolean       @default(false)
-  viewedProfiles      ProfileView[] @relation("ViewerProfileViews")
-  profileViewers      ProfileView[] @relation("ViewedProfileViews")
+  hasSeenMembersIntro Boolean           @default(false)
+  viewedProfiles      ProfileView[]     @relation("ViewerProfileViews")
+  profileViewers      ProfileView[]     @relation("ViewedProfileViews")
+  SmartMatchCache     SmartMatchCache[]
 }
 
 model Interest {
@@ -66,26 +67,26 @@ model Interest {
 }
 
 model Member {
-  id                 String            @id @default(cuid())
-  userId             String            @unique
-  name               String
-  dateOfBirth        DateTime
-  gender             String
-  created            DateTime          @default(now())
-  updated            DateTime          @default(now())
-  description        String
-  city               String
-  country            String
-  image              String?
-  boostedUntil       DateTime?
-  
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  name         String
+  dateOfBirth  DateTime
+  gender       String
+  created      DateTime  @default(now())
+  updated      DateTime  @default(now())
+  description  String
+  city         String
+  country      String
+  image        String?
+  boostedUntil DateTime?
+
   // Location fields
-  latitude           Float?            // GPS coordinates
-  longitude          Float?
-  locationUpdatedAt  DateTime?         // When location was last updated
-  locationEnabled    Boolean           @default(false) // User opted in for location
-  maxDistance        Int?              @default(50)    // Max distance preference in KM
-  
+  latitude          Float? // GPS coordinates
+  longitude         Float?
+  locationUpdatedAt DateTime? // When location was last updated
+  locationEnabled   Boolean   @default(false) // User opted in for location
+  maxDistance       Int?      @default(50) // Max distance preference in KM
+
   sourceLikes        Like[]            @relation("source")
   targetLikes        Like[]            @relation("target")
   user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -105,6 +106,7 @@ model Member {
 model UserProfileAnalysis {
   userId    String   @id
   content   String
+  insights  String?  @db.Text
   updatedAt DateTime @updatedAt
 }
 
@@ -217,6 +219,19 @@ model ProfileView {
 enum TokenType {
   VERIFICATION
   PASSWORD_RESET
+}
+
+model SmartMatchCache {
+  id        String   @id @default(cuid())
+  userId    String
+  matchData String   @db.Text // JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("smart_match_cache")
 }
 
 enum Role {

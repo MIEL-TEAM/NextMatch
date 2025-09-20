@@ -25,6 +25,52 @@ export const useFilters = () => {
 
   const { ageRange, gender, orderBy, withPhoto } = filters;
 
+  // Sync store with URL parameters on mount and URL changes
+  useEffect(() => {
+    if (!clientLoaded) return;
+
+    const urlOrderBy = currentSearchParams.get("orderBy");
+    const urlGender = currentSearchParams.get("gender");
+    const urlAgeRange = currentSearchParams.get("ageRange");
+    const urlWithPhoto = currentSearchParams.get("withPhoto");
+
+    // Update store if URL has different values
+    if (urlOrderBy && urlOrderBy !== orderBy) {
+      setFilters("orderBy", urlOrderBy);
+    }
+
+    if (urlGender) {
+      const genderArray = urlGender.split(",");
+      if (
+        JSON.stringify(genderArray.sort()) !== JSON.stringify(gender.sort())
+      ) {
+        setFilters("gender", genderArray);
+      }
+    }
+
+    if (urlAgeRange) {
+      const [min, max] = urlAgeRange.split(",").map(Number);
+      if (min && max && (ageRange[0] !== min || ageRange[1] !== max)) {
+        setFilters("ageRange", [min, max]);
+      }
+    }
+
+    if (urlWithPhoto !== null) {
+      const withPhotoValue = urlWithPhoto === "true";
+      if (withPhotoValue !== withPhoto) {
+        setFilters("withPhoto", withPhotoValue);
+      }
+    }
+  }, [
+    clientLoaded,
+    currentSearchParams,
+    orderBy,
+    gender,
+    ageRange,
+    withPhoto,
+    setFilters,
+  ]);
+
   useEffect(() => {
     if (
       gender ||
@@ -41,34 +87,49 @@ export const useFilters = () => {
       // Start from existing params to preserve location and other flags
       const searchParams = new URLSearchParams(currentSearchParams.toString());
 
-      // Always set gender - if empty, use default
+      // Only update parameters that are not already set in URL or are different from store
+      const currentGender = searchParams.get("gender");
+      const currentAgeRange = searchParams.get("ageRange");
+      const currentOrderBy = searchParams.get("orderBy");
+      const currentWithPhoto = searchParams.get("withPhoto");
+
+      // Update gender only if not set in URL or different from store
       const genderParam =
         gender && gender.length > 0 ? gender.join(",") : "male,female";
-      searchParams.set("gender", genderParam);
+      if (!currentGender || currentGender !== genderParam) {
+        searchParams.set("gender", genderParam);
+      }
 
-      // Always set ageRange - if empty, use default
+      // Update ageRange only if not set in URL or different from store
       const ageRangeParam =
         ageRange && ageRange.length === 2
           ? `${ageRange[0]},${ageRange[1]}`
           : "18,100";
-      searchParams.set("ageRange", ageRangeParam);
+      if (!currentAgeRange || currentAgeRange !== ageRangeParam) {
+        searchParams.set("ageRange", ageRangeParam);
+      }
 
-      // Always set orderBy
-      searchParams.set("orderBy", orderBy || "updated");
+      // Don't override orderBy if it's already set in URL (let FilterButtons control it)
+      if (!currentOrderBy) {
+        searchParams.set("orderBy", orderBy || "updated");
+      }
+
+      // Update withPhoto only if not set in URL or different from store
+      const withPhotoParam = withPhoto.toString();
+      if (!currentWithPhoto || currentWithPhoto !== withPhotoParam) {
+        searchParams.set("withPhoto", withPhotoParam);
+      }
 
       // Always set pageSize and pageNumber
       if (pageSize) searchParams.set("pageSize", pageSize.toString());
       if (pageNumber) searchParams.set("pageNumber", pageNumber.toString());
-
-      // Always set withPhoto
-      searchParams.set("withPhoto", withPhoto.toString());
 
       const newUrl = `${pathname}?${searchParams.toString()}`;
       const currentUrl = `${pathname}?${currentSearchParams.toString()}`;
 
       // Avoid redundant replace if nothing changed
       if (newUrl !== currentUrl) {
-        router.replace(newUrl);
+        router.replace(newUrl, { scroll: false });
       }
     });
   }, [
@@ -85,7 +146,8 @@ export const useFilters = () => {
 
   const orderByList = [
     { label: "פעילות אחרונה", value: "updated" },
-    { label: "משתמשים חדשים ביותר", value: "created" },
+    { label: "משתמשים חדשים ביותר", value: "newest" },
+    { label: "לפי מרחק", value: "distance" },
   ];
   const gendersList = [
     { value: "male", icon: FaMale },

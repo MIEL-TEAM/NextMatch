@@ -100,7 +100,6 @@ jest.mock("@nextui-org/react", () => {
     ...originalModule,
     Button: ({ children, onPress, isLoading, ...props }) => {
       const handleClick = (e) => {
-        console.log("Button clicked, onPress:", onPress);
         if (onPress) {
           onPress(e);
         }

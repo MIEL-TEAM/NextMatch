@@ -5,6 +5,7 @@ import { useMembersQuery } from "@/hooks/useMembersQuery";
 import MembersLayout from "@/components/memberStyles/MembersLayout";
 import EmptyState from "@/components/EmptyState";
 import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
+import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
 import { useEffect, useState, useCallback, useRef } from "react";
 import LocationPermissionModal from "@/components/LocationPermissionModal";
 import HeartLoading from "@/components/HeartLoading";
@@ -28,6 +29,7 @@ export default function MembersClient() {
 
   const userLat = searchParams.get("userLat");
   const userLon = searchParams.get("userLon");
+  const forceLocationPrompt = searchParams.get("requestLocation") === "true";
   const hasLocationParams = Boolean(userLat && userLon);
 
   // Enable query when ready
@@ -56,7 +58,6 @@ export default function MembersClient() {
     const handleLocationSetup = async () => {
       if (hasLocationParams) {
         setLoadingState("data");
-
         locationProcessedRef.current = true;
         return;
       }
@@ -64,6 +65,29 @@ export default function MembersClient() {
       setLoadingState("location");
 
       try {
+        // First check if user has location in database
+        const userLocationStatus = await getCurrentUserLocationStatus();
+
+        // If force location prompt is requested, always show modal
+        if (forceLocationPrompt) {
+          setShowLocationModal(true);
+          setLoadingState("data");
+          locationProcessedRef.current = true;
+          return;
+        }
+
+        // If user has no location data OR location is disabled, show modal
+        if (
+          !userLocationStatus.hasLocation ||
+          !userLocationStatus.locationEnabled
+        ) {
+          setShowLocationModal(true);
+          setLoadingState("data");
+          locationProcessedRef.current = true;
+          return;
+        }
+
+        // If user has database location, check browser permission for current location
         const hasPermission = await checkLocationPermission();
 
         if (hasPermission) {
@@ -79,14 +103,54 @@ export default function MembersClient() {
               scroll: false,
             });
           } else {
-            setLoadingState("data");
+            // Browser location failed, use database location
+            if (userLocationStatus.coordinates) {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set(
+                "userLat",
+                userLocationStatus.coordinates.latitude.toString()
+              );
+              params.set(
+                "userLon",
+                userLocationStatus.coordinates.longitude.toString()
+              );
+              params.set("sortByDistance", "true");
+
+              router.replace(`${pathname}?${params.toString()}`, {
+                scroll: false,
+              });
+            } else {
+              setLoadingState("data");
+            }
           }
         } else {
-          setShowLocationModal(true);
-          setLoadingState("data");
+          // No browser permission, but user has database location - use it
+          if (userLocationStatus.coordinates) {
+            console.log("🎯 Using stored location (no browser permission)");
+            const params = new URLSearchParams(searchParams.toString());
+            params.set(
+              "userLat",
+              userLocationStatus.coordinates.latitude.toString()
+            );
+            params.set(
+              "userLon",
+              userLocationStatus.coordinates.longitude.toString()
+            );
+            params.set("sortByDistance", "true");
+
+            router.replace(`${pathname}?${params.toString()}`, {
+              scroll: false,
+            });
+          } else {
+            // Show modal to get fresh location
+            setShowLocationModal(true);
+            setLoadingState("data");
+          }
         }
       } catch (error) {
         console.warn("Location error:", error);
+        console.log("🎯 Showing modal: Error occurred");
+        setShowLocationModal(true);
         setLoadingState("data");
       }
 
@@ -94,7 +158,7 @@ export default function MembersClient() {
     };
 
     handleLocationSetup();
-  }, [hasLocationParams, searchParams, router, pathname]);
+  }, [hasLocationParams, forceLocationPrompt, searchParams, router, pathname]);
 
   const handleLocationGranted = useCallback(
     (coordinates: { latitude: number; longitude: number }) => {
@@ -102,6 +166,7 @@ export default function MembersClient() {
       params.set("userLat", coordinates.latitude.toString());
       params.set("userLon", coordinates.longitude.toString());
       params.set("sortByDistance", "true");
+      params.delete("requestLocation");
 
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       setShowLocationModal(false);
@@ -170,7 +235,17 @@ export default function MembersClient() {
 
       <LocationPermissionModal
         isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
+        onClose={() => {
+          setShowLocationModal(false);
+          // Clean up the force location parameter when modal is closed
+          if (forceLocationPrompt) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("requestLocation");
+            router.replace(`${pathname}?${params.toString()}`, {
+              scroll: false,
+            });
+          }
+        }}
         onLocationGranted={handleLocationGranted}
       />
     </>

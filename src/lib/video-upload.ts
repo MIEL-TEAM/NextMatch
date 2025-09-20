@@ -55,12 +55,6 @@ export async function uploadVideoToS3(
   const fileName = `videos/${userId}-${Date.now()}.${fileExtension}`;
 
   try {
-    console.log("Uploading to S3:", {
-      filename: fileName,
-      fileType,
-      fileSize: file.size,
-    });
-
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);

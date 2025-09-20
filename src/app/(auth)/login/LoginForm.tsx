@@ -10,11 +10,13 @@ import { GiPadlock } from "react-icons/gi";
 import { FaHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import SocialLogin from "./SocialLogin";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -28,6 +30,7 @@ export default function LoginForm() {
   async function onSubmit(data: LoginSchema) {
     const result = await signInUser(data);
     if (result.status === "success") {
+      router.push("/members");
     } else {
       toast.error(result.error as string, {
         style: {

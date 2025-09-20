@@ -30,18 +30,41 @@ export default function ProfileHeader({
   async function toggleLike() {
     setLoading(true);
     try {
-      await toggleLikeMember(member.userId, hasLiked);
-      setHasLiked(!hasLiked);
-      onLikeToggle?.(member.userId, hasLiked);
-      toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
+      const result = await toggleLikeMember(member.userId, hasLiked);
+
+      if (result.success) {
+        setHasLiked(!hasLiked);
+        onLikeToggle?.(member.userId, hasLiked);
+        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
+          style: {
+            ...getToastStyle(),
+            textAlign: "center",
+          },
+        });
+      } else if (result.alreadyLiked) {
+        toast.error(`כבר עשית לייק ל${member.name}`, {
+          style: {
+            ...getToastStyle(),
+            textAlign: "center",
+          },
+        });
+      } else {
+        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
+          style: {
+            ...getToastStyle(),
+            textAlign: "center",
+          },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      setHasLiked(likeIds.includes(member.userId));
+      toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
         style: {
           ...getToastStyle(),
           textAlign: "center",
         },
       });
-    } catch (error) {
-      console.log(error);
-      setHasLiked(likeIds.includes(member.userId));
     } finally {
       setLoading(false);
     }

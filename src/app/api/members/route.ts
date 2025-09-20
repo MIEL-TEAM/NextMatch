@@ -35,24 +35,7 @@ export async function GET(req: Request) {
     includeSelf: searchParams.get("includeSelf") || undefined,
   };
 
-  console.log("🗺️ API Members request with location params:", {
-    userLat: params.userLat,
-    userLon: params.userLon,
-    sortByDistance: params.sortByDistance,
-    distance: params.distance,
-  });
-
   const { items: members, totalCount } = await getMembers(params);
-
-  console.log("📊 API returning:", {
-    totalMembers: members.length,
-    hasLocation: params.userLat && params.userLon,
-    firstMemberDistance: members[0]?.distance,
-    allDistances: members.map((m) => ({
-      name: (m as any).name,
-      distance: (m as any).distance,
-    })),
-  });
 
   const memberIds = members.map((m) => m.userId);
   const photos = await getMembersWithPhotos(memberIds);
@@ -61,7 +44,7 @@ export async function GET(req: Request) {
   const data = members.map((member) => ({
     member: {
       ...member,
-      distance: (member as any).distance, // Preserve distance from memberActions
+      distance: (member as any).distance,
     },
     photos: photos[member.userId] || [],
     videos: videos[member.userId] || [],

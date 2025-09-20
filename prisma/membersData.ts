@@ -1,5 +1,19 @@
 export const membersData = [
   {
+    email: "fasika@test.com",
+    username: "fasika",
+    gender: "female",
+    dateOfBirth: "1998-04-09",
+    name: "פסיקה",
+    created: "2025-01-15",
+    lastActive: "2025-01-15",
+    description:
+      "סטודנטית למשפטים עם תשוקה לצדק ולעולם המשפט. אני חיה בין ספרי החוקים לאודיטוריום, אבל מחפשת מישהו לחלוק איתו רגעים פשוטים.",
+    city: "מעלה אדומים",
+    country: "ישראל",
+    image: "/images/f11.jpg",
+  },
+  {
     email: "lisa@test.com",
     username: "lisa",
     gender: "female",

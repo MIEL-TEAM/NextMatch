@@ -86,12 +86,18 @@ const nextConfig: NextConfig = {
         hostname: "profile-videos-miel.s3.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "platform-lookaside.fbsbx.com",
+        pathname: "/**",
+      },
     ],
     domains: [
       "res.cloudinary.com",
       "lh3.googleusercontent.com",
       "avatars.githubusercontent.com",
       "profile-videos-miel.s3.amazonaws.com",
+      "platform-lookaside.fbsbx.com",
     ],
   },
   webpack: (config) => {

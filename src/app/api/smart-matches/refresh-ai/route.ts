@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/app/actions/authActions";
-import { analyzeUserBehaviorWithAI } from "@/app/actions/ai/smartProfile";
+import { analyzeUserBehaviorWithPremiumAI } from "@/app/actions/ai/smartProfile";
+import { prisma } from "@/lib/prisma";
+
+interface OpenAIError extends Error {
+  code?: string;
+  status?: number;
+}
 
 export async function POST() {
   const startTime = Date.now();
@@ -20,8 +26,14 @@ export async function POST() {
 
     console.log(`🔄 מתחיל ניתוח AI עבור משתמש: ${userId}`);
 
-    const result = await analyzeUserBehaviorWithAI(userId, {
+    // Force refresh the AI analysis
+    const result = await analyzeUserBehaviorWithPremiumAI(userId, {
       forceRefresh: true,
+    });
+
+    // Clear smart match cache to force recalculation
+    await prisma.smartMatchCache.deleteMany({
+      where: { userId },
     });
 
     const duration = Date.now() - startTime;
@@ -31,23 +43,31 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      content: result,
+      message: "ניתוח ההעדפות עודכן בהצלחה! ההתאמות החכמות יחושבו מחדש.",
+      content: result.content,
       metadata: {
         userId,
         duration: `${duration}ms`,
         timestamp: new Date().toISOString(),
         analysisType: "force_refresh",
+        cacheCleared: true,
+        confidenceScore: result.insights?.confidenceScore || 0,
       },
     });
-  } catch (err: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
+    const err = error as OpenAIError;
+    const errorMessage = err.message || "Unknown error";
+    const errorStack = err.stack;
+
     console.error("❌ רענון ניתוח נכשל:", {
-      error: err.message,
-      stack: err.stack,
+      error: errorMessage,
+      stack: errorStack,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
     });
 
+    // Enhanced error handling
     if (err?.code === "account_deactivated" || err?.status === 401) {
       return NextResponse.json(
         {

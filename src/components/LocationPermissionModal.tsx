@@ -44,24 +44,19 @@ export default function LocationPermissionModal({
       const result: LocationPermissionResult = await getCurrentLocation();
 
       if (result.granted && result.coordinates) {
-        console.log("🌍 Location granted:", result.coordinates);
-
-        // Update URL with location parameters
         const params = new URLSearchParams(searchParams.toString());
         params.set("userLat", result.coordinates.latitude.toString());
         params.set("userLon", result.coordinates.longitude.toString());
         params.set("sortByDistance", "true");
 
-        // Include includeSelf=true so your own member card appears when you're alone
         params.set("includeSelf", "true");
-        // Persist user's own location on the server
+
         await updateCurrentUserLocation(
           result.coordinates.latitude,
           result.coordinates.longitude
         );
 
         const newUrl = `/members?${params.toString()}`;
-        console.log("🔗 Modal updating URL with:", newUrl);
         router.replace(newUrl);
 
         if (onLocationGranted) {

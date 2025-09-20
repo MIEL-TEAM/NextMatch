@@ -12,13 +12,15 @@ import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import MemberImageCarousel from "@/components/MemberImageCarousel";
 import { Play, VolumeX, Volume2 } from "lucide-react";
+import { toast } from "react-toastify";
+import { getToastStyle } from "@/hooks/useIsMobile";
 
 interface MemberCardProps {
   member: Member & { distance?: number };
   likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
   memberVideos?: Array<{ url: string; id: string }>;
-  onLike?: (memberId: string) => void;
+  onLike?: (memberId: string, isLiked: boolean) => void;
 }
 
 export default function MemberCard({
@@ -52,22 +54,45 @@ export default function MemberCard({
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+
+      if (!hasLiked && likeIds.includes(member.userId)) {
+        toast.error(`כבר עשית לייק ל${member.name}`, {
+          style: getToastStyle(),
+        });
+        return;
+      }
+
       setLoading(true);
 
       try {
-        await toggleLikeMember(member.userId, hasLiked);
-        setHasLiked(!hasLiked);
+        const result = await toggleLikeMember(member.userId, hasLiked);
 
-        if (!hasLiked && onLike) {
-          onLike(member.userId);
+        if (result.success) {
+          const newLikedState = !hasLiked;
+          setHasLiked(newLikedState);
+
+          if (onLike) {
+            onLike(member.userId, newLikedState);
+          }
+        } else if (result.alreadyLiked) {
+          toast.error(`כבר עשית לייק ל${member.name}`, {
+            style: getToastStyle(),
+          });
+        } else {
+          toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
+            style: getToastStyle(),
+          });
         }
       } catch (error) {
         console.error("Like toggle error:", error);
+        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
+          style: getToastStyle(),
+        });
       } finally {
         setLoading(false);
       }
     },
-    [member.userId, hasLiked, onLike]
+    [member.userId, hasLiked, onLike, member.name, likeIds]
   );
 
   const handleMouseEnter = useCallback(() => {

@@ -20,15 +20,20 @@ export async function signInUser(
   data: LoginSchema
 ): Promise<ActionResult<string>> {
   try {
-    // Let NextAuth handle the user validation in auth.config.ts
-    // This eliminates the duplicate getUserByEmail call
     const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
       redirect: false,
     });
 
-    console.log(result);
+    // Check if authentication was successful
+    if (result?.error) {
+      return {
+        status: "error",
+        error: "פרטי התחברות שגויים - בדוק אימייל וסיסמה",
+      };
+    }
+
     return { status: "success", data: "Logged in" };
   } catch (error) {
     if (error instanceof AuthError) {

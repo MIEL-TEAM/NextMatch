@@ -4,8 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "./authActions";
 import { pusherServer } from "@/lib/pusher";
 import { trackUserInteraction } from "./smartMatchActions";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-export async function toggleLikeMember(targetUserId: string, isLiked: boolean) {
+export async function toggleLikeMember(
+  targetUserId: string,
+  isLiked: boolean
+): Promise<{ success: boolean; error?: string; alreadyLiked?: boolean }> {
   try {
     const userId = await getAuthUserId();
 
@@ -46,9 +50,28 @@ export async function toggleLikeMember(targetUserId: string, isLiked: boolean) {
         userId: like.sourceMember.userId,
       });
     }
+
+    return { success: true };
   } catch (error) {
-    console.log(error);
-    throw error;
+    console.log("Server action error:", error);
+
+    // Handle unique constraint violation for duplicate likes
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorString = JSON.stringify(error);
+
+    if (
+      (error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2002") ||
+      errorMessage.includes("Unique constraint failed") ||
+      errorMessage.includes("sourceUserId") ||
+      errorMessage.includes("targetUserId") ||
+      errorString.includes("sourceUserId") ||
+      errorString.includes("targetUserId")
+    ) {
+      return { success: false, alreadyLiked: true };
+    }
+
+    return { success: false, error: "Unknown error occurred" };
   }
 }
 

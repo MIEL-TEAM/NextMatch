@@ -6,7 +6,5 @@ export const metadata = {
 };
 
 export default function MembersPage() {
-  // Remove server-side fetch to eliminate loading delay
-  // Client will handle fetching likes for better performance
   return <MembersClient />;
 }

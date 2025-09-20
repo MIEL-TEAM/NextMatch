@@ -308,6 +308,48 @@ export async function updateCurrentUserLocation(
   }
 }
 
+export async function getCurrentUserLocationStatus() {
+  try {
+    const userId = await getAuthUserId();
+    const member = await prisma.member.findUnique({
+      where: { userId },
+      select: {
+        latitude: true,
+        longitude: true,
+        locationEnabled: true,
+        locationUpdatedAt: true,
+      },
+    });
+
+    if (!member) {
+      return {
+        hasLocation: false,
+        locationEnabled: false,
+        coordinates: null,
+      };
+    }
+
+    const result = {
+      hasLocation: Boolean(member.latitude && member.longitude),
+      locationEnabled: member.locationEnabled,
+      coordinates:
+        member.latitude && member.longitude
+          ? { latitude: member.latitude, longitude: member.longitude }
+          : null,
+      locationUpdatedAt: member.locationUpdatedAt,
+    };
+
+    return result;
+  } catch (error) {
+    console.error("Failed to get user location status", error);
+    return {
+      hasLocation: false,
+      locationEnabled: false,
+      coordinates: null,
+    };
+  }
+}
+
 export async function getMembersWithPhotos(memberIds: string[]) {
   if (!memberIds.length) return {};
 

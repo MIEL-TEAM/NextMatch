@@ -15,11 +15,6 @@ export const {
       if (user) {
         token.profileComplete = user.profileComplete;
         token.role = user.role;
-        console.log("🔑 JWT CALLBACK - USER LOGIN:", {
-          userId: user.id,
-          email: user.email,
-          profileComplete: user.profileComplete,
-        });
       }
 
       return token;
@@ -36,11 +31,6 @@ export const {
           !globalAny.lastSessionLog ||
           now - globalAny.lastSessionLog > 5000
         ) {
-          console.log("🎫 SESSION CALLBACK:", {
-            userId: session.user.id,
-            email: session.user.email,
-            profileComplete: session.user.profileComplete,
-          });
           globalAny.lastSessionLog = now;
         }
       }
