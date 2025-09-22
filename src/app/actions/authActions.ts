@@ -90,11 +90,11 @@ export async function registerUser(
       return { status: "error", error: "User already exists" };
     }
 
-    // Check for exactly 3 photos
-    if (!photos || photos.length !== 3) {
+    // Photos are optional - can be 0 to 3
+    if (photos && photos.length > 3) {
       return {
         status: "error",
-        error: "יש להעלות בדיוק 3 תמונות",
+        error: "ניתן להעלות עד 3 תמונות",
       };
     }
 
@@ -104,7 +104,7 @@ export async function registerUser(
         email,
         passwordHash: hashedPassword,
         profileComplete: true,
-        image: photos[0].url, // Set first photo as main profile image
+        image: photos && photos.length > 0 ? photos[0].url : null, // Set first photo as main profile image
         // Save user preferences
         preferredGenders,
         preferredAgeMin,
@@ -117,15 +117,18 @@ export async function registerUser(
             country,
             dateOfBirth: new Date(dateOfBirth),
             gender,
-            image: photos[0].url, // Set first photo as main profile image
-            // Create photos
-            photos: {
-              create: photos.map((photo) => ({
-                url: photo.url,
-                publicId: photo.publicId,
-                isApproved: false, // Photos need approval by default
-              })),
-            },
+            image: photos && photos.length > 0 ? photos[0].url : null, // Set first photo as main profile image
+            // Create photos only if they exist
+            ...(photos &&
+              photos.length > 0 && {
+                photos: {
+                  create: photos.map((photo) => ({
+                    url: photo.url,
+                    publicId: photo.publicId,
+                    isApproved: false, // Photos need approval by default
+                  })),
+                },
+              }),
           },
         },
       },

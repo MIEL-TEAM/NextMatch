@@ -80,6 +80,9 @@ export const useFilters = () => {
       if (withPhotoValue !== currentFilters.withPhoto) {
         setFilters("withPhoto", withPhotoValue);
       }
+    } else {
+      // If no withPhoto in URL, ensure store value is synced to URL
+      // This happens on first load when URL doesn't have withPhoto param
     }
 
     if (urlUserLat !== currentFilters.userLat) {

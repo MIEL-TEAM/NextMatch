@@ -8,11 +8,14 @@ import {
   CloudinaryUploadWidgetResults,
 } from "next-cloudinary";
 import { HiPhoto } from "react-icons/hi2";
-import { Progress } from "@nextui-org/react";
 import { IoMdCloseCircle } from "react-icons/io";
 import Image from "next/image";
 
-export default function PhotoUploadForm() {
+interface PhotoUploadFormProps {
+  onSubmit?: () => void;
+}
+
+export default function PhotoUploadForm({ onSubmit }: PhotoUploadFormProps) {
   const {
     setValue,
     getValues,
@@ -91,8 +94,6 @@ export default function PhotoUploadForm() {
     showPoweredBy: false,
   };
 
-  const progressPercentage = (photos.length / 3) * 100;
-
   return (
     <div className="space-y-6 w-full">
       <div className="text-center mb-6">
@@ -100,49 +101,42 @@ export default function PhotoUploadForm() {
           תמונות הפרופיל שלך
         </h3>
         <p className="text-neutral-600 text-sm mt-2">
-          עליך להעלות בדיוק 3 תמונות כדי להשלים את הרישום
+          תוכל להוסיף עד 3 תמונות או להמשיך בלי תמונות
         </p>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-secondary font-medium">
-            {photos.length}/3 תמונות
-          </span>
-          <span className="text-neutral-600">{progressPercentage}% הושלם</span>
-        </div>
-        <Progress
-          value={progressPercentage}
-          classNames={{
-            indicator:
-              "bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27]",
-          }}
-          aria-label="התקדמות העלאת תמונות"
-        />
+      {/* Status message */}
+      <div className="text-center">
+        {photos.length === 0 ? (
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="text-blue-700 text-sm mb-3">
+              💡 <strong>טיפ:</strong> תמונות מגדילות את הסיכוי להתאמות ב-80%
+            </div>
+            <div className="text-blue-600 text-xs">
+              תוכל להוסיף תמונות עכשיו או להמשיך בלי תמונות
+            </div>
+          </div>
+        ) : photos.length === 3 ? (
+          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+            <div className="text-green-700 text-sm flex items-center justify-center gap-2">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              מצוין! יש לך 3 תמונות
+            </div>
+          </div>
+        ) : (
+          <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+            <div className="text-amber-700 text-sm">
+              יש לך {photos.length} תמונות (תוכל להוסיף עוד {3 - photos.length})
+            </div>
+          </div>
+        )}
       </div>
-
-      {photos.length === 3 ? (
-        <div className="flex items-center justify-center gap-2 bg-green-100 text-green-700 p-2 rounded-md">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>יש לך 3 תמונות! ניתן להמשיך</span>
-        </div>
-      ) : (
-        <div className="text-center text-neutral-600 text-sm">
-          יש להעלות {3 - photos.length} תמונות נוספות
-        </div>
-      )}
 
       {uploadError && (
         <div className="text-center text-danger text-sm">{uploadError}</div>
@@ -227,6 +221,35 @@ export default function PhotoUploadForm() {
           {errors.photos.message as string}
         </p>
       )}
+
+      {/* Clear instructions */}
+      <div className="text-center mt-6 pt-4 border-t border-gray-100">
+        <div className="text-sm text-gray-600">
+          {photos.length === 0 ? (
+            <span>
+              💡 תוכל להוסיף תמונות או{" "}
+              <button
+                type="button"
+                onClick={onSubmit}
+                className="text-[#E37B27] font-semibold hover:text-[#FFB547] underline transition-colors cursor-pointer"
+              >
+                המשך בלי תמונות
+              </button>
+            </span>
+          ) : (
+            <span>
+              ✨ מצוין!{" "}
+              <button
+                type="button"
+                onClick={onSubmit}
+                className="text-[#E37B27] font-semibold hover:text-[#FFB547] underline transition-colors cursor-pointer"
+              >
+                השלם רישום
+              </button>
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

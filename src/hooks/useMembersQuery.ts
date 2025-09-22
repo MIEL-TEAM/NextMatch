@@ -18,7 +18,7 @@ export const useMembersQuery = (
       ageMax: params.get("ageMax") || undefined,
       ageRange: params.get("ageRange") || "18,100",
       gender: params.get("gender") || "male,female",
-      withPhoto: params.get("withPhoto") || "false",
+      withPhoto: params.get("withPhoto") || "true",
       orderBy: params.get("orderBy") || "updated",
       city: params.get("city") || undefined,
       interests: params.getAll("interests") || [],

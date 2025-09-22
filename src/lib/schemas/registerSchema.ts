@@ -98,9 +98,13 @@ export const photoSchema = z.object({
         publicId: z.string(),
       })
     )
-    .refine((photos) => photos.length === 3, {
-      message: "יש להעלות בדיוק 3 תמונות",
-    }),
+    .min(0, {
+      message: "תמונות אופציונליות",
+    })
+    .max(3, {
+      message: "ניתן להעלות עד 3 תמונות",
+    })
+    .default([]),
 });
 
 export const combinedRegisterSchema = registerSchema

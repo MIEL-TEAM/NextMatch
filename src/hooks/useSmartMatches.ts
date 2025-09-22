@@ -3,15 +3,32 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSmartMatches } from "@/app/actions/smartMatchActions";
 import { useCallback } from "react";
+import useFilterStore from "./useFilterStore";
 
 export function useSmartMatches(page: number, pageSize = 12) {
   const queryClient = useQueryClient();
+  const { filters } = useFilterStore();
 
+  // Include filters in query key so it refreshes when filters change
   const query = useQuery({
-    queryKey: ["smartMatches", page, pageSize],
+    queryKey: [
+      "smartMatches",
+      page,
+      pageSize,
+      filters.gender,
+      filters.ageRange,
+    ],
     queryFn: () => {
-      console.log("🎯 Enhanced useSmartMatches - calling getSmartMatches");
-      return getSmartMatches(page.toString(), pageSize.toString());
+      console.log(
+        "🎯 Enhanced useSmartMatches - calling getSmartMatches with filters:",
+        filters
+      );
+      return getSmartMatches(
+        page.toString(),
+        pageSize.toString(),
+        filters.gender,
+        filters.ageRange
+      );
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes (renamed from cacheTime)
@@ -27,11 +44,23 @@ export function useSmartMatches(page: number, pageSize = 12) {
       queryClient.prefetchQuery({
         queryKey: ["smartMatches", page + 1, pageSize],
         queryFn: () =>
-          getSmartMatches((page + 1).toString(), pageSize.toString()),
+          getSmartMatches(
+            (page + 1).toString(),
+            pageSize.toString(),
+            filters.gender,
+            filters.ageRange
+          ),
         staleTime: 1000 * 60 * 5,
       });
     }
-  }, [page, pageSize, query.data?.totalCount, queryClient]);
+  }, [
+    page,
+    pageSize,
+    query.data?.totalCount,
+    queryClient,
+    filters.gender,
+    filters.ageRange,
+  ]);
 
   // Enhanced refresh function that clears all cache
   const refreshMatches = useCallback(async () => {

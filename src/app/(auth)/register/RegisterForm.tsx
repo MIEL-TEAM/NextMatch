@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   photoSchema,
   profileSchema,
@@ -30,9 +30,12 @@ const stepSchemas = [
   photoSchema,
 ];
 
+const DRAFT_KEY = "miel-registration-draft";
+
 export default function RegisterForm() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
+  const [, setHasDraft] = useState(false);
   const currentValidationSchema = stepSchemas[activeStep];
 
   const methods = useForm<RegisterSchema>({
@@ -45,16 +48,91 @@ export default function RegisterForm() {
     setError,
     getValues,
     watch,
+    setValue,
     formState: { errors, isValid, isSubmitting },
   } = methods;
 
-  const photos = watch("photos") || [];
-  const isLastStep = activeStep === stepSchemas.length - 1;
-  const isSubmitDisabled = isLastStep ? photos.length !== 3 : !isValid;
+  const isSubmitDisabled = !isValid;
+
+  // Auto-save functionality
+  const saveDraft = useCallback(() => {
+    try {
+      const formData = getValues();
+      const draft = {
+        ...formData,
+        step: activeStep,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch (error) {
+      console.error("Failed to save draft:", error);
+    }
+  }, [getValues, activeStep]);
+
+  const loadDraft = useCallback(() => {
+    try {
+      const draftStr = localStorage.getItem(DRAFT_KEY);
+      if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        const hourAgo = Date.now() - 60 * 60 * 1000;
+
+        // Only load if draft is less than 1 hour old
+        if (draft.timestamp > hourAgo) {
+          // Load form data
+          Object.keys(draft).forEach((key) => {
+            if (key !== "step" && key !== "timestamp") {
+              setValue(key as keyof RegisterSchema, draft[key]);
+            }
+          });
+
+          // Set step
+          if (
+            typeof draft.step === "number" &&
+            draft.step >= 0 &&
+            draft.step < stepSchemas.length
+          ) {
+            setActiveStep(draft.step);
+          }
+
+          setHasDraft(true);
+        } else {
+          // Remove old draft
+          localStorage.removeItem(DRAFT_KEY);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load draft:", error);
+      localStorage.removeItem(DRAFT_KEY);
+    }
+  }, [setValue]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
+  }, []);
+
+  // Load draft on mount
+  useEffect(() => {
+    loadDraft();
+  }, [loadDraft]);
+
+  // Auto-save on form changes
+  useEffect(() => {
+    const subscription = watch(() => {
+      saveDraft();
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, saveDraft]);
+
+  // Save on step change
+  useEffect(() => {
+    saveDraft();
+  }, [activeStep, saveDraft]);
 
   async function onSubmit() {
     const result = await registerUser(getValues());
     if (result.status === "success") {
+      clearDraft();
       router.push("/register/success");
     } else {
       handleFormServerError(result, setError);
@@ -70,7 +148,7 @@ export default function RegisterForm() {
       case 2:
         return <PreferencesForm />;
       case 3:
-        return <PhotoUploadForm />;
+        return <PhotoUploadForm onSubmit={onSubmit} />;
       default:
         return "Unknown step";
     }

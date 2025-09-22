@@ -162,11 +162,20 @@ export async function getMembers({
         { dateOfBirth: { gte: minDob } },
         { dateOfBirth: { lte: maxDob } },
         { gender: { in: selectedGender } },
-        ...(withPhoto === "true" ? [{ image: { not: null } }] : []),
+        ...(withPhoto === "true"
+          ? [
+              {
+                OR: [
+                  { image: { not: null } },
+                  { photos: { some: { isApproved: true } } },
+                ],
+              },
+            ]
+          : []),
         ...(onlineOnly === "true"
           ? [{ updated: { gte: onlineThreshold } }]
           : []),
-        // If user has location and we're filtering by distance, only include members with location
+
         ...(shouldFilterByDistance
           ? [
               { latitude: { not: null } },
@@ -247,25 +256,13 @@ export async function getMembers({
       distance: (member as any).distance,
     }));
 
-    console.log(
-      "🎯 Final members with distances:",
-      finalMembers.map((m) => ({ name: m.name, distance: (m as any).distance }))
-    );
-
     return {
       items: finalMembers,
       totalCount: membersWithDistance.length,
     };
   } catch (error) {
-    console.error(
-      "Error fetching members:",
-      error ? JSON.stringify(error) : "Unknown error"
-    );
-
-    return {
-      items: [],
-      totalCount: 0,
-    };
+    console.error("Error fetching members:", error);
+    return { items: [], totalCount: 0 };
   }
 }
 

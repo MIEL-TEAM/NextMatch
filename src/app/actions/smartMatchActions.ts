@@ -103,7 +103,9 @@ export async function getSmartMatches(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _pageNumber = "1",
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _pageSize = "12"
+  _pageSize = "12",
+  filterGender?: string[],
+  filterAgeRange?: number[]
 ): Promise<
   PaginatedResponse<Member & { matchReason?: string; matchScore?: number }>
 > {
@@ -175,19 +177,41 @@ export async function getSmartMatches(
       },
     });
 
-    // Build filter conditions
+    // Build filter conditions - use UI filters first, then fallback to user preferences
     let genderFilter = {};
     let ageFilter = {};
 
-    if (userPreferences?.preferredGenders?.length) {
+    // Use filter from UI if provided, otherwise use user preferences
+    if (filterGender && filterGender.length > 0) {
+      genderFilter = { gender: { in: filterGender } };
+      console.log("🎯 Using UI gender filter:", filterGender);
+    } else if (userPreferences?.preferredGenders?.length) {
       const genders = Array.isArray(userPreferences.preferredGenders)
         ? userPreferences.preferredGenders
         : userPreferences.preferredGenders.split(",");
 
       genderFilter = { gender: { in: genders } };
+      console.log("🎯 Using DB gender preferences:", genders);
     }
 
-    if (userPreferences?.preferredAgeMin || userPreferences?.preferredAgeMax) {
+    // Use age filter from UI if provided, otherwise use user preferences
+    if (filterAgeRange && filterAgeRange.length === 2) {
+      const [minAge, maxAge] = filterAgeRange;
+      const today = new Date();
+      const minBirthDate = addYears(today, -maxAge - 1);
+      const maxBirthDate = addYears(today, -minAge);
+
+      ageFilter = {
+        dateOfBirth: {
+          gte: minBirthDate,
+          lte: maxBirthDate,
+        },
+      };
+      console.log("🎯 Using UI age filter:", filterAgeRange);
+    } else if (
+      userPreferences?.preferredAgeMin ||
+      userPreferences?.preferredAgeMax
+    ) {
       const today = new Date();
       const minBirthDate = userPreferences.preferredAgeMax
         ? addYears(today, -userPreferences.preferredAgeMax - 1)
@@ -205,6 +229,12 @@ export async function getSmartMatches(
       } else if (maxBirthDate) {
         ageFilter = { dateOfBirth: { lte: maxBirthDate } };
       }
+      console.log(
+        "🎯 Using DB age preferences:",
+        userPreferences.preferredAgeMin,
+        "-",
+        userPreferences.preferredAgeMax
+      );
     }
 
     const members = await prisma.member.findMany({
