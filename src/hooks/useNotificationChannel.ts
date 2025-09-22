@@ -74,6 +74,7 @@ export const useNotificationChannel = (
   useEffect(() => {
     if (!userId || !profileComplete) return;
     if (!channelRef.current) {
+      // ✅ זה ה-hook הראשי שיוצר את הערוץ הפרטי - hooks אחרים ישתמשו באותו ערוץ
       channelRef.current = pusherClient.subscribe(`private-${userId}`);
       channelRef.current.bind("message:new", handleNewMessage);
       // channelRef.current.bind("like:new", handleNewLike); // מועבר למאזין החגיגה
@@ -104,12 +105,18 @@ export function useSimpleNotificationChannel({
   useEffect(() => {
     if (!channel || !event || !callback) return;
 
-    const pusherChannel = pusherClient.subscribe(channel);
+    // השתמש בערוץ קיים אם זה ערוץ פרטי, אחרת צור חדש
+    const pusherChannel = channel.startsWith("private-")
+      ? pusherClient.channel(channel) || pusherClient.subscribe(channel)
+      : pusherClient.subscribe(channel);
     pusherChannel.bind(event, callback);
 
     return () => {
       pusherChannel.unbind(event, callback);
-      pusherClient.unsubscribe(channel);
+      // אל תבטל מנוי לערוצים פרטיים (שמשמשים hooks אחרים)
+      if (!channel.startsWith("private-")) {
+        pusherClient.unsubscribe(channel);
+      }
     };
   }, [channel, event, callback]);
 }
@@ -118,7 +125,10 @@ export function useProfileViewsRealtime(userId: string, onNewView: () => void) {
   useEffect(() => {
     if (!userId) return;
 
-    const channel = pusherClient.subscribe(`private-${userId}`);
+    // השתמש בערוץ קיים - אל תיצור חדש אם כבר קיים
+    const channel =
+      pusherClient.channel(`private-${userId}`) ||
+      pusherClient.subscribe(`private-${userId}`);
 
     channel.bind(
       "profile-viewed",
@@ -130,8 +140,9 @@ export function useProfileViewsRealtime(userId: string, onNewView: () => void) {
     );
 
     return () => {
+      // רק נתק את האירוע, אל תבטל את המנוי לערוץ (שמשמש גם hooks אחרים)
       channel.unbind("profile-viewed");
-      pusherClient.unsubscribe(`private-${userId}`);
+      // אל תקרא ל-pusherClient.unsubscribe - זה יכול להפריע להוקים אחרים
     };
   }, [userId, onNewView]);
 }

@@ -29,8 +29,10 @@ export function useCelebrationListener(
   useEffect(() => {
     if (!userId) return;
 
-    // השתמש בערוץ קיים או צור חדש
-    const channel = pusherClient.subscribe(`private-${userId}`);
+    // השתמש בערוץ קיים - אל תיצור חדש אם כבר קיים
+    const channel =
+      pusherClient.channel(`private-${userId}`) ||
+      pusherClient.subscribe(`private-${userId}`);
 
     // 💕 לייק הדדי
     channel.bind("mutual-match", (data: MutualMatchData) => {
@@ -117,12 +119,14 @@ export function useCelebrationListener(
     );
 
     return () => {
+      // רק נתק את האירועים, אל תבטל את המנוי לערוץ (שמשמש גם hooks אחרים)
       channel.unbind("mutual-match");
       channel.unbind("like:new");
       channel.unbind("smart-match");
       channel.unbind("first-message");
       channel.unbind("profile-boost");
       channel.unbind("achievement");
+      // אל תקרא ל-pusherClient.unsubscribe - זה יכול להפריע להוקים אחרים
     };
   }, [userId, showCelebration]);
 
