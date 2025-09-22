@@ -43,6 +43,11 @@ type UserFilters = {
   orderBy: string;
   gender: string[];
   withPhoto: boolean;
+  // Location parameters
+  userLat?: string;
+  userLon?: string;
+  distance?: string;
+  sortByDistance?: string;
 };
 
 type PagingParams = {

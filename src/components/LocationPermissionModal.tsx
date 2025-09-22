@@ -16,6 +16,7 @@ import {
 } from "@/lib/locationUtils";
 import { updateCurrentUserLocation } from "@/app/actions/memberActions";
 import { useRouter, useSearchParams } from "next/navigation";
+import useFilterStore from "@/hooks/useFilterStore";
 
 interface LocationPermissionModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function LocationPermissionModal({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setFilters } = useFilterStore();
 
   const handleEnableLocation = async () => {
     setIsLoading(true);
@@ -48,8 +50,12 @@ export default function LocationPermissionModal({
         params.set("userLat", result.coordinates.latitude.toString());
         params.set("userLon", result.coordinates.longitude.toString());
         params.set("sortByDistance", "true");
-
         params.set("includeSelf", "true");
+
+        // Update the filter store as well
+        setFilters("userLat", result.coordinates.latitude.toString());
+        setFilters("userLon", result.coordinates.longitude.toString());
+        setFilters("sortByDistance", "true");
 
         await updateCurrentUserLocation(
           result.coordinates.latitude,

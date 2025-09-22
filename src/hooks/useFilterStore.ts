@@ -14,6 +14,11 @@ const useFilterStore = create<FilterState>()(
       gender: ["male", "female"],
       orderBy: "updated",
       withPhoto: true,
+      // Location parameters
+      userLat: undefined,
+      userLon: undefined,
+      distance: undefined,
+      sortByDistance: undefined,
     },
     setFilters: (filterName, value) =>
       set((state) => {

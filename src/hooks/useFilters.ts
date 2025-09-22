@@ -23,9 +23,17 @@ export const useFilters = () => {
   );
   const setPage = usePaginationStore((state) => state.setPage);
 
-  const { ageRange, gender, orderBy, withPhoto } = filters;
+  const {
+    ageRange,
+    gender,
+    orderBy,
+    withPhoto,
+    userLat,
+    userLon,
+    distance,
+    sortByDistance,
+  } = filters;
 
-  // Sync store with URL parameters on mount and URL changes
   useEffect(() => {
     if (!clientLoaded) return;
 
@@ -33,43 +41,63 @@ export const useFilters = () => {
     const urlGender = currentSearchParams.get("gender");
     const urlAgeRange = currentSearchParams.get("ageRange");
     const urlWithPhoto = currentSearchParams.get("withPhoto");
+    const urlUserLat = currentSearchParams.get("userLat");
+    const urlUserLon = currentSearchParams.get("userLon");
+    const urlDistance = currentSearchParams.get("distance");
+    const urlSortByDistance = currentSearchParams.get("sortByDistance");
 
-    // Update store if URL has different values
-    if (urlOrderBy && urlOrderBy !== orderBy) {
+    const currentFilters = useFilterStore.getState().filters;
+
+    if (urlOrderBy && urlOrderBy !== currentFilters.orderBy) {
       setFilters("orderBy", urlOrderBy);
     }
 
     if (urlGender) {
-      const genderArray = urlGender.split(",");
-      if (
-        JSON.stringify(genderArray.sort()) !== JSON.stringify(gender.sort())
-      ) {
+      const genderArray = urlGender.split(",").filter(Boolean);
+
+      const currentGenderStr = [...currentFilters.gender].sort().join(",");
+      const urlGenderStr = [...genderArray].sort().join(",");
+
+      if (currentGenderStr !== urlGenderStr) {
         setFilters("gender", genderArray);
       }
     }
 
     if (urlAgeRange) {
       const [min, max] = urlAgeRange.split(",").map(Number);
-      if (min && max && (ageRange[0] !== min || ageRange[1] !== max)) {
+      if (
+        min &&
+        max &&
+        (currentFilters.ageRange[0] !== min ||
+          currentFilters.ageRange[1] !== max)
+      ) {
         setFilters("ageRange", [min, max]);
       }
     }
 
     if (urlWithPhoto !== null) {
       const withPhotoValue = urlWithPhoto === "true";
-      if (withPhotoValue !== withPhoto) {
+      if (withPhotoValue !== currentFilters.withPhoto) {
         setFilters("withPhoto", withPhotoValue);
       }
     }
-  }, [
-    clientLoaded,
-    currentSearchParams,
-    orderBy,
-    gender,
-    ageRange,
-    withPhoto,
-    setFilters,
-  ]);
+
+    if (urlUserLat !== currentFilters.userLat) {
+      setFilters("userLat", urlUserLat || undefined);
+    }
+
+    if (urlUserLon !== currentFilters.userLon) {
+      setFilters("userLon", urlUserLon || undefined);
+    }
+
+    if (urlDistance !== currentFilters.distance) {
+      setFilters("distance", urlDistance || undefined);
+    }
+
+    if (urlSortByDistance !== currentFilters.sortByDistance) {
+      setFilters("sortByDistance", urlSortByDistance || undefined);
+    }
+  }, [clientLoaded, currentSearchParams, setFilters]);
 
   useEffect(() => {
     if (
@@ -84,23 +112,19 @@ export const useFilters = () => {
 
   useEffect(() => {
     startTransition(() => {
-      // Start from existing params to preserve location and other flags
       const searchParams = new URLSearchParams(currentSearchParams.toString());
 
-      // Only update parameters that are not already set in URL or are different from store
       const currentGender = searchParams.get("gender");
       const currentAgeRange = searchParams.get("ageRange");
       const currentOrderBy = searchParams.get("orderBy");
       const currentWithPhoto = searchParams.get("withPhoto");
 
-      // Update gender only if not set in URL or different from store
       const genderParam =
         gender && gender.length > 0 ? gender.join(",") : "male,female";
       if (!currentGender || currentGender !== genderParam) {
         searchParams.set("gender", genderParam);
       }
 
-      // Update ageRange only if not set in URL or different from store
       const ageRangeParam =
         ageRange && ageRange.length === 2
           ? `${ageRange[0]},${ageRange[1]}`
@@ -109,25 +133,26 @@ export const useFilters = () => {
         searchParams.set("ageRange", ageRangeParam);
       }
 
-      // Don't override orderBy if it's already set in URL (let FilterButtons control it)
       if (!currentOrderBy) {
         searchParams.set("orderBy", orderBy || "updated");
       }
 
-      // Update withPhoto only if not set in URL or different from store
       const withPhotoParam = withPhoto.toString();
       if (!currentWithPhoto || currentWithPhoto !== withPhotoParam) {
         searchParams.set("withPhoto", withPhotoParam);
       }
 
-      // Always set pageSize and pageNumber
       if (pageSize) searchParams.set("pageSize", pageSize.toString());
       if (pageNumber) searchParams.set("pageNumber", pageNumber.toString());
+
+      if (userLat) searchParams.set("userLat", userLat);
+      if (userLon) searchParams.set("userLon", userLon);
+      if (distance) searchParams.set("distance", distance);
+      if (sortByDistance) searchParams.set("sortByDistance", sortByDistance);
 
       const newUrl = `${pathname}?${searchParams.toString()}`;
       const currentUrl = `${pathname}?${currentSearchParams.toString()}`;
 
-      // Avoid redundant replace if nothing changed
       if (newUrl !== currentUrl) {
         router.replace(newUrl, { scroll: false });
       }
@@ -142,6 +167,10 @@ export const useFilters = () => {
     pageNumber,
     pageSize,
     withPhoto,
+    userLat,
+    userLon,
+    distance,
+    sortByDistance,
   ]);
 
   const orderByList = [
