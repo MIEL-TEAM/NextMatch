@@ -7,6 +7,7 @@ import {
   FiMessageCircle,
   FiSearch,
   FiEye,
+  FiBarChart,
 } from "react-icons/fi";
 import { Feature } from "../types";
 
@@ -28,6 +29,7 @@ export function createPopularFeatures(boostCount: number = 10): Feature[] {
   return [
     ...createBasicFeatures(boostCount),
     { text: "תעדוף במסך החיפוש", icon: <FiSearch size={18} /> },
+    { text: "ראה מי צפה בסטורי שלך", icon: <FiBarChart size={18} /> },
   ];
 }
 

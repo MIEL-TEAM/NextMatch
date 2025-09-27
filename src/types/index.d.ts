@@ -3,7 +3,7 @@ import { ZodIssue } from "zod";
 
 type ActionResult<T> =
   | { status: "success"; data: T }
-  | { status: "error"; error: string | ZodIssue[] };
+  | { status: "error"; error: string | ZodIssue[]; requiresPremium?: boolean };
 
 type MessageWithSenderRecipient = Prisma.MessageGetPayload<{
   select: {

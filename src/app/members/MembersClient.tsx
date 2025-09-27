@@ -9,6 +9,9 @@ import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
 import { useEffect, useState, useCallback, useRef } from "react";
 import LocationPermissionModal from "@/components/LocationPermissionModal";
 import HeartLoading from "@/components/HeartLoading";
+import { StoriesContainer } from "@/components/stories/StoriesContainer";
+import { useSession } from "next-auth/react";
+import { Session } from "next-auth";
 import {
   checkLocationPermission,
   getCurrentLocation,
@@ -16,10 +19,23 @@ import {
 
 type LoadingState = "initial" | "location" | "data" | "ready";
 
-export default function MembersClient() {
+interface MembersClientProps {
+  serverSession?: Session | null;
+}
+
+export default function MembersClient({ serverSession }: MembersClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const currentSession = session || serverSession;
+  const currentStatus = session
+    ? status
+    : serverSession
+      ? "authenticated"
+      : status === "loading"
+        ? "loading"
+        : "unauthenticated";
   const [likeIds, setLikeIds] = useState<string[]>([]);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [loadingState, setLoadingState] = useState<LoadingState>("initial");
@@ -36,20 +52,22 @@ export default function MembersClient() {
   const queryEnabled = loadingState === "data" || hasLocationParams;
   const query = useMembersQuery(searchParams, { enabled: queryEnabled });
 
-  // Fetch likes immediately
+  // Fetch likes immediately and when session changes
   useEffect(() => {
-    fetchCurrentUserLikeIds()
-      .then((ids) => {
-        if (mountedRef.current) {
-          setLikeIds(ids);
-        }
-      })
-      .catch(console.warn);
+    if (currentStatus === "authenticated" && currentSession?.user?.id) {
+      fetchCurrentUserLikeIds()
+        .then((ids) => {
+          if (mountedRef.current) {
+            setLikeIds(ids);
+          }
+        })
+        .catch(console.warn);
+    }
 
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [currentStatus, currentSession?.user?.id]);
 
   // Handle location setup
   useEffect(() => {
@@ -174,14 +192,12 @@ export default function MembersClient() {
     [searchParams, router, pathname]
   );
 
-  // Update state when location params arrive
   useEffect(() => {
     if (hasLocationParams && loadingState === "location") {
       setLoadingState("data");
     }
   }, [hasLocationParams, loadingState]);
 
-  // Update loading message based on query state
   useEffect(() => {
     if (query.isLoading && loadingState === "data") {
     }
@@ -224,6 +240,57 @@ export default function MembersClient() {
 
   return (
     <>
+      {/* Stories Section Loading State */}
+      {currentStatus === "loading" && (
+        <div className="mb-8 relative">
+          <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex gap-4 p-4">
+              {/* Loading skeletons for stories */}
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center flex-shrink-0"
+                >
+                  <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="w-12 h-3 bg-gray-200 rounded mt-2 animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Loading separator */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-2 sm:px-4 lg:px-8">
+            <div className="relative flex items-center justify-center mt-6">
+              <div className="flex-1 h-px bg-gray-200 animate-pulse"></div>
+              <div className="px-4">
+                <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+              <div className="flex-1 h-px bg-gray-200 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentStatus === "authenticated" && currentSession?.user?.id && (
+        <div className="mb-8 relative">
+          <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <StoriesContainer currentUserId={currentSession.user.id} />
+          </div>
+
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-2 sm:px-4 lg:px-8">
+            <div className="relative flex items-center justify-center mt-6">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent opacity-60"></div>
+
+              <div className="px-4">
+                <div className="w-2 h-2 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full shadow-sm"></div>
+              </div>
+
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent opacity-60"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <MembersLayout
         membersData={data}
         totalCount={totalCount}
@@ -237,7 +304,6 @@ export default function MembersClient() {
         isOpen={showLocationModal}
         onClose={() => {
           setShowLocationModal(false);
-          // Clean up the force location parameter when modal is closed
           if (forceLocationPrompt) {
             const params = new URLSearchParams(searchParams.toString());
             params.delete("requestLocation");

@@ -12,6 +12,7 @@ type MessageState = {
   toggleArchive: (id: string) => void;
   updateById: (id: string, updates: Partial<MessageDto>) => void;
   updateUnreadCount: (amount: number) => void;
+  setUnreadCount: (count: number) => void;
   resetMessages: () => void;
 };
 
@@ -58,6 +59,7 @@ const useMessageStore = create<MessageState>()(
         })),
       updateUnreadCount: (amount: number) =>
         set((state) => ({ unreadCount: state.unreadCount + amount })),
+      setUnreadCount: (count: number) => set(() => ({ unreadCount: count })),
       resetMessages: () => set({ messages: [] }),
     }),
 

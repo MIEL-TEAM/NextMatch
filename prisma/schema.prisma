@@ -55,6 +55,13 @@ model User {
   viewedProfiles      ProfileView[]     @relation("ViewerProfileViews")
   profileViewers      ProfileView[]     @relation("ViewedProfileViews")
   SmartMatchCache     SmartMatchCache[]
+
+  // Stories relations
+  stories        Story[]
+  storyViews     StoryView[]
+  storyReactions StoryReaction[]
+  storySent      StoryReply[]    @relation("StoryReplySender")
+  storyReceived  StoryReply[]    @relation("StoryReplyRecipient")
 }
 
 model Interest {
@@ -237,4 +244,81 @@ model SmartMatchCache {
 enum Role {
   ADMIN
   MEMBER
+}
+
+// Stories feature - Image only
+model Story {
+  id          String       @id @default(cuid())
+  userId      String // Who created the story
+  imageUrl    String // Cloudinary URL for the story image
+  publicId    String? // Cloudinary public ID for deletion
+  textOverlay String? // Optional text overlay
+  filter      String? // Applied filter name
+  privacy     StoryPrivacy @default(PUBLIC)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  expiresAt DateTime // 24 hours from creation
+  isActive  Boolean  @default(true)
+
+  // Relations
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views     StoryView[]
+  reactions StoryReaction[]
+  replies   StoryReply[]
+
+  @@index([userId, isActive, expiresAt])
+  @@index([expiresAt]) // For cleanup jobs
+}
+
+model StoryView {
+  id       String   @id @default(cuid())
+  storyId  String
+  viewerId String
+  viewedAt DateTime @default(now())
+
+  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User  @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerId]) // One view per user per story
+  @@index([viewerId])
+}
+
+model StoryReaction {
+  id           String       @id @default(cuid())
+  storyId      String
+  userId       String
+  reactionType ReactionType @default(HEART)
+  createdAt    DateTime     @default(now())
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId]) // One reaction per user per story
+}
+
+model StoryReply {
+  id          String   @id @default(cuid())
+  storyId     String
+  senderId    String
+  recipientId String // Story owner
+  messageText String
+  createdAt   DateTime @default(now())
+
+  story     Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  sender    User  @relation("StoryReplySender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User  @relation("StoryReplyRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+}
+
+enum StoryPrivacy {
+  PUBLIC // Everyone can see
+  PREMIUM // Only premium users can see
+  PRIVATE // Only specific users (future feature)
+}
+
+enum ReactionType {
+  HEART // ❤️
+  FIRE // 🔥
+  LOVE_EYES // 😍
+  EYES // 👀
 }

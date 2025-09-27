@@ -72,6 +72,18 @@ export default async function RootLayout({
   const userId = session?.user?.id || null;
   const profileComplete = session?.user.profileComplete as boolean;
 
+  let initialUnreadCount = 0;
+  if (userId) {
+    try {
+      const { getUnreadMessageCount } = await import(
+        "@/app/actions/messageActions"
+      );
+      initialUnreadCount = await getUnreadMessageCount();
+    } catch (error) {
+      console.warn("Failed to load initial unread count in layout:", error);
+    }
+  }
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -119,7 +131,11 @@ export default async function RootLayout({
       </head>
       <body>
         <ReactQueryProvider>
-          <Providers userId={userId} profileComplete={profileComplete}>
+          <Providers
+            userId={userId}
+            profileComplete={profileComplete}
+            initialUnreadCount={initialUnreadCount}
+          >
             <MobileBlocker />
             <div className="hidden lg:block">
               <TopNav />

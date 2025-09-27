@@ -8,11 +8,17 @@ import React from "react";
 type NavLinkProps = {
   href: string;
   label: string;
+  initialUnreadCount?: number;
 };
 
-export default function NavLink({ href, label }: NavLinkProps) {
+export default function NavLink({
+  href,
+  label,
+  initialUnreadCount,
+}: NavLinkProps) {
   const pathName = usePathname();
-  const unreadCount = useMessageStore((state) => state.unreadCount);
+  const storeUnreadCount = useMessageStore((state) => state.unreadCount);
+  const unreadCount = storeUnreadCount || initialUnreadCount || 0;
 
   return (
     <li className="list-none">

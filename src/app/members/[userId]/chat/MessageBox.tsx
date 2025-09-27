@@ -3,6 +3,7 @@
 import PresenceAvatar from "@/components/PresenceAvatar";
 import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
 import { MessageDto } from "@/types";
+import Image from "next/image";
 
 import clsx from "clsx";
 import React, { useEffect, useRef, memo } from "react";
@@ -19,6 +20,22 @@ function MessageBox({ message, currentUserId }: MessageBoxProps) {
   const router = useRouter();
 
   const isLongMessage = message.text.length > 50;
+
+  const isStoryReply =
+    message.text.includes("🖼️ הגיב/ה על הסטורי שלך:") &&
+    message.text.includes("📸 תמונת הסטורי:");
+
+  const getStoryImageFromMessage = () => {
+    if (!isStoryReply) return null;
+    const match = message.text.match(/📸 תמונת הסטורי: (.+)/);
+    return match ? match[1].trim() : null;
+  };
+
+  const getStoryReplyText = () => {
+    if (!isStoryReply) return message.text;
+    const match = message.text.match(/🖼️ הגיב\/ה על הסטורי שלך: "(.+)"/);
+    return match ? match[1] : message.text;
+  };
 
   useEffect(() => {
     if (messageEndRef.current)
@@ -51,14 +68,41 @@ function MessageBox({ message, currentUserId }: MessageBoxProps) {
       style={isLongMessage ? { maxWidth: "450px" } : {}}
     >
       {renderMessageHeader()}
-      <p
-        className={clsx("text-sm py-3 text-gray-900", {
-          "break-words whitespace-normal": isLongMessage,
-        })}
-        style={isLongMessage ? { wordBreak: "break-word" } : {}}
-      >
-        {message.text}
-      </p>
+
+      {isStoryReply ? (
+        <div className="py-3">
+          <div className="mb-3 p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                {getStoryImageFromMessage() && (
+                  <Image
+                    src={getStoryImageFromMessage()!}
+                    alt="Story"
+                    width={48}
+                    height={64}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">תגובה על סטורי</p>
+                <p className="text-sm font-medium text-gray-800">
+                  &ldquo;{getStoryReplyText()}&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p
+          className={clsx("text-sm py-3 text-gray-900", {
+            "break-words whitespace-normal": isLongMessage,
+          })}
+          style={isLongMessage ? { wordBreak: "break-word" } : {}}
+        >
+          {message.text}
+        </p>
+      )}
     </div>
   );
 

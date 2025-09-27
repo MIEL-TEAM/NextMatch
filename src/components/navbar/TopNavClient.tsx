@@ -16,6 +16,7 @@ export default function TopNavClient({
   userInfo,
   userId,
   links,
+  initialUnreadCount,
 }: any) {
   const pathname = usePathname();
   const isAuthPage =
@@ -127,7 +128,14 @@ export default function TopNavClient({
         >
           {session &&
             links.map((item: any) => (
-              <NavLink key={item.href} href={item.href} label={item.label} />
+              <NavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                initialUnreadCount={
+                  item.href === "/messages" ? initialUnreadCount : undefined
+                }
+              />
             ))}
         </NavbarContent>
 

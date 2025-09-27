@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import MembersClient from "./MembersClient";
 
 export const metadata = {
@@ -5,6 +6,7 @@ export const metadata = {
   description: "גלו פרופילים חדשים שמתאימים לכם בדיוק.",
 };
 
-export default function MembersPage() {
-  return <MembersClient />;
+export default async function MembersPage() {
+  const session = await auth();
+  return <MembersClient serverSession={session} />;
 }

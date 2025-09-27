@@ -20,16 +20,19 @@ type ProvidersProps = {
   children: ReactNode;
   userId: string | null;
   profileComplete: boolean;
+  initialUnreadCount?: number;
 };
 
 export default function Providers({
   children,
   userId,
   profileComplete,
+  initialUnreadCount,
 }: ProvidersProps) {
   const isUnreadCountSet = useRef(false);
 
   const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
+  const setStoreUnreadCount = useMessageStore((state) => state.setUnreadCount);
 
   const setUnreadCount = useCallback(
     (amount: number) => {
@@ -39,17 +42,28 @@ export default function Providers({
   );
 
   useEffect(() => {
-    if (!isUnreadCountSet.current && userId) {
-      getUnreadMessageCount().then((count) => {
-        setUnreadCount(count);
-      });
-
+    if (initialUnreadCount !== undefined && !isUnreadCountSet.current) {
+      setStoreUnreadCount(initialUnreadCount);
       isUnreadCountSet.current = true;
+    }
+  }, [initialUnreadCount, setStoreUnreadCount]);
+
+  useEffect(() => {
+    if (!isUnreadCountSet.current && userId) {
+      getUnreadMessageCount()
+        .then((count) => {
+          setUnreadCount(count);
+          isUnreadCountSet.current = true;
+        })
+        .catch((error) => {
+          console.warn("Failed to load unread count:", error);
+          isUnreadCountSet.current = true;
+        });
     }
   }, [setUnreadCount, userId]);
 
   usePresenceChannel(userId, profileComplete);
-  useNotificationChannel(userId, profileComplete); // נשאיר - רק ההודעות
+  useNotificationChannel(userId, profileComplete);
 
   const { celebration, showCelebration, closeCelebration } = useCelebration();
   useCelebrationListener(userId || undefined, showCelebration);
