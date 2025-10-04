@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import authConfig from "./auth.config";
 import { prisma } from "./lib/prisma";
 import { Role } from "@prisma/client";
+import { sendWelcomeEmail } from "./lib/mail";
 
 export const {
   handlers: { GET, POST },
@@ -11,6 +12,34 @@ export const {
   signOut,
 } = NextAuth({
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        if (user.email) {
+          try {
+            const existingUser = await prisma.user.findUnique({
+              where: { email: user.email },
+              select: { hasSeenWelcomeMessage: true },
+            });
+
+            if (existingUser && !existingUser.hasSeenWelcomeMessage) {
+              await prisma.user.update({
+                where: { email: user.email },
+                data: { hasSeenWelcomeMessage: true },
+              });
+
+              try {
+                await sendWelcomeEmail(user.email, user.name || "חבר חדש");
+              } catch (emailError) {
+                console.error("Failed to send welcome email:", emailError);
+              }
+            }
+          } catch (error) {
+            console.error("Error in Google signIn callback:", error);
+          }
+        }
+      }
+      return true;
+    },
     async jwt({ user, token }) {
       if (user) {
         token.profileComplete = user.profileComplete;

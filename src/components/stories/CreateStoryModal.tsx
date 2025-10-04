@@ -21,12 +21,47 @@ export function CreateStoryModal({
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [textOverlay, setTextOverlay] = useState("");
+  const [textPosition, setTextPosition] = useState({ x: 0.5, y: 0.3 }); // Default safe position
+  const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle text positioning
+  const handleTextDrag = (e: React.MouseEvent) => {
+    if (!imageContainerRef.current || !textOverlay) return;
+
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+
+    // Allow free positioning but clamp to image bounds
+    const clampedX = Math.max(0, Math.min(1, x));
+    const clampedY = Math.max(0, Math.min(1, y));
+
+    setTextPosition({ x: clampedX, y: clampedY });
+  };
+
+  const handleMouseDown = () => {
+    setIsDragging(true);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      handleTextDrag(e);
+    }
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Reset text position when new image is selected
+    setTextPosition({ x: 0.5, y: 0.3 });
 
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
@@ -79,6 +114,8 @@ export function CreateStoryModal({
       storyFormData.append("imageUrl", cloudinaryData.secure_url);
       storyFormData.append("publicId", cloudinaryData.public_id);
       storyFormData.append("textOverlay", textOverlay);
+      storyFormData.append("textX", textPosition.x.toString());
+      storyFormData.append("textY", textPosition.y.toString());
       storyFormData.append("privacy", "PUBLIC");
 
       const result = await createStory(storyFormData);
@@ -136,7 +173,13 @@ export function CreateStoryModal({
               <p className="text-sm text-gray-400 mt-2">Max size: 5MB</p>
             </div>
           ) : (
-            <div className="relative">
+            <div
+              ref={imageContainerRef}
+              className="relative cursor-pointer"
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
               <Image
                 src={imagePreview}
                 alt="Story preview"
@@ -149,14 +192,22 @@ export function CreateStoryModal({
                   setSelectedImage(null);
                   setImagePreview(null);
                 }}
-                className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
+                className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70 z-10"
               >
                 <FiX size={16} />
               </button>
 
               {textOverlay && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-white text-xl font-bold text-center px-4 py-2 bg-black bg-opacity-50 rounded-lg max-w-xs">
+                <div
+                  className="absolute cursor-move select-none"
+                  style={{
+                    left: `${textPosition.x * 100}%`,
+                    top: `${textPosition.y * 100}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  onMouseDown={handleMouseDown}
+                >
+                  <p className="text-white text-xl font-bold text-center px-4 py-2 bg-black bg-opacity-50 rounded-lg max-w-xs backdrop-blur-sm drop-shadow-lg">
                     {textOverlay}
                   </p>
                 </div>

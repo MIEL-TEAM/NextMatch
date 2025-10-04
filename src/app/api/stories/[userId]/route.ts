@@ -68,7 +68,6 @@ export async function GET(
       });
     }
 
-    // Transform stories data
     const transformedStories = stories.map((story) => ({
       id: story.id,
       imageUrl: story.imageUrl,

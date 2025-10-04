@@ -93,6 +93,8 @@ export async function POST(request: NextRequest) {
       imageUrl,
       publicId,
       textOverlay,
+      textX,
+      textY,
       filter,
       privacy = "PUBLIC",
     } = body;
@@ -147,6 +149,8 @@ export async function POST(request: NextRequest) {
         imageUrl,
         publicId,
         textOverlay,
+        textX,
+        textY,
         filter,
         privacy,
         expiresAt,

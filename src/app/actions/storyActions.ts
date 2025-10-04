@@ -15,6 +15,8 @@ interface Story {
   imageUrl: string;
   publicId?: string | null;
   textOverlay?: string | null;
+  textX?: number | null;
+  textY?: number | null;
   filter?: string | null;
   privacy: StoryPrivacy;
   createdAt: Date;
@@ -45,6 +47,12 @@ export async function createStory(
     const imageUrl = formData.get("imageUrl") as string;
     const publicId = formData.get("publicId") as string;
     const textOverlay = formData.get("textOverlay") as string;
+    const textX = formData.get("textX")
+      ? parseFloat(formData.get("textX") as string)
+      : null;
+    const textY = formData.get("textY")
+      ? parseFloat(formData.get("textY") as string)
+      : null;
     const filter = formData.get("filter") as string;
     const privacy = (formData.get("privacy") as StoryPrivacy) || "PUBLIC";
 
@@ -91,6 +99,8 @@ export async function createStory(
           imageUrl,
           publicId: publicId || null,
           textOverlay: textOverlay || null,
+          textX: textX,
+          textY: textY,
           filter: filter || null,
           privacy,
           expiresAt,
@@ -137,6 +147,7 @@ export async function getStoryUsers() {
     }
 
     try {
+      // Get all users with stories
       const usersWithStories = await prisma.user.findMany({
         where: {
           stories: {
@@ -193,6 +204,27 @@ export async function getStoryUsers() {
         };
       });
 
+      // Check if current user is in the list
+      const currentUserInList = storyUsers.find((user) => user.isCurrentUser);
+
+      if (!currentUserInList) {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { id: true, name: true, image: true },
+        });
+
+        if (currentUser) {
+          storyUsers.push({
+            id: currentUser.id,
+            name: currentUser.name || "Unknown",
+            image: currentUser.image,
+            hasUnviewedStories: false,
+            totalStories: 0,
+            isCurrentUser: true,
+          });
+        }
+      }
+
       storyUsers.sort((a, b) => {
         if (a.isCurrentUser) return -1;
         if (b.isCurrentUser) return 1;
@@ -218,8 +250,6 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
     if (!session?.user?.id) {
       return [];
     }
-
-    console.log("Getting stories for user:", userId);
 
     try {
       const stories = await prisma.story.findMany({
@@ -254,8 +284,6 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
           createdAt: "asc",
         },
       });
-
-      console.log(`Found ${stories.length} stories for user ${userId}`);
 
       const unviewedStoryIds = stories
         .filter((story) => story.views.length === 0)
@@ -292,6 +320,8 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
         imageUrl: story.imageUrl,
         publicId: story.publicId,
         textOverlay: story.textOverlay,
+        textX: story.textX,
+        textY: story.textY,
         filter: story.filter,
         privacy: story.privacy as StoryPrivacy,
         createdAt: story.createdAt,
@@ -324,7 +354,9 @@ export async function reactToStory(
       return { status: "error", error: "Unauthorized" };
     }
 
-    console.log("Reacting to story:", storyId, "with:", reactionType);
+    // TODO: Implement story reaction logic
+    console.log(`Reacting to story ${storyId} with ${reactionType}`);
+
     return { status: "success", data: "Reaction added" };
   } catch (error) {
     console.error("Error reacting to story:", error);
@@ -350,7 +382,6 @@ export async function getStoryAnalytics(storyId: string): Promise<
       return { status: "error", error: "Not authenticated" };
     }
 
-    // Verify story ownership and premium status
     const story = await prisma.story.findUnique({
       where: { id: storyId },
       select: {
@@ -373,7 +404,6 @@ export async function getStoryAnalytics(storyId: string): Promise<
       return { status: "error", error: "Access denied" };
     }
 
-    // Check premium access
     const isPremiumActive =
       story.user.isPremium &&
       story.user.premiumUntil &&
@@ -387,7 +417,6 @@ export async function getStoryAnalytics(storyId: string): Promise<
       };
     }
 
-    // Get story views
     const storyViews = await prisma.storyView.findMany({
       where: { storyId },
       include: {
@@ -476,5 +505,60 @@ export async function sendStoryMessage(
   } catch (error) {
     console.error("Error sending story message:", error);
     return { status: "error", error: "Failed to send message" };
+  }
+}
+
+export async function deleteStory(
+  storyId: string
+): Promise<ActionResult<string>> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { status: "error", error: "לא מחובר" };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+    if (!user) {
+      return { status: "error", error: "משתמש לא נמצא" };
+    }
+
+    // Check if story exists and belongs to user
+    const story = await prisma.story.findUnique({
+      where: { id: storyId },
+      select: { userId: true, publicId: true },
+    });
+
+    if (!story) {
+      return { status: "error", error: "סטורי לא נמצא" };
+    }
+
+    if (story.userId !== user.id) {
+      return { status: "error", error: "אין הרשאה למחוק סטורי זה" };
+    }
+
+    // Delete from database
+    await prisma.story.delete({
+      where: { id: storyId },
+    });
+
+    // Delete from Cloudinary if publicId exists
+    if (story.publicId) {
+      try {
+        const { cloudinary } = await import("@/lib/cloudinary");
+        await cloudinary.v2.uploader.destroy(story.publicId);
+      } catch (cloudinaryError) {
+        console.error("Failed to delete from Cloudinary:", cloudinaryError);
+        // Don't fail the whole operation if Cloudinary deletion fails
+      }
+    }
+
+    revalidatePath("/members");
+
+    return { status: "success", data: "סטורי נמחק בהצלחה" };
+  } catch (error) {
+    console.error("Error deleting story:", error);
+    return { status: "error", error: "שגיאה במחיקת הסטורי" };
   }
 }

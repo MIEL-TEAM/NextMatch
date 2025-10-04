@@ -11,6 +11,8 @@ interface Story {
   id: string;
   imageUrl: string;
   textOverlay?: string | null;
+  textX?: number | null;
+  textY?: number | null;
   createdAt: string | Date;
   user: {
     id: string;
@@ -100,6 +102,25 @@ export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  const handleStoryDeleted = (storyId: string) => {
+    // Remove the deleted story from current stories
+    setCurrentStories((prev) => prev.filter((story) => story.id !== storyId));
+
+    // If no more stories, close viewer
+    if (currentStories.length <= 1) {
+      setShowViewer(false);
+      return;
+    }
+
+    // Adjust current index if needed
+    if (currentStoryIndex >= currentStories.length - 1) {
+      setCurrentStoryIndex(currentStories.length - 2);
+    }
+
+    // Refresh the carousel
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   return (
     <>
       <StoriesCarousel
@@ -116,6 +137,7 @@ export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
         onNext={handleNextStory}
         onPrevious={handlePreviousStory}
         currentUserId={currentUserId}
+        onStoryDeleted={handleStoryDeleted}
       />
       <CreateStoryModal
         isOpen={showCreateModal}

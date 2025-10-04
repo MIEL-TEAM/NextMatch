@@ -31,6 +31,9 @@ export default {
           image: profile.picture?.data?.url,
         } as any;
       },
+      client: {
+        token_endpoint_auth_method: "client_secret_post",
+      },
     }),
     Cerdentials({
       name: "credentials",

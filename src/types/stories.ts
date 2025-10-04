@@ -7,6 +7,8 @@ export interface Story {
   imageUrl: string;
   publicId?: string;
   textOverlay?: string;
+  textX?: number;
+  textY?: number;
   filter?: string;
   privacy: StoryPrivacy;
   createdAt: Date;

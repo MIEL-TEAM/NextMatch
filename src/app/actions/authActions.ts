@@ -13,7 +13,11 @@ import { LoginSchema } from "@/lib/schemas/loginSchema";
 import { auth, signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { generateToken, getTokenByToken } from "@/lib/tokens";
-import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/mail";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "@/lib/mail";
 import { revalidatePath } from "next/cache";
 
 export async function signInUser(
@@ -26,7 +30,6 @@ export async function signInUser(
       redirect: false,
     });
 
-    // Check if authentication was successful
     if (result?.error) {
       return {
         status: "error",
@@ -34,12 +37,26 @@ export async function signInUser(
       };
     }
 
+    const user = await getUserByEmail(data.email);
+
+    if (user && !user.hasSeenWelcomeMessage) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { hasSeenWelcomeMessage: true },
+      });
+
+      try {
+        await sendWelcomeEmail(user.email!, user.name || "חבר חדש");
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+      }
+    }
+
     return { status: "success", data: "Logged in" };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          // Extract the actual error message from auth.config.ts
           return {
             status: "error",
             error: error.cause?.err?.message || "פרטי התחברות שגויים",

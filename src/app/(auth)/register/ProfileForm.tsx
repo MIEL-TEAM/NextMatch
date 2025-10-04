@@ -47,7 +47,10 @@ export default function ProfileForm() {
           {...register("dateOfBirth")}
           isInvalid={!!errors.dateOfBirth}
           errorMessage={errors.dateOfBirth?.message as string}
-          className="w-full h-12"
+          className="w-full h-14"
+          classNames={{
+            label: "mb-2",
+          }}
         />
       </div>
 

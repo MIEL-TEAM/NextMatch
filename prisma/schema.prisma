@@ -48,13 +48,14 @@ model User {
   preferredAgeMin  Int?    @default(18)
   preferredAgeMax  Int?    @default(100)
 
-  member              Member?
-  Transaction         Transaction[]
-  accounts            Account[]
-  hasSeenMembersIntro Boolean           @default(false)
-  viewedProfiles      ProfileView[]     @relation("ViewerProfileViews")
-  profileViewers      ProfileView[]     @relation("ViewedProfileViews")
-  SmartMatchCache     SmartMatchCache[]
+  member                Member?
+  Transaction           Transaction[]
+  accounts              Account[]
+  hasSeenMembersIntro   Boolean           @default(false)
+  hasSeenWelcomeMessage Boolean           @default(false)
+  viewedProfiles        ProfileView[]     @relation("ViewerProfileViews")
+  profileViewers        ProfileView[]     @relation("ViewedProfileViews")
+  SmartMatchCache       SmartMatchCache[]
 
   // Stories relations
   stories        Story[]
@@ -249,11 +250,13 @@ enum Role {
 // Stories feature - Image only
 model Story {
   id          String       @id @default(cuid())
-  userId      String // Who created the story
-  imageUrl    String // Cloudinary URL for the story image
-  publicId    String? // Cloudinary public ID for deletion
-  textOverlay String? // Optional text overlay
-  filter      String? // Applied filter name
+  userId      String
+  imageUrl    String
+  publicId    String?
+  textOverlay String?
+  textX       Float?
+  textY       Float?
+  filter      String?
   privacy     StoryPrivacy @default(PUBLIC)
 
   // Timestamps

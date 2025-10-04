@@ -2,15 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { FiX } from "react-icons/fi";
+import { FiX, FiTrash2 } from "react-icons/fi";
 import { StoryProgressBar } from "./StoryProgressBar";
 import { StoryMessageModal } from "./StoryMessageModal";
 import { StoryAnalytics } from "./StoryAnalytics";
+import AppModal from "../AppModal";
 
 interface Story {
   id: string;
   imageUrl: string;
   textOverlay?: string | null;
+  textX?: number | null;
+  textY?: number | null;
   createdAt: string | Date;
   user: {
     id: string;
@@ -27,6 +30,7 @@ interface StoryViewerProps {
   onNext: () => void;
   onPrevious: () => void;
   currentUserId?: string;
+  onStoryDeleted?: (storyId: string) => void;
 }
 
 export function StoryViewer({
@@ -37,11 +41,13 @@ export function StoryViewer({
   onNext,
   onPrevious,
   currentUserId,
+  onStoryDeleted,
 }: StoryViewerProps) {
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPreview] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<
     Array<{
       id: string;
@@ -86,6 +92,24 @@ export function StoryViewer({
     setTimeout(() => {
       setFloatingEmojis((prev) => prev.filter((e) => e.id !== newEmoji.id));
     }, 1200);
+  };
+
+  const handleDeleteStory = async () => {
+    if (!currentStory) return;
+
+    try {
+      const { deleteStory } = await import("@/app/actions/storyActions");
+      const result = await deleteStory(currentStory.id);
+
+      if (result.status === "success") {
+        onStoryDeleted?.(currentStory.id);
+        onClose();
+      } else {
+        console.error("Failed to delete story:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to delete story:", error);
+    }
   };
 
   useEffect(() => {
@@ -211,7 +235,7 @@ export function StoryViewer({
           </svg>
         </button>
 
-        <div className="relative w-80 h-[600px] bg-black rounded-2xl overflow-hidden shadow-2xl">
+        <div className="relative w-[28rem] h-[700px] bg-black rounded-2xl overflow-hidden shadow-2xl">
           <div className="absolute top-4 left-4 right-4 z-10">
             <div className="flex gap-1">
               {stories.map((_, index) => (
@@ -263,6 +287,15 @@ export function StoryViewer({
                 storyId={currentStory.id}
                 isCurrentUserStory={currentStory.user.id === currentUserId}
               />
+              {currentStory.user.id === currentUserId && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-8 h-8 bg-red-600 bg-opacity-50 hover:bg-opacity-70 rounded-full flex items-center justify-center text-white transition-colors backdrop-blur-sm"
+                  title="מחק סטורי"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className="w-8 h-8 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full flex items-center justify-center text-white transition-colors backdrop-blur-sm"
@@ -288,7 +321,14 @@ export function StoryViewer({
             />
 
             {currentStory.textOverlay && (
-              <div className="absolute inset-0 flex items-center justify-center p-4">
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${(currentStory.textX || 0.5) * 100}%`,
+                  top: `${(currentStory.textY || 0.5) * 100}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
                 <p className="text-white text-lg font-bold text-center px-4 py-3 bg-black bg-opacity-60 rounded-xl max-w-xs backdrop-blur-sm drop-shadow-lg">
                   {currentStory.textOverlay}
                 </p>
@@ -391,6 +431,32 @@ export function StoryViewer({
         storyImageUrl={currentStory.imageUrl}
         storyOwnerName={currentStory.user.name || "Unknown User"}
         storyOwnerImage={currentStory.user.image}
+      />
+
+      <AppModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        header="מחק סטורי?"
+        body={
+          <p className="text-gray-600">
+            האם אתה בטוח שברצונך למחוק את הסטורי הזה? פעולה זו לא ניתנת לביטול.
+          </p>
+        }
+        footerButtons={[
+          {
+            children: "ביטול",
+            variant: "bordered",
+            onClick: () => setShowDeleteConfirm(false),
+          },
+          {
+            children: "מחק",
+            color: "danger",
+            onClick: () => {
+              setShowDeleteConfirm(false);
+              handleDeleteStory();
+            },
+          },
+        ]}
       />
     </div>
   );
