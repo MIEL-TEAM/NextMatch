@@ -2,8 +2,9 @@
 
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
-import { calculateAge, transformImageUrl } from "@/lib/util";
-import { Card, CardFooter, Image } from "@nextui-org/react";
+import { transformImageUrl } from "@/lib/util";
+import { Card, CardFooter } from "@nextui-org/react";
+import NextImage from "next/image";
 import { Member } from "@prisma/client";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -27,16 +28,15 @@ type SmartMemberCardProps = {
   index?: number;
 };
 
-// פונקציה לקביעת צבע הבאדג' לפי אחוז ההתאמה - עקבי עם ברנדינג Miel (כתום-חם)
 const getScoreBadgeStyle = (score: number): string => {
   if (score >= 90) {
-    return "bg-gradient-to-r from-orange-500 to-red-500"; // כתום-אדום עז לציונים גבוהים
+    return "bg-gradient-to-r from-orange-500 to-red-500";
   } else if (score >= 75) {
-    return "bg-gradient-to-r from-amber-500 to-orange-500"; // כתום קלאסי לציונים טובים
+    return "bg-gradient-to-r from-amber-500 to-orange-500";
   } else if (score >= 60) {
-    return "bg-gradient-to-r from-yellow-500 to-amber-500"; // צהוב-כתום לציונים בינוניים
+    return "bg-gradient-to-r from-yellow-500 to-amber-500";
   } else {
-    return "bg-gradient-to-r from-gray-400 to-slate-500"; // אפור עדין לציונים נמוכים
+    return "bg-gradient-to-r from-gray-400 to-slate-500";
   }
 };
 
@@ -55,7 +55,6 @@ const getScoreText = (score: number): string => {
 export default function SmartMemberCard({
   member,
   memberPhotos = [],
-  index = 0,
 }: SmartMemberCardProps) {
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,24 +64,38 @@ export default function SmartMemberCard({
   const router = useRouter();
   const processedPhotosRef = useRef(false);
   const likeCheckedRef = useRef(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    async function checkLikeStatus() {
-      if (likeCheckedRef.current) return;
+    const target = cardRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "100px" }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
 
+  useEffect(() => {
+    if (!isVisible || likeCheckedRef.current) return;
+    (async () => {
       try {
         const likedIds = await fetchCurrentUserLikeIds();
-        if (likedIds.includes(member.userId)) {
-          setHasLiked(true);
-        }
+        if (likedIds.includes(member.userId)) setHasLiked(true);
         likeCheckedRef.current = true;
       } catch (error) {
         console.error("Error checking like status:", error);
       }
-    }
-
-    checkLikeStatus();
-  }, [member.userId]);
+    })();
+  }, [isVisible, member.userId]);
 
   useEffect(() => {
     if (processedPhotosRef.current) return;
@@ -162,10 +175,11 @@ export default function SmartMemberCard({
 
   const renderCardContent = (imageUrl: string, isPriority: boolean = false) => (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
+      transition={{ duration: 0.3 }}
       className="h-full"
+      ref={cardRef}
     >
       <Card
         isPressable
@@ -173,24 +187,18 @@ export default function SmartMemberCard({
         onPress={handleProfileClick}
       >
         <div className="relative w-full h-full smart-member-card overflow-hidden rounded-t-lg">
-          {/* Premium glow effect for high scores */}
-          {member.matchScore && member.matchScore >= 95 && (
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-400/20 via-purple-500/20 to-indigo-500/20 animate-pulse z-10 pointer-events-none" />
-          )}
-          {member.matchScore &&
-            member.matchScore >= 90 &&
-            member.matchScore < 95 && (
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 z-10 pointer-events-none" />
-            )}
-
           <div className="absolute inset-0">
-            <Image
-              isZoomed
+            <NextImage
               alt={member.name}
               src={transformImageUrl(imageUrl) || "/images/user.png"}
-              className="smart-member-card-image transition-all duration-500 ease-in-out transform group-hover:scale-105"
-              removeWrapper
+              className="object-cover transition-all duration-200 ease-in-out transform group-hover:scale-105"
+              fill
+              sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw"
               loading={isPriority ? "eager" : "lazy"}
+              fetchPriority={isPriority ? "high" : "low"}
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABAgEAf6qL9wAAAABJRU5ErkJggg=="
+              priority={isPriority}
             />
           </div>
 
@@ -211,7 +219,6 @@ export default function SmartMemberCard({
             <PresenceDot member={member} />
           </div>
 
-          {/* Bottom-left media counter (photos) for consistency with dating.com */}
           <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5">
             <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
               <Camera className="w-3.5 h-3.5" />
@@ -221,7 +228,6 @@ export default function SmartMemberCard({
             </div>
           </div>
 
-          {/* AI badge */}
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
             <motion.span
               initial={{ scale: 0, rotate: -10 }}
@@ -236,13 +242,10 @@ export default function SmartMemberCard({
           <CardFooter className="flex flex-col items-start justify-between gap-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent absolute bottom-0 z-20 w-full p-4">
             <div className="flex items-center justify-between w-full">
               <div className="flex flex-col text-white">
-                <span className="font-bold text-base">
-                  {member.name}, {calculateAge(member.dateOfBirth)}
-                </span>
+                <span className="font-bold text-base">{member.name}</span>
                 <span className="text-sm text-white/90">{member.city}</span>
               </div>
 
-              {/* Match score badge on the right side */}
               {member.matchScore && (
                 <span
                   className={`text-white px-3 py-1 rounded-full text-xs font-bold shadow-md ${getScoreBadgeStyle(member.matchScore)}`}
@@ -253,7 +256,6 @@ export default function SmartMemberCard({
               )}
             </div>
 
-            {/* Premium match reason */}
             {member.matchReason && member.matchReason.trim() !== "" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -272,7 +274,6 @@ export default function SmartMemberCard({
               </motion.div>
             )}
 
-            {/* Premium insights */}
             {member.premiumInsights && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -308,7 +309,6 @@ export default function SmartMemberCard({
     </motion.div>
   );
 
-  // Handle single or no photos
   if (photos.length <= 1) {
     const defaultImage =
       photos.length === 1 ? photos[0].url : "/images/user.png";
