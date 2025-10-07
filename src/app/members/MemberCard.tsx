@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
@@ -21,6 +21,7 @@ interface MemberCardProps {
   memberPhotos?: Array<{ url: string; id: string }>;
   memberVideos?: Array<{ url: string; id: string }>;
   onLike?: (memberId: string, isLiked: boolean) => void;
+  isPriority?: boolean;
 }
 
 export default function MemberCard({
@@ -29,6 +30,7 @@ export default function MemberCard({
   memberPhotos = [],
   memberVideos = [],
   onLike,
+  isPriority = false,
 }: MemberCardProps) {
   const [hasLiked, setHasLiked] = useState<boolean>(
     likeIds.includes(member.userId)
@@ -45,6 +47,16 @@ export default function MemberCard({
       setActiveVideo(memberVideos[0].url);
     }
   }, [memberVideos, activeVideo]);
+
+  const age = useMemo(
+    () => calculateAge(member.dateOfBirth),
+    [member.dateOfBirth]
+  );
+  const distanceText = useMemo(
+    () =>
+      member.distance !== undefined ? formatDistance(member.distance) : null,
+    [member.distance]
+  );
 
   useEffect(() => {
     setVideoError(false);
@@ -128,7 +140,7 @@ export default function MemberCard({
       >
         <div className="relative aspect-square overflow-hidden rounded-t-lg group">
           {memberVideos.length > 0 && (
-            <span className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-md z-50">
+            <span className="absolute top-2 right-14 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-md z-50">
               חדש 🎬
             </span>
           )}
@@ -142,7 +154,7 @@ export default function MemberCard({
                 loop
                 muted={isMuted}
                 playsInline
-                preload="metadata"
+                preload="none"
                 onError={handleVideoError}
               />
             </div>
@@ -151,14 +163,16 @@ export default function MemberCard({
           <Image
             alt={member.name}
             src={transformImageUrl(imageUrl) || "/images/user.png"}
-            className={`w-full h-full object-cover transition-all duration-500 ease-in-out transform group-hover:scale-110 ${
+            className={`w-full h-full object-cover transition-all duration-200 ease-in-out transform group-hover:scale-105 ${
               showVideo ? "opacity-0" : "opacity-100"
             }`}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw"
             loading={isPriority ? "eager" : "lazy"}
             fetchPriority={isPriority ? "high" : "low"}
             priority={isPriority}
+            placeholder="blur"
+            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABAgEAf6qL9wAAAABJRU5ErkJggg=="
           />
 
           <div className="absolute top-2 right-2 z-50">
@@ -209,7 +223,7 @@ export default function MemberCard({
               <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
                 <MapPin className="w-3.5 h-3.5" />
                 <span className="text-[11px] leading-none font-medium">
-                  {formatDistance(member.distance)}
+                  {distanceText}
                 </span>
               </div>
             )}
@@ -222,7 +236,7 @@ export default function MemberCard({
         {/* Title and description under the image like dating.com */}
         <div className="px-2 py-2">
           <div className="font-semibold text-[15px] truncate">
-            {member.name}, {calculateAge(member.dateOfBirth)}
+            {member.name}, {age}
           </div>
           {member.description && (
             <div className="text-[12px] text-muted-foreground/90 line-clamp-2 leading-snug mt-1">
@@ -247,6 +261,8 @@ export default function MemberCard({
       toggleMute,
       memberVideos.length,
       memberPhotos.length,
+      age,
+      distanceText,
     ]
   );
 
@@ -265,9 +281,7 @@ export default function MemberCard({
         onIndexChange={setCurrentIndex}
         prioritizeFirstImage
       >
-        {(currentImage, isPriority) =>
-          renderCardContent(currentImage.url, isPriority)
-        }
+        {(currentImage) => renderCardContent(currentImage.url, isPriority)}
       </MemberImageCarousel>
     </div>
   );
