@@ -15,6 +15,7 @@ import { useInteractionTracking } from "@/hooks/useInteractionTracking";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { Camera } from "lucide-react";
 
 type SmartMemberCardProps = {
   member: Member & {
@@ -208,6 +209,16 @@ export default function SmartMemberCard({
           {/* Presence dot */}
           <div className="absolute top-2 left-3 z-20">
             <PresenceDot member={member} />
+          </div>
+
+          {/* Bottom-left media counter (photos) for consistency with dating.com */}
+          <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5">
+            <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
+              <Camera className="w-3.5 h-3.5" />
+              <span className="text-[11px] leading-none font-medium">
+                {Math.max(photos.length, member.image ? 1 : 0)}
+              </span>
+            </div>
           </div>
 
           {/* AI badge */}

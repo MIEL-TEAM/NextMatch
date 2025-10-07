@@ -11,7 +11,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import MemberImageCarousel from "@/components/MemberImageCarousel";
-import { Play, VolumeX, Volume2 } from "lucide-react";
+import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastStyle } from "@/hooks/useIsMobile";
 
@@ -36,7 +36,7 @@ export default function MemberCard({
   const [loading, setLoading] = useState<boolean>(false);
   const [showVideo, setShowVideo] = useState<boolean>(false);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [, setCurrentIndex] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [videoError, setVideoError] = useState<boolean>(false);
 
@@ -189,58 +189,46 @@ export default function MemberCard({
             )}
           </div>
 
-          <CardFooter
-            className="flex items-center justify-between overflow-hidden absolute bottom-0 z-50 w-full px-3 py-2 bg-black/50 backdrop-blur-[2px]"
-            dir="rtl"
-          >
-            <div className="flex flex-col items-start">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-white font-medium">
-                  {member.city}
-                </span>
-                <span className="text-xs text-white/80 font-medium">
-                  {calculateAge(member.dateOfBirth)}
-                </span>
-                {member.distance !== undefined && (
-                  <span className="text-xs text-white/90 font-medium bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/10">
-                    📍 {formatDistance(member.distance)}
-                  </span>
-                )}
-              </div>
-              <span className="font-semibold text-sm text-white">
-                {member.name}
+          {/* Bottom-left media counters + location like dating.com */}
+          <div className="absolute bottom-2 left-2 z-50 flex items-center gap-1.5">
+            <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
+              <Camera className="w-3.5 h-3.5" />
+              <span className="text-[11px] leading-none font-medium">
+                {Math.max(memberPhotos.length, member.image ? 1 : 0)}
               </span>
             </div>
+            {memberVideos.length > 0 && (
+              <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
+                <Video className="w-3.5 h-3.5" />
+                <span className="text-[11px] leading-none font-medium">
+                  {memberVideos.length}
+                </span>
+              </div>
+            )}
+            {member.distance !== undefined && (
+              <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
+                <MapPin className="w-3.5 h-3.5" />
+                <span className="text-[11px] leading-none font-medium">
+                  {formatDistance(member.distance)}
+                </span>
+              </div>
+            )}
+          </div>
 
-            <div className="flex items-center gap-1.5">
-              {memberVideos.length > 0 && !showVideo && (
-                <div className="bg-white/20 backdrop-blur-[1px] rounded-md p-1 flex items-center justify-center border border-white/10">
-                  <div className="relative w-4 h-4">
-                    <div className="absolute inset-0 animate-ping rounded-full bg-white/30"></div>
-                    <div className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center">
-                      <Play className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  </div>
-                </div>
-              )}
+          {/* Removed centered strip */}
+          <CardFooter className="pointer-events-none absolute bottom-0 left-0 right-0 z-40 px-2 pb-2" />
+        </div>
 
-              {memberVideos.length > 0 && showVideo && (
-                <div className="bg-white/20 backdrop-blur-[1px] rounded-md p-1 flex items-center justify-center border border-white/10">
-                  <div className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center">
-                    <Play className="w-2.5 h-2.5 text-white" fill="white" />
-                  </div>
-                </div>
-              )}
-
-              {memberPhotos.length > 1 && (
-                <div className="flex items-center bg-white/20 backdrop-blur-[1px] rounded-md px-1.5 py-0.5 border border-white/10">
-                  <span className="text-white text-[10px] font-medium tracking-tight">
-                    {currentIndex + 1}/{memberPhotos.length}
-                  </span>
-                </div>
-              )}
+        {/* Title and description under the image like dating.com */}
+        <div className="px-2 py-2">
+          <div className="font-semibold text-[15px] truncate">
+            {member.name}, {calculateAge(member.dateOfBirth)}
+          </div>
+          {member.description && (
+            <div className="text-[12px] text-muted-foreground/90 line-clamp-2 leading-snug mt-1">
+              {member.description}
             </div>
-          </CardFooter>
+          )}
         </div>
       </Card>
     ),
@@ -259,7 +247,6 @@ export default function MemberCard({
       toggleMute,
       memberVideos.length,
       memberPhotos.length,
-      currentIndex,
     ]
   );
 

@@ -47,6 +47,7 @@ export function StoryViewer({
   const [isPaused, setIsPaused] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPreview] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<
     Array<{
@@ -76,6 +77,15 @@ export function StoryViewer({
   const handlePreviousWithTransition = useCallback(() => {
     onPrevious();
   }, [onPrevious]);
+
+  useEffect(() => {
+    setImageLoaded(false);
+    if (progressRef.current) {
+      clearInterval(progressRef.current);
+      progressRef.current = undefined;
+    }
+    setProgress(0);
+  }, [currentStoryIndex, currentStory?.imageUrl]);
 
   const createFloatingEmoji = (emoji: string) => {
     const newEmoji = {
@@ -142,7 +152,14 @@ export function StoryViewer({
   }, [isOpen, handleNextWithTransition, handlePreviousWithTransition, onClose]);
 
   useEffect(() => {
-    if (!isOpen || isPaused || !currentStory || showMessageModal) return;
+    if (
+      !isOpen ||
+      isPaused ||
+      !currentStory ||
+      showMessageModal ||
+      !imageLoaded
+    )
+      return;
 
     setProgress(0);
     const startTime = Date.now();
@@ -172,6 +189,7 @@ export function StoryViewer({
     onNext,
     onClose,
     currentStory,
+    imageLoaded,
   ]);
 
   const handleTap = (event: React.MouseEvent) => {
@@ -240,7 +258,7 @@ export function StoryViewer({
             <div className="flex gap-1">
               {stories.map((_, index) => (
                 <StoryProgressBar
-                  key={index}
+                  key={`${index}-${currentStoryIndex}`}
                   progress={
                     index === currentStoryIndex
                       ? progress
@@ -316,9 +334,20 @@ export function StoryViewer({
               src={currentStory.imageUrl}
               alt="Story"
               fill
-              className="object-cover"
+              className={`object-cover transition-opacity duration-300 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
               priority
+              onLoadingComplete={() => setImageLoaded(true)}
             />
+
+            {!imageLoaded && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-none">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
+                </div>
+              </div>
+            )}
 
             {currentStory.textOverlay && (
               <div

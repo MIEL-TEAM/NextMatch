@@ -10,19 +10,23 @@ export default function PresenceDot({ member }: PresenceProps) {
 
   const isOnline = members.indexOf(member.userId) !== -1;
 
-  if (!isOnline) return null;
+  // Always render a presence indicator: gray by default, green when online
   return (
-    <>
-      <div className="relative" title="מחובר/ת">
-        <GoDot
-          size={36}
-          className="fill-white z-10 absolute -top-[2px] -right-[2px]"
-        />
-        <GoDotFill
-          size={32}
-          className="fill-[#007A33] border-2 border-white rounded-full animate-pulse z-20 cursor-pointer"
-        />
-      </div>
-    </>
+    <div
+      className="relative"
+      title={isOnline ? "מחובר/ת" : "לא מחובר/ת"}
+      aria-label={isOnline ? "online" : "offline"}
+    >
+      <GoDot
+        size={36}
+        className="fill-white z-10 absolute -top-[2px] -right-[2px]"
+      />
+      <GoDotFill
+        size={32}
+        className={`${
+          isOnline ? "fill-[#007A33] animate-pulse" : "fill-gray-400"
+        } border-2 border-white rounded-full z-20`}
+      />
+    </div>
   );
 }
