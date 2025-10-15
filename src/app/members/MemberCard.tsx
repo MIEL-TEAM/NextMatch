@@ -14,9 +14,15 @@ import MemberImageCarousel from "@/components/MemberImageCarousel";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastStyle } from "@/hooks/useIsMobile";
+import VerifiedRibbon from "@/components/VerifiedRibbon";
 
 interface MemberCardProps {
-  member: Member & { distance?: number };
+  member: Member & {
+    distance?: number;
+    user?: {
+      oauthVerified?: boolean;
+    };
+  };
   likeIds: string[];
   memberPhotos?: Array<{ url: string; id: string }>;
   memberVideos?: Array<{ url: string; id: string }>;
@@ -175,11 +181,10 @@ export default function MemberCard({
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABAgEAf6qL9wAAAABJRU5ErkJggg=="
           />
 
-          <div className="absolute top-2 right-2 z-50">
-            <PresenceDot member={member} />
-          </div>
+          {/* OAuth Verification Ribbon */}
+          {member.user?.oauthVerified && <VerifiedRibbon />}
 
-          <div className="absolute top-2 left-2 z-50 flex gap-1 items-center">
+          <div className="absolute top-2 left-2 z-50 flex gap-1.5 items-center">
             <LikeButton
               loading={loading}
               toggleLike={toggleLike}
@@ -233,15 +238,18 @@ export default function MemberCard({
           <CardFooter className="pointer-events-none absolute bottom-0 left-0 right-0 z-40 px-2 pb-2" />
         </div>
 
-        {/* Title and description under the image like dating.com */}
-        <div className="px-2 py-2">
-          <div className="font-semibold text-[15px] truncate">
-            {member.name}, {age}
+        {/* Title and description - Beautiful card footer */}
+        <div className="px-3 py-3 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 border-t border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-2 mb-1.5">
+            <h3 className="font-bold text-[16px] text-gray-900 dark:text-white truncate">
+              {member.name}, {age}
+            </h3>
+            <PresenceDot member={member} />
           </div>
           {member.description && (
-            <div className="text-[12px] text-muted-foreground/90 line-clamp-2 leading-snug mt-1">
+            <p className="text-[13px] text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
               {member.description}
-            </div>
+            </p>
           )}
         </div>
       </Card>

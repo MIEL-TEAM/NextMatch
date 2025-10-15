@@ -5,6 +5,7 @@ import { getAuthUserId } from "./authActions";
 import { pusherServer } from "@/lib/pusher";
 import { trackUserInteraction } from "./smartMatchActions";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { sendNewMatchEmail } from "@/lib/mail";
 
 export async function toggleLikeMember(
   targetUserId: string,
@@ -98,6 +99,41 @@ export async function toggleLikeMember(
             timestamp: new Date().toISOString(),
           }),
         ]);
+
+        // 📧 שלח אימיילים על התאמה הדדית
+        const [currentUserData, targetUserData] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true, name: true },
+          }),
+          prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: { email: true, name: true },
+          }),
+        ]);
+
+        // שלח אימיילים לשני המשתמשים (לא ממתינים - רץ ברקע)
+        if (currentUserData?.email && targetMember?.name) {
+          sendNewMatchEmail(
+            currentUserData.email,
+            currentUserData.name || "משתמש",
+            targetMember.name,
+            targetUserId
+          ).catch((e) =>
+            console.error("Failed to send match email to current user:", e)
+          );
+        }
+
+        if (targetUserData?.email && like.sourceMember.name) {
+          sendNewMatchEmail(
+            targetUserData.email,
+            targetUserData.name || "משתמש",
+            like.sourceMember.name,
+            userId
+          ).catch((e) =>
+            console.error("Failed to send match email to target user:", e)
+          );
+        }
       } else {
         // לייק רגיל
         await pusherServer.trigger(`private-${targetUserId}`, "like:new", {

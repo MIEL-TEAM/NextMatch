@@ -17,12 +17,16 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { Camera } from "lucide-react";
+import VerifiedRibbon from "@/components/VerifiedRibbon";
 
 type SmartMemberCardProps = {
   member: Member & {
     matchReason?: string;
     matchScore?: number;
     premiumInsights?: string;
+    user?: {
+      oauthVerified?: boolean;
+    };
   };
   memberPhotos?: Array<{ url: string; id: string }>;
   index?: number;
@@ -202,21 +206,18 @@ export default function SmartMemberCard({
             />
           </div>
 
-          {/* Like button */}
-          <div
-            className="absolute top-3 right-3 z-20"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <LikeButton
-              loading={loading}
-              toggleLike={toggleLike}
-              hasLiked={hasLiked}
-            />
-          </div>
+          {/* OAuth Verification Ribbon */}
+          {member.user?.oauthVerified && <VerifiedRibbon />}
 
-          {/* Presence dot */}
-          <div className="absolute top-2 left-3 z-20">
-            <PresenceDot member={member} />
+          {/* Like button */}
+          <div className="absolute top-3 left-3 z-20">
+            <div onClick={(e) => e.stopPropagation()}>
+              <LikeButton
+                loading={loading}
+                toggleLike={toggleLike}
+                hasLiked={hasLiked}
+              />
+            </div>
           </div>
 
           <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5">
@@ -242,7 +243,10 @@ export default function SmartMemberCard({
           <CardFooter className="flex flex-col items-start justify-between gap-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent absolute bottom-0 z-20 w-full p-4">
             <div className="flex items-center justify-between w-full">
               <div className="flex flex-col text-white">
-                <span className="font-bold text-base">{member.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-base">{member.name}</span>
+                  <PresenceDot member={member} />
+                </div>
                 <span className="text-sm text-white/90">{member.city}</span>
               </div>
 

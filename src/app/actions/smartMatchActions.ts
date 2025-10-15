@@ -150,7 +150,7 @@ export async function getSmartMatches(
         where: { userId: { not: userId } },
         include: {
           interests: { select: { name: true } },
-          user: { select: { emailVerified: true } },
+          user: { select: { emailVerified: true, oauthVerified: true } },
         },
         orderBy: { created: "desc" },
         take: 12,
@@ -245,7 +245,7 @@ export async function getSmartMatches(
       },
       include: {
         interests: { select: { name: true } },
-        user: { select: { emailVerified: true } },
+        user: { select: { emailVerified: true, oauthVerified: true } },
       },
       orderBy: { created: "desc" },
     });
@@ -255,7 +255,7 @@ export async function getSmartMatches(
         where: { userId: { not: userId } },
         include: {
           interests: { select: { name: true } },
-          user: { select: { emailVerified: true } },
+          user: { select: { emailVerified: true, oauthVerified: true } },
         },
         orderBy: { created: "desc" },
         take: 12,

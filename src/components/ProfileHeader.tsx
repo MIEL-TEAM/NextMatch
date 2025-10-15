@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@nextui-org/react";
+import { Button, Chip } from "@nextui-org/react";
 import { MessageCircleIcon, MapPinIcon, ShareIcon } from "lucide-react";
+import { MdVerified } from "react-icons/md";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { Member } from "@prisma/client";
 import { toast } from "react-toastify";
@@ -11,7 +12,12 @@ import { getToastStyle } from "@/hooks/useIsMobile";
 import { useRouter } from "next/navigation";
 
 type ProfileHeaderProps = {
-  member: Member;
+  member: Member & {
+    user?: {
+      oauthVerified?: boolean;
+      emailVerified?: Date | null;
+    };
+  };
   userId: string;
   likeIds: string[];
   onLikeToggle?: (userId: string, hasLiked: boolean) => void;
@@ -112,7 +118,44 @@ export default function ProfileHeader({
   return (
     <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
       <div className="flex flex-col gap-2 items-center md:items-start">
-        <h1 className="text-3xl font-bold">{member.name || "משתמש"}</h1>
+        <div className="flex items-center gap-2" dir="rtl">
+          <h1 className="text-3xl font-bold">{member.name || "משתמש"}</h1>
+          {member.user?.oauthVerified && (
+            <MdVerified className="text-blue-500 inline w-7 h-7" />
+          )}
+        </div>
+
+        {/* Verification Badge */}
+        {(member.user?.oauthVerified || member.user?.emailVerified) && (
+          <div className="flex gap-2" dir="rtl">
+            {member.user?.oauthVerified && (
+              <Chip
+                size="sm"
+                variant="flat"
+                classNames={{
+                  base: "bg-blue-50 border-blue-200 border",
+                  content: "text-blue-600 font-semibold",
+                }}
+                startContent={<MdVerified className="text-blue-500 w-4 h-4" />}
+              >
+                מאומת
+              </Chip>
+            )}
+            {!member.user?.oauthVerified && member.user?.emailVerified && (
+              <Chip
+                size="sm"
+                variant="flat"
+                classNames={{
+                  base: "bg-gray-50 border-gray-200 border",
+                  content: "text-gray-600 font-semibold",
+                }}
+              >
+                אימייל מאומת
+              </Chip>
+            )}
+          </div>
+        )}
+
         <div className="flex gap-2 items-center text-default-500">
           <MapPinIcon size={16} />
           <span>

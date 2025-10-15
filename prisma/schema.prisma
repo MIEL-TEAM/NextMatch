@@ -43,8 +43,19 @@ model User {
   stripeSubscriptionId String?
   stripeCustomerId     String?
 
+  // OAuth verification
+  provider      String? // "google", "facebook", or "credentials"
+  oauthVerified Boolean @default(false)
+  trustScore    Int     @default(0)
+
+  // Activity tracking
+  lastActiveAt DateTime?
+
+  // Email notification preferences
+  emailNotifications Json? @default("{\"newMessage\": true, \"newMatch\": true, \"newLike\": false}")
+
   // Dating Preferences
-  preferredGenders String? @default("male,female") // "male", "female", or "male,female"
+  preferredGenders String? @default("male,female")
   preferredAgeMin  Int?    @default(18)
   preferredAgeMax  Int?    @default(100)
 

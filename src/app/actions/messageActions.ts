@@ -8,6 +8,11 @@ import { mapMessageToMessageDto } from "@/lib/mappings";
 import { pusherServer } from "@/lib/pusher";
 import { createChatId } from "@/lib/util";
 import { trackUserInteraction } from "./smartMatchActions";
+import {
+  sendImmediateMessageEmail,
+  scheduleReminderEmail,
+  cancelReminderEmail,
+} from "@/lib/email-rate-limiting";
 
 export async function createMessgae(
   recipientUserId: string,
@@ -51,6 +56,27 @@ export async function createMessgae(
       "message:new",
       messageDto
     );
+
+    const conversationId = createChatId(userId, recipientUserId);
+
+    // Send immediate email if user is offline
+    const emailSent = await sendImmediateMessageEmail(
+      message.id,
+      conversationId,
+      userId,
+      recipientUserId,
+      text
+    );
+
+    // Schedule reminder email for 2 hours later if message still unread
+    if (emailSent) {
+      await scheduleReminderEmail(
+        message.id,
+        conversationId,
+        recipientUserId,
+        2
+      );
+    }
 
     return { status: "success", data: messageDto };
   } catch (error) {
@@ -108,6 +134,11 @@ export async function getMessageThread(recipientId: string) {
         "messages:read",
         readMessagesIds
       );
+
+      // 📧 Cancel any reminder emails for messages that were just read
+      for (const messageId of readMessagesIds) {
+        await cancelReminderEmail(messageId);
+      }
     }
 
     const messagesToReturn = messages.map((message) => ({

@@ -13,29 +13,64 @@ export const {
 } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        if (user.email) {
-          try {
-            const existingUser = await prisma.user.findUnique({
-              where: { email: user.email },
-              select: { hasSeenWelcomeMessage: true },
-            });
+      if (user.email) {
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            select: {
+              hasSeenWelcomeMessage: true,
+              oauthVerified: true,
+              trustScore: true,
+            },
+          });
 
-            if (existingUser && !existingUser.hasSeenWelcomeMessage) {
-              await prisma.user.update({
-                where: { email: user.email },
-                data: { hasSeenWelcomeMessage: true },
-              });
+          // Handle OAuth providers (Google, Facebook)
+          if (
+            account?.provider === "google" ||
+            account?.provider === "facebook"
+          ) {
+            const updateData: any = {
+              emailVerified: new Date(),
+              provider: account.provider,
+              oauthVerified: true,
+            };
 
+            // Increment trust score by 40 if not already OAuth verified
+            if (existingUser && !existingUser.oauthVerified) {
+              updateData.trustScore = (existingUser.trustScore || 0) + 40;
+            }
+
+            // Send welcome email for new Google users
+            if (
+              account.provider === "google" &&
+              existingUser &&
+              !existingUser.hasSeenWelcomeMessage
+            ) {
+              updateData.hasSeenWelcomeMessage = true;
               try {
                 await sendWelcomeEmail(user.email, user.name || "חבר חדש");
               } catch (emailError) {
                 console.error("Failed to send welcome email:", emailError);
               }
             }
-          } catch (error) {
-            console.error("Error in Google signIn callback:", error);
+
+            await prisma.user.update({
+              where: { email: user.email },
+              data: updateData,
+            });
           }
+          // Handle credentials (email/password) provider
+          else if (account?.provider === "credentials") {
+            await prisma.user.update({
+              where: { email: user.email },
+              data: {
+                provider: "credentials",
+                oauthVerified: false,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Error in signIn callback:", error);
         }
       }
       return true;

@@ -198,6 +198,12 @@ export async function getMembers({
             where: { isApproved: true },
             take: 1,
           },
+          user: {
+            select: {
+              oauthVerified: true,
+              emailVerified: true,
+            },
+          },
         },
         orderBy: { [orderByField]: orderDirection },
       }),
@@ -418,6 +424,7 @@ export const getMemberByUserId = cache(async (userId: string) => {
       user: {
         select: {
           emailVerified: true,
+          oauthVerified: true,
         },
       },
     },
