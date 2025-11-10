@@ -5,12 +5,14 @@ declare module "next-auth" {
   interface User {
     profileComplete: boolean;
     role: Role;
+    isPremium: boolean;
   }
 
   interface Session {
     user: {
       profileComplete: boolean;
       role: Role;
+      isPremium: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -19,10 +21,10 @@ declare module "next-auth/jwt" {
   interface Jwt {
     profileComplete: boolean;
     role: Role;
+    isPremium: boolean;
   }
 }
 
-// Create a file like types/env.d.ts
 declare module "process" {
   namespace NodeJS {
     interface ProcessEnv {

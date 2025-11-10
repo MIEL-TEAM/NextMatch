@@ -15,12 +15,14 @@ import InterestNotification from "@/hooks/useInterestNotification";
 import CelebrationModal, {
   useCelebration,
 } from "@/components/CelebrationModal";
+import { AIAssistantButton } from "@/components/ai-assistant";
 
 type ProvidersProps = {
   children: ReactNode;
   userId: string | null;
   profileComplete: boolean;
   initialUnreadCount?: number;
+  isPremium?: boolean;
 };
 
 export default function Providers({
@@ -28,6 +30,7 @@ export default function Providers({
   userId,
   profileComplete,
   initialUnreadCount,
+  isPremium = false,
 }: ProvidersProps) {
   const isUnreadCountSet = useRef(false);
 
@@ -85,6 +88,11 @@ export default function Providers({
           type={celebration.type}
           data={celebration.data}
         />
+
+        {/* AI Dating Assistant - Only show for logged in users with complete profiles */}
+        {userId && profileComplete && (
+          <AIAssistantButton userId={userId} isPremium={isPremium} />
+        )}
 
         {children}
       </NextUIProvider>

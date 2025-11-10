@@ -71,6 +71,7 @@ export default async function RootLayout({
   const session = await auth();
   const userId = session?.user?.id || null;
   const profileComplete = session?.user.profileComplete as boolean;
+  const isPremium = session?.user?.isPremium as boolean;
 
   let initialUnreadCount = 0;
   if (userId) {
@@ -135,6 +136,7 @@ export default async function RootLayout({
             userId={userId}
             profileComplete={profileComplete}
             initialUnreadCount={initialUnreadCount}
+            isPremium={isPremium}
           >
             <MobileBlocker />
             <div className="hidden lg:block">

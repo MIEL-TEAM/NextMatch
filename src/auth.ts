@@ -24,7 +24,6 @@ export const {
             },
           });
 
-          // Handle OAuth providers (Google, Facebook)
           if (
             account?.provider === "google" ||
             account?.provider === "facebook"
@@ -35,12 +34,10 @@ export const {
               oauthVerified: true,
             };
 
-            // Increment trust score by 40 if not already OAuth verified
             if (existingUser && !existingUser.oauthVerified) {
               updateData.trustScore = (existingUser.trustScore || 0) + 40;
             }
 
-            // Send welcome email for new Google users
             if (
               account.provider === "google" &&
               existingUser &&
@@ -58,9 +55,7 @@ export const {
               where: { email: user.email },
               data: updateData,
             });
-          }
-          // Handle credentials (email/password) provider
-          else if (account?.provider === "credentials") {
+          } else if (account?.provider === "credentials") {
             await prisma.user.update({
               where: { email: user.email },
               data: {
@@ -79,6 +74,7 @@ export const {
       if (user) {
         token.profileComplete = user.profileComplete;
         token.role = user.role;
+        token.isPremium = user.isPremium;
       }
 
       return token;
@@ -88,6 +84,7 @@ export const {
         session.user.id = token.sub;
         session.user.profileComplete = token.profileComplete as boolean;
         session.user.role = token.role as Role;
+        session.user.isPremium = token.isPremium as boolean;
 
         const now = Date.now();
         const globalAny = global as any;

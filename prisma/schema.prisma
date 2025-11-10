@@ -74,6 +74,10 @@ model User {
   storyReactions StoryReaction[]
   storySent      StoryReply[]    @relation("StoryReplySender")
   storyReceived  StoryReply[]    @relation("StoryReplyRecipient")
+
+  // AI Assistant relations
+  aiConversations AIConversation[]
+  aiUsageLogs     AIUsageLog[]
 }
 
 model Interest {
@@ -136,9 +140,8 @@ model Photo {
   isApproved Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime? @updatedAt
-
-  member   Member? @relation(fields: [memberId], references: [id])
-  memberId String?
+  member     Member?   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId   String?
 }
 
 model Like {
@@ -335,4 +338,51 @@ enum ReactionType {
   FIRE // 🔥
   LOVE_EYES // 😍
   EYES // 👀
+}
+
+// AI Dating Assistant feature
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String? // Optional title for conversation
+  context   Json? // Store conversation context (preferences, current search, etc.)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId, isActive, updatedAt])
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String // "user" or "assistant"
+  content        String   @db.Text
+  metadata       Json? // Store suggested matches, actions, etc.
+  tokensUsed     Int? // Track API usage
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+// Track AI usage for rate limiting and analytics
+model AIUsageLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String // "chat", "match_suggestion", "profile_analysis"
+  tokens    Int?
+  cost      Float? // Track cost in credits
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_usage_logs")
 }

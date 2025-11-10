@@ -220,6 +220,11 @@ export default function SmartMemberCard({
             </div>
           </div>
 
+          {/* Presence Dot - Top Right */}
+          <div className="absolute top-3 right-3 z-20">
+            <PresenceDot member={member} />
+          </div>
+
           <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5">
             <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
               <Camera className="w-3.5 h-3.5" />
@@ -245,7 +250,6 @@ export default function SmartMemberCard({
               <div className="flex flex-col text-white">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-base">{member.name}</span>
-                  <PresenceDot member={member} />
                 </div>
                 <span className="text-sm text-white/90">{member.city}</span>
               </div>
@@ -319,7 +323,6 @@ export default function SmartMemberCard({
     return renderCardContent(defaultImage, true);
   }
 
-  // Handle multiple photos with carousel
   return (
     <div className="flex flex-col justify-between h-full smart-member-card-container">
       <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl smart-member-card">
