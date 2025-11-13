@@ -1,11 +1,14 @@
 import { auth } from "@/auth";
-import { getUserInfoForNav } from "@/app/actions/userActions";
+import {
+  getProfileCompletionStatus,
+  getUserInfoForNav,
+} from "@/app/actions/userActions";
 import { getUnreadMessageCount } from "@/app/actions/messageActions";
 import TopNavClient from "./TopNavClient";
 
 export default async function TopNav() {
   const session = await auth();
-  const userInfo = session?.user && (await getUserInfoForNav());
+  const userInfo = session?.user ? await getUserInfoForNav() : null;
   const userId = session?.user?.id || null;
 
   let initialUnreadCount = 0;
@@ -31,6 +34,9 @@ export default async function TopNav() {
 
   const links = session?.user?.role === "ADMIN" ? adminLinks : memberLinks;
 
+  const profileCompletion =
+    userId && session?.user ? await getProfileCompletionStatus(userId) : null;
+
   return (
     <TopNavClient
       session={session}
@@ -38,6 +44,7 @@ export default async function TopNav() {
       userId={userId}
       links={links}
       initialUnreadCount={initialUnreadCount}
+      profileCompletion={profileCompletion}
     />
   );
 }

@@ -20,24 +20,28 @@ export default function NavLink({
   const storeUnreadCount = useMessageStore((state) => state.unreadCount);
   const unreadCount = storeUnreadCount || initialUnreadCount || 0;
 
+  const isActive = pathName === href;
+
   return (
     <li className="list-none">
       <Link
         href={href}
-        className={`text-white hover:text-yellow-200 transition-all duration-300 text-lg font-medium relative group ${
-          pathName === href ? "text-yellow-300" : ""
-        }`}
-      >
-        <span className="relative z-10">{label}</span>
-        {unreadCount > 0 && href === "/messages" && (
-          <span className="ml-2 relative z-10"> ({unreadCount}) </span>
-        )}
+        className={`
+    transition-all duration-200 
+    text-lg font-semibold 
 
-        <span
-          className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-white transform -translate-x-1/2 transition-all duration-300 group-hover:w-full ${
-            pathName === href ? "w-full" : ""
-          }`}
-        />
+    ${isActive ? "text-[#8B5A2B]" : "text-white hover:text-white/70"}
+  `}
+      >
+        {label}
+
+        {unreadCount > 0 && href === "/messages" && (
+          <span
+            className={`ml-2 ${isActive ? "text-[#8B5A2B]" : "text-white"}`}
+          >
+            ({unreadCount})
+          </span>
+        )}
       </Link>
     </li>
   );

@@ -1,15 +1,37 @@
 "use client";
 
-import { Navbar, NavbarBrand, NavbarContent, Button } from "@nextui-org/react";
+import { Navbar, NavbarContent, Button } from "@nextui-org/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import type { Session } from "next-auth";
 
 import NavLink from "./NavLink";
 import UserMenu from "./UserMenu";
 import FiltersWrapper from "./FiltersWrapper";
 import MobileMenu from "./MobileMenu";
 import ProfileViewsButton from "../profile-view/ProfileViewsButton";
+import ProfileCompletionButton from "./ProfileCompletionButton";
+import type { ProfileCompletionStatus } from "@/app/actions/userActions";
+
+type NavLinkItem = {
+  href: string;
+  label: string;
+};
+
+type UserInfoForNav = {
+  name: string | null;
+  image: string | null;
+};
+
+type TopNavClientProps = {
+  session: Session | null;
+  userInfo: UserInfoForNav | null;
+  userId: string | null;
+  links: NavLinkItem[];
+  initialUnreadCount: number;
+  profileCompletion: ProfileCompletionStatus | null;
+};
 
 export default function TopNavClient({
   session,
@@ -17,7 +39,8 @@ export default function TopNavClient({
   userId,
   links,
   initialUnreadCount,
-}: any) {
+  profileCompletion,
+}: TopNavClientProps) {
   const pathname = usePathname();
   const isAuthPage =
     pathname.includes("/login") ||
@@ -58,10 +81,10 @@ export default function TopNavClient({
           <div className="flex items-center gap-2">
             <span
               className="font-bold tracking-wide text-3xl 
-    bg-gradient-to-r from-[#FF9F1C] via-[#FF6A00] to-[#E63946] 
-    bg-clip-text text-transparent 
-    drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)] 
-    [text-shadow:_0_1px_0_#000]"
+                bg-gradient-to-r from-[#FF9F1C] via-[#FF6A00] to-[#E63946] 
+                bg-clip-text text-transparent 
+                drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)] 
+                [text-shadow:_0_1px_0_#000]"
             >
               Miel
             </span>
@@ -88,8 +111,9 @@ export default function TopNavClient({
   return (
     <>
       <Navbar
-        maxWidth="xl"
-        className="bg-gradient-to-r from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 backdrop-blur-lg shadow-md border-b border-white/20"
+        maxWidth="full"
+        className="bg-gradient-to-r from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
+        backdrop-blur-lg shadow-md border-b border-white/20"
         classNames={{
           item: [
             "text-lg",
@@ -103,45 +127,13 @@ export default function TopNavClient({
           ],
         }}
       >
-        <NavbarBrand className="flex items-center justify-start gap-2 w-full">
-          <div className="relative flex items-center justify-center w-11 h-11">
-            <Image
-              src="/images/icons/Logo.png"
-              width={35}
-              height={35}
-              alt="logo"
-              className="object-contain w-auto h-auto"
-            />
-          </div>
-
-          <Link
-            href="/home"
-            className="text-white font-bold drop-shadow-md tracking-wide text-3xl"
-          >
-            Miel
-          </Link>
-        </NavbarBrand>
-
-        <NavbarContent
-          justify="center"
-          className="hidden sm:flex gap-6 font-rubik"
-        >
-          {session &&
-            links.map((item: any) => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                initialUnreadCount={
-                  item.href === "/messages" ? initialUnreadCount : undefined
-                }
-              />
-            ))}
-        </NavbarContent>
-
-        <NavbarContent justify="end" className="gap-3 items-center">
+        {/* ---- צד ימין (User Menu + Profile Views) ---- */}
+        <NavbarContent justify="start" className="gap-4 items-center">
           {userInfo ? (
             <>
+              {profileCompletion && (
+                <ProfileCompletionButton status={profileCompletion} />
+              )}
               <div className="p-2 rounded-full bg-white/20 hover:bg-white/30 shadow-md hover:shadow-lg transition">
                 <ProfileViewsButton />
               </div>
@@ -160,12 +152,51 @@ export default function TopNavClient({
               <Button
                 as={Link}
                 href="/register"
-                className="bg-gradient-to-r from-[#FFB547] to-[#E37B27] text-white rounded-full shadow-md hover:shadow-xl transition-all"
+                className="bg-gradient-to-r from-[#FFB547] to-[#E37B27] 
+                text-white rounded-full shadow-md hover:shadow-xl transition-all"
               >
                 הרשמה
               </Button>
             </div>
           )}
+        </NavbarContent>
+
+        {/* ---- אמצע התפריט ---- */}
+        <NavbarContent
+          justify="center"
+          className="hidden sm:flex gap-6 font-rubik"
+        >
+          {session &&
+            links.map((item) => (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                initialUnreadCount={
+                  item.href === "/messages" ? initialUnreadCount : undefined
+                }
+              />
+            ))}
+        </NavbarContent>
+
+        {/* ---- צד שמאל (לוגו + Miel) ---- */}
+        <NavbarContent justify="end" className="gap-3 items-center">
+          <Link
+            href="/home"
+            className="font-bold tracking-wide text-3xl text-[#8B5A2B]"
+          >
+            Miel
+          </Link>
+
+          <div className="relative flex items-center justify-center w-11 h-11">
+            <Image
+              src="/images/icons/Logo.png"
+              width={35}
+              height={35}
+              alt="logo"
+              className="object-contain w-auto h-auto"
+            />
+          </div>
         </NavbarContent>
       </Navbar>
 
