@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import {
   getProfileCompletionStatus,
   getUserInfoForNav,
@@ -7,12 +7,13 @@ import { getUnreadMessageCount } from "@/app/actions/messageActions";
 import TopNavClient from "./TopNavClient";
 
 export default async function TopNav() {
-  const session = await auth();
+  const session = await getSession();
   const userInfo = session?.user ? await getUserInfoForNav() : null;
   const userId = session?.user?.id || null;
+  const isAdmin = session?.user?.role === "ADMIN";
 
   let initialUnreadCount = 0;
-  if (session?.user?.id) {
+  if (userId && !isAdmin) {
     try {
       initialUnreadCount = await getUnreadMessageCount();
     } catch (error) {
@@ -29,13 +30,16 @@ export default async function TopNav() {
   ];
 
   const adminLinks = [
-    { href: "/admin/moderation", label: "מתן תמונה למתן אישור" },
+    { href: "/admin", label: "ראשי" },
+    { href: "/admin/moderation", label: "אישור תמונות" },
   ];
 
-  const links = session?.user?.role === "ADMIN" ? adminLinks : memberLinks;
+  const links = isAdmin ? adminLinks : memberLinks;
 
   const profileCompletion =
-    userId && session?.user ? await getProfileCompletionStatus(userId) : null;
+    userId && session?.user && !isAdmin
+      ? await getProfileCompletionStatus(userId)
+      : null;
 
   return (
     <TopNavClient
@@ -45,6 +49,7 @@ export default async function TopNav() {
       links={links}
       initialUnreadCount={initialUnreadCount}
       profileCompletion={profileCompletion}
+      isAdmin={isAdmin}
     />
   );
 }

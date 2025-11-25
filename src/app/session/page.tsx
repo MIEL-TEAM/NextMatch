@@ -1,8 +1,9 @@
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import ClientSession from "@/components/ClientSession";
 
 export default async function Home() {
-  const session = await auth();
+  // ✅ Uses cached session - deduped with layout
+  const session = await getSession();
 
   return (
     <div className="flex flex-row justify-around mt-20 gap-6">

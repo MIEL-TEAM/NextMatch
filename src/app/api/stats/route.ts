@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/app/actions/authActions";
+import { getAuthUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 interface MatchData {

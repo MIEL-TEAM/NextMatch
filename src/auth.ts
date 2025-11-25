@@ -11,99 +11,123 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
+  adapter: PrismaAdapter(prisma) as any,
+
+  session: {
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60,
+  },
+  jwt: {
+    maxAge: 24 * 60 * 60,
+  },
+
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 24 * 60 * 60,
+      },
+    },
+  },
+
   callbacks: {
     async signIn({ user, account }) {
-      if (user.email) {
-        try {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            select: {
-              hasSeenWelcomeMessage: true,
-              oauthVerified: true,
-              trustScore: true,
-            },
-          });
+      if (!user.email) return true;
+
+      try {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: {
+            hasSeenWelcomeMessage: true,
+            oauthVerified: true,
+            trustScore: true,
+          },
+        });
+
+        if (
+          account?.provider === "google" ||
+          account?.provider === "facebook"
+        ) {
+          const updateData: any = {
+            emailVerified: new Date(),
+            provider: account.provider,
+            oauthVerified: true,
+          };
+
+          if (existingUser && !existingUser.oauthVerified) {
+            updateData.trustScore = (existingUser.trustScore || 0) + 40;
+          }
 
           if (
-            account?.provider === "google" ||
-            account?.provider === "facebook"
+            account.provider === "google" &&
+            existingUser &&
+            !existingUser.hasSeenWelcomeMessage
           ) {
-            const updateData: any = {
-              emailVerified: new Date(),
-              provider: account.provider,
-              oauthVerified: true,
-            };
-
-            if (existingUser && !existingUser.oauthVerified) {
-              updateData.trustScore = (existingUser.trustScore || 0) + 40;
+            updateData.hasSeenWelcomeMessage = true;
+            try {
+              await sendWelcomeEmail(user.email, user.name || "חבר חדש");
+            } catch (err) {
+              console.error("Failed to send welcome email:", err);
             }
-
-            if (
-              account.provider === "google" &&
-              existingUser &&
-              !existingUser.hasSeenWelcomeMessage
-            ) {
-              updateData.hasSeenWelcomeMessage = true;
-              try {
-                await sendWelcomeEmail(user.email, user.name || "חבר חדש");
-              } catch (emailError) {
-                console.error("Failed to send welcome email:", emailError);
-              }
-            }
-
-            await prisma.user.update({
-              where: { email: user.email },
-              data: updateData,
-            });
-          } else if (account?.provider === "credentials") {
-            await prisma.user.update({
-              where: { email: user.email },
-              data: {
-                provider: "credentials",
-                oauthVerified: false,
-              },
-            });
           }
-        } catch (error) {
-          console.error("Error in signIn callback:", error);
+
+          await prisma.user.update({
+            where: { email: user.email },
+            data: updateData,
+          });
         }
+
+        if (account?.provider === "credentials") {
+          await prisma.user.update({
+            where: { email: user.email },
+            data: {
+              provider: "credentials",
+              oauthVerified: false,
+            },
+          });
+        }
+      } catch (err) {
+        console.error("signIn error:", err);
+        // Still allow sign in even if DB update fails
       }
+
       return true;
     },
-    async jwt({ user, token }) {
+
+    async jwt({ token, user }) {
+      // Initial sign in - user object exists
       if (user) {
         token.profileComplete = user.profileComplete;
         token.role = user.role;
         token.isPremium = user.isPremium;
       }
 
+      // Subsequent requests - preserve existing token data
+      // This ensures token properties persist across requests
       return token;
     },
-    async session({ token, session }) {
-      if (token.sub && session.user) {
+
+    async session({ session, token }) {
+      // ✅ Safely assign user ID with fallback
+      if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.profileComplete = token.profileComplete as boolean;
         session.user.role = token.role as Role;
         session.user.isPremium = token.isPremium as boolean;
-
-        const now = Date.now();
-        const globalAny = global as any;
-        if (
-          !globalAny.lastSessionLog ||
-          now - globalAny.lastSessionLog > 5000
-        ) {
-          globalAny.lastSessionLog = now;
-        }
       }
       return session;
     },
   },
-  adapter: PrismaAdapter(prisma) as any,
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60,
-  },
+
   ...authConfig,
+
   pages: {
     signIn: "/login",
     error: "/login",

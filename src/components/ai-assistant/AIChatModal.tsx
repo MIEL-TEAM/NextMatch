@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiX, FiSend, FiRefreshCw, FiTrash2 } from "react-icons/fi";
 import { AIChatMessage } from "./AIChatMessage";
@@ -23,6 +24,7 @@ interface AIChatModalProps {
 }
 
 export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
+  const pathname = usePathname();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,10 +38,24 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
 
   const loadConversationHistory = useCallback(async () => {
     try {
-      const [historyResponse, insightsResponse] = await Promise.all([
+      const isForbiddenRoute =
+        pathname === "/" ||
+        pathname === "/premium" ||
+        pathname === "/login" ||
+        pathname === "/register";
+
+      const fetchPromises = [
         fetch(`/api/ai-assistant/history?userId=${userId}`),
-        fetch(`/api/ai-assistant/insights?userId=${userId}`),
-      ]);
+      ];
+
+      if (!isForbiddenRoute) {
+        fetchPromises.push(
+          fetch(`/api/ai-assistant/insights?userId=${userId}`)
+        );
+      }
+
+      const [historyResponse, insightsResponse] =
+        await Promise.all(fetchPromises);
 
       let historyData = null;
       if (historyResponse.ok) {
@@ -48,8 +64,8 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
         setDailyUsage(historyData.dailyUsage || 0);
       }
 
-      // Show proactive insight if available
-      if (insightsResponse.ok) {
+      // Show proactive insight if available (skip on forbidden routes)
+      if (insightsResponse && insightsResponse.ok) {
         const insightData = await insightsResponse.json();
         if (insightData.hasInsights && insightData.insight && historyData) {
           // Add insight as a system message if no recent messages
@@ -70,7 +86,7 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [userId]);
+  }, [userId, pathname]);
 
   // Load conversation history
   useEffect(() => {

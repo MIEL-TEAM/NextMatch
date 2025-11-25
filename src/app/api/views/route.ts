@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUserId } from "@/app/actions/authActions";
+import { getAuthUserId } from "@/lib/session";
 import { recordProfileView, getProfileViews } from "@/app/actions/viewActions";
 
 export async function POST(req: NextRequest) {

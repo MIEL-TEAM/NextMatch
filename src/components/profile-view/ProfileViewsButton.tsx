@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 import ProfileViewsBell from "./ProfileViewsBell";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useServerSession } from "@/contexts/SessionContext";
 
 export default function ProfileViewsButton() {
-  const { data: session, status } = useSession();
+  const { session, status } = useServerSession();
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {

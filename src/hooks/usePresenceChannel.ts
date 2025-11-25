@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useMemo } from "react";
 import usePresenceStore from "./usePresenceStore";
 import { Channel, Members } from "pusher-js";
 import { pusherClient } from "@/lib/pusher-client";
@@ -49,45 +49,39 @@ export const usePresenceChannel = (
     [remove]
   );
 
-  const throttledUpdateLastActive = useCallback(() => {
-    const throttledFn = throttle(async () => {
-      try {
-        await updateLastActive();
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("Error updating last active:", error);
+  const throttledUpdateLastActive = useMemo(
+    () =>
+      throttle(async () => {
+        try {
+          await updateLastActive();
+        } catch (error) {
+          if (process.env.NODE_ENV === "development") {
+            console.error("Error updating last active:", error);
+          }
         }
-      }
-    }, 30000);
-    return throttledFn();
-  }, []);
+      }, 30000),
+    []
+  );
 
   useEffect(() => {
     if (!userId || !profileComplete) return;
+
     if (!channelRef.current) {
-      channelRef.current = pusherClient.subscribe("presence-nextMatch");
+      const channel = pusherClient.subscribe("presence-nextMatch");
+      channelRef.current = channel;
 
-      channelRef.current.bind(
-        "pusher:subscription_succeeded",
-        async (members: Members) => {
-          handleSetMembers(Object.keys(members.members));
-          throttledUpdateLastActive();
-        }
-      );
+      channel.bind("pusher:subscription_succeeded", (members: Members) => {
+        handleSetMembers(Object.keys(members.members));
+        throttledUpdateLastActive();
+      });
 
-      channelRef.current.bind(
-        "pusher:member_added",
-        (member: Record<string, any>) => {
-          handleAddMember(member.id);
-        }
-      );
+      channel.bind("pusher:member_added", (member: Record<string, any>) => {
+        handleAddMember(member.id);
+      });
 
-      channelRef.current.bind(
-        "pusher:member_removed",
-        (member: Record<string, any>) => {
-          handleRemoveMember(member.id);
-        }
-      );
+      channel.bind("pusher:member_removed", (member: Record<string, any>) => {
+        handleRemoveMember(member.id);
+      });
 
       const interval = setInterval(() => {
         if (document.visibilityState === "visible") {
@@ -97,8 +91,8 @@ export const usePresenceChannel = (
 
       return () => {
         clearInterval(interval);
+
         if (channelRef.current && channelRef.current.subscribed) {
-          channelRef.current.unsubscribe();
           channelRef.current.unbind(
             "pusher:subscription_succeeded",
             handleSetMembers
@@ -108,6 +102,7 @@ export const usePresenceChannel = (
             "pusher:member_removed",
             handleRemoveMember
           );
+          channelRef.current.unsubscribe();
           channelRef.current = null;
         }
       };

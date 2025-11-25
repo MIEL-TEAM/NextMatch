@@ -1,13 +1,13 @@
 import { CardBody, CardHeader, Divider } from "@nextui-org/react";
 import React from "react";
 import EditForm from "./EditForm";
-import { getAuthUserId } from "@/app/actions/authActions";
-import { getMemberByUserId } from "@/app/actions/memberActions";
+import { getAuthUserId } from "@/lib/session";
+import { getSelfProfile } from "@/lib/getSelfProfile";
 import { notFound } from "next/navigation";
 
 export default async function MemberEditPage() {
   const userId = await getAuthUserId();
-  const member = await getMemberByUserId(userId);
+  const member = await getSelfProfile(userId);
 
   if (!member) return notFound();
 

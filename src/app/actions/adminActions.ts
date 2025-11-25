@@ -1,9 +1,35 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getUserRole } from "./authActions";
+import { getUserRole, getSession } from "@/lib/session";
 import { Photo } from "@prisma/client";
 import { cloudinary } from "@/lib/cloudinary";
+
+// ✅ Admin audit log helper
+async function logAdminAction(
+  action: string,
+  targetType: string,
+  targetId: string,
+  details?: Record<string, unknown>
+) {
+  const session = await getSession();
+  if (!session?.user?.id) return;
+
+  try {
+    await prisma.adminAuditLog.create({
+      data: {
+        adminId: session.user.id,
+        action,
+        targetType,
+        targetId,
+        details: details ? JSON.stringify(details) : null,
+        timestamp: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to log admin action:", error);
+  }
+}
 
 export async function getUnapprovedPhotos() {
   try {
@@ -47,7 +73,7 @@ export async function approvePhoto(photoId: string) {
       });
     }
 
-    return prisma.member.update({
+    const result = await prisma.member.update({
       where: { id: member.id },
       data: {
         ...memberUpdate,
@@ -56,6 +82,15 @@ export async function approvePhoto(photoId: string) {
         },
       },
     });
+
+    // ✅ Log admin action
+    await logAdminAction("APPROVE_PHOTO", "Photo", photoId, {
+      userId: member.userId,
+      userName: member.name,
+      photoUrl: photo.url,
+    });
+
+    return result;
   } catch (error) {
     console.log(error);
     throw error;
@@ -72,9 +107,17 @@ export async function rejectPhoto(photo: Photo) {
       await cloudinary.v2.uploader.destroy(photo.publicId);
     }
 
-    return prisma.photo.delete({
+    const result = await prisma.photo.delete({
       where: { id: photo.id },
     });
+
+    // ✅ Log admin action
+    await logAdminAction("REJECT_PHOTO", "Photo", photo.id, {
+      photoUrl: photo.url,
+      publicId: photo.publicId,
+    });
+
+    return result;
   } catch (error) {
     console.log(error);
     throw error;

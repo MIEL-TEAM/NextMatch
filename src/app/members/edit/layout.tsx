@@ -1,14 +1,14 @@
-import { getMemberByUserId } from "@/app/actions/memberActions";
 import { ReactNode } from "react";
 import MemberSidebar from "../MemberSidebar";
 import { notFound } from "next/navigation";
 import { Card } from "@nextui-org/react";
-import { getAuthUserId } from "@/app/actions/authActions";
+import { getAuthUserId } from "@/lib/session";
+import { getSelfProfile } from "@/lib/getSelfProfile";
 
 export default async function Layout({ children }: { children: ReactNode }) {
   const userId = await getAuthUserId();
 
-  const member = await getMemberByUserId(userId);
+  const member = await getSelfProfile(userId);
   if (!member) return notFound();
 
   const basePath = `/members/edit`;

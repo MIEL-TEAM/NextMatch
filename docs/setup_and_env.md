@@ -17,12 +17,12 @@
 
 ### Required Software
 
-| Software | Minimum Version | Purpose |
-|----------|-----------------|---------|
-| **Node.js** | 18.0.0 | JavaScript runtime |
-| **npm** | 9.0.0 | Package manager |
-| **Git** | 2.0.0 | Version control |
-| **PostgreSQL** | 15.0.0 | Database (local dev) or Neon |
+| Software       | Minimum Version | Purpose                      |
+| -------------- | --------------- | ---------------------------- |
+| **Node.js**    | 18.0.0          | JavaScript runtime           |
+| **npm**        | 9.0.0           | Package manager              |
+| **Git**        | 2.0.0           | Version control              |
+| **PostgreSQL** | 15.0.0          | Database (local dev) or Neon |
 
 ### Recommended Tools
 
@@ -67,6 +67,7 @@ npm install
 ```
 
 **Expected Output**:
+
 ```
 added 1234 packages in 45s
 ```
@@ -106,6 +107,7 @@ NEXTAUTH_URL="http://localhost:3000"
 # ========================================
 GOOGLE_CLIENT_ID="123456789-abcdefg.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="GOCSPX-xxxxxxxxxxxxxxxxxx"
+NEXT_PUBLIC_GOOGLE_CLIENT_ID="123456789-abcdefg.apps.googleusercontent.com"  # Same as GOOGLE_CLIENT_ID (for One Tap)
 
 # ========================================
 # FACEBOOK OAUTH
@@ -179,19 +181,23 @@ RUN_SEED="false"
 ### Environment Variable Details
 
 #### DATABASE_URL
+
 **Purpose**: PostgreSQL connection string
 
 **Local Development**:
+
 ```env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/miel_db"
 ```
 
 **Neon (Production)**:
+
 ```env
 DATABASE_URL="postgresql://user:pass@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require"
 ```
 
 **Getting Neon URL**:
+
 1. Sign up at [neon.tech](https://neon.tech)
 2. Create new project
 3. Copy connection string from dashboard
@@ -200,9 +206,11 @@ DATABASE_URL="postgresql://user:pass@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmo
 ---
 
 #### NEXTAUTH_SECRET
+
 **Purpose**: Encryption key for NextAuth JWT tokens
 
 **Generate**:
+
 ```bash
 # Option 1: Using openssl
 openssl rand -base64 32
@@ -215,6 +223,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 **Example**:
+
 ```env
 NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ```
@@ -224,9 +233,11 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET
+
 **Purpose**: Google OAuth authentication
 
 **Setup Steps**:
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create new project or select existing
 3. Enable **Google+ API**
@@ -240,9 +251,11 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### FACEBOOK_CLIENT_ID & FACEBOOK_CLIENT_SECRET
+
 **Purpose**: Facebook OAuth authentication
 
 **Setup Steps**:
+
 1. Go to [Facebook Developers](https://developers.facebook.com/)
 2. Create new app → **Consumer**
 3. Add **Facebook Login** product
@@ -254,13 +267,16 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### AWS S3 Configuration
+
 **Purpose**: Store user video uploads
 
 **Setup Steps**:
+
 1. Go to [AWS Console](https://console.aws.amazon.com/)
 2. Create S3 bucket: `profile-videos-miel`
 3. Set region: `eu-north-1` (Stockholm)
 4. Permissions → CORS Configuration:
+
 ```json
 [
   {
@@ -271,21 +287,19 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
   }
 ]
 ```
+
 5. Create IAM user with S3 permissions
 6. Generate Access Key ID and Secret Access Key
 
 **Required Permissions**:
+
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:DeleteObject"
-      ],
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
       "Resource": "arn:aws:s3:::profile-videos-miel/*"
     }
   ]
@@ -295,9 +309,11 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### CLOUDINARY Configuration
+
 **Purpose**: Store and transform user photos
 
 **Setup Steps**:
+
 1. Sign up at [cloudinary.com](https://cloudinary.com)
 2. Go to Dashboard
 3. Copy:
@@ -306,6 +322,7 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
    - **API Secret** → `CLOUDINARY_API_SECRET`
 
 **Upload Presets**:
+
 1. Go to **Settings** → **Upload**
 2. Create upload preset: `miel_photos`
 3. Set folder: `members`
@@ -314,9 +331,11 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### PUSHER Configuration
+
 **Purpose**: Real-time WebSocket communication
 
 **Setup Steps**:
+
 1. Sign up at [pusher.com](https://pusher.com)
 2. Create new app (Channels product)
 3. Select cluster: **eu** (Europe)
@@ -326,21 +345,25 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
    - **secret** → `PUSHER_SECRET`
 
 **Configuration**:
+
 - Enable client events: ✅
 - Enable authorized connections: ✅
 
 ---
 
 #### STRIPE Configuration
+
 **Purpose**: Payment processing for premium subscriptions
 
 **Setup Steps**:
+
 1. Sign up at [stripe.com](https://stripe.com)
 2. Get API keys from **Developers** → **API keys**:
    - **Publishable key** → `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
    - **Secret key** → `STRIPE_SECRET_KEY`
 
 **Create Products & Prices**:
+
 1. Go to **Products** → **Add product**
 2. Create three products:
    - **Basic**: $9.99/month
@@ -349,6 +372,7 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 3. Copy Price IDs to environment variables
 
 **Webhook Setup**:
+
 1. Go to **Developers** → **Webhooks**
 2. Add endpoint: `https://miel-love.com/api/webhooks/stripe`
 3. Select events:
@@ -360,15 +384,18 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### RESEND Configuration
+
 **Purpose**: Transactional email sending
 
 **Setup Steps**:
+
 1. Sign up at [resend.com](https://resend.com)
 2. Go to **API Keys**
 3. Create new key with **Full Access**
 4. Copy to `RESEND_API_KEY`
 
 **Domain Setup** (Optional for production):
+
 1. Add custom domain (e.g., `mail.miel-love.com`)
 2. Add DNS records provided by Resend
 3. Verify domain
@@ -376,9 +403,11 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 ---
 
 #### OPENAI Configuration
+
 **Purpose**: AI-powered dating assistant
 
 **Setup Steps**:
+
 1. Sign up at [platform.openai.com](https://platform.openai.com)
 2. Go to **API Keys**
 3. Create new secret key
@@ -387,6 +416,7 @@ NEXTAUTH_SECRET="abcd1234efgh5678ijkl9012mnop3456"
 **Model Used**: `gpt-4o-mini` (cost-effective, fast)
 
 **Usage Limits**:
+
 - Free users: 5 queries/day
 - Premium users: 999 queries/day
 
@@ -502,6 +532,7 @@ npm run dev
 ```
 
 **Console Output**:
+
 ```
 ▲ Next.js 15.1.6
 - Local:        http://localhost:3000
@@ -551,10 +582,12 @@ npm run test:coverage    # Coverage report
 ### Browser DevTools
 
 **React DevTools**:
+
 - Install: [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi)
 - Inspect components, props, state
 
 **Next.js DevTools**:
+
 - Built into dev mode
 - Shows build info, routes, cache status
 
@@ -565,12 +598,14 @@ npm run test:coverage    # Coverage report
 ### Vercel Deployment (Recommended)
 
 #### Prerequisites
+
 - GitHub account
 - Vercel account (sign up with GitHub)
 
 #### Deployment Steps
 
 1. **Push to GitHub**:
+
 ```bash
 git add .
 git commit -m "Initial commit"
@@ -578,6 +613,7 @@ git push origin main
 ```
 
 2. **Import to Vercel**:
+
    - Go to [vercel.com/new](https://vercel.com/new)
    - Import your repository
    - Configure project:
@@ -586,11 +622,13 @@ git push origin main
      - Build Command: `npm run build`
 
 3. **Add Environment Variables**:
+
    - Go to **Settings** → **Environment Variables**
    - Add ALL variables from `.env.local`
    - ⚠️ Use **production** values (different from dev)
 
 4. **Configure Build Settings**:
+
 ```json
 {
   "buildCommand": "prisma generate && prisma migrate deploy && next build",
@@ -600,6 +638,7 @@ git push origin main
 ```
 
 5. **Deploy**:
+
    - Click **Deploy**
    - Wait 2-3 minutes
    - Visit deployment URL: `https://your-app.vercel.app`
@@ -663,19 +702,22 @@ pm2 startup
 ```
 
 **ecosystem.config.js**:
+
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'miel-app',
-    script: 'node_modules/next/dist/bin/next',
-    args: 'start',
-    instances: 'max',
-    exec_mode: 'cluster',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000
-    }
-  }]
+  apps: [
+    {
+      name: "miel-app",
+      script: "node_modules/next/dist/bin/next",
+      args: "start",
+      instances: "max",
+      exec_mode: "cluster",
+      env: {
+        NODE_ENV: "production",
+        PORT: 3000,
+      },
+    },
+  ],
 };
 ```
 
@@ -688,11 +730,13 @@ module.exports = {
 #### 1. Database Connection Failed
 
 **Error**:
+
 ```
 Error: Can't reach database server at `localhost:5432`
 ```
 
 **Solutions**:
+
 - Check PostgreSQL is running: `pg_isready`
 - Verify `DATABASE_URL` format
 - Check firewall allows port 5432
@@ -703,11 +747,13 @@ Error: Can't reach database server at `localhost:5432`
 #### 2. Prisma Client Not Generated
 
 **Error**:
+
 ```
 Error: Cannot find module '@prisma/client'
 ```
 
 **Solution**:
+
 ```bash
 npx prisma generate
 ```
@@ -717,11 +763,13 @@ npx prisma generate
 #### 3. NextAuth Session Issues
 
 **Error**:
+
 ```
 [next-auth][error][JWT_SESSION_ERROR]
 ```
 
 **Solutions**:
+
 - Verify `NEXTAUTH_SECRET` is set (min 32 characters)
 - Check `NEXTAUTH_URL` matches your domain
 - Clear cookies and try again
@@ -732,11 +780,13 @@ npx prisma generate
 #### 4. Cloudinary Upload Fails
 
 **Error**:
+
 ```
 Invalid signature
 ```
 
 **Solutions**:
+
 - Verify `CLOUDINARY_API_SECRET` is correct
 - Check upload preset exists
 - Ensure folder permissions are correct
@@ -746,14 +796,17 @@ Invalid signature
 #### 5. Stripe Webhook Not Working
 
 **Error**:
+
 ```
 No signatures found matching the expected signature
 ```
 
 **Solutions**:
+
 - Verify `STRIPE_WEBHOOK_SECRET`
 - Check webhook endpoint URL is correct
 - Test locally with Stripe CLI:
+
 ```bash
 stripe listen --forward-to localhost:3000/api/webhooks/stripe
 ```
@@ -763,11 +816,13 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 #### 6. Pusher Connection Fails
 
 **Error**:
+
 ```
 Pusher : Error : {"type":"WebSocketError","error":{"type":"PusherError"}}
 ```
 
 **Solutions**:
+
 - Verify `NEXT_PUBLIC_PUSHER_APP_KEY` is public key (not secret)
 - Check cluster is correct (should be `eu`)
 - Ensure `/api/pusher-auth` endpoint is accessible
@@ -777,11 +832,13 @@ Pusher : Error : {"type":"WebSocketError","error":{"type":"PusherError"}}
 #### 7. Module Not Found
 
 **Error**:
+
 ```
 Module not found: Can't resolve 'some-package'
 ```
 
 **Solution**:
+
 ```bash
 # Clear cache and reinstall
 rm -rf node_modules package-lock.json .next
@@ -793,11 +850,13 @@ npm install
 #### 8. TypeScript Errors
 
 **Error**:
+
 ```
 Type 'X' is not assignable to type 'Y'
 ```
 
 **Solutions**:
+
 - Run `npm run lint` to see all errors
 - Regenerate Prisma Client: `npx prisma generate`
 - Restart TypeScript server in VS Code (Cmd+Shift+P → "TypeScript: Restart TS Server")
@@ -807,17 +866,20 @@ Type 'X' is not assignable to type 'Y'
 ### Environment-Specific Issues
 
 #### Development
+
 - **Port 3000 in use**: Kill process on port 3000
+
   ```bash
   # macOS/Linux
   lsof -ti:3000 | xargs kill -9
-  
+
   # Windows
   netstat -ano | findstr :3000
   taskkill /PID <PID> /F
   ```
 
 #### Production
+
 - **Build fails on Vercel**: Check build logs, ensure all env vars are set
 - **Database connection timeout**: Increase connection timeout in Prisma schema
 - **Out of memory**: Increase Node.js memory: `NODE_OPTIONS="--max-old-space-size=4096"`
@@ -828,7 +890,7 @@ Type 'X' is not assignable to type 'Y'
 
 1. **Check Documentation**: Re-read relevant sections
 2. **Search Issues**: GitHub Issues for similar problems
-3. **Check Logs**: 
+3. **Check Logs**:
    - Browser console
    - Terminal output
    - Vercel deployment logs
@@ -842,12 +904,14 @@ Type 'X' is not assignable to type 'Y'
 ## Additional Resources
 
 ### Official Documentation
+
 - [Next.js Docs](https://nextjs.org/docs)
 - [Prisma Docs](https://www.prisma.io/docs)
 - [NextAuth Docs](https://next-auth.js.org/getting-started/introduction)
 - [Vercel Docs](https://vercel.com/docs)
 
 ### External Services
+
 - [Neon Documentation](https://neon.tech/docs/introduction)
 - [Cloudinary Docs](https://cloudinary.com/documentation)
 - [Stripe API Reference](https://stripe.com/docs/api)
@@ -856,5 +920,4 @@ Type 'X' is not assignable to type 'Y'
 
 ---
 
-*Last Updated: November 2025*
-
+_Last Updated: November 2025_

@@ -92,6 +92,7 @@ export default function PhotoUploadForm({ onSubmit }: PhotoUploadFormProps) {
     language: "he",
     showUploadMoreButton: false,
     showPoweredBy: false,
+    folder: "registration/profiles", // Required for unauthenticated uploads during registration
   };
 
   return (

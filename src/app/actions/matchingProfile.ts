@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { differenceInYears } from "date-fns";
 
 function getAge(dateOfBirth: Date): number {
@@ -15,7 +15,7 @@ function mostCommon(arr: string[]): string | null {
 }
 
 export async function getMatchingProfileSummary() {
-  const session = await auth();
+  const session = await getSession();
   const userId = session?.user?.id;
   if (!userId) return null;
 

@@ -1,12 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
 // Get interests for logged-in user
 export async function getUserInterests() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return [];
 
   // First get the member ID associated with this user
@@ -66,7 +66,7 @@ export async function saveUserInterests(
     category?: string;
   }>
 ) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   // Get the member ID for this user
@@ -115,7 +115,7 @@ export async function saveUserInterests(
 
 // Check if user has added interests
 export async function hasUserAddedInterests() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return false;
 
   // Get the member ID for this user
@@ -142,7 +142,7 @@ export async function addInterest(
   icon: string,
   category?: string
 ) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   // Get the member ID for this user
@@ -171,7 +171,7 @@ export async function addInterest(
 
 // Remove an interest for the current user
 export async function removeInterest(interestId: string) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   // Get the member ID for this user

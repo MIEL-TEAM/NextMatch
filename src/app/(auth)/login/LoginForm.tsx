@@ -17,6 +17,7 @@ import Image from "next/image";
 
 export default function LoginForm() {
   const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -30,7 +31,10 @@ export default function LoginForm() {
   async function onSubmit(data: LoginSchema) {
     const result = await signInUser(data);
     if (result.status === "success") {
+      // ✅ Trust NextAuth cookie + middleware to handle routing
+      // Middleware will redirect admins to /admin automatically
       router.push("/members");
+      router.refresh();
     } else {
       toast.error(result.error as string, {
         style: {

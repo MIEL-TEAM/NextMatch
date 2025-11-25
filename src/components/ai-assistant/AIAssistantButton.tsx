@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMessageCircle } from "react-icons/fi";
 import { AIChatModal } from "./AIChatModal";
@@ -14,6 +15,7 @@ export function AIAssistantButton({
   userId,
   isPremium,
 }: AIAssistantButtonProps) {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewInsight, setHasNewInsight] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -32,6 +34,15 @@ export function AIAssistantButton({
 
   // Check for new insights from the AI
   useEffect(() => {
+    // 🚫 NEVER run on forbidden routes - causes heavy Prisma queries
+    const isForbiddenRoute =
+      pathname === "/" ||
+      pathname === "/premium" ||
+      pathname === "/login" ||
+      pathname === "/register";
+
+    if (isForbiddenRoute) return;
+
     const checkForInsights = async () => {
       try {
         const response = await fetch(
@@ -56,7 +67,7 @@ export function AIAssistantButton({
       const interval = setInterval(checkForInsights, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, userId]);
+  }, [isOpen, userId, pathname]);
 
   const handleOpen = () => {
     setIsOpen(true);

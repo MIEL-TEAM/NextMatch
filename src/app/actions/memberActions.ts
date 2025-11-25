@@ -2,28 +2,45 @@
 
 import { prisma } from "@/lib/prisma";
 import { GetMemberParams, PaginatedResponse } from "@/types";
-import { Member, Photo } from "@prisma/client";
+import { Photo } from "@prisma/client";
 import { addYears } from "date-fns";
-import { getAuthUserId } from "./authActions";
+import { getAuthUserId } from "@/lib/session";
 import { cache } from "react";
 import { ensureMember } from "@/lib/prismaHelpers";
 import { calculateDistance, isValidCoordinates } from "@/lib/locationUtils";
 
+type MemberCardData = {
+  id: string;
+  userId: string;
+  name: string;
+  dateOfBirth: Date;
+  description: string;
+  image: string | null;
+  updated: Date;
+  created: Date;
+  latitude: number | null;
+  longitude: number | null;
+  user: {
+    oauthVerified: boolean;
+  };
+};
+
 export async function getMembers({
-  ageRange = "18,100",
+  ageRange = "18,65",
   gender = "male,female",
   orderBy = "updated",
   pageNumber = "1",
   pageSize = "12",
-  withPhoto = "false",
+  withPhoto, // No default - API route handles normalization
   onlineOnly = "false",
+  lastActive,
   userLat,
   userLon,
   distance,
   sortByDistance = "false",
   includeSelf,
 }: GetMemberParams): Promise<
-  PaginatedResponse<Member & { distance?: number }>
+  PaginatedResponse<MemberCardData & { distance?: number }>
 > {
   try {
     let userId: string | null = null;
@@ -87,6 +104,31 @@ export async function getMembers({
     const onlineThreshold = new Date();
     onlineThreshold.setMinutes(onlineThreshold.getMinutes() - 15);
 
+    // Calculate lastActive thresholds
+    let lastActiveThreshold: Date | null = null;
+    if (lastActive && onlineOnly !== "true") {
+      const now = new Date();
+      switch (lastActive) {
+        case "24h":
+          lastActiveThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        case "1week":
+          lastActiveThreshold = new Date(
+            now.getTime() - 7 * 24 * 60 * 60 * 1000
+          );
+          break;
+        case "1month":
+          lastActiveThreshold = new Date(
+            now.getTime() - 30 * 24 * 60 * 60 * 1000
+          );
+          break;
+        case "any":
+        default:
+          lastActiveThreshold = null;
+          break;
+      }
+    }
+
     // Parse location parameters
     // Determine user location source: URL params first, then saved Member location as fallback
     let hasUserLocation = !!(
@@ -128,6 +170,123 @@ export async function getMembers({
       maxDistance = max || 999999;
     }
 
+    // Determine if we need JS-based distance sorting/filtering
+    const needsDistanceCalculation =
+      hasUserLocation &&
+      (orderBy === "distance" ||
+        sortByDistance === "true" ||
+        Boolean(distance));
+
+    // Determine if we should filter by photo presence
+    // - withPhoto === "true" → filter for users WITH photos
+    // - withPhoto === "false" → NO filter (show all users including those without photos)
+    const shouldFilterByPhoto = withPhoto === "true";
+
+    // Build WHERE clause for filtering
+    const whereClause = {
+      AND: [
+        { dateOfBirth: { gte: minDob } },
+        { dateOfBirth: { lte: maxDob } },
+        { gender: { in: selectedGender } },
+        ...(shouldFilterByPhoto
+          ? [
+              {
+                OR: [
+                  { image: { not: null } },
+                  { photos: { some: { isApproved: true } } },
+                ],
+              },
+            ]
+          : []),
+        ...(onlineOnly === "true"
+          ? [{ updated: { gte: onlineThreshold } }]
+          : lastActiveThreshold
+            ? [{ updated: { gte: lastActiveThreshold } }]
+            : []),
+
+        ...(needsDistanceCalculation
+          ? [
+              { latitude: { not: null } },
+              { longitude: { not: null } },
+              { locationEnabled: true },
+            ]
+          : []),
+      ],
+      ...(userId && includeSelf !== "true" ? { NOT: { userId } } : {}),
+    };
+
+    // Optimize: Use select to fetch only needed fields (not include)
+    const selectFields = {
+      id: true,
+      userId: true,
+      name: true,
+      dateOfBirth: true,
+      description: true,
+      image: true,
+      updated: true,
+      created: true,
+      latitude: true,
+      longitude: true,
+      user: {
+        select: {
+          oauthVerified: true,
+        },
+      },
+    };
+
+    // Path 1: Distance-based sorting (requires JS calculation)
+    if (
+      needsDistanceCalculation &&
+      userLatNum !== null &&
+      userLonNum !== null
+    ) {
+      // Fetch all matching members (no pagination yet)
+      const allMembers = await prisma.member.findMany({
+        where: whereClause,
+        select: selectFields,
+      });
+
+      // Calculate distances and filter by distance range
+      const membersWithDistance = allMembers
+        .map((member) => {
+          if (member.latitude && member.longitude) {
+            const dist = calculateDistance(
+              userLatNum,
+              userLonNum,
+              member.latitude,
+              member.longitude
+            );
+            return { ...member, distance: dist };
+          }
+          return { ...member, distance: undefined };
+        })
+        .filter((member) => {
+          // Filter by distance range if specified
+          if (distance && member.distance !== undefined) {
+            return (
+              member.distance >= minDistance && member.distance <= maxDistance
+            );
+          }
+          return true;
+        });
+
+      // Sort by distance
+      membersWithDistance.sort((a, b) => {
+        const distA = a.distance ?? 999999;
+        const distB = b.distance ?? 999999;
+        return distA - distB;
+      });
+
+      // Apply pagination in JS
+      const paginatedMembers = membersWithDistance.slice(skip, skip + limit);
+
+      return {
+        items: paginatedMembers,
+        totalCount: membersWithDistance.length,
+      };
+    }
+
+    // Path 2: Database-level sorting and pagination (optimized)
     let orderByField = "updated";
     let orderDirection: "asc" | "desc" = "desc";
 
@@ -140,131 +299,48 @@ export async function getMembers({
         orderByField = "updated";
         orderDirection = "desc";
         break;
-      case "distance":
-        // For distance sorting, we'll handle it after fetching
-        orderByField = "updated";
-        orderDirection = "desc";
-        break;
       default:
         orderByField = "updated";
         orderDirection = "desc";
     }
 
-    // Should we enforce distance filtering (only members with location)?
-    const shouldFilterByDistance =
-      hasUserLocation &&
-      (Boolean(distance) ||
-        sortByDistance === "true" ||
-        (!userLat && !userLon));
-
-    const whereClause = {
-      AND: [
-        { dateOfBirth: { gte: minDob } },
-        { dateOfBirth: { lte: maxDob } },
-        { gender: { in: selectedGender } },
-        ...(withPhoto === "true"
-          ? [
-              {
-                OR: [
-                  { image: { not: null } },
-                  { photos: { some: { isApproved: true } } },
-                ],
-              },
-            ]
-          : []),
-        ...(onlineOnly === "true"
-          ? [{ updated: { gte: onlineThreshold } }]
-          : []),
-
-        ...(shouldFilterByDistance
-          ? [
-              { latitude: { not: null } },
-              { longitude: { not: null } },
-              { locationEnabled: true },
-            ]
-          : []),
-      ],
-      ...(userId && includeSelf !== "true" ? { NOT: { userId } } : {}),
-    };
-
-    const [, allMembers] = await Promise.all([
+    // Optimize: Fetch count and members in parallel, with DB pagination
+    const [totalCount, members] = await Promise.all([
       prisma.member.count({
         where: whereClause,
       }),
       prisma.member.findMany({
         where: whereClause,
-        include: {
-          photos: {
-            where: { isApproved: true },
-            take: 1,
-          },
-          user: {
-            select: {
-              oauthVerified: true,
-              emailVerified: true,
-            },
-          },
-        },
+        select: selectFields,
         orderBy: { [orderByField]: orderDirection },
+        skip: skip,
+        take: limit,
       }),
     ]);
 
-    let membersWithDistance = allMembers;
-
-    // Calculate distances if user location is available
-    if (hasUserLocation && userLatNum !== null && userLonNum !== null) {
-      membersWithDistance = allMembers
-        .map((member) => {
-          if (member.latitude && member.longitude) {
-            const distance = calculateDistance(
-              userLatNum,
-              userLonNum,
-              member.latitude,
-              member.longitude
-            );
-            return { ...member, distance };
-          }
-          return { ...member, distance: undefined };
-        })
-        .filter((member) => {
-          // Filter by distance range if specified
-          if (distance && (member as any).distance !== undefined) {
-            return (
-              (member as any).distance >= minDistance &&
-              (member as any).distance <= maxDistance
-            );
-          }
-          return true;
-        });
-
-      // Sort by distance if requested
-      const shouldSortByDistance =
-        orderBy === "distance" ||
-        sortByDistance === "true" ||
-        (!userLat && !userLon);
-      if (shouldSortByDistance) {
-        membersWithDistance.sort((a, b) => {
-          const distA = (a as any).distance ?? 999999;
-          const distB = (b as any).distance ?? 999999;
-          return distA - distB;
-        });
+    // Add distance field if location is available (but not used for sorting)
+    const membersWithOptionalDistance = members.map((member) => {
+      if (
+        hasUserLocation &&
+        userLatNum !== null &&
+        userLonNum !== null &&
+        member.latitude &&
+        member.longitude
+      ) {
+        const dist = calculateDistance(
+          userLatNum,
+          userLonNum,
+          member.latitude,
+          member.longitude
+        );
+        return { ...member, distance: dist };
       }
-    }
-
-    // Apply pagination after distance filtering/sorting
-    const startIndex = skip;
-    const endIndex = skip + limit;
-    const paginatedMembers = membersWithDistance.slice(startIndex, endIndex);
-
-    // Ensure distance is preserved in the final result
-    const finalMembers = paginatedMembers.map((member) => ({
-      ...member,
-      distance: (member as any).distance,
-    }));
+      return { ...member, distance: undefined };
+    });
 
     return {
-      items: finalMembers,
-      totalCount: membersWithDistance.length,
+      items: membersWithOptionalDistance,
+      totalCount,
     };
   } catch (error) {
     console.error("Error fetching members:", error);
@@ -311,7 +387,8 @@ export async function updateCurrentUserLocation(
   }
 }
 
-export async function getCurrentUserLocationStatus() {
+// Cached version for better performance - deduplicates requests
+export const getCurrentUserLocationStatus = cache(async () => {
   try {
     const userId = await getAuthUserId();
     const member = await prisma.member.findUnique({
@@ -351,7 +428,7 @@ export async function getCurrentUserLocationStatus() {
       coordinates: null,
     };
   }
-}
+});
 
 export async function getMembersWithPhotos(memberIds: string[]) {
   if (!memberIds.length) return {};

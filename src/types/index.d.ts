@@ -78,6 +78,7 @@ export type GetMemberParams = {
   sort?: string;
   withPhoto?: string;
   onlineOnly?: string;
+  lastActive?: string; // "24h" | "1week" | "1month" | "any"
   city?: string;
   interests?: string[];
   // Location parameters

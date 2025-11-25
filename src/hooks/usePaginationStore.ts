@@ -18,19 +18,42 @@ const usePaginationStore = create<PaginationState>()(
         totalCount: 0,
         totalPages: 1,
       },
+
       setPagination: (totalCount: number) =>
-        set((state) => ({
-          pagination: {
-            pageNumber: 1,
-            pageSize: state.pagination.pageSize,
+        set((state) => {
+          const newTotalPages = Math.ceil(
+            totalCount / state.pagination.pageSize
+          );
+          const validPageNumber = Math.min(
+            state.pagination.pageNumber,
+            Math.max(1, newTotalPages)
+          );
+
+          console.log("📊 setPagination called:", {
             totalCount,
-            totalPages: Math.ceil(totalCount / state.pagination.pageSize),
-          },
-        })),
-      setPage: (page: number) =>
+            oldPage: state.pagination.pageNumber,
+            newPage: validPageNumber,
+            newTotalPages,
+          });
+
+          return {
+            pagination: {
+              pageNumber: validPageNumber,
+              pageSize: state.pagination.pageSize,
+              totalCount,
+              totalPages: newTotalPages,
+            },
+          };
+        }),
+
+      setPage: (page: number) => {
+        const validPage = Math.max(1, Math.floor(page));
+        console.log("📄 setPage called:", page, "→ validated:", validPage);
+
         set((state) => ({
-          pagination: { ...state.pagination, pageNumber: page },
-        })),
+          pagination: { ...state.pagination, pageNumber: validPage },
+        }));
+      },
       setPageSize: (pageSize: number) =>
         set((state) => ({
           pagination: {

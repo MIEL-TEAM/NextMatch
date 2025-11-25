@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getAuthUserId } from "./authActions";
+import { getAuthUserId } from "@/lib/session";
 import { ActionResult } from "@/types";
 
 export interface UserPreferences {

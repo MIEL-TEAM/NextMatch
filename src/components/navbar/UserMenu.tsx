@@ -18,9 +18,14 @@ type UserMenuProps = {
     image: string | null;
   } | null;
   userId?: string | undefined;
+  isAdmin?: boolean;
 };
 
-export default function UserMenu({ userInfo, userId }: UserMenuProps) {
+export default function UserMenu({
+  userInfo,
+  userId,
+  isAdmin = false,
+}: UserMenuProps) {
   if (!userId) {
     return null;
   }
@@ -46,21 +51,41 @@ export default function UserMenu({ userInfo, userId }: UserMenuProps) {
             as="span"
             className="h-14 flex flex-row"
           >
-            מחובר כ—{userInfo?.name}
+            {isAdmin
+              ? `מנהל ← ${userInfo?.name || "Admin"}`
+              : `מחובר כ—${userInfo?.name}`}
           </DropdownItem>
         </DropdownSection>
 
-        <DropdownItem key="profile" as={Link} href={`/members/${userId}`}>
-          הפרופיל שלי
-        </DropdownItem>
+        {isAdmin ? (
+          <>
+            <DropdownItem key="admin-dashboard" as={Link} href="/admin">
+              לוח בקרה
+            </DropdownItem>
 
-        <DropdownItem key="edit-profile" as={Link} href="/members/edit">
-          ערוך פרופיל
-        </DropdownItem>
+            <DropdownItem
+              key="admin-moderation"
+              as={Link}
+              href="/admin/moderation"
+            >
+              אישור תמונות
+            </DropdownItem>
+          </>
+        ) : (
+          <>
+            <DropdownItem key="profile" as={Link} href={`/members/${userId}`}>
+              הפרופיל שלי
+            </DropdownItem>
 
-        <DropdownItem key="premium-page" as={Link} href="/premium">
-          שדרג לפרימיום
-        </DropdownItem>
+            <DropdownItem key="edit-profile" as={Link} href="/members/edit">
+              ערוך פרופיל
+            </DropdownItem>
+
+            <DropdownItem key="premium-page" as={Link} href="/premium">
+              שדרג לפרימיום
+            </DropdownItem>
+          </>
+        )}
 
         <DropdownItem
           key="sign-out"

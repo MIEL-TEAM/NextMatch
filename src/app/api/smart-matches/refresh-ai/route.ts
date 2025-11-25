@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/app/actions/authActions";
+import { getAuthUserId } from "@/lib/session";
 import { analyzeUserBehaviorWithPremiumAI } from "@/app/actions/ai/smartProfile";
 import { prisma } from "@/lib/prisma";
 

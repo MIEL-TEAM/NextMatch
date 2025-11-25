@@ -31,6 +31,7 @@ type TopNavClientProps = {
   links: NavLinkItem[];
   initialUnreadCount: number;
   profileCompletion: ProfileCompletionStatus | null;
+  isAdmin: boolean;
 };
 
 export default function TopNavClient({
@@ -40,8 +41,10 @@ export default function TopNavClient({
   links,
   initialUnreadCount,
   profileCompletion,
+  isAdmin,
 }: TopNavClientProps) {
   const pathname = usePathname();
+
   const isAuthPage =
     pathname.includes("/login") ||
     pathname.includes("/register") ||
@@ -127,17 +130,22 @@ export default function TopNavClient({
           ],
         }}
       >
-        {/* ---- צד ימין (User Menu + Profile Views) ---- */}
         <NavbarContent justify="start" className="gap-4 items-center">
           {userInfo ? (
             <>
               {profileCompletion && (
                 <ProfileCompletionButton status={profileCompletion} />
               )}
-              <div className="p-2 rounded-full bg-white/20 hover:bg-white/30 shadow-md hover:shadow-lg transition">
-                <ProfileViewsButton />
-              </div>
-              <UserMenu userInfo={userInfo} userId={userId || undefined} />
+              {!isAdmin && (
+                <div className="p-2 rounded-full bg-white/20 hover:bg-white/30 shadow-md hover:shadow-lg transition">
+                  <ProfileViewsButton />
+                </div>
+              )}
+              <UserMenu
+                userInfo={userInfo}
+                userId={userId || undefined}
+                isAdmin={isAdmin}
+              />
             </>
           ) : (
             <div className="hidden sm:flex gap-3">
@@ -161,7 +169,6 @@ export default function TopNavClient({
           )}
         </NavbarContent>
 
-        {/* ---- אמצע התפריט ---- */}
         <NavbarContent
           justify="center"
           className="hidden sm:flex gap-6 font-rubik"
@@ -179,7 +186,6 @@ export default function TopNavClient({
             ))}
         </NavbarContent>
 
-        {/* ---- צד שמאל (לוגו + Miel) ---- */}
         <NavbarContent justify="end" className="gap-3 items-center">
           <Link
             href="/home"

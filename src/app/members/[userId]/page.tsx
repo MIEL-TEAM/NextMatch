@@ -9,9 +9,10 @@ import CardInnerWrapper from "@/components/CardInnerWrapper";
 import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import InterestsSection from "@/components/interests/InterestsSection";
 import ProfileViewTracker from "@/components/profile-view/ProfileViewTracker";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import VideoUploadSection from "@/components/video/VideoUploadSection";
 import VideoPlayer from "@/components/video/VideoPlayer";
+import { getSelfProfile } from "@/lib/getSelfProfile";
 
 interface MemberDetailedPageProps {
   params: Promise<{ userId: string }>;
@@ -21,16 +22,33 @@ export default async function MemberDetailedPage({
   params,
 }: MemberDetailedPageProps) {
   const { userId } = await params;
-  const member = await getMemberByUserId(userId);
-  const session = await auth();
+  const session = await getSession();
   const isOwnProfile = session?.user?.id === userId;
 
-  if (!member) return notFound();
+  // Use optimized single query for own profile, separate queries for viewing others
+  let member, interests, memberVideos;
+
+  if (isOwnProfile) {
+    const profile = await getSelfProfile(userId);
+    if (!profile) return notFound();
+
+    member = profile;
+    interests = profile.interests.map((interest) => ({
+      id: interest.id,
+      name: interest.name,
+      icon: interest.icon,
+      category: interest.category,
+    }));
+    memberVideos = profile.videos;
+  } else {
+    member = await getMemberByUserId(userId);
+    if (!member) return notFound();
+
+    interests = await getUserInterestsByUserId(userId);
+    memberVideos = await getMemberVideos(member.id);
+  }
 
   const likeIds = await fetchCurrentUserLikeIds();
-  const interests = await getUserInterestsByUserId(userId);
-
-  const memberVideos = await getMemberVideos(member.id);
 
   const formattedVideos = memberVideos.map((video) => ({
     url: video.url,

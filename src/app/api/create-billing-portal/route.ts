@@ -1,20 +1,17 @@
-// app/api/create-billing-portal/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-
-const prisma = new PrismaClient();
 
 export async function POST() {
   try {
     const session = await auth();
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       select: { stripeCustomerId: true },
     });
 

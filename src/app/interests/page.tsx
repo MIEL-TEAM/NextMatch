@@ -1,9 +1,8 @@
 // app/profile/edit/interests/page.tsx
 import React from "react";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { getMemberByUserId } from "@/app/actions/memberActions";
-import { getUserInterestsByUserId } from "@/app/actions/interestsAction";
+import { getSelfProfile } from "@/lib/getSelfProfile";
 import EditInterestsClient from "@/components/interests/InterestsPage";
 
 type EditInterestsPageProps = {
@@ -13,7 +12,7 @@ type EditInterestsPageProps = {
 export default async function EditInterestsPage({
   searchParams,
 }: EditInterestsPageProps) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }
@@ -21,14 +20,18 @@ export default async function EditInterestsPage({
   const params = await searchParams;
   const userId = params.userId || session.user.id;
 
-  const [member, interests] = await Promise.all([
-    getMemberByUserId(userId),
-    getUserInterestsByUserId(userId),
-  ]);
+  const profile = await getSelfProfile(userId);
 
-  if (!member) {
+  if (!profile) {
     throw new Error("Member not found");
   }
+
+  const interests = profile.interests.map((interest) => ({
+    id: interest.id,
+    name: interest.name,
+    icon: interest.icon,
+    category: interest.category,
+  }));
 
   return (
     <EditInterestsClient

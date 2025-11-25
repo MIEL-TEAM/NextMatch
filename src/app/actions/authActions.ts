@@ -10,7 +10,8 @@ import bcrypt from "bcryptjs";
 import { ActionResult } from "@/types";
 import { TokenType, User } from "@prisma/client";
 import { LoginSchema } from "@/lib/schemas/loginSchema";
-import { auth, signIn, signOut } from "@/auth";
+import { getSession } from "@/lib/session";
+import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { generateToken, getTokenByToken } from "@/lib/tokens";
 import {
@@ -176,15 +177,6 @@ export async function getUserById(id: string) {
   return prisma.user.findUnique({ where: { id } });
 }
 
-export async function getAuthUserId() {
-  const session = await auth();
-  const userId = session?.user?.id;
-
-  if (!userId) throw new Error("Unauthorized");
-
-  return userId;
-}
-
 export async function verifyEmail(
   token: string
 ): Promise<ActionResult<string>> {
@@ -303,7 +295,7 @@ export async function resetPassword(
 export async function completeSocialLoginProfile(
   data: ProfileSchema
 ): Promise<ActionResult<string>> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) return { status: "error", error: "user not found" };
 
   try {
@@ -320,7 +312,6 @@ export async function completeSocialLoginProfile(
             description: data.description,
             city: data.city,
             country: data.country,
-            // Removed Interest_MemberInterests
           },
         },
       },
@@ -340,17 +331,8 @@ export async function completeSocialLoginProfile(
   }
 }
 
-export async function getUserRole() {
-  const session = await auth();
-  const role = session?.user.role;
-
-  if (!role) throw new Error("Not in role");
-
-  return role;
-}
-
 export async function setProfileIncomplete() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   await prisma.user.update({

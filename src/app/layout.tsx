@@ -3,11 +3,16 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import TopNav from "@/components/navbar/TopNav";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
+import { SessionProvider } from "@/contexts/SessionContext";
 import MielLayout from "./mielLayout";
 import { Toaster } from "sonner";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
 import MobileBlocker from "@/components/MobileBlocker";
+import { headers } from "next/headers";
+import { Session } from "next-auth";
+import GoogleOneTap from "@/components/auth/GoogleOneTap";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://miel-love.com"),
@@ -68,13 +73,25 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
+  // 🔥 PERFORMANCE FIX: Check pathname early
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isForbiddenRoute =
+    pathname === "/premium" ||
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register";
+
+  // ✅ SINGLE auth call for entire request tree via React Cache
+  const session = await getSession();
   const userId = session?.user?.id || null;
   const profileComplete = session?.user.profileComplete as boolean;
   const isPremium = session?.user?.isPremium as boolean;
+  const isAdmin = session?.user?.role === "ADMIN";
 
+  // ✅ SKIP all queries on forbidden routes
   let initialUnreadCount = 0;
-  if (userId) {
+  if (userId && !isAdmin && !isForbiddenRoute) {
     try {
       const { getUnreadMessageCount } = await import(
         "@/app/actions/messageActions"
@@ -129,22 +146,27 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
+        <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
       <body>
-        <ReactQueryProvider>
-          <Providers
-            userId={userId}
-            profileComplete={profileComplete}
-            initialUnreadCount={initialUnreadCount}
-            isPremium={isPremium}
-          >
-            <MobileBlocker />
-            <div className="hidden lg:block">
+        <SessionProvider session={session as Session}>
+          {!session?.user && !pathname.startsWith("/admin") && <GoogleOneTap />}
+          <ReactQueryProvider>
+            <Providers
+              userId={userId}
+              profileComplete={profileComplete}
+              initialUnreadCount={initialUnreadCount}
+              isPremium={isPremium}
+              isAdmin={isAdmin}
+            >
+              <MobileBlocker />
               <TopNav />
-              <MielLayout>{children}</MielLayout>
-            </div>
-          </Providers>
-        </ReactQueryProvider>
+              <div className="hidden lg:block">
+                <MielLayout>{children}</MielLayout>
+              </div>
+            </Providers>
+          </ReactQueryProvider>
+        </SessionProvider>
 
         <Toaster position="top-center" richColors expand={true} />
       </body>

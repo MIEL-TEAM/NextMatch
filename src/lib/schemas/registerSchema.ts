@@ -15,8 +15,8 @@ export const registerSchema = z.object({
 });
 
 export const profileSchema = z.object({
-  gender: z.string().min(1, {
-    message: "בחר מגדר בבקשה",
+  gender: z.enum(["male", "female"], {
+    errorMap: () => ({ message: "בחר מגדר תקין: זכר או נקבה" }),
   }),
   description: z.string().min(1, {
     message: "ספר על עצמך בכמה מילים",

@@ -1,7 +1,7 @@
 // ✅ /app/api/messages/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getMessageByContainer } from "@/app/actions/messageActions";
-import { getAuthUserId } from "@/app/actions/authActions";
+import { getAuthUserId } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   try {

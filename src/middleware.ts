@@ -1,4 +1,4 @@
-// Fixed middleware.ts - Optimized for fewer redirects
+// Fixed middleware.ts - Admin isolation + optimized redirects
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
 import { authRoutes, publicRoutes } from "./routes";
@@ -13,26 +13,51 @@ export default auth((req) => {
   const isAdmin = req.auth?.user.role === "ADMIN";
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
 
-  // Early returns for performance
-  if (isPublic || isAdmin) {
-    return NextResponse.next();
+  // 🔥 PERFORMANCE FIX: Add pathname to headers for server components
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", nextUrl.pathname);
+
+  // ✅ ADMIN ISOLATION: Redirect admins to admin panel ONLY
+  if (isAdmin) {
+    if (isAdminRoute) {
+      return NextResponse.next({
+        request: { headers: requestHeaders },
+      });
+    }
+    // ❌ Block admin from accessing user routes
+    if (!isPublic && !isAuthRoutes) {
+      return NextResponse.redirect(new URL("/admin", nextUrl));
+    }
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
+  // ✅ Block non-admins from admin routes
   if (isAdminRoute && !isAdmin) {
     return NextResponse.redirect(new URL("/", nextUrl));
+  }
+
+  // Early return for public routes
+  if (isPublic) {
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
   // Handle auth routes
   if (isAuthRoutes) {
     if (isLoggedIn) {
-      // ✅ Redirect to members with preserved search params if any
+      // Redirect to members (non-admins only reach here)
       const membersUrl = new URL("/members", nextUrl);
       if (nextUrl.searchParams.toString()) {
         membersUrl.search = nextUrl.searchParams.toString();
       }
       return NextResponse.redirect(membersUrl);
     }
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
   // Handle unauthenticated users
@@ -49,7 +74,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/complete-profile", nextUrl));
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 });
 
 export const config = {

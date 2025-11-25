@@ -29,16 +29,13 @@ export function useCelebrationListener(
   useEffect(() => {
     if (!userId) return;
 
-    // השתמש בערוץ קיים - אל תיצור חדש אם כבר קיים
     const channel =
       pusherClient.channel(`private-${userId}`) ||
       pusherClient.subscribe(`private-${userId}`);
 
-    // 💕 לייק הדדי
     channel.bind("mutual-match", (data: MutualMatchData) => {
       console.log("🎉 Mutual match detected!", data);
 
-      // טקסט דינמי לפי מגדר - כולל התאמה של כל המילים
       const genderText = data.currentUserGender === "male" ? "אתה" : "את";
       const loveText =
         data.currentUserGender === "male" ? "אחד את השנייה" : "אחת את השני";
@@ -46,24 +43,20 @@ export function useCelebrationListener(
       showCelebration("mutual-like", {
         userName: data.matchedUser.name,
         userImage: data.matchedUser.image,
-        matchedUserId: data.matchedUser.userId, // 🎯 ID של המשתמש המתאים
+        matchedUserId: data.matchedUser.userId,
         customTitle: "🎉 מזל טוב! התאמה הדדית!",
         customSubtitle: `${genderText} ו${data.matchedUser.name} אוהבים ${loveText}! 💕`,
       });
 
-      // 🔊 צליל חגיגי (אופציונלי)
       try {
         const audio = new Audio("/sounds/celebration.mp3");
         audio.volume = 0.3;
-        audio.play().catch(() => {
-          // אם הצליל נכשל, לא נעשה כלום
-        });
-      } catch {
-        // אם אין קובץ צליל, לא נעשה כלום
+        audio.play().catch(() => {});
+      } catch (error) {
+        console.error("Error playing celebration sound:", error);
       }
     });
 
-    // 💗 לייק רגיל (טוסט)
     channel.bind(
       "like:new",
       (data: { name: string; image: string | null; userId: string }) => {
@@ -72,7 +65,6 @@ export function useCelebrationListener(
       }
     );
 
-    // 🧠 התאמה חכמה (אופציונלי)
     channel.bind("smart-match", (data: SmartMatchData) => {
       console.log("🎯 Smart match found!", data);
 
@@ -84,7 +76,6 @@ export function useCelebrationListener(
       });
     });
 
-    // 📩 הודעה ראשונה
     channel.bind("first-message", (data: { userName: string }) => {
       console.log("📩 First message sent!", data);
 
@@ -95,7 +86,6 @@ export function useCelebrationListener(
       });
     });
 
-    // ⭐ שדרוג פרופיל
     channel.bind("profile-boost", () => {
       console.log("⭐ Profile boosted!");
 
@@ -105,7 +95,6 @@ export function useCelebrationListener(
       });
     });
 
-    // 🏆 הישג כללי
     channel.bind(
       "achievement",
       (data: { title: string; description: string }) => {
@@ -119,29 +108,24 @@ export function useCelebrationListener(
     );
 
     return () => {
-      // רק נתק את האירועים, אל תבטל את המנוי לערוץ (שמשמש גם hooks אחרים)
       channel.unbind("mutual-match");
       channel.unbind("like:new");
       channel.unbind("smart-match");
       channel.unbind("first-message");
       channel.unbind("profile-boost");
       channel.unbind("achievement");
-      // אל תקרא ל-pusherClient.unsubscribe - זה יכול להפריע להוקים אחרים
     };
   }, [userId, showCelebration]);
 
-  return null; // Hook לא מחזיר UI
+  return null;
 }
 
 export const celebrationTriggers = {
-  // 🧠 התאמה חכמה
   smartMatch: async (userId: string, matchData: SmartMatchData) => {
-    // ניתן לקרוא מ-smartMatchActions.ts
     const { pusherServer } = await import("@/lib/pusher");
     await pusherServer.trigger(`private-${userId}`, "smart-match", matchData);
   },
 
-  // 📩 הודעה ראשונה
   firstMessage: async (userId: string, userName: string) => {
     const { pusherServer } = await import("@/lib/pusher");
     await pusherServer.trigger(`private-${userId}`, "first-message", {
@@ -149,13 +133,11 @@ export const celebrationTriggers = {
     });
   },
 
-  // ⭐ שדרוג פרופיל
   profileBoost: async (userId: string) => {
     const { pusherServer } = await import("@/lib/pusher");
     await pusherServer.trigger(`private-${userId}`, "profile-boost", {});
   },
 
-  // 🏆 הישג כללי
   achievement: async (userId: string, title: string, description: string) => {
     const { pusherServer } = await import("@/lib/pusher");
     await pusherServer.trigger(`private-${userId}`, "achievement", {

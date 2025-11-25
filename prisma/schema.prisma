@@ -44,7 +44,7 @@ model User {
   stripeCustomerId     String?
 
   // OAuth verification
-  provider      String? // "google", "facebook", or "credentials"
+  provider      String?
   oauthVerified Boolean @default(false)
   trustScore    Int     @default(0)
 
@@ -64,6 +64,7 @@ model User {
   accounts              Account[]
   hasSeenMembersIntro   Boolean           @default(false)
   hasSeenWelcomeMessage Boolean           @default(false)
+  adminAuditLogs        AdminAuditLog[]
   viewedProfiles        ProfileView[]     @relation("ViewerProfileViews")
   profileViewers        ProfileView[]     @relation("ViewedProfileViews")
   SmartMatchCache       SmartMatchCache[]
@@ -259,6 +260,23 @@ model SmartMatchCache {
 enum Role {
   ADMIN
   MEMBER
+}
+
+// Admin audit logging
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  details    String?  @db.Text
+  timestamp  DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, timestamp])
+  @@index([targetType, targetId])
+  @@map("admin_audit_logs")
 }
 
 // Stories feature - Image only

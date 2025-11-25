@@ -1,6 +1,6 @@
 import { updateCurrentUserLocation, getMembers } from "../memberActions";
 import { prisma } from "@/lib/prisma";
-import { getAuthUserId } from "../authActions";
+import { getAuthUserId } from "@/lib/session";
 import { ensureMember } from "@/lib/prismaHelpers";
 
 // Mock React cache

@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@nextui-org/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { hasUserAddedInterests } from "@/app/actions/interestsAction";
 
 export default function InterestNotification({
@@ -12,12 +12,19 @@ export default function InterestNotification({
   userId: string | null;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const hasShownNotificationRef = useRef(false);
   const [hasCheckedInterests, setHasCheckedInterests] = useState(false);
   const [hasInterests, setHasInterests] = useState(true);
 
   useEffect(() => {
-    if (!userId || hasCheckedInterests) return;
+    const isForbiddenRoute =
+      pathname === "/" ||
+      pathname === "/premium" ||
+      pathname === "/login" ||
+      pathname === "/register";
+
+    if (!userId || hasCheckedInterests || isForbiddenRoute) return;
 
     async function checkInterests() {
       try {
@@ -34,9 +41,17 @@ export default function InterestNotification({
     }
 
     checkInterests();
-  }, [userId, hasCheckedInterests]);
+  }, [userId, hasCheckedInterests, pathname]);
 
   useEffect(() => {
+    const isForbiddenRoute =
+      pathname === "/" ||
+      pathname === "/premium" ||
+      pathname === "/login" ||
+      pathname === "/register";
+
+    if (isForbiddenRoute) return;
+
     const dismissedUntil = localStorage.getItem(
       `interestsDismissedUntil_${userId}`
     );
@@ -107,7 +122,7 @@ export default function InterestNotification({
     return () => {
       clearTimeout(timer);
     };
-  }, [userId, hasCheckedInterests, hasInterests, router]);
+  }, [userId, hasCheckedInterests, hasInterests, router, pathname]);
 
   return null;
 }

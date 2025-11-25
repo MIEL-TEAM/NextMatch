@@ -2,7 +2,7 @@
 
 import { MessageSchema, messagesSchema } from "@/lib/schemas/messagesSchema";
 import { ActionResult, MessageDto } from "@/types";
-import { getAuthUserId } from "./authActions";
+import { getAuthUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { mapMessageToMessageDto } from "@/lib/mappings";
 import { pusherServer } from "@/lib/pusher";

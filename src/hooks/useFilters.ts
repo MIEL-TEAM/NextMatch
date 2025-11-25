@@ -1,6 +1,6 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Selection } from "@nextui-org/react";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import { FaMale, FaFemale } from "react-icons/fa";
 import useFilterStore from "./useFilterStore";
 import usePaginationStore from "./usePaginationStore";
@@ -11,6 +11,9 @@ export const useFilters = () => {
   const currentSearchParams = useSearchParams();
   const [clientLoaded, setClientLoaded] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const isSyncing = useRef(false);
+  const lastSyncedUrl = useRef<string>("");
 
   useEffect(() => {
     setClientLoaded(true);
@@ -37,6 +40,8 @@ export const useFilters = () => {
   useEffect(() => {
     if (!clientLoaded) return;
 
+    if (isSyncing.current) return;
+
     const urlOrderBy = currentSearchParams.get("orderBy");
     const urlGender = currentSearchParams.get("gender");
     const urlAgeRange = currentSearchParams.get("ageRange");
@@ -48,13 +53,14 @@ export const useFilters = () => {
 
     const currentFilters = useFilterStore.getState().filters;
 
+    // Sync orderBy
     if (urlOrderBy && urlOrderBy !== currentFilters.orderBy) {
       setFilters("orderBy", urlOrderBy);
     }
 
+    // Sync gender
     if (urlGender) {
       const genderArray = urlGender.split(",").filter(Boolean);
-
       const currentGenderStr = [...currentFilters.gender].sort().join(",");
       const urlGenderStr = [...genderArray].sort().join(",");
 
@@ -63,6 +69,7 @@ export const useFilters = () => {
       }
     }
 
+    // Sync ageRange
     if (urlAgeRange) {
       const [min, max] = urlAgeRange.split(",").map(Number);
       if (
@@ -75,16 +82,15 @@ export const useFilters = () => {
       }
     }
 
+    // Sync withPhoto
     if (urlWithPhoto !== null) {
       const withPhotoValue = urlWithPhoto === "true";
       if (withPhotoValue !== currentFilters.withPhoto) {
         setFilters("withPhoto", withPhotoValue);
       }
-    } else {
-      // If no withPhoto in URL, ensure store value is synced to URL
-      // This happens on first load when URL doesn't have withPhoto param
     }
 
+    // Sync location params
     if (urlUserLat !== currentFilters.userLat) {
       setFilters("userLat", urlUserLat || undefined);
     }
@@ -100,67 +106,103 @@ export const useFilters = () => {
     if (urlSortByDistance !== currentFilters.sortByDistance) {
       setFilters("sortByDistance", urlSortByDistance || undefined);
     }
-  }, [clientLoaded, currentSearchParams, setFilters]);
 
-  useEffect(() => {
-    if (
-      gender ||
-      ageRange ||
-      orderBy !== undefined ||
-      withPhoto !== undefined
-    ) {
-      setPage(1);
+    /**
+     * Sync pageNumber from URL to store.
+     *
+     * This enables:
+     * - Browser back/forward navigation
+     * - Deep linking (e.g., /members?pageNumber=5)
+     * - Manual URL editing
+     *
+     * Only updates if the URL value differs from current store value
+     * and is a valid positive integer.
+     */
+    const urlPageNumber = currentSearchParams.get("pageNumber");
+    if (urlPageNumber) {
+      const pageNum = Number(urlPageNumber);
+      const currentPage = usePaginationStore.getState().pagination.pageNumber;
+
+      // Only update if the URL value is different from store AND is a valid number
+      if (!isNaN(pageNum) && pageNum > 0 && pageNum !== currentPage) {
+        console.log(
+          "🔗 Syncing pageNumber from URL:",
+          urlPageNumber,
+          "→",
+          pageNum
+        );
+        setPage(pageNum);
+      }
     }
-  }, [ageRange, gender, orderBy, setPage, withPhoto]);
+  }, [clientLoaded, currentSearchParams, setFilters, setPage]);
+
+  /**
+   * Reset pagination when filters change.
+   *
+   * IMPORTANT: setPage is intentionally NOT in the dependency array.
+   * Including it would create a circular dependency where pagination
+   * changes trigger this effect, which resets pagination, causing the
+   * double-click bug.
+   *
+   * This effect only runs when filter values (gender, ageRange, etc.)
+   * actually change, ensuring pagination resets are intentional.
+   */
+  useEffect(() => {
+    console.log("🔄 Filter changed, resetting pagination to page 1");
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ageRange, gender, orderBy, withPhoto]);
 
   useEffect(() => {
-    startTransition(() => {
-      const searchParams = new URLSearchParams(currentSearchParams.toString());
+    if (!clientLoaded) return;
 
-      const currentGender = searchParams.get("gender");
-      const currentAgeRange = searchParams.get("ageRange");
-      const currentOrderBy = searchParams.get("orderBy");
-      const currentWithPhoto = searchParams.get("withPhoto");
+    const searchParams = new URLSearchParams(currentSearchParams.toString());
 
-      const genderParam =
-        gender && gender.length > 0 ? gender.join(",") : "male,female";
-      if (!currentGender || currentGender !== genderParam) {
-        searchParams.set("gender", genderParam);
-      }
+    // Build params from store
+    const genderParam =
+      gender && gender.length > 0 ? gender.join(",") : "male,female";
+    searchParams.set("gender", genderParam);
 
-      const ageRangeParam =
-        ageRange && ageRange.length === 2
-          ? `${ageRange[0]},${ageRange[1]}`
-          : "18,100";
-      if (!currentAgeRange || currentAgeRange !== ageRangeParam) {
-        searchParams.set("ageRange", ageRangeParam);
-      }
+    const ageRangeParam =
+      ageRange && ageRange.length === 2
+        ? `${ageRange[0]},${ageRange[1]}`
+        : "18,65";
+    searchParams.set("ageRange", ageRangeParam);
 
-      if (!currentOrderBy) {
-        searchParams.set("orderBy", orderBy || "updated");
-      }
+    searchParams.set("orderBy", orderBy || "updated");
+    searchParams.set("withPhoto", withPhoto.toString());
 
-      const withPhotoParam = withPhoto.toString();
-      if (!currentWithPhoto || currentWithPhoto !== withPhotoParam) {
-        searchParams.set("withPhoto", withPhotoParam);
-      }
+    if (pageSize) searchParams.set("pageSize", pageSize.toString());
 
-      if (pageSize) searchParams.set("pageSize", pageSize.toString());
-      if (pageNumber) searchParams.set("pageNumber", pageNumber.toString());
+    // Only add pageNumber to URL if it's valid and greater than 1
+    // (page 1 can be omitted from URL as it's the default)
+    if (pageNumber && pageNumber > 1) {
+      searchParams.set("pageNumber", pageNumber.toString());
+    } else {
+      searchParams.delete("pageNumber"); // Clean URL for page 1
+    }
 
-      if (userLat) searchParams.set("userLat", userLat);
-      if (userLon) searchParams.set("userLon", userLon);
-      if (distance) searchParams.set("distance", distance);
-      if (sortByDistance) searchParams.set("sortByDistance", sortByDistance);
+    if (userLat) searchParams.set("userLat", userLat);
+    if (userLon) searchParams.set("userLon", userLon);
+    if (distance) searchParams.set("distance", distance);
+    if (sortByDistance) searchParams.set("sortByDistance", sortByDistance);
 
-      const newUrl = `${pathname}?${searchParams.toString()}`;
-      const currentUrl = `${pathname}?${currentSearchParams.toString()}`;
+    const newUrl = `${pathname}?${searchParams.toString()}`;
 
-      if (newUrl !== currentUrl) {
+    if (newUrl !== lastSyncedUrl.current) {
+      lastSyncedUrl.current = newUrl;
+      isSyncing.current = true;
+
+      startTransition(() => {
         router.replace(newUrl, { scroll: false });
-      }
-    });
+
+        setTimeout(() => {
+          isSyncing.current = false;
+        }, 100);
+      });
+    }
   }, [
+    clientLoaded,
     ageRange,
     gender,
     orderBy,
@@ -176,16 +218,19 @@ export const useFilters = () => {
     sortByDistance,
   ]);
 
+  // UI lists
   const orderByList = [
     { label: "פעילות אחרונה", value: "updated" },
     { label: "משתמשים חדשים ביותר", value: "newest" },
     { label: "לפי מרחק", value: "distance" },
   ];
+
   const gendersList = [
     { value: "male", icon: FaMale },
     { value: "female", icon: FaFemale },
   ];
 
+  // Event handlers
   const handleOrderSelect = (value: Selection) => {
     if (value instanceof Set) {
       setFilters("orderBy", value.values().next().value);
@@ -197,12 +242,14 @@ export const useFilters = () => {
   };
 
   const handleGenderSelect = (value: string) => {
-    if (gender.includes(value))
+    if (gender.includes(value)) {
       setFilters(
         "gender",
         gender.filter((g) => g !== value)
       );
-    else setFilters("gender", [...gender, value]);
+    } else {
+      setFilters("gender", [...gender, value]);
+    }
   };
 
   const handleWithPhotoToggle = (event: any) => {
@@ -211,7 +258,8 @@ export const useFilters = () => {
     } else if (event && typeof event.target?.checked === "boolean") {
       setFilters("withPhoto", event.target.checked);
     } else {
-      setFilters("withPhoto", !withPhoto);
+      const currentValue = useFilterStore.getState().filters.withPhoto;
+      setFilters("withPhoto", !currentValue);
     }
   };
 

@@ -2,67 +2,106 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { GetMemberParams } from "@/types";
 import type { Member } from "@prisma/client";
+import usePaginationStore from "./usePaginationStore";
 
 interface QueryOptions {
   enabled?: boolean;
 }
 
 export const useMembersQuery = (
-  params: URLSearchParams,
+  paramsString: string,
   options: QueryOptions = {}
 ) => {
-  const queryObj = useMemo(
-    (): GetMemberParams => ({
-      filter: params.get("filter") || "all",
-      ageMin: params.get("ageMin") || undefined,
-      ageMax: params.get("ageMax") || undefined,
-      ageRange: params.get("ageRange") || "18,100",
-      gender: params.get("gender") || "male,female",
-      withPhoto: params.get("withPhoto") || "true",
-      orderBy: params.get("orderBy") || "updated",
-      city: params.get("city") || undefined,
-      interests: params.getAll("interests") || [],
-      onlineOnly: params.get("onlineOnly") === "true" ? "true" : "false",
-      sort: params.get("sort") || "latest",
-      pageNumber: params.get("pageNumber") || params.get("page") || "1",
-      pageSize: params.get("pageSize") || "12",
-      userLat: params.get("userLat") || undefined,
-      userLon: params.get("userLon") || undefined,
-      distance: params.get("distance") || undefined,
-      sortByDistance: params.get("sortByDistance") || "false",
-    }),
-    [params]
-  );
+  /**
+   * Subscribe to pagination store for reactive updates.
+   * 
+   * CRITICAL: This ensures the query refetches immediately when pagination
+   * changes, without waiting for URL sync to complete.
+   * 
+   * The store is the source of truth for pagination state, and URL is just
+   * a reflection of that state (with a slight delay due to async updates).
+   */
+  const { pageNumber: storePageNumber, pageSize: storePageSize } =
+    usePaginationStore((state) => state.pagination);
+
+  const queryObj = useMemo((): GetMemberParams => {
+    const params = new URLSearchParams(paramsString);
+    const paramsMap = new Map<string, string>();
+
+    // Collect all params
+    const entries: [string, string][] = [];
+    params.forEach((value, key) => {
+      entries.push([key, value]);
+      // Store last value for non-array params
+      paramsMap.set(key, value);
+    });
+
+    // Get all interests values (can be multiple)
+    const interests: string[] = [];
+    entries.forEach(([key, value]) => {
+      if (key === "interests") {
+        interests.push(value);
+      }
+    });
+
+    return {
+      filter: paramsMap.get("filter") || "all",
+      ageMin: paramsMap.get("ageMin") || undefined,
+      ageMax: paramsMap.get("ageMax") || undefined,
+      ageRange: paramsMap.get("ageRange") || "18,65",
+      gender: paramsMap.get("gender") || "male,female",
+      withPhoto: paramsMap.get("withPhoto") ?? undefined, // Pass through exact value, no defaulting
+      orderBy: paramsMap.get("orderBy") || "updated",
+      lastActive: paramsMap.get("lastActive") || undefined,
+      city: paramsMap.get("city") || undefined,
+      interests: interests.length > 0 ? interests : [],
+      onlineOnly: paramsMap.get("onlineOnly") === "true" ? "true" : "false",
+      sort: paramsMap.get("sort") || "latest",
+      // Read pageNumber from Zustand store (reactive), fallback to URL, then default to "1"
+      // This ensures immediate reactivity when user clicks pagination
+      pageNumber:
+        storePageNumber?.toString() ||
+        paramsMap.get("pageNumber") ||
+        paramsMap.get("page") ||
+        "1",
+      // Read pageSize from Zustand store first
+      pageSize: storePageSize?.toString() || paramsMap.get("pageSize") || "12",
+      userLat: paramsMap.get("userLat") || undefined,
+      userLon: paramsMap.get("userLon") || undefined,
+      distance: paramsMap.get("distance") || undefined,
+      sortByDistance: paramsMap.get("sortByDistance") || "false",
+    };
+  }, [paramsString, storePageNumber, storePageSize]);
 
   const hasLocationParams = queryObj.userLat && queryObj.userLon;
 
-  const stableQueryObj = useMemo(
-    () =>
-      Object.entries(queryObj)
-        .filter(([, value]) => value !== undefined)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {}),
-    [queryObj]
-  );
+  // Create stable query key - queryObj is now stable since it depends on paramsString
+  const queryKey = useMemo(() => {
+    // Sort entries for consistent key generation
+    const stableObj = Object.entries(queryObj)
+      .filter(([, value]) => value !== undefined && value !== null)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
-  const queryKey = ["members", stableQueryObj];
+    return ["members", stableObj];
+  }, [queryObj]);
 
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
       const query = new URLSearchParams();
 
+      // Build query string from queryObj
       Object.entries(queryObj).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach((v) => query.append(key, v));
-        } else if (value !== undefined) {
+        } else if (value !== undefined && value !== null) {
           query.append(key, value);
         }
       });
 
       const res = await fetch(`/api/members?${query.toString()}`, {
         signal,
-
         headers: {
           Accept: "application/json",
           "Cache-Control": "max-age=60",
@@ -88,7 +127,6 @@ export const useMembersQuery = (
     retry: 1,
     gcTime: 1000 * 60 * 5,
     enabled: options.enabled !== false,
-
     structuralSharing: true,
     throwOnError: false,
   });

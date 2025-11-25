@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { add } from "date-fns";
 import { ActionResult } from "@/types";
 import { createMessgae } from "./messageActions";
+import { getSession } from "@/lib/session";
 
 type StoryPrivacy = "PUBLIC" | "PREMIUM" | "PRIVATE";
 
@@ -39,7 +40,7 @@ export async function createStory(
   formData: FormData
 ): Promise<ActionResult<Story>> {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return { status: "error", error: "Unauthorized" };
     }
@@ -141,7 +142,7 @@ export async function createStory(
 
 export async function getStoryUsers() {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return [];
     }
@@ -246,7 +247,7 @@ export async function getStoryUsers() {
 
 export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return [];
     }
@@ -349,7 +350,7 @@ export async function reactToStory(
   reactionType: string
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return { status: "error", error: "Unauthorized" };
     }
@@ -456,7 +457,7 @@ export async function sendStoryMessage(
   messageText: string
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return { status: "error", error: "Not authenticated" };
     }
@@ -512,7 +513,7 @@ export async function deleteStory(
   storyId: string
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return { status: "error", error: "לא מחובר" };
     }

@@ -9,22 +9,33 @@ export async function GET(req: Request) {
   // Get all search parameters with better handling
   const ageRange = searchParams.get("ageRange");
   const gender = searchParams.get("gender");
-  const withPhoto = searchParams.get("withPhoto");
+  const withPhotoRaw = searchParams.get("withPhoto");
   const orderBy = searchParams.get("orderBy");
+  const lastActive = searchParams.get("lastActive");
+
+  // Normalize withPhoto to exact string literal "true" | "false"
+  // Default to "true" only when param is missing (null)
+  let withPhotoNormalized: "true" | "false";
+  if (withPhotoRaw === null) {
+    withPhotoNormalized = "true"; // Default on initial load
+  } else {
+    withPhotoNormalized = withPhotoRaw === "true" ? "true" : "false";
+  }
 
   const params: GetMemberParams = {
     filter: searchParams.get("filter") || "all",
     ageMin: searchParams.get("ageMin") || undefined,
     ageMax: searchParams.get("ageMax") || undefined,
-    ageRange: ageRange || "18,100",
+    ageRange: ageRange || "18,65",
     gender: gender || "male,female",
     pageNumber:
       searchParams.get("pageNumber") || searchParams.get("page") || "1",
     pageSize: searchParams.get("pageSize") || "12",
     orderBy: orderBy || "updated",
     sort: searchParams.get("sort") || undefined,
-    withPhoto: withPhoto || "false",
+    withPhoto: withPhotoNormalized,
     onlineOnly: searchParams.get("onlineOnly") || "false",
+    lastActive: lastActive || undefined,
     city: searchParams.get("city") || undefined,
     interests: searchParams.getAll("interests"),
     // Location parameters

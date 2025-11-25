@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { add } from "date-fns";
 import { revalidatePath } from "next/cache";
 import { stripe, PREMIUM_PLAN_PRICES } from "@/lib/stripe";
@@ -9,8 +9,8 @@ import { prisma } from "@/lib/prisma";
 
 // Updates premium status when returning from Stripe checkout
 export async function updatePremiumStatusFromStripe(sessionId: string) {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const session = await getSession();
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
@@ -23,7 +23,7 @@ export async function updatePremiumStatusFromStripe(sessionId: string) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       select: {
         id: true,
         isPremium: true,
@@ -84,16 +84,16 @@ export async function updatePremiumStatusFromStripe(sessionId: string) {
 
 // Gets and validates current premium status
 export async function getPremiumStatus() {
-  const session = await auth();
+  const session = await getSession();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: session.user.email,
+        id: session.user.id,
       },
       select: {
         id: true,
@@ -105,12 +105,6 @@ export async function getPremiumStatus() {
         boostsAvailable: true,
         canceledAt: true,
         stripeSubscriptionId: true,
-        member: {
-          select: {
-            id: true,
-            boostedUntil: true,
-          },
-        },
       },
     });
 
@@ -147,9 +141,7 @@ export async function getPremiumStatus() {
     // Add activePlan to the returned object
     return {
       ...user,
-      activePlan: user.stripeSubscriptionId
-        ? user.member?.id || "popular"
-        : "popular",
+      activePlan: "popular", // Default plan - actual plan should be stored in subscription metadata
     };
   } catch (error) {
     console.error("שגיאה בהבאת נתוני פרימיום:", error);
@@ -158,7 +150,7 @@ export async function getPremiumStatus() {
 }
 
 export async function createCheckoutSession(formData: FormData) {
-  const session = await auth();
+  const session = await getSession();
 
   if (!session?.user?.email || !session?.user?.id) {
     throw new Error("לא מורשה");
@@ -231,8 +223,8 @@ export async function activatePremium(formData: FormData) {
     process.env.NODE_ENV === "development" &&
     process.env.NEXT_PUBLIC_BYPASS_STRIPE === "true"
   ) {
-    const session = await auth();
-    if (!session?.user?.email) {
+    const session = await getSession();
+    if (!session?.user?.id) {
       throw new Error("לא מורשה");
     }
 
@@ -241,17 +233,10 @@ export async function activatePremium(formData: FormData) {
     const boosts = planId === "basic" ? 5 : planId === "popular" ? 10 : 15;
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { id: true },
-      });
-
-      if (!user) {
-        throw new Error("משתמש לא נמצא");
-      }
+      const userId = session.user.id;
 
       await prisma.user.update({
-        where: { id: user.id },
+        where: { id: userId },
         data: {
           isPremium: true,
           premiumUntil: add(new Date(), { months }),
@@ -294,15 +279,15 @@ export async function activatePremium(formData: FormData) {
 
 // Redirects to Stripe portal for subscription cancellation
 export async function redirectToCancelSubscription() {
-  const session = await auth();
+  const session = await getSession();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       select: {
         stripeCustomerId: true,
         stripeSubscriptionId: true,
@@ -335,15 +320,15 @@ export async function redirectToCancelSubscription() {
 }
 
 export async function processCancellationReturn() {
-  const session = await auth();
+  const session = await getSession();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       select: {
         stripeSubscriptionId: true,
       },
@@ -365,7 +350,7 @@ export async function processCancellationReturn() {
     if (isCancelScheduled) {
       // Update user record to reflect the cancellation
       await prisma.user.update({
-        where: { email: session.user.email },
+        where: { id: session.user.id },
         data: {
           canceledAt: new Date(),
           premiumUntil: currentPeriodEnd,
@@ -399,16 +384,16 @@ export async function processCancellationReturn() {
 
 // Cancels premium subscription directly (fallback method)
 export async function cancelPremium() {
-  const session = await auth();
+  const session = await getSession();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
   try {
     const existingUser = await prisma.user.findUnique({
       where: {
-        email: session.user.email,
+        id: session.user.id,
       },
       select: {
         id: true,
@@ -473,13 +458,13 @@ export async function cancelPremium() {
 }
 
 export async function createBillingPortalSession() {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const session = await getSession();
+  if (!session?.user?.id) {
     throw new Error("User not authenticated");
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
     select: {
       id: true,
       email: true,
@@ -511,13 +496,13 @@ export async function createBillingPortalSession() {
 
 export async function createReactivateSubscriptionSession() {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
+    const session = await getSession();
+    if (!session?.user?.id) {
       throw new Error("משתמש לא מאומת");
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       select: {
         stripeCustomerId: true,
         stripeSubscriptionId: true,
@@ -560,13 +545,13 @@ export async function createReactivateSubscriptionSession() {
 }
 
 export async function checkStripeSubscriptionStatus() {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const session = await getSession();
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
     select: {
       stripeSubscriptionId: true,
       isPremium: true,
@@ -612,7 +597,7 @@ export async function checkStripeSubscriptionStatus() {
 
       if (needsUpdate) {
         await prisma.user.update({
-          where: { email: session.user.email },
+          where: { id: session.user.id },
           data: updateData,
         });
 
@@ -635,9 +620,9 @@ export async function checkStripeSubscriptionStatus() {
 }
 // Profile boost functionality
 export async function boostProfile(formData: FormData) {
-  const session = await auth();
+  const session = await getSession();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     throw new Error("לא מורשה");
   }
 
@@ -650,7 +635,7 @@ export async function boostProfile(formData: FormData) {
 
     const user = await prisma.user.findUnique({
       where: {
-        email: session.user.email,
+        id: session.user.id,
       },
       select: {
         id: true,

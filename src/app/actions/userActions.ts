@@ -6,7 +6,7 @@ import {
 } from "@/lib/schemas/memberEditSchema";
 import { ActionResult } from "@/types";
 import { Photo } from "@prisma/client";
-import { getAuthUserId } from "./authActions";
+import { getAuthUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { cloudinary } from "@/lib/cloudinary";
 import { ensureMember } from "@/lib/prismaHelpers";
@@ -237,9 +237,12 @@ export async function getProfileCompletionStatus(
     const essentialsProgress =
       (basicFields.length - missingBasics.length) / basicFields.length;
 
-    const hasVideo =
-      Boolean(member.videoUrl) ||
-      member.videos.some((video) => video.isApproved);
+    const approvedVideos = member.videos.filter((video) => video.isApproved);
+    const pendingVideos = member.videos.filter((video) => !video.isApproved);
+    const totalVideos = member.videos.length;
+
+    const hasVideo = totalVideos > 0 || Boolean(member.videoUrl);
+    const videoProgress = hasVideo ? 1 : 0;
 
     const hasLocation =
       member.locationEnabled &&
@@ -347,8 +350,13 @@ export async function getProfileCompletionStatus(
           : "העלה סרטון קצר כדי לבלוט מול משתמשים אחרים.",
         actionHref: `/members/${member.userId}`,
         weight: PROFILE_COMPLETION_WEIGHTS.video,
-        progress: hasVideo ? 1 : 0,
+        progress: videoProgress,
         completed: hasVideo,
+        meta: {
+          totalVideoCount: totalVideos,
+          approvedVideoCount: approvedVideos.length,
+          pendingVideoCount: pendingVideos.length,
+        },
       },
       {
         key: "location",

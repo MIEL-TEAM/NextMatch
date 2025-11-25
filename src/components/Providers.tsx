@@ -6,7 +6,6 @@ import { useNotificationChannel } from "@/hooks/useNotificationChannel";
 import { usePresenceChannel } from "@/hooks/usePresenceChannel";
 import { useCelebrationListener } from "@/hooks/useCelebrationListener";
 import { NextUIProvider } from "@nextui-org/react";
-import { SessionProvider } from "next-auth/react";
 import React, { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,6 +15,7 @@ import CelebrationModal, {
   useCelebration,
 } from "@/components/CelebrationModal";
 import { AIAssistantButton } from "@/components/ai-assistant";
+import { usePathname } from "next/navigation";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -23,6 +23,7 @@ type ProvidersProps = {
   profileComplete: boolean;
   initialUnreadCount?: number;
   isPremium?: boolean;
+  isAdmin?: boolean;
 };
 
 export default function Providers({
@@ -31,8 +32,16 @@ export default function Providers({
   profileComplete,
   initialUnreadCount,
   isPremium = false,
+  isAdmin = false,
 }: ProvidersProps) {
+  const pathname = usePathname();
   const isUnreadCountSet = useRef(false);
+
+  const isForbiddenRoute =
+    pathname === "/premium" ||
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register";
 
   const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
   const setStoreUnreadCount = useMessageStore((state) => state.setUnreadCount);
@@ -45,57 +54,73 @@ export default function Providers({
   );
 
   useEffect(() => {
-    if (initialUnreadCount !== undefined && !isUnreadCountSet.current) {
-      setStoreUnreadCount(initialUnreadCount);
-      isUnreadCountSet.current = true;
-    }
-  }, [initialUnreadCount, setStoreUnreadCount]);
+    const skipLogic =
+      isForbiddenRoute ||
+      isAdmin ||
+      initialUnreadCount === undefined ||
+      isUnreadCountSet.current;
+
+    if (skipLogic) return;
+
+    setStoreUnreadCount(initialUnreadCount);
+    isUnreadCountSet.current = true;
+  }, [initialUnreadCount, setStoreUnreadCount, isAdmin, isForbiddenRoute]);
 
   useEffect(() => {
-    if (!isUnreadCountSet.current && userId) {
-      getUnreadMessageCount()
-        .then((count) => {
-          setUnreadCount(count);
-          isUnreadCountSet.current = true;
-        })
-        .catch((error) => {
-          console.warn("Failed to load unread count:", error);
-          isUnreadCountSet.current = true;
-        });
-    }
-  }, [setUnreadCount, userId]);
+    const skipLogic =
+      isForbiddenRoute || isAdmin || !userId || isUnreadCountSet.current;
 
-  usePresenceChannel(userId, profileComplete);
-  useNotificationChannel(userId, profileComplete);
+    if (skipLogic) return;
+
+    getUnreadMessageCount()
+      .then((count) => {
+        setUnreadCount(count);
+        isUnreadCountSet.current = true;
+      })
+      .catch(() => {
+        isUnreadCountSet.current = true;
+      });
+  }, [setUnreadCount, userId, isAdmin, isForbiddenRoute]);
+
+  const shouldEnableChannels =
+    !isForbiddenRoute && !isAdmin && userId && profileComplete;
+
+  usePresenceChannel(shouldEnableChannels ? userId : null, profileComplete);
+  useNotificationChannel(shouldEnableChannels ? userId : null, profileComplete);
 
   const { celebration, showCelebration, closeCelebration } = useCelebration();
-  useCelebrationListener(userId || undefined, showCelebration);
+  useCelebrationListener(
+    shouldEnableChannels ? userId : undefined,
+    showCelebration
+  );
 
   return (
-    <SessionProvider>
-      <NextUIProvider>
-        <Toaster position="top-center" richColors />
-        <ToastContainer
-          position="bottom-right"
-          hideProgressBar
-          className="z-50"
-        />
-        {userId && <InterestNotification userId={userId} />}
+    <NextUIProvider>
+      <Toaster position="top-center" richColors />
+      <ToastContainer
+        position="bottom-right"
+        hideProgressBar
+        className="z-50"
+      />
 
+      {!isForbiddenRoute && !isAdmin && userId && (
+        <InterestNotification userId={userId} />
+      )}
+
+      {!isForbiddenRoute && !isAdmin && (
         <CelebrationModal
           isOpen={celebration.isOpen}
           onClose={closeCelebration}
           type={celebration.type}
           data={celebration.data}
         />
+      )}
 
-        {/* AI Dating Assistant - Only show for logged in users with complete profiles */}
-        {userId && profileComplete && (
-          <AIAssistantButton userId={userId} isPremium={isPremium} />
-        )}
+      {!isForbiddenRoute && !isAdmin && userId && profileComplete && (
+        <AIAssistantButton userId={userId} isPremium={isPremium} />
+      )}
 
-        {children}
-      </NextUIProvider>
-    </SessionProvider>
+      {children}
+    </NextUIProvider>
   );
 }

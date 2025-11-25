@@ -44,6 +44,7 @@ NEXTAUTH_URL="http://localhost:3000"
 # Google OAuth
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
+NEXT_PUBLIC_GOOGLE_CLIENT_ID="your-google-client-id"  # Same as GOOGLE_CLIENT_ID (for One Tap)
 
 # Facebook OAuth
 FACEBOOK_CLIENT_ID="your-facebook-client-id"

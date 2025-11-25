@@ -1,7 +1,7 @@
 import CardInnerWrapper from "@/components/CardInnerWrapper";
 import ChatForm from "./ChatForm";
 import { getMessageThread } from "@/app/actions/messageActions";
-import { getAuthUserId } from "@/app/actions/authActions";
+import { getAuthUserId } from "@/lib/session";
 import { createChatId } from "@/lib/util";
 import dynamic from "next/dynamic";
 import HeartLoading from "@/components/HeartLoading";

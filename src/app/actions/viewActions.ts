@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { subMinutes } from "date-fns";
@@ -53,7 +53,7 @@ export async function recordProfileView(viewerId: string, viewedId: string) {
 
 export async function getProfileViews(userId?: string) {
   if (!userId) {
-    const session = await auth();
+    const session = await getSession();
     userId = session?.user?.id;
     if (!userId) throw new Error("Unauthorized");
   }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { StoryRing } from "./StoryRing";
 import { CreateStoryButton } from "./CreateStoryButton";
 import { getStoryUsers } from "@/app/actions/storyActions";
-import { useSession } from "next-auth/react";
+import { useServerSession } from "@/contexts/SessionContext";
 import { getPusherClient } from "@/lib/pusher-client";
 import {
   MdOutlineKeyboardArrowLeft,
@@ -38,7 +38,7 @@ export function StoriesCarousel({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { data: session } = useSession();
+  const { session } = useServerSession();
 
   useEffect(() => {
     fetchStoryUsers();

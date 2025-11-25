@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import MembersClient from "./MembersClient";
 
 export const metadata = {
@@ -7,6 +7,6 @@ export const metadata = {
 };
 
 export default async function MembersPage() {
-  const session = await auth();
+  const session = await getSession();
   return <MembersClient serverSession={session} />;
 }

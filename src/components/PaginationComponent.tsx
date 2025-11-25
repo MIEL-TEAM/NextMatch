@@ -34,7 +34,14 @@ export default function PaginationComponent({
           total={totalPages}
           color="secondary"
           page={pageNumber}
-          onChange={setPage}
+          onChange={(newPage) => {
+            console.log("🔵 PAGINATION CLICK:", {
+              clickedPage: newPage,
+              currentPage: pageNumber,
+              timestamp: Date.now(),
+            });
+            setPage(newPage);
+          }}
           variant="bordered"
           showControls
           size="sm"
@@ -56,7 +63,15 @@ export default function PaginationComponent({
                 }
               )}
               key={size}
-              onClick={() => setPageSize(size)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("📏 PAGE SIZE CHANGE:", {
+                  oldSize: pageSize,
+                  newSize: size,
+                });
+                setPageSize(size);
+              }}
             >
               {size}
             </div>

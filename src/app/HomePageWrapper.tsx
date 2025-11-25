@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type HomePageWrapperProps = {
@@ -11,31 +11,24 @@ export default function HomePageWrapper({ children }: HomePageWrapperProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+    const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  const heartDrawingVariants = {
-    hidden: {
-      pathLength: 0,
-      opacity: 0.2,
-    },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: {
-        pathLength: {
-          duration: 1.2 * 1.5,
-          ease: "easeInOut",
-        },
-        opacity: {
-          duration: 0.6,
+  const heartDrawingVariants = useMemo(
+    () => ({
+      hidden: { pathLength: 0, opacity: 0.2 },
+      visible: {
+        pathLength: 1,
+        opacity: 1,
+        transition: {
+          pathLength: { duration: 1.2 * 1.5, ease: "easeInOut" },
+          opacity: { duration: 0.6 },
         },
       },
-    },
-  };
+    }),
+    []
+  );
 
   return (
     <AnimatePresence mode="wait">
