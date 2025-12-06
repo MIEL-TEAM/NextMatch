@@ -247,12 +247,31 @@ export function useLocationFlow() {
       return;
     }
 
+    // Guard: Check if location params already exist and match (prevents infinite loop)
+    const currentLat = searchParams.get("userLat");
+    const currentLon = searchParams.get("userLon");
+    const latStr = coords.latitude.toString();
+    const lonStr = coords.longitude.toString();
+
+    if (
+      currentLat === latStr &&
+      currentLon === lonStr &&
+      currentLat &&
+      currentLon
+    ) {
+      // Location already in URL and matches, skip update
+      urlUpdateAppliedRef.current = true;
+      setInternalLocation(coords);
+      transitionToState("readyToQuery");
+      return;
+    }
+
     const router = routerRef.current;
     const pathname = pathnameRef.current;
 
     const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set("userLat", coords.latitude.toString());
-    currentParams.set("userLon", coords.longitude.toString());
+    currentParams.set("userLat", latStr);
+    currentParams.set("userLon", lonStr);
     currentParams.set("sortByDistance", "true");
 
     urlUpdateAppliedRef.current = true;
@@ -263,7 +282,7 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState]);
+  }, [locationState, searchParams]);
 
   // Using DB location → update URL
   useEffect(() => {
@@ -284,12 +303,31 @@ export function useLocationFlow() {
       return;
     }
 
+    // Guard: Check if location params already exist and match (prevents infinite loop)
+    const currentLat = searchParams.get("userLat");
+    const currentLon = searchParams.get("userLon");
+    const latStr = coords.latitude.toString();
+    const lonStr = coords.longitude.toString();
+
+    if (
+      currentLat === latStr &&
+      currentLon === lonStr &&
+      currentLat &&
+      currentLon
+    ) {
+      // Location already in URL and matches, skip update
+      urlUpdateAppliedRef.current = true;
+      setInternalLocation(coords);
+      transitionToState("readyToQuery");
+      return;
+    }
+
     const router = routerRef.current;
     const pathname = pathnameRef.current;
 
     const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set("userLat", coords.latitude.toString());
-    currentParams.set("userLon", coords.longitude.toString());
+    currentParams.set("userLat", latStr);
+    currentParams.set("userLon", lonStr);
     currentParams.set("sortByDistance", "true");
 
     urlUpdateAppliedRef.current = true;
@@ -300,7 +338,7 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState]);
+  }, [locationState, searchParams]);
 
   // Show modal
   useEffect(() => {
