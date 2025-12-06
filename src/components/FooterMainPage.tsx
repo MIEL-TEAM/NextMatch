@@ -17,7 +17,7 @@ const MielFooter = () => {
             <div className="col-span-1 max-w-xs">
               <div className="flex items-center gap-2 mb-6">
                 <Image
-                  src="/images/icons/Logo.png"
+                  src="/images/icons/logo-m.png"
                   alt="Miel Logo"
                   width={28}
                   height={28}

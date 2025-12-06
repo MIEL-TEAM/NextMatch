@@ -64,7 +64,7 @@ export default function TopNavClient({
             </span>
             <div className="relative flex items-center justify-center w-11 h-11">
               <Image
-                src="/images/icons/Logo.png"
+                src="/images/icons/logo-m.png"
                 width={35}
                 height={35}
                 alt="logo"
@@ -94,7 +94,7 @@ export default function TopNavClient({
 
             <div className="relative flex w-11 h-11">
               <Image
-                src="/images/icons/Logo.png"
+                src="/images/icons/logo-m.png"
                 width={35}
                 height={35}
                 alt="logo"
@@ -196,7 +196,7 @@ export default function TopNavClient({
           >
             {/* Icon */}
             <Image
-              src="/images/icons/Logo.png"
+              src="/images/icons/logo-m.png"
               width={35}
               height={35}
               alt="logo"
