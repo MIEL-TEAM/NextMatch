@@ -1,7 +1,5 @@
-// premium/plans/PremiumPlansGrid.tsx
 import React from "react";
 import { PremiumPlanCard } from "./PremiumPlanCard";
-import { FiDroplet, FiAward, FiStar } from "react-icons/fi";
 
 interface Feature {
   text: string;
@@ -34,16 +32,17 @@ export function PremiumPlansGrid({
   onCancel,
 }: PremiumPlansGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+    <div className="w-full px-6 grid grid-cols-4 gap-6 items-stretch">
+      {/* FREE */}
       <PremiumPlanCard
-        title="בסיסי"
-        price="₪29.90 / חודש"
-        description="חודש של פרימיום"
+        title="חינם"
+        price="0"
+        period="לחודש"
+        subline="להתחיל להכיר אנשים בצורה טבעית ונעימה, עם צעדים ראשונים פשוטים ונוחים עבורך"
         features={basicFeatures}
-        buttonText="הפעל חשבון פרימיום"
+        buttonText="הפעל חשבון חינם"
         isLoading={loadingPlan === "basic"}
         onActivate={() => onActivatePremium("basic", 1)}
-        planIcon={<FiDroplet size={32} />}
         isActive={activePlan === "basic"}
         isCanceled={activePlan === "basic" && isCanceled}
         canceledAt={activePlan === "basic" ? canceledAt : null}
@@ -51,16 +50,36 @@ export function PremiumPlansGrid({
         onCancel={activePlan === "basic" && !isCanceled ? onCancel : undefined}
       />
 
+      {/* MONTHLY */}
+      <PremiumPlanCard
+        title="חודשי"
+        price="₪29.90"
+        period="לחודש"
+        subline="לקבל בוסט משמעותי לחשיפה ולהתאמות, ולהגדיל את סיכויי ההצלחה שלך"
+        description="חודש של פרימיום"
+        features={basicFeatures}
+        buttonText="הפעל חשבון פרימיום"
+        isLoading={loadingPlan === "basic"}
+        onActivate={() => onActivatePremium("basic", 1)}
+        isActive={activePlan === "basic"}
+        isCanceled={activePlan === "basic" && isCanceled}
+        canceledAt={activePlan === "basic" ? canceledAt : null}
+        premiumUntil={activePlan === "basic" ? premiumUntil : null}
+        onCancel={activePlan === "basic" && !isCanceled ? onCancel : undefined}
+      />
+
+      {/* POPULAR */}
       <PremiumPlanCard
         title="פופולרי"
-        price="₪19.90 / לחודש"
+        price="₪19.90"
+        period="לחודש"
+        subline="שלושה חודשים שמגבירים את סיכויי ההתאמה ומאפשרים לבנות חיבור אמיתי בקצב מדויק"
         description="3 חודשים של פרימיום"
         features={popularFeatures}
         buttonText="בחר תוכנית פופולרית"
         isLoading={loadingPlan === "popular"}
         onActivate={() => onActivatePremium("popular", 3)}
-        isHighlighted={true}
-        planIcon={<FiAward size={32} />}
+        isHighlighted
         isActive={activePlan === "popular"}
         isCanceled={activePlan === "popular" && isCanceled}
         canceledAt={activePlan === "popular" ? canceledAt : null}
@@ -70,15 +89,17 @@ export function PremiumPlansGrid({
         }
       />
 
+      {/* ANNUAL */}
       <PremiumPlanCard
         title="שנתי"
-        price="₪14.90 / לחודש"
+        price="₪14.90"
+        period="לחודש"
+        subline="המסלול המשתלם והיציב ביותר להתקדמות רצינית ולבניית קשרים משמעותיים לאורך זמן"
         description="שנה של פרימיום"
         features={annualFeatures}
         buttonText="בחר תוכנית שנתית"
         isLoading={loadingPlan === "annual"}
         onActivate={() => onActivatePremium("annual", 12)}
-        planIcon={<FiStar size={32} />}
         isActive={activePlan === "annual"}
         isCanceled={activePlan === "annual" && isCanceled}
         canceledAt={activePlan === "annual" ? canceledAt : null}

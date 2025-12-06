@@ -198,21 +198,30 @@ export default function PremiumStatus({
             היתרונות שלך:
           </h3>
           <ul className="space-y-2 text-right">
-            <li className="flex items-center text-amber-700">
-              <span>ראה מי אהב את הפרופיל שלך</span>
-              <FiCheck className="ml-2 text-amber-500" />
+            <li className="flex flex-row-reverse items-start gap-2 text-amber-700">
+              <FiCheck className="text-amber-500 mt-1 flex-shrink-0" />
+              <span className="text-right leading-snug">
+                ראה מי אהב את הפרופיל שלך
+              </span>
             </li>
-            <li className="flex items-center text-amber-700">
-              <span>סינון מתקדם למציאת ההתאמה המושלמת</span>
-              <FiCheck className="ml-2 text-amber-500" />
+
+            <li className="flex flex-row-reverse items-start gap-2 text-amber-700">
+              <FiCheck className="text-amber-500 mt-1 flex-shrink-0" />
+              <span className="text-right leading-snug">
+                סינון מתקדם למציאת ההתאמה המושלמת
+              </span>
             </li>
-            <li className="flex items-center text-amber-700">
-              <span>גישה ללא הגבלה להודעות ולייקים</span>
-              <FiCheck className="ml-2 text-amber-500" />
+
+            <li className="flex flex-row-reverse items-start gap-2 text-amber-700">
+              <FiCheck className="text-amber-500 mt-1 flex-shrink-0" />
+              <span className="text-right text-[5px] leading-snug">
+                גישה ללא הגבלה להודעות ולייקים
+              </span>
             </li>
-            <li className="flex items-center text-amber-700">
-              <span>תעדוף במסך החיפוש</span>
-              <FiCheck className="ml-2 text-amber-500" />
+
+            <li className="flex flex-row-reverse items-start gap-2 text-amber-700">
+              <FiCheck className="text-amber-500 mt-1 flex-shrink-0" />
+              <span className="text-right leading-snug">תעדוף במסך החיפוש</span>
             </li>
           </ul>
         </div>

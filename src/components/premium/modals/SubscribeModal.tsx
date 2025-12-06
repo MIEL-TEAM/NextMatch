@@ -9,26 +9,7 @@ import {
   Button,
 } from "@nextui-org/react";
 import { FiCheck } from "react-icons/fi";
-
-interface Feature {
-  text: string;
-  icon: React.ReactNode;
-}
-
-interface SubscribeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  price: string;
-  features: Feature[];
-  planIcon?: React.ReactNode;
-  isHighlighted?: boolean;
-  isLoading: boolean;
-  isSwitchingPlan?: boolean;
-  isPremium?: boolean;
-  isRenewing?: boolean;
-}
+import { SubscribeModalProps } from "../types";
 
 export function SubscribeModal({
   isOpen,

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function FeaturesSection() {
@@ -31,6 +31,13 @@ export default function FeaturesSection() {
       image: "/images/features-images/three.jpg",
     },
   ];
+
+  useEffect(() => {
+    features.forEach((f) => {
+      const img = new window.Image();
+      img.src = f.image;
+    });
+  }, []);
 
   return (
     <section
@@ -65,13 +72,13 @@ export default function FeaturesSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-xl border border-amber-100">
-          <AnimatePresence mode="wait">
+          <AnimatePresence initial={false}>
             <motion.div
               key={activeFeature}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
               className="absolute inset-0"
             >
               <Image
@@ -79,40 +86,33 @@ export default function FeaturesSection() {
                 alt={features[activeFeature].title}
                 fill
                 className="object-cover object-center"
-                priority
+                priority={activeFeature === 0}
                 sizes="(max-width: 768px) 100vw, 50vw"
+                placeholder="blur"
+                blurDataURL="/images/blur-placeholder.jpg"
               />
             </motion.div>
           </AnimatePresence>
 
-          <div className="absolute inset-0 z-10 pointer-events-none">
-            <div
-              className="w-full h-full"
-              style={{
-                WebkitMaskImage:
-                  "radial-gradient(circle at 45% 30%, rgba(0,0,0,0) 30%, rgba(0,0,0,1) 48%)",
-                WebkitMaskRepeat: "no-repeat",
-                WebkitMaskSize: "cover",
-                backgroundColor: "rgba(0,0,0,0.95)",
-              }}
-            />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/80 pointer-events-none z-10" />
 
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-center px-6 z-20">
             <motion.h3
-              key={activeFeature}
+              key={activeFeature + "-title"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
               className="text-2xl font-semibold text-white drop-shadow-md"
             >
               {features[activeFeature].title}
             </motion.h3>
+
             <motion.p
               key={activeFeature + "-desc"}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
+              transition={{ duration: 0.3, delay: 0.05 }}
               className="text-white/90 mt-2 max-w-sm mx-auto text-base leading-relaxed drop-shadow-sm"
             >
               {features[activeFeature].description}
@@ -138,6 +138,7 @@ export default function FeaturesSection() {
               <p className="text-sm text-gray-600 mt-1">
                 {feature.description}
               </p>
+
               {activeFeature === index && (
                 <motion.div
                   layoutId="active-line"

@@ -23,7 +23,7 @@ export default function MielLayout({ children }: MielLayoutProps) {
     pathname.includes("/reset-password") ||
     pathname.includes("/verify-email");
 
-  const isHomePage = pathname === "/" || pathname === "/home";
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     if (containerRef.current) {
@@ -34,7 +34,7 @@ export default function MielLayout({ children }: MielLayoutProps) {
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 overflow-auto ${
+      className={`min-h-screen w-screen max-w-none overflow-x-visible ${
         isHomePage
           ? "bg-transparent"
           : "bg-gradient-to-b from-amber-50 to-orange-50"
@@ -56,7 +56,9 @@ export default function MielLayout({ children }: MielLayoutProps) {
       </div>
 
       <main
-        className={`relative z-10 ${isAuthPage || isHomePage ? "" : "pt-14"}`}
+        className={`relative z-10 w-screen max-w-none overflow-x-visible ${
+          isAuthPage || isHomePage ? "" : "pt-8"
+        }`}
       >
         {children}
       </main>

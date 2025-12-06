@@ -378,11 +378,17 @@ export default function PremiumPageClient() {
   return (
     <div className="container mx-auto py-12 px-4">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">שדרג לחווית Miel פרימיום</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          גלה את כל היתרונות של חשבון פרמיום והגדל את הסיכויים למצוא את ההתאמה
-          המושלמת
-        </p>
+        <h1
+          className="
+    text-6xl 
+    font-semibold 
+    tracking-tight 
+    mb-4 
+    text-[#012030] 
+  "
+        >
+          כי מגיע לך למצוא מישהו שבאמת מתאים לך
+        </h1>
       </div>
 
       {statusMessage && (
@@ -426,22 +432,24 @@ export default function PremiumPageClient() {
           </div>
         )}
 
-        <PremiumPlansGrid
-          onActivatePremium={handleActivatePremium}
-          loadingPlan={loadingPlan}
-          basicFeatures={features.basic}
-          popularFeatures={features.popular}
-          annualFeatures={features.annual}
-          activePlan={isPremium ? premiumInfo?.activePlan : null}
-          isCanceled={isCanceled}
-          canceledAt={premiumInfo?.canceledAt}
-          premiumUntil={premiumInfo?.premiumUntil}
-          onCancel={
-            isPremium && !isCanceled
-              ? () => setShowCancelModal(true)
-              : undefined
-          }
-        />
+        <div className="w-screen relative left-1/2 right-1/2 ml-[-50vw] mr-[-50vw] flex justify-center">
+          <PremiumPlansGrid
+            onActivatePremium={handleActivatePremium}
+            loadingPlan={loadingPlan}
+            basicFeatures={features.basic}
+            popularFeatures={features.popular}
+            annualFeatures={features.annual}
+            activePlan={isPremium ? premiumInfo?.activePlan : null}
+            isCanceled={isCanceled}
+            canceledAt={premiumInfo?.canceledAt}
+            premiumUntil={premiumInfo?.premiumUntil}
+            onCancel={
+              isPremium && !isCanceled
+                ? () => setShowCancelModal(true)
+                : undefined
+            }
+          />
+        </div>
       </div>
 
       <CancelSubscriptionModal

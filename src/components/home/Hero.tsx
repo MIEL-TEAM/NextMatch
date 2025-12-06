@@ -197,7 +197,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
                 <p className="text-white text-sm md:text-base">
                   ב-Miel אנחנו מאמינים שכל אחד שמחפש אהבה צריך למצוא אותה.
                   האלגוריתם החכם שלנו מחבר בין אנשים שבאמת מתאימים, כדי שתוכלו
-                  לצאת לדייטים משמעותיים - ולא להישאר באפליקציה.
+                  לצאת לדייטים משמעותיים ולא להישאר באפליקציה.
                 </p>
               </div>
             </div>

@@ -6,6 +6,7 @@ import FeaturesSection from "@/components/home/Features";
 import MielFooter from "../FooterMainPage";
 import TestimonialsSection from "../TestimonialsSectionFeedbacks";
 import { motion } from "framer-motion";
+import MielHeader from "@/components/home/MielHeader";
 import { useEffect, useState } from "react";
 
 export type MielHomePageProps = {
@@ -41,6 +42,7 @@ export default function MielHomePage({ session }: MielHomePageProps) {
       {mounted && <AnimatedBackground />}
 
       <div className="relative z-10 flex flex-col min-h-screen">
+        <MielHeader />
         <main className="flex-grow">
           <HeroSection session={session} />
           <FeaturesSection />

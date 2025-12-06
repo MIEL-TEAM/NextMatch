@@ -40,15 +40,36 @@ export default function ProfileCompletionButton({
     <Popover placement="bottom-end" showArrow>
       <PopoverTrigger>
         <Button
-          radius="full"
-          className="relative flex items-center gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946] px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-[1.02]"
+          radius="sm"
+          className="
+          relative flex items-center justify-center
+          bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946]
+          px-6 py-2 text-sm font-semibold text-white shadow-lg
+
+          h-10                             
+          will-change-transform            
+          transition-transform duration-200 ease-out
+          hover:scale-[1.015]              
+          translate-z-0                    
+          
+          overflow-visible
+        "
         >
-          <span>שפר פרופיל</span>
-          <span className="rounded-full bg-[#FFC857] px-2 py-1 text-xs font-bold text-[#732400] shadow-md">
-            {status.completionPercentage}%
+          <span
+            className="
+            absolute -top-[14px] right-[9.5px] z-10
+            rounded-full bg-[#FFC857] px-3 py-0.5
+            text-[11px] font-bold text-[#732400] shadow-md
+            pointer-events-none
+          "
+          >
+            {status.completionPercentage}% הושלם
           </span>
+
+          <span className="leading-none">שפר פרופיל</span>
         </Button>
       </PopoverTrigger>
+
       <PopoverContent className="p-0">
         <div className="w-80 max-w-sm space-y-4 rounded-xl bg-white p-4 text-right shadow-xl">
           <div className="space-y-1">

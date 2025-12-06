@@ -52,7 +52,7 @@ export default function TopNavClient({
     pathname.includes("/reset-password") ||
     pathname.includes("/verify-email");
 
-  const isHomePage = pathname === "/" || pathname === "/home";
+  const isHomePage = pathname === "/";
 
   if (!pathname) {
     return (
@@ -115,7 +115,7 @@ export default function TopNavClient({
     <>
       <Navbar
         maxWidth="full"
-        className="bg-gradient-to-r from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
+        className="bg-gradient-to-r h-20 from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
         backdrop-blur-lg shadow-md border-b border-white/20"
         classNames={{
           item: [
@@ -186,23 +186,28 @@ export default function TopNavClient({
             ))}
         </NavbarContent>
 
-        <NavbarContent justify="end" className="gap-3 items-center">
+        <NavbarContent
+          justify="end"
+          className="items-center px-0 gap-0 !leading-none !h-auto !min-h-fit"
+        >
           <Link
-            href="/home"
-            className="font-bold tracking-wide text-3xl text-[#8B5A2B]"
+            href="/"
+            className="flex flex-col items-center justify-center leading-none !gap-0 !p-0 !m-0"
           >
-            Miel
-          </Link>
-
-          <div className="relative flex items-center justify-center w-11 h-11">
+            {/* Icon */}
             <Image
               src="/images/icons/Logo.png"
               width={35}
               height={35}
               alt="logo"
-              className="object-contain w-auto h-auto"
+              className="object-contain  mb-0 pb-0 rotate-[-10deg]"
             />
-          </div>
+
+            {/* Text */}
+            <span className="font-bold mb-1 tracking-wide text-xl text-[#8B5A2B]">
+              Miel Love
+            </span>
+          </Link>
         </NavbarContent>
       </Navbar>
 
