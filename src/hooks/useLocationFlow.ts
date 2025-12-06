@@ -247,20 +247,6 @@ export function useLocationFlow() {
       return;
     }
 
-    // Guard: Don't rewrite if location params already exist and match
-    const currentLat = searchParams.get("userLat");
-    const currentLon = searchParams.get("userLon");
-    const latMatches = currentLat === coords.latitude.toString();
-    const lonMatches = currentLon === coords.longitude.toString();
-
-    if (latMatches && lonMatches && currentLat && currentLon) {
-      // Location already in URL and matches, skip update
-      urlUpdateAppliedRef.current = true;
-      setInternalLocation(coords);
-      transitionToState("readyToQuery");
-      return;
-    }
-
     const router = routerRef.current;
     const pathname = pathnameRef.current;
 
@@ -277,7 +263,7 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState, searchParams]);
+  }, [locationState]);
 
   // Using DB location → update URL
   useEffect(() => {
@@ -298,20 +284,6 @@ export function useLocationFlow() {
       return;
     }
 
-    // Guard: Don't rewrite if location params already exist and match
-    const currentLat = searchParams.get("userLat");
-    const currentLon = searchParams.get("userLon");
-    const latMatches = currentLat === coords.latitude.toString();
-    const lonMatches = currentLon === coords.longitude.toString();
-
-    if (latMatches && lonMatches && currentLat && currentLon) {
-      // Location already in URL and matches, skip update
-      urlUpdateAppliedRef.current = true;
-      setInternalLocation(coords);
-      transitionToState("readyToQuery");
-      return;
-    }
-
     const router = routerRef.current;
     const pathname = pathnameRef.current;
 
@@ -328,7 +300,7 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState, searchParams]);
+  }, [locationState]);
 
   // Show modal
   useEffect(() => {

@@ -9,9 +9,9 @@ import MielLayout from "./mielLayout";
 import { Toaster } from "sonner";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
 import MobileBlocker from "@/components/MobileBlocker";
+import { headers } from "next/headers";
 import { Session } from "next-auth";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
-
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -73,17 +73,25 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // 👉 קריאת Session בצד שרת — נשארת
+  // 🔥 PERFORMANCE FIX: Check pathname early
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isForbiddenRoute =
+    pathname === "/premium" ||
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register";
+
+  // ✅ SINGLE auth call for entire request tree via React Cache
   const session = await getSession();
   const userId = session?.user?.id || null;
-  const profileComplete = session?.user?.profileComplete as boolean;
+  const profileComplete = session?.user.profileComplete as boolean;
   const isPremium = session?.user?.isPremium as boolean;
   const isAdmin = session?.user?.role === "ADMIN";
 
-  // 👉 טעינת כמות הודעות רק למשתמש אמיתי
+  // ✅ SKIP all queries on forbidden routes
   let initialUnreadCount = 0;
-
-  if (userId && !isAdmin) {
+  if (userId && !isAdmin && !isForbiddenRoute) {
     try {
       const { getUnreadMessageCount } = await import(
         "@/app/actions/messageActions"
@@ -121,18 +129,28 @@ export default async function RootLayout({
         <link rel="shortcut icon" href="/images/icons/logo-m.png" />
         <link rel="apple-touch-icon" href="/images/icons/logo-m.png" />
         <link rel="manifest" href="/manifest.json" />
-
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Miel" />
+        <meta name="application-name" content="Miel" />
+        <meta name="theme-color" content="#F97316" />
+        <meta name="msapplication-TileColor" content="#F97316" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
         <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
-
       <body>
         <SessionProvider session={session as Session}>
-          {!session?.user && <GoogleOneTap />}
-
+          {!session?.user && !pathname.startsWith("/admin") && <GoogleOneTap />}
           <ReactQueryProvider>
             <Providers
               userId={userId}
@@ -143,8 +161,9 @@ export default async function RootLayout({
             >
               <MobileBlocker />
               <TopNav />
-
-              <MielLayout>{children}</MielLayout>
+              <div className="hidden lg:block">
+                <MielLayout>{children}</MielLayout>
+              </div>
             </Providers>
           </ReactQueryProvider>
         </SessionProvider>

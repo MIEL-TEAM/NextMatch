@@ -52,7 +52,7 @@ export default function TopNavClient({
     pathname.includes("/reset-password") ||
     pathname.includes("/verify-email");
 
-  const isHomePage = pathname === "/";
+  const isHomePage = pathname === "/" || pathname === "/home";
 
   if (!pathname) {
     return (
@@ -64,7 +64,7 @@ export default function TopNavClient({
             </span>
             <div className="relative flex items-center justify-center w-11 h-11">
               <Image
-                src="/images/icons/logo-m.png"
+                src="/images/icons/Logo.png"
                 width={35}
                 height={35}
                 alt="logo"
@@ -94,7 +94,7 @@ export default function TopNavClient({
 
             <div className="relative flex w-11 h-11">
               <Image
-                src="/images/icons/logo-m.png"
+                src="/images/icons/Logo.png"
                 width={35}
                 height={35}
                 alt="logo"
@@ -191,12 +191,12 @@ export default function TopNavClient({
           className="items-center px-0 gap-0 !leading-none !h-auto !min-h-fit"
         >
           <Link
-            href="/"
+            href="/home"
             className="flex flex-col items-center justify-center leading-none !gap-0 !p-0 !m-0"
           >
             {/* Icon */}
             <Image
-              src="/images/icons/logo-m.png"
+              src="/images/icons/Logo.png"
               width={35}
               height={35}
               alt="logo"
