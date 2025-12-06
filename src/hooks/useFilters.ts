@@ -156,6 +156,17 @@ export const useFilters = () => {
   useEffect(() => {
     if (!clientLoaded) return;
 
+    // Guard: Don't rewrite URL if only location params changed
+    // This prevents infinite loop with useLocationFlow
+    const currentUrlLat = currentSearchParams.get("userLat");
+    const currentUrlLon = currentSearchParams.get("userLon");
+    const onlyLocationChanged =
+      currentUrlLat === userLat &&
+      currentUrlLon === userLon &&
+      currentUrlLat !== null &&
+      currentUrlLon !== null;
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const searchParams = new URLSearchParams(currentSearchParams.toString());
 
     // Build params from store
@@ -182,12 +193,27 @@ export const useFilters = () => {
       searchParams.delete("pageNumber"); // Clean URL for page 1
     }
 
-    if (userLat) searchParams.set("userLat", userLat);
-    if (userLon) searchParams.set("userLon", userLon);
+    // Preserve existing location params if they exist and match store
+    // Only update if store has location but URL doesn't, or if they differ
+    if (userLat) {
+      if (currentUrlLat !== userLat) {
+        searchParams.set("userLat", userLat);
+      }
+    }
+    if (userLon) {
+      if (currentUrlLon !== userLon) {
+        searchParams.set("userLon", userLon);
+      }
+    }
     if (distance) searchParams.set("distance", distance);
     if (sortByDistance) searchParams.set("sortByDistance", sortByDistance);
 
     const newUrl = `${pathname}?${searchParams.toString()}`;
+
+    // Skip update if only location params changed (useLocationFlow handles those)
+    if (onlyLocationChanged && newUrl === lastSyncedUrl.current) {
+      return;
+    }
 
     if (newUrl !== lastSyncedUrl.current) {
       lastSyncedUrl.current = newUrl;
@@ -201,6 +227,10 @@ export const useFilters = () => {
         }, 100);
       });
     }
+    // Note: currentSearchParams is intentionally omitted from dependencies
+    // to prevent infinite loop with useLocationFlow. We read it inside the
+    // effect to build the URL but don't want to react to its changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     clientLoaded,
     ageRange,
@@ -208,7 +238,6 @@ export const useFilters = () => {
     orderBy,
     pathname,
     router,
-    currentSearchParams,
     pageNumber,
     pageSize,
     withPhoto,
