@@ -78,7 +78,6 @@ export default async function RootLayout({
   const pathname = headersList.get("x-pathname") || "";
   const isForbiddenRoute =
     pathname === "/premium" ||
-    pathname === "/" ||
     pathname === "/login" ||
     pathname === "/register";
 
