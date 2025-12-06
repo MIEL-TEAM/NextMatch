@@ -247,38 +247,15 @@ export function useLocationFlow() {
       return;
     }
 
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
+    // Guard: Don't rewrite if location params already exist and match
+    const currentLat = searchParams.get("userLat");
+    const currentLon = searchParams.get("userLon");
+    const latMatches = currentLat === coords.latitude.toString();
+    const lonMatches = currentLon === coords.longitude.toString();
 
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set("userLat", coords.latitude.toString());
-    currentParams.set("userLon", coords.longitude.toString());
-    currentParams.set("sortByDistance", "true");
-
-    urlUpdateAppliedRef.current = true;
-
-    router.replace(`${pathname}?${currentParams.toString()}`, {
-      scroll: false,
-    });
-
-    setInternalLocation(coords);
-    transitionToState("readyToQuery");
-  }, [locationState]);
-
-  // Using DB location → update URL
-  useEffect(() => {
-    if (locationState !== "usingDbLocation") return;
-
-    const dbLoc = dbLocationRef.current;
-
-    if (!dbLoc?.coordinates) {
-      transitionToState("noLocationAvailable");
-      return;
-    }
-
-    const coords = dbLoc.coordinates;
-
-    if (urlUpdateAppliedRef.current) {
+    if (latMatches && lonMatches && currentLat && currentLon) {
+      // Location already in URL and matches, skip update
+      urlUpdateAppliedRef.current = true;
       setInternalLocation(coords);
       transitionToState("readyToQuery");
       return;
@@ -300,7 +277,58 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState]);
+  }, [locationState, searchParams]);
+
+  // Using DB location → update URL
+  useEffect(() => {
+    if (locationState !== "usingDbLocation") return;
+
+    const dbLoc = dbLocationRef.current;
+
+    if (!dbLoc?.coordinates) {
+      transitionToState("noLocationAvailable");
+      return;
+    }
+
+    const coords = dbLoc.coordinates;
+
+    if (urlUpdateAppliedRef.current) {
+      setInternalLocation(coords);
+      transitionToState("readyToQuery");
+      return;
+    }
+
+    // Guard: Don't rewrite if location params already exist and match
+    const currentLat = searchParams.get("userLat");
+    const currentLon = searchParams.get("userLon");
+    const latMatches = currentLat === coords.latitude.toString();
+    const lonMatches = currentLon === coords.longitude.toString();
+
+    if (latMatches && lonMatches && currentLat && currentLon) {
+      // Location already in URL and matches, skip update
+      urlUpdateAppliedRef.current = true;
+      setInternalLocation(coords);
+      transitionToState("readyToQuery");
+      return;
+    }
+
+    const router = routerRef.current;
+    const pathname = pathnameRef.current;
+
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set("userLat", coords.latitude.toString());
+    currentParams.set("userLon", coords.longitude.toString());
+    currentParams.set("sortByDistance", "true");
+
+    urlUpdateAppliedRef.current = true;
+
+    router.replace(`${pathname}?${currentParams.toString()}`, {
+      scroll: false,
+    });
+
+    setInternalLocation(coords);
+    transitionToState("readyToQuery");
+  }, [locationState, searchParams]);
 
   // Show modal
   useEffect(() => {
