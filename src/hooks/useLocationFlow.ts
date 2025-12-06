@@ -15,12 +15,8 @@ import type {
 
 export function useLocationFlow() {
   const searchParams = useSearchParams();
-
-  const routerRef = useRef(useRouter());
-  const pathnameRef = useRef(usePathname());
-
-  routerRef.current = useRouter();
-  pathnameRef.current = usePathname();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [locationState, setLocationState] = useState<LocationState>("initial");
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -34,6 +30,13 @@ export function useLocationFlow() {
   const browserLocationRef = useRef<LocationData | null>(null);
   const locationStartRef = useRef<number | null>(null);
   const isFirstMountRef = useRef(true);
+  const lastUrlUpdateRef = useRef<string>("");
+
+  // Reset urlUpdateAppliedRef when pathname changes (navigation)
+  useEffect(() => {
+    urlUpdateAppliedRef.current = false;
+    lastUrlUpdateRef.current = "";
+  }, [pathname]);
 
   const rawLat = searchParams.get("userLat");
   const rawLon = searchParams.get("userLon");
@@ -241,37 +244,22 @@ export function useLocationFlow() {
       return;
     }
 
-    if (urlUpdateAppliedRef.current) {
-      setInternalLocation(coords);
-      transitionToState("readyToQuery");
-      return;
-    }
-
-    // Guard: Check if location params already exist and match (prevents infinite loop)
-    const currentLat = searchParams.get("userLat");
-    const currentLon = searchParams.get("userLon");
-    const latStr = coords.latitude.toString();
-    const lonStr = coords.longitude.toString();
-
+    // Check if URL already has these coordinates to prevent unnecessary updates
+    const currentUrlLat = searchParams.get("userLat");
+    const currentUrlLon = searchParams.get("userLon");
     if (
-      currentLat === latStr &&
-      currentLon === lonStr &&
-      currentLat &&
-      currentLon
+      currentUrlLat === coords.latitude.toString() &&
+      currentUrlLon === coords.longitude.toString() &&
+      urlUpdateAppliedRef.current
     ) {
-      // Location already in URL and matches, skip update
-      urlUpdateAppliedRef.current = true;
       setInternalLocation(coords);
       transitionToState("readyToQuery");
       return;
     }
 
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
-
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set("userLat", latStr);
-    currentParams.set("userLon", lonStr);
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.set("userLat", coords.latitude.toString());
+    currentParams.set("userLon", coords.longitude.toString());
     currentParams.set("sortByDistance", "true");
 
     urlUpdateAppliedRef.current = true;
@@ -282,7 +270,7 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState, searchParams]);
+  }, [locationState, searchParams, pathname, router]);
 
   // Using DB location → update URL
   useEffect(() => {
@@ -297,37 +285,22 @@ export function useLocationFlow() {
 
     const coords = dbLoc.coordinates;
 
-    if (urlUpdateAppliedRef.current) {
-      setInternalLocation(coords);
-      transitionToState("readyToQuery");
-      return;
-    }
-
-    // Guard: Check if location params already exist and match (prevents infinite loop)
-    const currentLat = searchParams.get("userLat");
-    const currentLon = searchParams.get("userLon");
-    const latStr = coords.latitude.toString();
-    const lonStr = coords.longitude.toString();
-
+    // Check if URL already has these coordinates to prevent unnecessary updates
+    const currentUrlLat = searchParams.get("userLat");
+    const currentUrlLon = searchParams.get("userLon");
     if (
-      currentLat === latStr &&
-      currentLon === lonStr &&
-      currentLat &&
-      currentLon
+      currentUrlLat === coords.latitude.toString() &&
+      currentUrlLon === coords.longitude.toString() &&
+      urlUpdateAppliedRef.current
     ) {
-      // Location already in URL and matches, skip update
-      urlUpdateAppliedRef.current = true;
       setInternalLocation(coords);
       transitionToState("readyToQuery");
       return;
     }
 
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
-
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set("userLat", latStr);
-    currentParams.set("userLon", lonStr);
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.set("userLat", coords.latitude.toString());
+    currentParams.set("userLon", coords.longitude.toString());
     currentParams.set("sortByDistance", "true");
 
     urlUpdateAppliedRef.current = true;
@@ -338,7 +311,7 @@ export function useLocationFlow() {
 
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState, searchParams]);
+  }, [locationState, searchParams, pathname, router]);
 
   // Show modal
   useEffect(() => {
@@ -349,10 +322,7 @@ export function useLocationFlow() {
   }, [locationState]);
 
   const handleLocationGranted = (coordinates: LocationData) => {
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
-
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     params.set("userLat", coordinates.latitude.toString());
     params.set("userLon", coordinates.longitude.toString());
     params.set("sortByDistance", "true");

@@ -155,18 +155,60 @@ export const useFilters = () => {
 
   useEffect(() => {
     if (!clientLoaded) return;
+    if (isSyncing.current) return;
 
     // Guard: Don't rewrite URL if only location params changed
     // This prevents infinite loop with useLocationFlow
     const currentUrlLat = currentSearchParams.get("userLat");
     const currentUrlLon = currentSearchParams.get("userLon");
-    const onlyLocationChanged =
+    const currentUrlDistance = currentSearchParams.get("distance");
+    const currentUrlSortByDistance = currentSearchParams.get("sortByDistance");
+
+    // Check if only location-related params changed
+    const onlyLocationParamsChanged =
       currentUrlLat === userLat &&
       currentUrlLon === userLon &&
+      currentUrlDistance === distance &&
+      currentUrlSortByDistance === sortByDistance &&
       currentUrlLat !== null &&
       currentUrlLon !== null;
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Get current URL params for comparison
+    const currentUrlGender = currentSearchParams.get("gender");
+    const currentUrlAgeRange = currentSearchParams.get("ageRange");
+    const currentUrlOrderBy = currentSearchParams.get("orderBy");
+    const currentUrlWithPhoto = currentSearchParams.get("withPhoto");
+    const currentUrlPageNumber = currentSearchParams.get("pageNumber");
+    const currentUrlPageSize = currentSearchParams.get("pageSize");
+
+    // Build expected values from store
+    const expectedGender =
+      gender && gender.length > 0 ? gender.join(",") : "male,female";
+    const expectedAgeRange =
+      ageRange && ageRange.length === 2
+        ? `${ageRange[0]},${ageRange[1]}`
+        : "18,65";
+    const expectedOrderBy = orderBy || "updated";
+    const expectedWithPhoto = withPhoto.toString();
+    const expectedPageNumber =
+      pageNumber && pageNumber > 1 ? pageNumber.toString() : null;
+    const expectedPageSize = pageSize ? pageSize.toString() : null;
+
+    // Check if non-location params match
+    const nonLocationParamsMatch =
+      currentUrlGender === expectedGender &&
+      currentUrlAgeRange === expectedAgeRange &&
+      currentUrlOrderBy === expectedOrderBy &&
+      currentUrlWithPhoto === expectedWithPhoto &&
+      currentUrlPageNumber === expectedPageNumber &&
+      currentUrlPageSize === expectedPageSize;
+
+    // If only location params changed and non-location params match, skip update
+    // (useLocationFlow handles location updates)
+    if (onlyLocationParamsChanged && nonLocationParamsMatch) {
+      return;
+    }
+
     const searchParams = new URLSearchParams(currentSearchParams.toString());
 
     // Build params from store
@@ -210,26 +252,24 @@ export const useFilters = () => {
 
     const newUrl = `${pathname}?${searchParams.toString()}`;
 
-    // Skip update if only location params changed (useLocationFlow handles those)
-    if (onlyLocationChanged && newUrl === lastSyncedUrl.current) {
+    // Skip if URL hasn't actually changed
+    if (newUrl === lastSyncedUrl.current) {
       return;
     }
 
-    if (newUrl !== lastSyncedUrl.current) {
-      lastSyncedUrl.current = newUrl;
-      isSyncing.current = true;
+    lastSyncedUrl.current = newUrl;
+    isSyncing.current = true;
 
-      startTransition(() => {
-        router.replace(newUrl, { scroll: false });
+    startTransition(() => {
+      router.replace(newUrl, { scroll: false });
 
-        setTimeout(() => {
-          isSyncing.current = false;
-        }, 100);
-      });
-    }
-    // Note: currentSearchParams is intentionally omitted from dependencies
-    // to prevent infinite loop with useLocationFlow. We read it inside the
-    // effect to build the URL but don't want to react to its changes.
+      setTimeout(() => {
+        isSyncing.current = false;
+      }, 100);
+    });
+    // Note: We intentionally don't include currentSearchParams in dependencies
+    // to prevent infinite loops. We read it inside the effect to compare values,
+    // but we only want to react to changes in the filter store values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     clientLoaded,
