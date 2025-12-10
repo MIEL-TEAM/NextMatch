@@ -8,5 +8,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [],  // Don't run on any routes for now
+  matcher: [], // Don't run on any routes for now
 };
