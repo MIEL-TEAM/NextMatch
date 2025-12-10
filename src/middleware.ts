@@ -26,7 +26,7 @@ export default auth((req) => {
     }
     // ❌ Block admin from accessing user routes
     if (!isPublic && !isAuthRoutes) {
-      return NextResponse.redirect(new URL("/admin", nextUrl));
+      return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
     }
     return NextResponse.next({
       request: { headers: requestHeaders },
@@ -53,7 +53,7 @@ export default auth((req) => {
       if (nextUrl.searchParams.toString()) {
         membersUrl.search = nextUrl.searchParams.toString();
       }
-      return NextResponse.redirect(membersUrl);
+      return NextResponse.redirect(membersUrl, { status: 303 });
     }
     return NextResponse.next({
       request: { headers: requestHeaders },

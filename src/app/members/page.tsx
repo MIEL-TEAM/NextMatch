@@ -1,6 +1,8 @@
 import { getSession } from "@/lib/session";
 import MembersClient from "./MembersClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "מצאו התאמות חדשות | Miel",
   description: "גלו פרופילים חדשים שמתאימים לכם בדיוק.",
