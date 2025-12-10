@@ -14,23 +14,19 @@ export default auth((req) => {
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
 
   // 🔥 PERFORMANCE FIX: Add pathname to headers for server components
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-pathname", nextUrl.pathname);
+  // const requestHeaders = new Headers(req.headers);
+  // requestHeaders.set("x-pathname", nextUrl.pathname);
 
   // ✅ ADMIN ISOLATION: Redirect admins to admin panel ONLY
   if (isAdmin) {
     if (isAdminRoute) {
-      return NextResponse.next({
-        request: { headers: requestHeaders },
-      });
+      return NextResponse.next();
     }
     // ❌ Block admin from accessing user routes
     if (!isPublic && !isAuthRoutes) {
       return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
     }
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
+    return NextResponse.next();
   }
 
   // ✅ Block non-admins from admin routes
@@ -40,9 +36,7 @@ export default auth((req) => {
 
   // Early return for public routes
   if (isPublic) {
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
+    return NextResponse.next();
   }
 
   // Handle auth routes
@@ -55,9 +49,7 @@ export default auth((req) => {
       }
       return NextResponse.redirect(membersUrl, { status: 303 });
     }
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
+    return NextResponse.next();
   }
 
   // Handle unauthenticated users
@@ -74,9 +66,7 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/complete-profile", nextUrl));
   }
 
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  return NextResponse.next();
 });
 
 export const config = {

@@ -76,11 +76,7 @@ export default async function RootLayout({
   // 🔥 PERFORMANCE FIX: Check pathname early
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
-  const isForbiddenRoute =
-    pathname === "/premium" ||
-    pathname === "/" ||
-    pathname === "/login" ||
-    pathname === "/register";
+  const isForbiddenRoute = false; // Disable pathname check for now since header is removed
 
   // ✅ SINGLE auth call for entire request tree via React Cache
   const session = await getSession();
