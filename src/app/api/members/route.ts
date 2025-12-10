@@ -3,6 +3,8 @@ import { getMembers, getMembersWithPhotos } from "@/app/actions/memberActions";
 import { getMemberVideosForCards } from "@/app/actions/videoActions";
 import type { GetMemberParams } from "@/types";
 
+export const dynamic = "force-dynamic"; // Ensure this route is always treated as dynamic
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
