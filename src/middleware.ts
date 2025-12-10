@@ -1,3 +1,15 @@
+// TEMPORARILY DISABLED FOR DEBUGGING
+// import { NextResponse } from "next/server";
+// import { auth } from "./auth";
+// import { authRoutes, publicRoutes } from "./routes";
+
+export { auth as default } from "./auth";
+
+export const config = {
+  matcher: [], // Temporarily disable middleware
+};
+
+/*
 // Fixed middleware.ts - Admin isolation + optimized redirects
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
@@ -76,3 +88,4 @@ export const config = {
     "/((?!api|_next/static|_next/image|images|favicon.ico|sitemap.xml|robots.txt|manifest.json|browserconfig.xml).*)",
   ],
 };
+*/
