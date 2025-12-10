@@ -31,7 +31,7 @@ export default auth((req) => {
 
   // ✅ Block non-admins from admin routes
   if (isAdminRoute && !isAdmin) {
-    return NextResponse.redirect(new URL("/", nextUrl));
+    return NextResponse.redirect(new URL("/", nextUrl), { status: 303 });
   }
 
   // Early return for public routes
@@ -54,7 +54,7 @@ export default auth((req) => {
 
   // Handle unauthenticated users
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
+    return NextResponse.redirect(new URL("/login", nextUrl), { status: 303 });
   }
 
   // Handle incomplete profiles
@@ -63,7 +63,9 @@ export default auth((req) => {
     !isProfileComplete &&
     nextUrl.pathname !== "/complete-profile"
   ) {
-    return NextResponse.redirect(new URL("/complete-profile", nextUrl));
+    return NextResponse.redirect(new URL("/complete-profile", nextUrl), {
+      status: 303,
+    });
   }
 
   return NextResponse.next();
