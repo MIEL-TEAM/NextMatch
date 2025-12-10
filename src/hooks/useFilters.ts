@@ -107,17 +107,6 @@ export const useFilters = () => {
       setFilters("sortByDistance", urlSortByDistance || undefined);
     }
 
-    /**
-     * Sync pageNumber from URL to store.
-     *
-     * This enables:
-     * - Browser back/forward navigation
-     * - Deep linking (e.g., /members?pageNumber=5)
-     * - Manual URL editing
-     *
-     * Only updates if the URL value differs from current store value
-     * and is a valid positive integer.
-     */
     const urlPageNumber = currentSearchParams.get("pageNumber");
     if (urlPageNumber) {
       const pageNum = Number(urlPageNumber);
@@ -136,17 +125,6 @@ export const useFilters = () => {
     }
   }, [clientLoaded, currentSearchParams, setFilters, setPage]);
 
-  /**
-   * Reset pagination when filters change.
-   *
-   * IMPORTANT: setPage is intentionally NOT in the dependency array.
-   * Including it would create a circular dependency where pagination
-   * changes trigger this effect, which resets pagination, causing the
-   * double-click bug.
-   *
-   * This effect only runs when filter values (gender, ageRange, etc.)
-   * actually change, ensuring pagination resets are intentional.
-   */
   useEffect(() => {
     console.log("🔄 Filter changed, resetting pagination to page 1");
     setPage(1);
@@ -155,60 +133,18 @@ export const useFilters = () => {
 
   useEffect(() => {
     if (!clientLoaded) return;
-    if (isSyncing.current) return;
 
     // Guard: Don't rewrite URL if only location params changed
     // This prevents infinite loop with useLocationFlow
     const currentUrlLat = currentSearchParams.get("userLat");
     const currentUrlLon = currentSearchParams.get("userLon");
-    const currentUrlDistance = currentSearchParams.get("distance");
-    const currentUrlSortByDistance = currentSearchParams.get("sortByDistance");
-
-    // Check if only location-related params changed
-    const onlyLocationParamsChanged =
+    const onlyLocationChanged =
       currentUrlLat === userLat &&
       currentUrlLon === userLon &&
-      currentUrlDistance === distance &&
-      currentUrlSortByDistance === sortByDistance &&
       currentUrlLat !== null &&
       currentUrlLon !== null;
 
-    // Get current URL params for comparison
-    const currentUrlGender = currentSearchParams.get("gender");
-    const currentUrlAgeRange = currentSearchParams.get("ageRange");
-    const currentUrlOrderBy = currentSearchParams.get("orderBy");
-    const currentUrlWithPhoto = currentSearchParams.get("withPhoto");
-    const currentUrlPageNumber = currentSearchParams.get("pageNumber");
-    const currentUrlPageSize = currentSearchParams.get("pageSize");
-
-    // Build expected values from store
-    const expectedGender =
-      gender && gender.length > 0 ? gender.join(",") : "male,female";
-    const expectedAgeRange =
-      ageRange && ageRange.length === 2
-        ? `${ageRange[0]},${ageRange[1]}`
-        : "18,65";
-    const expectedOrderBy = orderBy || "updated";
-    const expectedWithPhoto = withPhoto.toString();
-    const expectedPageNumber =
-      pageNumber && pageNumber > 1 ? pageNumber.toString() : null;
-    const expectedPageSize = pageSize ? pageSize.toString() : null;
-
-    // Check if non-location params match
-    const nonLocationParamsMatch =
-      currentUrlGender === expectedGender &&
-      currentUrlAgeRange === expectedAgeRange &&
-      currentUrlOrderBy === expectedOrderBy &&
-      currentUrlWithPhoto === expectedWithPhoto &&
-      currentUrlPageNumber === expectedPageNumber &&
-      currentUrlPageSize === expectedPageSize;
-
-    // If only location params changed and non-location params match, skip update
-    // (useLocationFlow handles location updates)
-    if (onlyLocationParamsChanged && nonLocationParamsMatch) {
-      return;
-    }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const searchParams = new URLSearchParams(currentSearchParams.toString());
 
     // Build params from store
@@ -251,25 +187,32 @@ export const useFilters = () => {
     if (sortByDistance) searchParams.set("sortByDistance", sortByDistance);
 
     const newUrl = `${pathname}?${searchParams.toString()}`;
+    const currentFullUrl = `${pathname}?${currentSearchParams.toString()}`;
 
-    // Skip if URL hasn't actually changed
-    if (newUrl === lastSyncedUrl.current) {
+    // Skip update if new URL matches current URL exactly
+    if (newUrl === currentFullUrl) {
+      lastSyncedUrl.current = newUrl;
       return;
     }
 
-    lastSyncedUrl.current = newUrl;
-    isSyncing.current = true;
+    // Skip update if only location params changed (useLocationFlow handles those)
+    if (onlyLocationChanged && newUrl === lastSyncedUrl.current) {
+      return;
+    }
 
-    startTransition(() => {
-      router.replace(newUrl, { scroll: false });
+    if (newUrl !== lastSyncedUrl.current) {
+      lastSyncedUrl.current = newUrl;
+      isSyncing.current = true;
 
-      setTimeout(() => {
-        isSyncing.current = false;
-      }, 100);
-    });
-    // Note: We intentionally don't include currentSearchParams in dependencies
-    // to prevent infinite loops. We read it inside the effect to compare values,
-    // but we only want to react to changes in the filter store values.
+      startTransition(() => {
+        router.replace(newUrl, { scroll: false });
+
+        setTimeout(() => {
+          isSyncing.current = false;
+        }, 100);
+      });
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     clientLoaded,
