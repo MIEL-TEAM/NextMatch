@@ -143,7 +143,7 @@ export default async function RootLayout({
       </head>
       <body>
         <SessionProvider session={session as Session}>
-          {!session?.user && !pathname.startsWith("/admin") && <GoogleOneTap />}
+          {!session?.user && <GoogleOneTap />}
           <ReactQueryProvider>
             <Providers
               userId={userId}
