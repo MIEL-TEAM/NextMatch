@@ -73,10 +73,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // 🔥 PERFORMANCE FIX: Check pathname early
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  const isForbiddenRoute = false; // Disable pathname check for now since header is removed
+  // Check pathname for optimization
+  const isForbiddenRoute = false;
 
   // ✅ SINGLE auth call for entire request tree via React Cache
   const session = await getSession();

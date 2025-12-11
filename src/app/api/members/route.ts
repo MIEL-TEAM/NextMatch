@@ -3,9 +3,6 @@ import { getMembers, getMembersWithPhotos } from "@/app/actions/memberActions";
 import { getMemberVideosForCards } from "@/app/actions/videoActions";
 import type { GetMemberParams } from "@/types";
 
-// Removed force-dynamic - let Next.js handle caching automatically
-// export const dynamic = "force-dynamic";
-
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
