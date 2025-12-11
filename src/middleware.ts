@@ -8,7 +8,10 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   // TEMPORARY: Allow /members to bypass middleware for debugging
-  if (nextUrl.pathname === "/members" || nextUrl.pathname.startsWith("/members/")) {
+  if (
+    nextUrl.pathname === "/members" ||
+    nextUrl.pathname.startsWith("/members/")
+  ) {
     return NextResponse.next();
   }
 

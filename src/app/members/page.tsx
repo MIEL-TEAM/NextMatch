@@ -1,7 +1,8 @@
 import { getSession } from "@/lib/session";
 import MembersClient from "./MembersClient";
 
-export const dynamic = "force-dynamic";
+// Removed force-dynamic to allow Server Actions to work
+// export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "מצאו התאמות חדשות | Miel",
