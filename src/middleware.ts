@@ -7,6 +7,11 @@ export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
+  // TEMPORARY: Allow /members to bypass middleware for debugging
+  if (nextUrl.pathname === "/members" || nextUrl.pathname.startsWith("/members/")) {
+    return NextResponse.next();
+  }
+
   const isPublic = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoutes = authRoutes.includes(nextUrl.pathname);
   const isProfileComplete = req.auth?.user.profileComplete;
