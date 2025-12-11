@@ -9,7 +9,6 @@ import MielLayout from "./mielLayout";
 import { Toaster } from "sonner";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
 import MobileBlocker from "@/components/MobileBlocker";
-import { headers } from "next/headers";
 import { Session } from "next-auth";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
 export const dynamic = "force-dynamic";

@@ -6,7 +6,6 @@ import type { GetMemberParams } from "@/types";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
-  // Get all search parameters with better handling
   const ageRange = searchParams.get("ageRange");
   const gender = searchParams.get("gender");
   const withPhotoRaw = searchParams.get("withPhoto");
