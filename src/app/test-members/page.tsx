@@ -8,11 +8,10 @@ export const metadata = {
 
 export default async function TestMembersPage() {
   const session = await getSession();
-  
+
   if (!session) {
     return <div>No session - please login</div>;
   }
-  
+
   return <MembersClient serverSession={session} />;
 }
-
