@@ -147,7 +147,7 @@ export function StoriesCarousel({
       {canScrollRight && (
         <button
           onClick={scrollRight}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 transition-colors duration-200 drop-shadow-lg"
+          className="absolute right-[-10px] top-[50px] transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 transition-colors duration-200 drop-shadow-lg"
           style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }}
           aria-label="Scroll right"
         >
@@ -162,7 +162,7 @@ export function StoriesCarousel({
       {/* Stories Container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-3 px-6 py-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+        className="flex gap-3 px-8 py-4 overflow-x-auto scrollbar-hide"
         onScroll={checkScrollability}
         style={{
           scrollbarWidth: "none",

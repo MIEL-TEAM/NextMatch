@@ -9,7 +9,7 @@ import {
   RegisterSchema,
 } from "@/lib/schemas/registerSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { Button } from "@nextui-org/react";
 import { FormProvider, useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
 import { registerUser } from "@/app/actions/authActions";
@@ -167,90 +167,88 @@ export default function RegisterForm() {
   };
 
   return (
-    <Card className="bg-white w-full max-w-4xl mx-auto shadow-lg rounded-xl overflow-hidden">
-      <div className="flex flex-col lg:flex-row">
-        {/* Left Column - Image */}
-        <div className="lg:w-1/2 relative min-h-[400px] lg:min-h-[600px]">
-          <Image
-            src="/images/couple.jpg"
-            alt="Happy couple"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
-
-        {/* Right Column - Form */}
-        <div className="lg:w-1/2 p-6 sm:p-8">
-          <CardHeader className="flex flex-col items-center justify-center text-[#E37B27] text-center">
+    <div className="flex h-full w-full">
+      {/* Left side - Form */}
+      <div className="w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white overflow-y-auto">
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center justify-center text-[#E37B27] text-center mb-8">
             <div className="flex flex-col gap-2 items-center">
               <div className="flex flex-row items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-semibold">הרשמה</h1>
+                <h1 className="text-3xl font-semibold">הרשמה</h1>
                 <GiPadlock size={30} className="text-[#E37B27]" />
               </div>
-              <p className="text-neutral-500 text-sm sm:text-base">
+              <p className="text-neutral-500 text-base">
                 הצעד הראשון למסע האהבה שלך
               </p>
             </div>
-          </CardHeader>
+          </div>
 
-          <CardBody>
-            <FormProvider {...methods}>
-              <form onSubmit={handleSubmit(onNext)} className="space-y-5">
-                {getStepContent(activeStep)}
+          <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onNext)} className="space-y-5">
+              {getStepContent(activeStep)}
 
-                {errors.root?.serverError && (
-                  <p className="text-danger text-sm">
-                    {errors.root.serverError.message}
-                  </p>
-                )}
+              {errors.root?.serverError && (
+                <p className="text-danger text-sm">
+                  {errors.root.serverError.message}
+                </p>
+              )}
 
-                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                <Button
+                  isLoading={isSubmitting}
+                  isDisabled={isSubmitDisabled}
+                  fullWidth
+                  className="bg-[#E37B27] text-white hover:bg-[#FFB547] py-2 sm:py-3 text-base sm:text-lg"
+                  type="submit"
+                >
+                  {activeStep === stepSchemas.length - 1 ? "שלח" : "המשך"}
+                </Button>
+                {activeStep !== 0 && (
                   <Button
-                    isLoading={isSubmitting}
-                    isDisabled={isSubmitDisabled}
+                    onPress={onBack}
                     fullWidth
-                    className="bg-[#E37B27] text-white hover:bg-[#FFB547] py-2 sm:py-3 text-base sm:text-lg"
-                    type="submit"
+                    className="bg-[#FFB547] text-white hover:bg-[#E37B27] py-2 sm:py-3 text-base sm:text-lg"
                   >
-                    {activeStep === stepSchemas.length - 1 ? "שלח" : "המשך"}
+                    חזרה
                   </Button>
-                  {activeStep !== 0 && (
-                    <Button
-                      onPress={onBack}
-                      fullWidth
-                      className="bg-[#FFB547] text-white hover:bg-[#E37B27] py-2 sm:py-3 text-base sm:text-lg"
-                    >
-                      חזרה
-                    </Button>
-                  )}
-                </div>
-                {activeStep === 0 && <SocialLogin />}
-                {activeStep === 0 && (
-                  <div className="flex flex-col items-center space-y-2 text-sm">
-                    <p className="text-neutral-600">כבר יש לך חשבון?</p>
-                    <Link
-                      href="/login"
-                      className="hover:underline text-[#E37B27] font-medium"
-                    >
-                      התחבר כאן
-                    </Link>
-                  </div>
                 )}
-
-                <div className="flex justify-center mt-4">
+              </div>
+              {activeStep === 0 && <SocialLogin />}
+              {activeStep === 0 && (
+                <div className="flex flex-col items-center space-y-2 text-sm">
+                  <p className="text-neutral-600">כבר יש לך חשבון?</p>
                   <Link
-                    href="/"
-                    className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
+                    href="/login"
+                    className="hover:underline text-[#E37B27] font-medium"
                   >
-                    חזרה לדף הבית
+                    התחבר כאן
                   </Link>
                 </div>
-              </form>
-            </FormProvider>
-          </CardBody>
+              )}
+
+              <div className="flex justify-center mt-4">
+                <Link
+                  href="/"
+                  className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
+                >
+                  חזרה לדף הבית
+                </Link>
+              </div>
+            </form>
+          </FormProvider>
         </div>
       </div>
-    </Card>
+
+      {/* Right side - Image */}
+      <div className="w-1/2 relative">
+        <Image
+          src="/images/couple.jpg"
+          alt="Happy couple"
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
+    </div>
   );
 }

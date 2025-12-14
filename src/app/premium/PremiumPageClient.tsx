@@ -343,7 +343,6 @@ export default function PremiumPageClient() {
     }
   }, []);
 
-  // Renew Subscription
   const handleRenewSubscription = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -354,7 +353,6 @@ export default function PremiumPageClient() {
     } catch (error) {
       console.error("שגיאה בחידוש המנוי:", error);
 
-      // More specific error handling
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -376,12 +374,13 @@ export default function PremiumPageClient() {
   const isCanceled = !!premiumInfo?.canceledAt;
 
   return (
-    <div className="container mx-auto py-12 px-4">
+    <div className="py-12 px-4">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">שדרג לחווית Miel פרימיום</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          גלה את כל היתרונות של חשבון פרמיום והגדל את הסיכויים למצוא את ההתאמה
-          המושלמת
+        <h1 className="text-6xl font-bold mb-4">
+          לפעמים, כל מה שצריך זה חיבור אחד נכון
+        </h1>
+        <p className="text-2xl text-gray-600 mx-auto">
+          Miel Premium נבנה כדי לעזור לזה לקרות בצורה מדויקת, רגישה ואמיתית.
         </p>
       </div>
 
@@ -429,6 +428,7 @@ export default function PremiumPageClient() {
         <PremiumPlansGrid
           onActivatePremium={handleActivatePremium}
           loadingPlan={loadingPlan}
+          freeFeatures={features.free}
           basicFeatures={features.basic}
           popularFeatures={features.popular}
           annualFeatures={features.annual}

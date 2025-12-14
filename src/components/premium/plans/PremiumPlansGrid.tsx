@@ -1,16 +1,16 @@
-// premium/plans/PremiumPlansGrid.tsx
 import React from "react";
 import { PremiumPlanCard } from "./PremiumPlanCard";
 import { FiDroplet, FiAward, FiStar } from "react-icons/fi";
 
 interface Feature {
-  text: string;
+  text: string | React.ReactNode;
   icon: React.ReactNode;
 }
 
 interface PremiumPlansGridProps {
   onActivatePremium: (planId: string, months: number) => void;
   loadingPlan: string | null;
+  freeFeatures: Feature[];
   basicFeatures: Feature[];
   popularFeatures: Feature[];
   annualFeatures: Feature[];
@@ -24,6 +24,7 @@ interface PremiumPlansGridProps {
 export function PremiumPlansGrid({
   onActivatePremium,
   loadingPlan,
+  freeFeatures,
   basicFeatures,
   popularFeatures,
   annualFeatures,
@@ -34,7 +35,22 @@ export function PremiumPlansGrid({
   onCancel,
 }: PremiumPlansGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-6">
+      <PremiumPlanCard
+        title="חינם"
+        price="₪0.00 / לחודש"
+        description="בחר תוכנית חינמית"
+        features={freeFeatures}
+        buttonText="התחל בחינם"
+        isLoading={loadingPlan === "free"}
+        onActivate={() => onActivatePremium("free", 1)}
+        planIcon={<FiDroplet size={32} />}
+        isActive={activePlan === "free"}
+        isCanceled={activePlan === "free" && isCanceled}
+        canceledAt={activePlan === "free" ? canceledAt : null}
+        premiumUntil={activePlan === "free" ? premiumUntil : null}
+        onCancel={activePlan === "free" && !isCanceled ? onCancel : undefined}
+      />
       <PremiumPlanCard
         title="בסיסי"
         price="₪29.90 / חודש"

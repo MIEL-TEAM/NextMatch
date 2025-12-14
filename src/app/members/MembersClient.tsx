@@ -107,7 +107,7 @@ export default function MembersClient({
       {/* Stories */}
       {currentSession?.user?.id && (
         <div className="mb-8 relative">
-          <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="w-screen px-2 pt-4">
             <StoriesContainer currentUserId={currentSession.user.id} />
           </div>
         </div>

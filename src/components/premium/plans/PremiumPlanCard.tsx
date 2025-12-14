@@ -1,13 +1,5 @@
-// premium/plans/PremiumPlanCard.tsx
 import React, { useState } from "react";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-  Divider,
-} from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
 import {
   FiCheck,
   FiXCircle,
@@ -18,7 +10,7 @@ import { PremiumFeatureList } from "./PremiumFeatureList";
 import { SubscribeModal } from "../modals/SubscribeModal";
 
 interface Feature {
-  text: string;
+  text: string | React.ReactNode;
   icon: React.ReactNode;
 }
 
@@ -75,69 +67,53 @@ export function PremiumPlanCard({
       ? "border-2 border-orange-500"
       : "border-2 border-green-500"
     : isHighlighted
-    ? "border-2 border-amber-400 shadow-xl"
-    : "";
+      ? "border-2 border-amber-400 shadow-xl"
+      : "";
 
-  const iconContainerClass = isActive
-    ? isCanceled
-      ? "bg-orange-100 text-orange-500"
-      : "bg-green-100 text-green-500"
-    : "bg-amber-100 text-amber-500";
+  const priceMatch = price.match(/^(.+?)(\s*\/\s*.+)$/);
+  const mainPrice = priceMatch ? priceMatch[1] : price;
+  const pricePeriod = priceMatch ? priceMatch[2] : "";
 
   return (
     <>
-      <Card className={`max-w-sm ${cardBorderClass}`} isHoverable>
-        <CardHeader className="flex flex-col items-center pb-0">
-          {planIcon && (
-            <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${iconContainerClass}`}
-            >
-              {planIcon}
-            </div>
-          )}
+      <Card className={`w-full min-h-[600px] ${cardBorderClass}`} isHoverable>
+        <CardHeader className="flex flex-col items-start pb-6 pt-6 px-6">
+          <div className="flex items-center gap-3 mb-4 w-full justify-between">
+            <h2 className="text-3xl font-bold">{title}</h2>
 
-          {isHighlighted && !isActive && (
-            <div className="bg-amber-400 text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
-              המומלץ ביותר
-            </div>
-          )}
+            {isHighlighted && !isActive && (
+              <div className="bg-amber-400 text-white text-xs font-semibold px-3 py-1 rounded-md">
+                המומלץ ביותר
+              </div>
+            )}
 
-          {isActive && !isCanceled && (
-            <div className="bg-green-500 text-white text-sm font-bold px-3 py-1 rounded-full mb-2 flex items-center">
-              <FiCheck className="mr-1" />
-              המנוי הפעיל שלך
-            </div>
-          )}
+            {isActive && !isCanceled && (
+              <div className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-md flex items-center gap-1">
+                <FiCheck size={14} />
+                המנוי הפעיל שלך
+              </div>
+            )}
 
-          {isActive && isCanceled && (
-            <div className="bg-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full mb-2 flex items-center">
-              <FiXCircle className="mr-1" />
-              המנוי יסתיים בתאריך {formattedEndDate}
-            </div>
-          )}
+            {isActive && isCanceled && (
+              <div className="bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-md flex items-center gap-1">
+                <FiXCircle size={14} />
+                המנוי יסתיים בתאריך {formattedEndDate}
+              </div>
+            )}
+          </div>
 
-          <h2 className="text-2xl font-bold">{title}</h2>
-          <p className="text-lg font-medium mt-1">{description}</p>
+          <p className="text-sm text-gray-500 mb-2">{description}</p>
+
+          <div className="mb-6">
+            <span className="text-5xl font-bold">{mainPrice}</span>
+            <span className="text-lg text-gray-400 mr-1">{pricePeriod}</span>
+          </div>
         </CardHeader>
 
-        <CardBody>
-          <PremiumFeatureList
-            features={features}
-            isActive={isActive}
-            isCanceled={isCanceled}
-          />
-
-          <Divider className="my-4" />
-
-          <div className="text-center">
-            <p className="text-2xl font-bold">{price}</p>
-          </div>
-        </CardBody>
-
-        <CardFooter className="flex flex-col gap-2">
+        <CardBody className="pt-0 px-6 pb-6 flex flex-col">
           {isActive ? (
             <>
-              <div className="w-full text-center mb-2">
+              <div className="w-full text-center mb-3">
                 {isCanceled ? (
                   <span className="text-orange-600 text-sm">
                     המנוי יסתיים בתאריך {formattedEndDate}
@@ -150,7 +126,7 @@ export function PremiumPlanCard({
               {isCanceled ? (
                 <Button
                   color="primary"
-                  className="w-full"
+                  className="w-full mb-6 h-12"
                   size="lg"
                   onPress={() => setIsModalOpen(true)}
                   startContent={<FiRefreshCw />}
@@ -163,7 +139,7 @@ export function PremiumPlanCard({
                   <Button
                     color="primary"
                     variant="flat"
-                    className="w-full"
+                    className="w-full mb-2 h-12"
                     size="lg"
                     disabled
                   >
@@ -173,7 +149,7 @@ export function PremiumPlanCard({
                     <Button
                       color="danger"
                       variant="flat"
-                      className="w-full mt-2"
+                      className="w-full mb-6 h-12"
                       size="lg"
                       onPress={onCancel}
                       startContent={<FiXCircle />}
@@ -187,7 +163,7 @@ export function PremiumPlanCard({
           ) : (
             <Button
               color={isHighlighted ? "warning" : "primary"}
-              className="w-full"
+              className="w-full mb-6 h-12 font-semibold"
               size="lg"
               isLoading={isLoading}
               onPress={() => setIsModalOpen(true)}
@@ -196,7 +172,19 @@ export function PremiumPlanCard({
               {isCanceled ? "שדרג לתוכנית זו" : buttonText}
             </Button>
           )}
-        </CardFooter>
+
+          <div className="border-t border-gray-200 pt-6 mt-2">
+            <div className="text-sm text-right font-medium text-gray-600 mb-4">
+              הכולל:
+            </div>
+
+            <PremiumFeatureList
+              features={features}
+              isActive={isActive}
+              isCanceled={isCanceled}
+            />
+          </div>
+        </CardBody>
       </Card>
 
       <SubscribeModal

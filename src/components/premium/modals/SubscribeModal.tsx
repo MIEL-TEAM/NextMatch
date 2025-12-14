@@ -11,7 +11,7 @@ import {
 import { FiCheck } from "react-icons/fi";
 
 interface Feature {
-  text: string;
+  text: string | React.ReactNode;
   icon: React.ReactNode;
 }
 

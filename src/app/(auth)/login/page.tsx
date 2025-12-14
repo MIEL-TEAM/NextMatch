@@ -8,7 +8,7 @@ export default function LoginPage() {
   useDisableScrollOnlyIfNotNeeded();
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen text-black px-6 sm:px-12">
+    <div className="h-screen w-screen overflow-hidden">
       <LoginForm />
     </div>
   );

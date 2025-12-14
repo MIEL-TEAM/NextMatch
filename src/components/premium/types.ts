@@ -6,7 +6,7 @@ export interface PremiumInfo {
 }
 
 export interface Feature {
-  text: string;
+  text: string | React.ReactNode;
   icon: React.ReactNode;
 }
 

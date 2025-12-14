@@ -3,7 +3,7 @@
 import { signInUser } from "@/app/actions/authActions";
 import { loginSchema, LoginSchema } from "@/lib/schemas/loginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Card, CardBody, CardHeader, Input } from "@nextui-org/react";
+import { Button, Input } from "@nextui-org/react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
@@ -46,100 +46,100 @@ export default function LoginForm() {
   }
 
   return (
-    <Card className="bg-white w-full max-w-4xl mx-auto shadow-lg rounded-xl overflow-hidden">
-      <div className="flex flex-col lg:flex-row">
-        <div className="lg:w-1/2 relative min-h-[400px] lg:min-h-[600px]">
-          <Image
-            src="/images/couple.jpg"
-            alt="Dating couple"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
-
-        <div className="lg:w-1/2 p-6 sm:p-8">
-          <CardHeader className="flex flex-col items-center justify-center text-[#E37B27]">
+    <div className="flex h-full w-full">
+      {/* Left side - Form */}
+      <div className="w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white overflow-y-auto">
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center justify-center text-[#E37B27] mb-8">
             <div className="flex flex-col gap-2 items-center text-center">
               <div className="flex flex-row items-center gap-3">
                 <GiPadlock size={30} className="text-[#E37B27]" />
-                <h1 className="text-2xl sm:text-3xl font-semibold">התחברות</h1>
+                <h1 className="text-3xl font-semibold">התחברות</h1>
               </div>
-              <p className="text-neutral-500 text-sm sm:text-base">
+              <p className="text-neutral-500 text-base">
                 בוא נמשיך מאיפה שעצרת
-                <FaHeart className="inline-block mr-2 text-xl sm:text-2xl text-[#E37B27]" />
+                <FaHeart className="inline-block mr-2 text-2xl text-[#E37B27]" />
               </p>
             </div>
-          </CardHeader>
+          </div>
 
-          <CardBody>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <Input
-                label="אימייל"
-                variant="bordered"
-                {...register("email")}
-                isInvalid={!!errors.email}
-                errorMessage={errors.email?.message as string}
-                className="w-full"
-              />
-              <Input
-                label="סיסמה"
-                variant="bordered"
-                type={showPassword ? "text" : "password"}
-                {...register("password")}
-                isInvalid={!!errors.password}
-                errorMessage={errors.password?.message as string}
-                className="w-full"
-                endContent={
-                  <div className="flex items-center justify-center h-full">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="focus:outline-none flex items-center justify-center"
-                    >
-                      {showPassword ? (
-                        <EyeOff size={24} className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye size={24} className="h-4 w-4 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                }
-              />
-              <Button
-                isLoading={isSubmitting}
-                isDisabled={!isValid}
-                fullWidth
-                className="bg-[#E37B27] text-white hover:bg-[#FFB547] text-lg"
-                type="submit"
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <Input
+              label="אימייל"
+              variant="bordered"
+              {...register("email")}
+              isInvalid={!!errors.email}
+              errorMessage={errors.email?.message as string}
+              className="w-full"
+            />
+            <Input
+              label="סיסמה"
+              variant="bordered"
+              type={showPassword ? "text" : "password"}
+              {...register("password")}
+              isInvalid={!!errors.password}
+              errorMessage={errors.password?.message as string}
+              className="w-full"
+              endContent={
+                <div className="flex items-center justify-center h-full">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="focus:outline-none flex items-center justify-center"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={24} className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye size={24} className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              }
+            />
+            <Button
+              isLoading={isSubmitting}
+              isDisabled={!isValid}
+              fullWidth
+              className="bg-[#E37B27] text-white hover:bg-[#FFB547] text-lg"
+              type="submit"
+            >
+              התחבר
+            </Button>
+            <SocialLogin />
+            <div className="flex flex-col items-center space-y-2 text-sm">
+              <Link href="/forgot-password" className="hover:underline">
+                שכחתי סיסמה?
+              </Link>
+              <Link
+                href="/register"
+                className="hover:underline text-[#E37B27] font-medium"
               >
-                התחבר
-              </Button>
-              <SocialLogin />
-              <div className="flex flex-col items-center space-y-2 text-sm">
-                <Link href="/forgot-password" className="hover:underline">
-                  שכחתי סיסמה?
-                </Link>
-                <Link
-                  href="/register"
-                  className="hover:underline text-[#E37B27] font-medium"
-                >
-                  אין לך חשבון? הירשם כאן
-                </Link>
-              </div>
+                אין לך חשבון? הירשם כאן
+              </Link>
+            </div>
 
-              <div className="flex justify-center mt-4">
-                <Link
-                  href="/"
-                  className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
-                >
-                  חזרה לדף הבית
-                </Link>
-              </div>
-            </form>
-          </CardBody>
+            <div className="flex justify-center mt-4">
+              <Link
+                href="/"
+                className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
+              >
+                חזרה לדף הבית
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
-    </Card>
+
+      {/* Right side - Image */}
+      <div className="w-1/2 relative">
+        <Image
+          src="/images/couple.jpg"
+          alt="Dating couple"
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
+    </div>
   );
 }
