@@ -82,13 +82,7 @@ export default function TopNavClient({
       <div className="p-4 relative z-50">
         <div className="flex justify-end">
           <div className="flex items-center gap-2">
-            <span
-              className="font-bold tracking-wide text-3xl 
-                bg-gradient-to-r from-[#FF9F1C] via-[#FF6A00] to-[#E63946] 
-                bg-clip-text text-transparent 
-                drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)] 
-                [text-shadow:_0_1px_0_#000]"
-            >
+            <span className="text-3xl font-medium text-white/90 tracking-tight">
               Miel
             </span>
 

@@ -15,42 +15,55 @@ export default function UserDetailsForm() {
     <div className="space-y-4">
       <Input
         defaultValue={getValues("name")}
-        label="שם"
-        variant="bordered"
+        placeholder="שם מלא"
+        variant="flat"
         {...register("name")}
         isInvalid={!!errors.name}
         errorMessage={errors.name?.message as string}
+        classNames={{
+          input: "text-base",
+          inputWrapper:
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+        }}
       />
       <Input
         defaultValue={getValues("email")}
-        label="אימייל"
-        variant="bordered"
+        placeholder="אימייל"
+        variant="flat"
         {...register("email")}
         isInvalid={!!errors.email}
         errorMessage={errors.email?.message as string}
+        classNames={{
+          input: "text-base",
+          inputWrapper:
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+        }}
       />
       <Input
         defaultValue={getValues("password")}
-        label="סיסמה"
-        variant="bordered"
+        placeholder="סיסמה"
+        variant="flat"
         type={showPassword ? "text" : "password"}
         {...register("password")}
         isInvalid={!!errors.password}
         errorMessage={errors.password?.message as string}
+        classNames={{
+          input: "text-base",
+          inputWrapper:
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+        }}
         endContent={
-          <div className="flex items-center justify-center h-full">
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="focus:outline-none flex items-center justify-center"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4 text-gray-400" />
-              ) : (
-                <Eye className="h-4 w-4 text-gray-400" />
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="focus:outline-none"
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5 text-gray-400" />
+            ) : (
+              <Eye className="h-5 w-5 text-gray-400" />
+            )}
+          </button>
         }
       />
     </div>

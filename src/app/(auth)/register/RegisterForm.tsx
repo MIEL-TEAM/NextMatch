@@ -11,7 +11,6 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@nextui-org/react";
 import { FormProvider, useForm } from "react-hook-form";
-import { GiPadlock } from "react-icons/gi";
 import { registerUser } from "@/app/actions/authActions";
 import { useRouter } from "next/navigation";
 import { handleFormServerError } from "@/lib/util";
@@ -169,22 +168,22 @@ export default function RegisterForm() {
   return (
     <div className="flex h-full w-full">
       {/* Left side - Form */}
-      <div className="w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white overflow-y-auto">
-        <div className="w-full max-w-md">
-          <div className="flex flex-col items-center justify-center text-[#E37B27] text-center mb-8">
-            <div className="flex flex-col gap-2 items-center">
-              <div className="flex flex-row items-center gap-3">
-                <h1 className="text-3xl font-semibold">הרשמה</h1>
-                <GiPadlock size={30} className="text-[#E37B27]" />
-              </div>
-              <p className="text-neutral-500 text-base">
-                הצעד הראשון למסע האהבה שלך
-              </p>
-            </div>
+      <div className="w-1/2 flex items-center justify-center p-16 bg-[#FAFAF9] overflow-y-auto">
+        <div className="w-full max-w-[420px]">
+          {/* Headline - Large, bold, emotional */}
+          <div className="mb-12">
+            <h1 className="text-[56px] leading-[1.1] font-bold text-gray-900 mb-4">
+              החיבור הבא שלכם
+              <br />
+              מתחיל כאן.
+            </h1>
+            <p className="text-lg text-gray-500">
+              הצטרפו ל-Miel ותנו לאהבה להתחיל
+            </p>
           </div>
 
           <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onNext)} className="space-y-5">
+            <form onSubmit={handleSubmit(onNext)} className="space-y-6">
               {getStepContent(activeStep)}
 
               {errors.root?.serverError && (
@@ -193,53 +192,77 @@ export default function RegisterForm() {
                 </p>
               )}
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+              {/* CTAs */}
+              <div className="space-y-3">
                 <Button
                   isLoading={isSubmitting}
                   isDisabled={isSubmitDisabled}
                   fullWidth
-                  className="bg-[#E37B27] text-white hover:bg-[#FFB547] py-2 sm:py-3 text-base sm:text-lg"
+                  className="bg-[#E37B27] text-white hover:bg-[#D16D1F] h-12 text-base font-medium rounded-xl shadow-sm transition-all"
                   type="submit"
                 >
-                  {activeStep === stepSchemas.length - 1 ? "שלח" : "המשך"}
+                  {activeStep === stepSchemas.length - 1
+                    ? "סיים והצטרף"
+                    : "המשך"}
                 </Button>
                 {activeStep !== 0 && (
                   <Button
                     onPress={onBack}
                     fullWidth
-                    className="bg-[#FFB547] text-white hover:bg-[#E37B27] py-2 sm:py-3 text-base sm:text-lg"
+                    className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-12 text-base font-medium rounded-xl shadow-sm"
                   >
                     חזרה
                   </Button>
                 )}
               </div>
+
               {activeStep === 0 && <SocialLogin />}
+
               {activeStep === 0 && (
-                <div className="flex flex-col items-center space-y-2 text-sm">
-                  <p className="text-neutral-600">כבר יש לך חשבון?</p>
+                <div className="text-center">
                   <Link
                     href="/login"
-                    className="hover:underline text-[#E37B27] font-medium"
+                    className="text-sm text-gray-600 hover:text-[#E37B27]"
                   >
-                    התחבר כאן
+                    כבר יש לך חשבון?{" "}
+                    <span className="font-medium text-[#E37B27]">התחבר</span>
                   </Link>
                 </div>
               )}
 
-              <div className="flex justify-center mt-4">
-                <Link
-                  href="/"
-                  className="text-[#E37B27] bg-gray-100 px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 text-sm font-medium"
-                >
-                  חזרה לדף הבית
-                </Link>
-              </div>
+              {/* Legal Links - Small, quiet, trust-building */}
+              {activeStep === 0 && (
+                <div className="pt-8 mt-8 border-t border-gray-200">
+                  <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+                    <Link
+                      href="/terms"
+                      className="hover:text-gray-600 transition-colors"
+                    >
+                      תנאי שימוש
+                    </Link>
+                    <span>•</span>
+                    <Link
+                      href="/privacy"
+                      className="hover:text-gray-600 transition-colors"
+                    >
+                      פרטיות
+                    </Link>
+                    <span>•</span>
+                    <Link
+                      href="/safety-tips"
+                      className="hover:text-gray-600 transition-colors"
+                    >
+                      אבטחה
+                    </Link>
+                  </div>
+                </div>
+              )}
             </form>
           </FormProvider>
         </div>
       </div>
 
-      {/* Right side - Image */}
+      {/* Right side - Image with subtle gradient overlay */}
       <div className="w-1/2 relative">
         <Image
           src="/images/couple.jpg"
@@ -248,6 +271,7 @@ export default function RegisterForm() {
           className="object-cover"
           priority
         />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/20" />
       </div>
     </div>
   );

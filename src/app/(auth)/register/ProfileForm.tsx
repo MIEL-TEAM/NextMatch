@@ -18,18 +18,21 @@ export default function ProfileForm() {
   ];
 
   return (
-    <div className="space-y-3 sm:space-y-4 w-full max-w-md px-2 sm:px-4">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select
           defaultSelectedKeys={getValues("gender")}
-          label="מגדר"
+          placeholder="מגדר"
           aria-label="בחר מגדר"
-          variant="bordered"
+          variant="flat"
           {...register("gender")}
           isInvalid={!!errors.gender}
           errorMessage={errors.gender?.message as string}
           onChange={(event) => setValue("gender", event.target.value)}
-          className="w-full h-12"
+          classNames={{
+            trigger:
+              "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+          }}
         >
           {genderList.map((item) => (
             <SelectItem key={item.value} value={item.value}>
@@ -40,48 +43,62 @@ export default function ProfileForm() {
 
         <Input
           defaultValue={getValues("dateOfBirth")}
-          label="תאריך לידה"
+          placeholder="תאריך לידה"
           type="date"
           max={format(subYears(new Date(), 18), "yyyy-MM-dd")}
-          variant="bordered"
+          variant="flat"
           {...register("dateOfBirth")}
           isInvalid={!!errors.dateOfBirth}
           errorMessage={errors.dateOfBirth?.message as string}
-          className="w-full h-14"
           classNames={{
-            label: "mb-2",
+            input: "text-base",
+            inputWrapper:
+              "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
           }}
         />
       </div>
 
       <Textarea
         defaultValue={getValues("description")}
-        label="תיאור"
-        variant="bordered"
+        placeholder="ספר/י קצת על עצמך..."
+        variant="flat"
         {...register("description")}
         isInvalid={!!errors.description}
         errorMessage={errors.description?.message as string}
-        className="w-full h-20 sm:h-24"
+        minRows={4}
+        classNames={{
+          input: "text-base",
+          inputWrapper:
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm rounded-xl",
+        }}
       />
 
       <Input
         defaultValue={getValues("city")}
-        label="עיר"
-        variant="bordered"
+        placeholder="עיר"
+        variant="flat"
         {...register("city")}
         isInvalid={!!errors.city}
         errorMessage={errors.city?.message as string}
-        className="w-full h-10 sm:h-12"
+        classNames={{
+          input: "text-base",
+          inputWrapper:
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+        }}
       />
 
       <Input
         defaultValue={getValues("country")}
-        label="מדינה"
-        variant="bordered"
+        placeholder="מדינה"
+        variant="flat"
         {...register("country")}
         isInvalid={!!errors.country}
         errorMessage={errors.country?.message as string}
-        className="w-full h-10 sm:h-12"
+        classNames={{
+          input: "text-base",
+          inputWrapper:
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+        }}
       />
     </div>
   );

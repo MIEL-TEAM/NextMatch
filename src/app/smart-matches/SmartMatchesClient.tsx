@@ -156,7 +156,7 @@ export default function SmartMatchesClient() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="container px-7"
+        className="px-7"
       >
         <div className="flex flex-col items-center">
           {/* Premium Header */}
