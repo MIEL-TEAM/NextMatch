@@ -95,32 +95,52 @@ export const {
         }
       } catch (err) {
         console.error("signIn error:", err);
-        // Still allow sign in even if DB update fails
       }
 
       return true;
     },
 
-    async jwt({ token, user }) {
-      // Initial sign in - user object exists
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.profileComplete = user.profileComplete;
         token.role = user.role;
         token.isPremium = user.isPremium;
+        token.gender = (user as any).member?.gender ?? null;
       }
 
-      // Subsequent requests - preserve existing token data
-      // This ensures token properties persist across requests
+      if (trigger === "update" && token.sub) {
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: {
+            profileComplete: true,
+            role: true,
+            isPremium: true,
+            member: {
+              select: {
+                gender: true,
+              },
+            },
+          },
+        });
+
+        if (freshUser) {
+          token.profileComplete = freshUser.profileComplete;
+          token.role = freshUser.role;
+          token.isPremium = freshUser.isPremium;
+          token.gender = freshUser.member?.gender ?? null;
+        }
+      }
+
       return token;
     },
 
     async session({ session, token }) {
-      // ✅ Safely assign user ID with fallback
       if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.profileComplete = token.profileComplete as boolean;
         session.user.role = token.role as Role;
         session.user.isPremium = token.isPremium as boolean;
+        session.user.gender = token.gender as string | null | undefined;
       }
       return session;
     },

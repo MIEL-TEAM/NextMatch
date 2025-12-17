@@ -1,11 +1,6 @@
+// True public content pages - accessible to everyone
 export const publicRoutes = [
   "/",
-  "/login",
-  "/register",
-  "/register/success",
-  "/verify-email",
-  "/reset-password",
-  "/forgot-password",
   "/contact",
   "/privacy",
   "/terms",
@@ -13,13 +8,19 @@ export const publicRoutes = [
   "/safety-tips",
 ];
 
-export const authRoutes = [
+// Entry points - only meaningful for logged-out users
+export const unauthOnlyRoutes = [
   "/login",
   "/register",
-  "/register/success",
-  "/verify-email",
   "/forgot-password",
   "/reset-password",
 ];
 
+// UI-only step after registration (allowed without session)
+export const registerSuccessRoutes = ["/register/success"];
+
+// Routes that MUST handle auth internally (middleware should NOT block)
+export const authActionRoutes = ["/verify-email"];
+
+// Profile completion
 export const profileRoutes = ["/complete-profile"];

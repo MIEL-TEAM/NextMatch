@@ -2,19 +2,21 @@
 
 import CardWrapper from "@/components/CardWrapper";
 import { useRouter } from "next/navigation";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaEnvelope } from "react-icons/fa";
+import { useCopy } from "@/lib/copy";
 
 export default function RegisterSuccessPage() {
   const router = useRouter();
+  const { t } = useCopy("onboarding");
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen overflow-hidden text-black fixed inset-0 px-6 sm:px-12 bg-gray-100">
       <CardWrapper
-        headerText="נרשמת בהצלחה"
-        subHeaderText="כמעט סיימנו! אמת/י את כתובת האימייל שלך כדי שתוכל/י להיכנס ולהתחיל להשתמש באפליקציה 😊"
+        headerText={t("register.success.header")}
+        subHeaderText={t("register.success.subtitle")}
         action={() => router.push("/login")}
-        actionLabel="עבור להתחברות"
-        headerIcon={FaCheckCircle}
+        actionLabel={t("register.success.cta")}
+        headerIcon={FaEnvelope}
       />
     </div>
   );

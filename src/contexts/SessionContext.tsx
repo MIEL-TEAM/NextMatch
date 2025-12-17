@@ -5,21 +5,15 @@ import {
   useSession as useNextAuthSession,
 } from "next-auth/react";
 
-// Export the real SessionProvider from NextAuth
 export const SessionProvider = NextAuthSessionProvider;
 
 export function useServerSession() {
-  const { data: session, status } = useNextAuthSession();
+  const sessionResult = useNextAuthSession();
 
   return {
-    session: session ?? null,
-    status:
-      status === "loading"
-        ? "loading"
-        : status === "authenticated"
-          ? "authenticated"
-          : "unauthenticated",
-    user: session?.user ?? null,
+    session: sessionResult.data ?? null,
+    status: sessionResult.status,
+    user: sessionResult.data?.user ?? null,
   };
 }
 

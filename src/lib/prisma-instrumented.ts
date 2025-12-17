@@ -1,10 +1,3 @@
-/**
- * Instrumented Prisma Client
- *
- * This wraps the Prisma client with performance monitoring.
- * Use this instead of the regular prisma client when instrumentation is needed.
- */
-
 import { PrismaClient } from "@prisma/client";
 import {
   prismaInstrumentation,

@@ -122,8 +122,7 @@ export async function registerUser(
         email,
         passwordHash: hashedPassword,
         profileComplete: true,
-        image: photos && photos.length > 0 ? photos[0].url : null, // Set first photo as main profile image
-        // Save user preferences
+        image: photos && photos.length > 0 ? photos[0].url : null,
         preferredGenders,
         preferredAgeMin,
         preferredAgeMax,
@@ -135,15 +134,14 @@ export async function registerUser(
             country,
             dateOfBirth: new Date(dateOfBirth),
             gender,
-            image: photos && photos.length > 0 ? photos[0].url : null, // Set first photo as main profile image
-            // Create photos only if they exist
+            image: photos && photos.length > 0 ? photos[0].url : null,
             ...(photos &&
               photos.length > 0 && {
                 photos: {
                   create: photos.map((photo) => ({
                     url: photo.url,
                     publicId: photo.publicId,
-                    isApproved: false, // Photos need approval by default
+                    isApproved: false,
                   })),
                 },
               }),
@@ -170,7 +168,10 @@ export async function registerUser(
 }
 
 export async function getUserByEmail(email: string) {
-  return prisma.user.findUnique({ where: { email } });
+  return prisma.user.findUnique({
+    where: { email },
+    include: { member: { select: { gender: true } } },
+  });
 }
 
 export async function getUserById(id: string) {
@@ -296,7 +297,9 @@ export async function completeSocialLoginProfile(
   data: ProfileSchema
 ): Promise<ActionResult<string>> {
   const session = await getSession();
-  if (!session?.user) return { status: "error", error: "user not found" };
+  if (!session?.user?.id) {
+    return { status: "error", error: "user not found" };
+  }
 
   try {
     const user = await prisma.user.update({
@@ -304,14 +307,23 @@ export async function completeSocialLoginProfile(
       data: {
         profileComplete: true,
         member: {
-          create: {
-            name: session.user.name as string,
-            image: session.user.image,
-            gender: data.gender,
-            dateOfBirth: new Date(data.dateOfBirth),
-            description: data.description,
-            city: data.city,
-            country: data.country,
+          upsert: {
+            create: {
+              name: session.user.name as string,
+              image: session.user.image,
+              gender: data.gender,
+              dateOfBirth: new Date(data.dateOfBirth),
+              description: data.description,
+              city: data.city,
+              country: data.country,
+            },
+            update: {
+              gender: data.gender,
+              dateOfBirth: new Date(data.dateOfBirth),
+              description: data.description,
+              city: data.city,
+              country: data.country,
+            },
           },
         },
       },
@@ -326,8 +338,8 @@ export async function completeSocialLoginProfile(
 
     return { status: "success", data: user.accounts[0].provider };
   } catch (error) {
-    console.log(error);
-    throw error;
+    console.error("[completeSocialLoginProfile]", error);
+    return { status: "error", error: "Failed to complete profile" };
   }
 }
 

@@ -13,6 +13,29 @@ import type {
   StableLocationParams,
 } from "@/types/members";
 
+// Persistent state key for tracking location flow completion
+const LOCATION_FLOW_KEY = "miel_location_flow_completed";
+
+// Helper to check if we've already run the location flow in this session
+function hasCompletedLocationFlow(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(LOCATION_FLOW_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+// Helper to mark location flow as completed
+function markLocationFlowCompleted(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(LOCATION_FLOW_KEY, "true");
+  } catch {
+    // Silently fail if sessionStorage is not available
+  }
+}
+
 export function useLocationFlow() {
   const searchParams = useSearchParams();
 
@@ -34,6 +57,7 @@ export function useLocationFlow() {
   const browserLocationRef = useRef<LocationData | null>(null);
   const locationStartRef = useRef<number | null>(null);
   const isFirstMountRef = useRef(true);
+  const hasInitializedRef = useRef(false);
 
   const rawLat = searchParams.get("userLat");
   const rawLon = searchParams.get("userLon");
@@ -66,11 +90,30 @@ export function useLocationFlow() {
 
   // Initialize state machine
   useEffect(() => {
-    if (locationState === "initial") {
-      locationStartRef.current = Date.now();
-      transitionToState("checkingUrlLocation");
+    if (locationState !== "initial" || hasInitializedRef.current) return;
+
+    hasInitializedRef.current = true;
+    locationStartRef.current = Date.now();
+
+    // ✅ CRITICAL FIX: If we have URL params AND we've completed flow before,
+    // skip the entire state machine to prevent remount cycles
+    if (
+      stableParams.hasLocation &&
+      stableParams.userLat &&
+      stableParams.userLon &&
+      hasCompletedLocationFlow()
+    ) {
+      setInternalLocation({
+        latitude: parseFloat(stableParams.userLat),
+        longitude: parseFloat(stableParams.userLon),
+      });
+      visitedStatesRef.current.add("readyToQuery");
+      setLocationState("readyToQuery");
+      return;
     }
-  }, [locationState]);
+
+    transitionToState("checkingUrlLocation");
+  }, [locationState, stableParams]);
 
   // Timeout fallback
   useEffect(() => {
@@ -243,6 +286,7 @@ export function useLocationFlow() {
 
     if (urlUpdateAppliedRef.current) {
       setInternalLocation(coords);
+      markLocationFlowCompleted();
       transitionToState("readyToQuery");
       return;
     }
@@ -256,6 +300,7 @@ export function useLocationFlow() {
     currentParams.set("sortByDistance", "true");
 
     urlUpdateAppliedRef.current = true;
+    markLocationFlowCompleted();
 
     router.replace(`${pathname}?${currentParams.toString()}`, {
       scroll: false,
@@ -280,6 +325,7 @@ export function useLocationFlow() {
 
     if (urlUpdateAppliedRef.current) {
       setInternalLocation(coords);
+      markLocationFlowCompleted();
       transitionToState("readyToQuery");
       return;
     }
@@ -293,6 +339,7 @@ export function useLocationFlow() {
     currentParams.set("sortByDistance", "true");
 
     urlUpdateAppliedRef.current = true;
+    markLocationFlowCompleted();
 
     router.replace(`${pathname}?${currentParams.toString()}`, {
       scroll: false,
@@ -307,6 +354,7 @@ export function useLocationFlow() {
     if (locationState !== "noLocationAvailable") return;
 
     setShowLocationModal(true);
+    markLocationFlowCompleted();
     transitionToState("readyToQuery");
   }, [locationState]);
 
@@ -320,11 +368,12 @@ export function useLocationFlow() {
     params.set("sortByDistance", "true");
     params.delete("requestLocation");
 
+    urlUpdateAppliedRef.current = true;
+    markLocationFlowCompleted();
+
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setShowLocationModal(false);
     setInternalLocation(coordinates);
-
-    urlUpdateAppliedRef.current = true;
   };
 
   return {

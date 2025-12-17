@@ -6,6 +6,7 @@ declare module "next-auth" {
     profileComplete: boolean;
     role: Role;
     isPremium: boolean;
+    gender?: string | null;
   }
 
   interface Session {
@@ -13,15 +14,17 @@ declare module "next-auth" {
       profileComplete: boolean;
       role: Role;
       isPremium: boolean;
+      gender?: string | null;
     } & DefaultSession["user"];
   }
 }
 
 declare module "next-auth/jwt" {
-  interface Jwt {
+  interface JWT {
     profileComplete: boolean;
     role: Role;
     isPremium: boolean;
+    gender?: string | null;
   }
 }
 

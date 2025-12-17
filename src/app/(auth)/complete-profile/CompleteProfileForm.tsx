@@ -29,6 +29,7 @@ export default function CompleteProfileForm() {
       });
     }
   };
+
   return (
     <CardWrapper
       headerText="קצת עליך"

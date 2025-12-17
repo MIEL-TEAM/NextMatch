@@ -1,69 +1,77 @@
-// Fixed middleware.ts - Admin isolation + optimized redirects
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
-import { authRoutes, publicRoutes } from "./routes";
+import {
+  publicRoutes,
+  unauthOnlyRoutes,
+  registerSuccessRoutes,
+  authActionRoutes,
+} from "./routes";
 
 export default auth((req) => {
   const { nextUrl } = req;
+  const pathname = nextUrl.pathname;
+
   const isLoggedIn = !!req.auth;
+  const user = req.auth?.user;
+  const isAdmin = user?.role === "ADMIN";
+  const isAdminRoute = pathname.startsWith("/admin");
 
-  const isPublic = publicRoutes.includes(nextUrl.pathname);
-  const isAuthRoutes = authRoutes.includes(nextUrl.pathname);
-  const isProfileComplete = req.auth?.user.profileComplete;
-  const isAdmin = req.auth?.user.role === "ADMIN";
-  const isAdminRoute = nextUrl.pathname.startsWith("/admin");
-
-  // ✅ ADMIN ISOLATION: Redirect admins to admin panel ONLY
+  /* =========================
+     ADMIN ISOLATION
+  ========================= */
   if (isAdmin) {
-    if (isAdminRoute) {
-      return NextResponse.next();
-    }
-    // ❌ Block admin from accessing user routes
-    if (!isPublic && !isAuthRoutes) {
-      return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
-    }
-    return NextResponse.next();
+    if (isAdminRoute) return NextResponse.next();
+    return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
   }
 
-  // ✅ Block non-admins from admin routes
   if (isAdminRoute && !isAdmin) {
     return NextResponse.redirect(new URL("/", nextUrl), { status: 303 });
   }
 
-  // Early return for public routes
-  if (isPublic) {
+  /* =========================
+     PUBLIC ROUTES
+  ========================= */
+  if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // Handle auth routes
-  if (isAuthRoutes) {
-    if (isLoggedIn) {
-      // Redirect to members (non-admins only reach here)
-      const membersUrl = new URL("/members", nextUrl);
-      if (nextUrl.searchParams.toString()) {
-        membersUrl.search = nextUrl.searchParams.toString();
-      }
-      return NextResponse.redirect(membersUrl, { status: 303 });
-    }
+  /* =========================
+     AUTH ACTION ROUTES
+     (Handled internally)
+  ========================= */
+  if (authActionRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // Handle unauthenticated users
+  /* =========================
+     AUTH REQUIRED
+  ========================= */
   if (!isLoggedIn) {
+    // Allow unauth users only on specific routes
+    if (unauthOnlyRoutes.includes(pathname)) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/login", nextUrl), { status: 303 });
   }
 
-  // Handle incomplete profiles
-  if (
-    isLoggedIn &&
-    !isProfileComplete &&
-    nextUrl.pathname !== "/complete-profile"
-  ) {
-    return NextResponse.redirect(new URL("/complete-profile", nextUrl), {
+  /* =========================
+     AUTHENTICATED USER ROUTES
+     Logged-in users should not access auth pages
+  ========================= */
+  if (unauthOnlyRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/members", nextUrl), {
       status: 303,
     });
   }
 
+  if (registerSuccessRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/members", nextUrl), {
+      status: 303,
+    });
+  }
+
+  // All other routes: allow access
+  // Onboarding enforcement happens in Server Components
   return NextResponse.next();
 });
 

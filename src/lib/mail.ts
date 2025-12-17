@@ -141,7 +141,13 @@ export async function sendWelcomeEmail(email: string, name: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const link = `${baseUrl}/reset-password?token=${token}`;
+  let link = "";
+
+  if (process.env.NODE_ENV === "development") {
+    link = `http://localhost:3000/reset-password?token=${token}`;
+  } else {
+    link = `${baseUrl}/reset-password?token=${token}`;
+  }
 
   return resend.emails.send({
     from: "mail@miel-love.com",

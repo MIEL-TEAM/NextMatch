@@ -1,9 +1,3 @@
-/**
- * Request-level instrumentation
- *
- * Tracks API requests and sets context for Prisma query logging
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import {
   requestContext,

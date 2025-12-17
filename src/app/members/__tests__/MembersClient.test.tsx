@@ -25,6 +25,15 @@ jest.mock("@/app/actions/likeActions", () => ({
   fetchCurrentUserLikeIds: jest.fn(),
 }));
 
+// Mock SessionContext
+jest.mock("@/contexts/SessionContext", () => ({
+  useServerSession: jest.fn(() => ({
+    session: null,
+    status: "unauthenticated",
+    user: null,
+  })),
+}));
+
 // Mock hooks
 jest.mock("@/hooks/useMembersQuery", () => ({
   __esModule: true,
@@ -112,7 +121,7 @@ describe("MembersClient", () => {
   it("should show location modal when no location params and no permission", async () => {
     mockCheckLocationPermission.mockResolvedValue(false);
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("location-modal")).toBeInTheDocument();
@@ -124,7 +133,7 @@ describe("MembersClient", () => {
       new Error("Permission check failed")
     );
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("location-modal")).toBeInTheDocument();
@@ -139,7 +148,7 @@ describe("MembersClient", () => {
       })
     );
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.queryByTestId("location-modal")).not.toBeInTheDocument();
@@ -153,7 +162,7 @@ describe("MembersClient", () => {
       coordinates: { latitude: 32.0853, longitude: 34.7818 },
     });
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(mockGetCurrentLocation).toHaveBeenCalledTimes(1);
@@ -177,7 +186,7 @@ describe("MembersClient", () => {
       error: "הרשאת מיקום נדחתה",
     });
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(mockGetCurrentLocation).toHaveBeenCalledTimes(1);
@@ -192,7 +201,7 @@ describe("MembersClient", () => {
     mockCheckLocationPermission.mockResolvedValue(true);
     mockGetCurrentLocation.mockRejectedValue(new Error("Location error"));
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(mockGetCurrentLocation).toHaveBeenCalledTimes(1);
@@ -204,7 +213,7 @@ describe("MembersClient", () => {
   });
 
   it("should fetch user like IDs on mount", async () => {
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(mockFetchCurrentUserLikeIds).toHaveBeenCalledTimes(1);
@@ -212,7 +221,7 @@ describe("MembersClient", () => {
   });
 
   it("should render members layout when data is available", async () => {
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("members-layout")).toBeInTheDocument();
@@ -222,7 +231,7 @@ describe("MembersClient", () => {
   it("should handle location modal close", async () => {
     mockCheckLocationPermission.mockResolvedValue(false);
 
-    render(<MembersClient />);
+    render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("location-modal")).toBeInTheDocument();
@@ -239,7 +248,7 @@ describe("MembersClient", () => {
   it("should not show location modal after it has been processed", async () => {
     mockCheckLocationPermission.mockResolvedValue(false);
 
-    const { rerender } = render(<MembersClient />);
+    const { rerender } = render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("location-modal")).toBeInTheDocument();
@@ -253,7 +262,7 @@ describe("MembersClient", () => {
       })
     );
 
-    rerender(<MembersClient />);
+    rerender(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.queryByTestId("location-modal")).not.toBeInTheDocument();
@@ -264,7 +273,7 @@ describe("MembersClient", () => {
     // First render - no permission
     mockCheckLocationPermission.mockResolvedValue(false);
 
-    const { rerender } = render(<MembersClient />);
+    const { rerender } = render(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("location-modal")).toBeInTheDocument();
@@ -277,7 +286,7 @@ describe("MembersClient", () => {
       coordinates: { latitude: 32.0853, longitude: 34.7818 },
     });
 
-    rerender(<MembersClient />);
+    rerender(<MembersClient serverSession={null} />);
 
     await waitFor(() => {
       expect(mockGetCurrentLocation).toHaveBeenCalledTimes(1);

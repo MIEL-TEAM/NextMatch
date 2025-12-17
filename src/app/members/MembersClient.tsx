@@ -2,7 +2,6 @@
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { useServerSession } from "@/contexts/SessionContext";
 import { motion } from "framer-motion";
 
 import { useMembersQuery } from "@/hooks/useMembersQuery";
@@ -16,12 +15,14 @@ import EmptyState from "@/components/EmptyState";
 import HeartLoading from "@/components/HeartLoading";
 import LocationPermissionModal from "@/components/LocationPermissionModal";
 import { StoriesContainer } from "@/components/stories/StoriesContainer";
+import { useCopy } from "@/lib/copy";
 
 export default function MembersClient({
   serverSession,
 }: {
   serverSession: Session | null;
 }) {
+  const { t } = useCopy("empty_state");
   const [isClientReady, setIsClientReady] = useState(false);
   useEffect(() => setIsClientReady(true), []);
 
@@ -29,8 +30,7 @@ export default function MembersClient({
   const router = useRouter();
   const pathname = usePathname();
 
-  const { session: clientSession } = useServerSession();
-  const currentSession = serverSession || clientSession;
+  const currentSession = serverSession;
 
   const {
     locationState,
@@ -95,8 +95,8 @@ export default function MembersClient({
   if (!data || (data.length === 0 && !isOnlineFilter)) {
     return (
       <EmptyState
-        message="לא נמצאו תוצאות בטווח הגילאים שבחרת"
-        subMessage="נסה/י להרחיב את טווח הגילאים או לשנות את הגדרות הסינון"
+        message={t("members.no_results.header")}
+        subMessage={t("members.no_results.subtitle")}
         icon
       />
     );

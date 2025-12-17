@@ -1,14 +1,3 @@
-/**
- * Prisma Query Instrumentation & Performance Monitoring
- *
- * This module instruments all Prisma queries to:
- * - Track execution time
- * - Log query parameters
- * - Identify call origin (file + function)
- * - Detect N+1 patterns
- * - Group queries by endpoint/request
- */
-
 interface QueryLog {
   timestamp: number;
   method: string;
