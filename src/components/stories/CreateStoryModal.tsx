@@ -60,16 +60,16 @@ export function CreateStoryModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset text position when new image is selected
+    // איפוס מיקום הטקסט בעת בחירת תמונה חדשה
     setTextPosition({ x: 0.5, y: 0.3 });
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error("אנא בחר קובץ תמונה");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+      toast.error("גודל התמונה חייב להיות עד 5MB");
       return;
     }
 
@@ -83,14 +83,14 @@ export function CreateStoryModal({
 
   const handleCreateStory = async () => {
     if (!selectedImage) {
-      toast.error("Please select an image");
+      toast.error("אנא בחר תמונה");
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // Upload to Cloudinary first
+      // העלאה ל-Cloudinary
       const formData = new FormData();
       formData.append("file", selectedImage);
       formData.append("upload_preset", "miel_stories");
@@ -104,12 +104,12 @@ export function CreateStoryModal({
       );
 
       if (!cloudinaryResponse.ok) {
-        throw new Error("Failed to upload image to Cloudinary");
+        throw new Error("העלאת התמונה ל-Cloudinary נכשלה");
       }
 
       const cloudinaryData = await cloudinaryResponse.json();
 
-      // Create story using server action
+      // יצירת סיפור דרך Server Action
       const storyFormData = new FormData();
       storyFormData.append("imageUrl", cloudinaryData.secure_url);
       storyFormData.append("publicId", cloudinaryData.public_id);
@@ -121,19 +121,19 @@ export function CreateStoryModal({
       const result = await createStory(storyFormData);
 
       if (result.status === "success") {
-        toast.success("Story created successfully! 🎉");
+        toast.success("הסיפור נוצר בהצלחה! 🎉");
         onStoryCreated();
         handleClose();
       } else {
         const errorMessage = Array.isArray(result.error)
           ? result.error.map((e) => e.message).join(", ")
-          : result.error || "Failed to create story";
+          : result.error || "יצירת הסיפור נכשלה";
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Error creating story:", error);
+      console.error("שגיאה ביצירת הסיפור:", error);
       toast.error(
-        "Failed to create story. Make sure to set up Cloudinary upload preset 'miel_stories'"
+        "יצירת הסיפור נכשלה. ודא שקיים Upload Preset בשם 'miel_stories' ב-Cloudinary"
       );
     } finally {
       setIsUploading(false);
@@ -153,7 +153,7 @@ export function CreateStoryModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Create Story</h2>
+          <h2 className="text-lg font-semibold">יצירת סיפור</h2>
           <button
             onClick={handleClose}
             className="text-gray-500 hover:text-gray-700"
@@ -169,8 +169,8 @@ export function CreateStoryModal({
               className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-orange-400 transition-colors"
             >
               <FiUpload size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600">Click to upload an image</p>
-              <p className="text-sm text-gray-400 mt-2">Max size: 5MB</p>
+              <p className="text-gray-600">לחץ כדי להעלות תמונה</p>
+              <p className="text-sm text-gray-400 mt-2">גודל מקסימלי: 5MB</p>
             </div>
           ) : (
             <div
@@ -182,7 +182,7 @@ export function CreateStoryModal({
             >
               <Image
                 src={imagePreview}
-                alt="Story preview"
+                alt="תצוגה מקדימה של הסיפור"
                 width={400}
                 height={400}
                 className="w-full h-64 object-cover rounded-lg"
@@ -219,12 +219,12 @@ export function CreateStoryModal({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <FiType size={16} />
-                Add Text (Optional)
+                הוספת טקסט (לא חובה)
               </label>
               <textarea
                 value={textOverlay}
                 onChange={(e) => setTextOverlay(e.target.value)}
-                placeholder="Add text to your story..."
+                placeholder="הוסף טקסט לסיפור שלך..."
                 className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                 rows={3}
                 maxLength={100}
@@ -244,7 +244,7 @@ export function CreateStoryModal({
             className="flex-1"
             disabled={isUploading}
           >
-            Cancel
+            ביטול
           </Button>
           <Button
             color="primary"
@@ -253,7 +253,7 @@ export function CreateStoryModal({
             disabled={!selectedImage || isUploading}
             isLoading={isUploading}
           >
-            {isUploading ? "Creating..." : "Share Story"}
+            {isUploading ? "יוצר סיפור..." : "שתף סיפור"}
           </Button>
         </div>
 

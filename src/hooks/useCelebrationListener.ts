@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { pusherClient } from "@/lib/pusher-client";
 import { CelebrationType } from "@/components/CelebrationModal";
 import { newLikeToast } from "@/components/NotificationToast";
+import useInvitationStore from "./useInvitationStore";
+import { useRouter } from "next/navigation";
 
 interface MutualMatchData {
   matchedUser: {
@@ -26,6 +28,9 @@ export function useCelebrationListener(
   userId: string | undefined,
   showCelebration: (type: CelebrationType, data?: any) => void
 ) {
+  const { show: showInvitation } = useInvitationStore();
+  const router = useRouter();
+
   useEffect(() => {
     if (!userId) return;
 
@@ -34,8 +39,6 @@ export function useCelebrationListener(
       pusherClient.subscribe(`private-${userId}`);
 
     channel.bind("mutual-match", (data: MutualMatchData) => {
-      console.log("🎉 Mutual match detected!", data);
-
       const genderText = data.currentUserGender === "male" ? "אתה" : "את";
       const loveText =
         data.currentUserGender === "male" ? "אחד את השנייה" : "אחת את השני";
@@ -60,14 +63,11 @@ export function useCelebrationListener(
     channel.bind(
       "like:new",
       (data: { name: string; image: string | null; userId: string }) => {
-        console.log("👍 Regular like received!", data);
         newLikeToast(data.name, data.image, data.userId);
       }
     );
 
     channel.bind("smart-match", (data: SmartMatchData) => {
-      console.log("🎯 Smart match found!", data);
-
       showCelebration("smart-match", {
         userName: data.userName,
         matchScore: data.matchScore,
@@ -77,8 +77,6 @@ export function useCelebrationListener(
     });
 
     channel.bind("first-message", (data: { userName: string }) => {
-      console.log("📩 First message sent!", data);
-
       showCelebration("first-message", {
         userName: data.userName,
         customTitle: "📩 הודעה ראשונה נשלחה!",
@@ -87,8 +85,6 @@ export function useCelebrationListener(
     });
 
     channel.bind("profile-boost", () => {
-      console.log("⭐ Profile boosted!");
-
       showCelebration("profile-boost", {
         customTitle: "⭐ הפרופיל שלך מושלם!",
         customSubtitle: "יותר אנשים יראו אותך עכשיו! 🌟",
@@ -98,11 +94,28 @@ export function useCelebrationListener(
     channel.bind(
       "achievement",
       (data: { title: string; description: string }) => {
-        console.log("🏆 Achievement unlocked!", data);
-
         showCelebration("achievement", {
           customTitle: data.title,
           customSubtitle: data.description,
+        });
+      }
+    );
+
+    channel.bind(
+      "match:online",
+      (data: { userId: string; name: string; image: string | null }) => {
+        showInvitation({
+          id: `chat-${data.userId}-${Date.now()}`,
+          type: "chat",
+          userId: data.userId,
+          image: data.image,
+          name: data.name,
+          title: `${data.name} זמינה עכשיו לשיחה`,
+          ctaText: "שלח/י הודעה",
+          onAction: () => {
+            console.log("💬 Navigating to chat with:", data.userId);
+            router.push(`/members/${data.userId}/chat`);
+          },
         });
       }
     );
@@ -114,8 +127,9 @@ export function useCelebrationListener(
       channel.unbind("first-message");
       channel.unbind("profile-boost");
       channel.unbind("achievement");
+      channel.unbind("match:online");
     };
-  }, [userId, showCelebration]);
+  }, [userId, showCelebration, showInvitation, router]);
 
   return null;
 }

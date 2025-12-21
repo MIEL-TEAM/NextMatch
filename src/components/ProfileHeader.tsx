@@ -10,13 +10,15 @@ import { toast } from "react-toastify";
 import LikeButton from "./LikeButton";
 import { getToastStyle } from "@/hooks/useIsMobile";
 import { useRouter } from "next/navigation";
+import PresenceDot from "./PresenceDot";
 
 type ProfileHeaderProps = {
   member: Member & {
     user?: {
       oauthVerified?: boolean;
       emailVerified?: Date | null;
-    };
+      lastActiveAt?: Date | null;
+    } | null;
   };
   userId: string;
   likeIds: string[];
@@ -123,6 +125,11 @@ export default function ProfileHeader({
           {member.user?.oauthVerified && (
             <MdVerified className="text-blue-500 inline w-7 h-7" />
           )}
+        </div>
+
+        {/* Presence Status */}
+        <div className="flex items-center" dir="rtl">
+          <PresenceDot member={member} showLabel size="sm" />
         </div>
 
         {/* Verification Badge */}

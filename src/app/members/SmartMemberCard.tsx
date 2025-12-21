@@ -26,6 +26,7 @@ type SmartMemberCardProps = {
     premiumInsights?: string;
     user?: {
       oauthVerified?: boolean;
+      lastActiveAt?: Date | null;
     };
   };
   memberPhotos?: Array<{ url: string; id: string }>;

@@ -37,6 +37,7 @@ export default function PreferencesForm() {
     if (selectedGenders.length > 0) {
       trigger(["preferredGenders", "preferredAgeMin", "preferredAgeMax"]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const genderOptions = [

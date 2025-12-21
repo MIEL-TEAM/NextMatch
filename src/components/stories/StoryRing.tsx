@@ -57,7 +57,7 @@ export function StoryRing({ user, onClick }: StoryRingProps) {
 
       {/* User Name */}
       <span className="text-xs text-gray-600 mt-1 max-w-16 truncate text-center">
-        {user.isCurrentUser ? "You" : user.name}
+        {user.isCurrentUser ? "הסטורי שלך" : user.name}
       </span>
 
       {/* Story Count Indicator */}

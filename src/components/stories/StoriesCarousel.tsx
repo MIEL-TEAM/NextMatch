@@ -194,7 +194,7 @@ export function StoriesCarousel({
             ))
           : !currentUser && (
               <div className="flex items-center justify-center text-gray-500 text-sm px-4">
-                No stories yet. Be the first to share!
+                אין כאן סיפורים עדיין. זה הזמן לשתף משהו משלך!
               </div>
             )}
       </div>

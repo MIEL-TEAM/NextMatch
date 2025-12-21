@@ -94,6 +94,20 @@ export default function Providers({
     showCelebration
   );
 
+  // Interest notification: only eligible on /members routes
+  const isOnMembersPage =
+    pathname === "/members" || pathname.startsWith("/members/");
+  const shouldShowInterestNotification =
+    isOnMembersPage && !isAdmin && userId && profileComplete;
+
+  console.log({
+    pathname,
+    isOnMembersPage,
+    userId,
+    profileComplete,
+    shouldShowInterestNotification,
+  });
+
   return (
     <NextUIProvider>
       <Toaster position="top-center" richColors />
@@ -103,8 +117,11 @@ export default function Providers({
         className="z-50"
       />
 
-      {!isForbiddenRoute && !isAdmin && userId && (
-        <InterestNotification userId={userId} />
+      {shouldShowInterestNotification && userId && (
+        <InterestNotification
+          userId={userId}
+          profileComplete={profileComplete}
+        />
       )}
 
       {!isForbiddenRoute && !isAdmin && (

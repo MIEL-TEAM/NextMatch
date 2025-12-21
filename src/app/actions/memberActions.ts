@@ -22,6 +22,7 @@ type MemberCardData = {
   longitude: number | null;
   user: {
     oauthVerified: boolean;
+    lastActiveAt: Date | null;
   };
 };
 
@@ -230,6 +231,7 @@ export async function getMembers({
       user: {
         select: {
           oauthVerified: true,
+          lastActiveAt: true,
         },
       },
     };
@@ -502,6 +504,7 @@ export const getMemberByUserId = cache(async (userId: string) => {
         select: {
           emailVerified: true,
           oauthVerified: true,
+          lastActiveAt: true,
         },
       },
     },
@@ -553,10 +556,19 @@ export async function updateLastActive() {
     const userId = await getAuthUserId();
     await ensureMember(userId);
 
-    return prisma.member.update({
-      where: { userId },
-      data: { updated: new Date() },
-    });
+    // Update both member.updated and user.lastActiveAt for presence system
+    await Promise.all([
+      prisma.member.update({
+        where: { userId },
+        data: { updated: new Date() },
+      }),
+      prisma.user.update({
+        where: { id: userId },
+        data: { lastActiveAt: new Date() },
+      }),
+    ]);
+
+    return true;
   } catch (error) {
     console.error("Error updating last active:", error);
     return null;

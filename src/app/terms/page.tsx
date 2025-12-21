@@ -9,7 +9,7 @@ export default function TermsPage() {
   return (
     <PageContainer title="תנאי שימוש">
       <div className="space-y-8 text-gray-700">
-        <p className="font-bold">עדכון אחרון: 1 במרץ, 2025</p>
+        <p className="font-bold">עדכון אחרון: 21 בדצמבר, 2025</p>
 
         <section>
           <h2 className="text-2xl font-semibold text-amber-800 mb-4">
@@ -100,7 +100,84 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-2xl font-semibold text-amber-800 mb-4">
-            6. הגבלת אחריות
+            6. שימוש בעוגיות (Cookies)
+          </h2>
+          <p>
+            אתר מיאל משתמש בקבצי Cookies כדי לשפר את חוויית המשתמש ולספק שירות
+            מיטבי. Cookies הם קבצי טקסט קטנים המאוחסנים במכשיר שלך כאשר אתה מבקר
+            באתר שלנו.
+          </p>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-3">
+            סוגי Cookies שאנו משתמשים בהם:
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                עוגיות חיוניות
+              </h4>
+              <p>
+                עוגיות אלה נדרשות לתפעול התקין של האתר. הן מאפשרות פונקציות
+                בסיסיות כמו אבטחה, ניהול רשת, וגישה לאזורים מאובטחים באתר. ללא
+                עוגיות אלה, חלק מהפונקציות של האתר לא יוכלו לפעול כראוי.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                עוגיות אנליטיות
+              </h4>
+              <p>
+                עוגיות אלה עוזרות לנו להבין כיצד משתמשים מתקשרים עם האתר שלנו.
+                הן אוספות מידע אנונימי על דפדפן, מערכת הפעלה, עמודים שנצפו וזמני
+                טעינה. מידע זה מסייע לנו לשפר את השירות ולהתאים את התוכן לצרכים
+                של המשתמשים.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                עוגיות שיווקיות
+              </h4>
+              <p>
+                עוגיות אלה משמשות להצגת פרסומות רלוונטיות יותר עבורך. הן גם
+                מגבילות את מספר הפעמים שאתה רואה מודעה ועוזרות למדוד את יעילות
+                הקמפיינים השיווקיים שלנו. מידע זה עשוי להיות משותף עם צדדים
+                שלישיים כגון פלטפורמות פרסום.
+              </p>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-3">
+            ניהול העדפות Cookies
+          </h3>
+          <p>
+            בעת הכניסה לאתר לראשונה, תוצג לך בקשה להסכמה לשימוש ב-Cookies. אתה
+            יכול לבחור לאשר את כל העוגיות או לאשר רק את העוגיות החיוניות הנדרשות
+            לתפעול האתר. ההעדפות שלך נשמרות למשך שנה אחת.
+          </p>
+          <p className="mt-3">
+            אתה יכול לשנות את העדפות ה-Cookies שלך בכל עת על ידי מחיקת העוגיות
+            מהדפדפן שלך או באמצעות הגדרות הדפדפן. שים לב כי חסימה או מחיקה של
+            עוגיות מסוימות עלולה להשפיע על הפונקציונליות של האתר.
+          </p>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-3">
+            Cookies של צדדים שלישיים
+          </h3>
+          <p>
+            אנו משתמשים גם בשירותי צד שלישי כגון Google Analytics, Facebook
+            Pixel ו-TikTok Pixel לניתוח השימוש באתר ולמטרות שיווקיות. שירותים
+            אלה עשויים להציב Cookies במכשיר שלך בהתאם להסכמתך. לכל ספק יש
+            מדיניות פרטיות משלו, ואנו ממליצים לך לעיין במדיניות הפרטיות של
+            הספקים הללו.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-amber-800 mb-4">
+            7. הגבלת אחריות
           </h2>
           <p>
             השירות מסופק &quot;כפי שהוא&quot; ו&quot;כפי שהוא זמין&quot; ללא כל
@@ -119,7 +196,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-2xl font-semibold text-amber-800 mb-4">
-            7. פגישות במציאות
+            8. פגישות במציאות
           </h2>
           <p>
             אתה מבין ומסכים שאתה לוקח על עצמך סיכונים כשאתה נפגש עם אנשים שפגשת
@@ -134,7 +211,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-2xl font-semibold text-amber-800 mb-4">
-            8. שינויים בתנאים
+            9. שינויים בתנאים
           </h2>
           <p>
             אנו שומרים לעצמנו את הזכות, לפי שיקול דעתנו הבלעדי, לשנות או להחליף
@@ -150,7 +227,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-2xl font-semibold text-amber-800 mb-4">
-            9. סיום
+            10. סיום
           </h2>
           <p>
             אנו רשאים לסיים או להשעות את הגישה שלך לשירות מיד, ללא הודעה מוקדמת
@@ -164,7 +241,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-2xl font-semibold text-amber-800 mb-4">
-            10. יצירת קשר
+            11. יצירת קשר
           </h2>
           <p>אם יש לך שאלות כלשהן לגבי תנאים אלה, אנא צור איתנו קשר בכתובת:</p>
           <p className="mt-2 font-medium">contact@miel.com</p>

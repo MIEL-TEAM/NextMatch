@@ -21,6 +21,7 @@ interface MemberCardProps {
     distance?: number;
     user?: {
       oauthVerified?: boolean;
+      lastActiveAt?: Date | null;
     };
   };
   likeIds: string[];

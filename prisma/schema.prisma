@@ -77,8 +77,9 @@ model User {
   storyReceived  StoryReply[]    @relation("StoryReplyRecipient")
 
   // AI Assistant relations
-  aiConversations AIConversation[]
-  aiUsageLogs     AIUsageLog[]
+  aiConversations       AIConversation[]
+  aiUsageLogs           AIUsageLog[]
+  lastOnlineAnnouncedAt DateTime?
 }
 
 model Interest {

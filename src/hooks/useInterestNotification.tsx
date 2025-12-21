@@ -1,30 +1,25 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@nextui-org/react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { hasUserAddedInterests } from "@/app/actions/interestsAction";
 
 export default function InterestNotification({
   userId,
+  profileComplete,
 }: {
-  userId: string | null;
+  userId: string;
+  profileComplete: boolean;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const hasShownNotificationRef = useRef(false);
   const [hasCheckedInterests, setHasCheckedInterests] = useState(false);
   const [hasInterests, setHasInterests] = useState(true);
 
+  // Check if user has interests (runs once on mount)
   useEffect(() => {
-    const isForbiddenRoute =
-      pathname === "/" ||
-      pathname === "/premium" ||
-      pathname === "/login" ||
-      pathname === "/register";
-
-    if (!userId || hasCheckedInterests || isForbiddenRoute) return;
+    if (!userId || !profileComplete || hasCheckedInterests) return;
 
     async function checkInterests() {
       try {
@@ -35,35 +30,32 @@ export default function InterestNotification({
         if (process.env.NODE_ENV === "development") {
           console.error("Failed to check interests:", error);
         }
-
         setHasCheckedInterests(true);
       }
     }
 
     checkInterests();
-  }, [userId, hasCheckedInterests, pathname]);
+  }, [userId, profileComplete, hasCheckedInterests]);
 
+  // Show toast if eligible (runs after interests check completes)
   useEffect(() => {
-    const isForbiddenRoute =
-      pathname === "/" ||
-      pathname === "/premium" ||
-      pathname === "/login" ||
-      pathname === "/register";
+    // Wait for interests check to complete
+    if (!hasCheckedInterests || hasInterests) return;
 
-    if (isForbiddenRoute) return;
+    // Session storage: only show once per session
+    const sessionKey = `interestsNudgeShown_${userId}`;
+    if (sessionStorage.getItem(sessionKey)) return;
 
+    // Local storage: respect "dismiss for 30 minutes"
     const dismissedUntil = localStorage.getItem(
       `interestsDismissedUntil_${userId}`
     );
-
     if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
 
-    if (hasInterests) {
-      return;
-    }
-
+    // Show toast after 10-second delay
     const timer = setTimeout(() => {
-      hasShownNotificationRef.current = true;
+      // Mark as shown in session
+      sessionStorage.setItem(sessionKey, "true");
 
       toast.custom(
         (t) => (
@@ -89,7 +81,6 @@ export default function InterestNotification({
                         `interestsDismissedUntil_${userId}`,
                         (Date.now() + THIRTY_MIN).toString()
                       );
-
                       toast.dismiss(t);
                     }}
                   >
@@ -122,7 +113,7 @@ export default function InterestNotification({
     return () => {
       clearTimeout(timer);
     };
-  }, [userId, hasCheckedInterests, hasInterests, router, pathname]);
+  }, [userId, hasCheckedInterests, hasInterests, router]);
 
   return null;
 }

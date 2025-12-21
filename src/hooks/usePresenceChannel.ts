@@ -3,6 +3,7 @@ import usePresenceStore from "./usePresenceStore";
 import { Channel, Members } from "pusher-js";
 import { pusherClient } from "@/lib/pusher-client";
 import { updateLastActive } from "@/app/actions/memberActions";
+import { announceUserOnline } from "@/app/actions/presenceActions";
 
 function throttle<T extends (...args: any[]) => any>(
   func: T,
@@ -71,8 +72,29 @@ export const usePresenceChannel = (
       channelRef.current = channel;
 
       channel.bind("pusher:subscription_succeeded", (members: Members) => {
+        console.log(
+          "🟢 [usePresenceChannel] pusher:subscription_succeeded fired"
+        );
         handleSetMembers(Object.keys(members.members));
         throttledUpdateLastActive();
+
+        // Announce to mutual matches that user is now online
+        // This fires ONCE per true online transition (not on every reconnect)
+        // Cooldown logic in announceUserOnline() prevents spam
+        console.log("🟢 [usePresenceChannel] Calling announceUserOnline()...");
+        announceUserOnline()
+          .then((result) => {
+            console.log(
+              "🟢 [usePresenceChannel] announceUserOnline result:",
+              result
+            );
+          })
+          .catch((err) => {
+            console.error(
+              "🟢 [usePresenceChannel] announceUserOnline error:",
+              err
+            );
+          });
       });
 
       channel.bind("pusher:member_added", (member: Record<string, any>) => {

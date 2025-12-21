@@ -11,6 +11,10 @@ import ReactQueryProvider from "@/components/ReactQueryProvider";
 import MobileBlocker from "@/components/MobileBlocker";
 import { Session } from "next-auth";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import InvitationContainer from "@/components/InvitationContainer";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import { CookieConsentManager } from "@/components/cookies";
+import { getServerConsentCookie } from "@/lib/cookies/cookieUtils.server";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -95,6 +99,9 @@ export default async function RootLayout({
     }
   }
 
+  // Get cookie consent from server
+  const cookieConsent = await getServerConsentCookie();
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -142,26 +149,30 @@ export default async function RootLayout({
         <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
       <body>
-        <SessionProvider session={session as Session}>
-          {!session?.user && !isAdmin && <GoogleOneTap />}
-          <ReactQueryProvider>
-            <Providers
-              userId={userId}
-              profileComplete={profileComplete}
-              initialUnreadCount={initialUnreadCount}
-              isPremium={isPremium}
-              isAdmin={isAdmin}
-            >
-              <MobileBlocker />
-              <TopNav />
-              <div className="hidden lg:block">
-                <MielLayout>{children}</MielLayout>
-              </div>
-            </Providers>
-          </ReactQueryProvider>
-        </SessionProvider>
+        <CookieConsentProvider initialPreferences={cookieConsent}>
+          <SessionProvider session={session as Session}>
+            {!session?.user && !isAdmin && <GoogleOneTap />}
+            <ReactQueryProvider>
+              <Providers
+                userId={userId}
+                profileComplete={profileComplete}
+                initialUnreadCount={initialUnreadCount}
+                isPremium={isPremium}
+                isAdmin={isAdmin}
+              >
+                <MobileBlocker />
+                <TopNav />
+                <div className="hidden lg:block">
+                  <MielLayout>{children}</MielLayout>
+                </div>
+              </Providers>
+            </ReactQueryProvider>
+          </SessionProvider>
 
-        <Toaster position="top-center" richColors expand={true} />
+          <Toaster position="top-center" richColors expand={true} />
+          <InvitationContainer />
+          <CookieConsentManager />
+        </CookieConsentProvider>
       </body>
     </html>
   );
