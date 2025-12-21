@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "identity-credentials-get=*, publickey-credentials-get=*",
+          },
+        ],
+      },
+      {
         source: "/manifest.json",
         headers: [
           {
