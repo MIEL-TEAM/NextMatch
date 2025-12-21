@@ -14,13 +14,14 @@ declare global {
             cancel_on_tap_outside?: boolean;
             auto_select?: boolean;
             itp_support?: boolean;
+            use_fedcm_for_prompt?: boolean; // FedCM API flag
           }) => void;
           prompt: (
             notification?: (notification: {
               isNotDisplayed: () => boolean;
               isSkippedMoment: () => boolean;
-              getNotDisplayedReason?: () => string;
-              getSkippedReason?: () => string;
+              isDismissedMoment?: () => boolean;
+              getDismissedReason?: () => string;
             }) => void
           ) => void;
           cancel: () => void;
@@ -83,32 +84,23 @@ export default function GoogleOneTap() {
           cancel_on_tap_outside: false,
           auto_select: false,
           itp_support: true,
+          use_fedcm_for_prompt: true, // Enable FedCM API
         });
 
         // Prompt with notification callback for better debugging
         window.google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed()) {
-            const reason = notification.getNotDisplayedReason?.() || "unknown";
-            console.warn("[Google One Tap] Not displayed. Reason:", reason);
-
-            // Handle specific reasons
-            if (reason === "suppressed_by_user") {
-              console.log("[Google One Tap] User previously closed the prompt");
-            } else if (reason === "browser_not_supported") {
-              console.log("[Google One Tap] Browser doesn't support One Tap");
-            } else if (reason === "invalid_client") {
-              console.error(
-                "[Google One Tap] Invalid client ID or domain not authorized in Google Cloud Console"
-              );
-              console.error(
-                "[Google One Tap] Check: https://console.cloud.google.com/apis/credentials"
-              );
-            }
+            console.warn("[Google One Tap] Prompt not displayed");
           }
 
           if (notification.isSkippedMoment()) {
-            const reason = notification.getSkippedReason?.() || "unknown";
-            console.log("[Google One Tap] User skipped. Reason:", reason);
+            console.log("[Google One Tap] User skipped the prompt");
+            // Note: getSkippedReason() is deprecated with FedCM
+          }
+
+          if (notification.isDismissedMoment?.()) {
+            const reason = notification.getDismissedReason?.() || "unknown";
+            console.log("[Google One Tap] User dismissed. Reason:", reason);
           }
         });
 
