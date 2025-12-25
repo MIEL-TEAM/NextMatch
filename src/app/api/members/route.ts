@@ -13,10 +13,11 @@ export async function GET(req: Request) {
   const lastActive = searchParams.get("lastActive");
 
   // Normalize withPhoto to exact string literal "true" | "false"
-  // Default to "true" only when param is missing (null)
+  // Default to "false" to show ALL users including those without photos
+  // This ensures new users appear immediately after registration
   let withPhotoNormalized: "true" | "false";
   if (withPhotoRaw === null) {
-    withPhotoNormalized = "true"; // Default on initial load
+    withPhotoNormalized = "false"; // Default: show all users
   } else {
     withPhotoNormalized = withPhotoRaw === "true" ? "true" : "false";
   }

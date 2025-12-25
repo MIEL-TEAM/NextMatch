@@ -13,7 +13,8 @@
     "test:coverage": "jest --coverage",
     "vercel-build": "prisma generate && prisma db push && next build",
     "push-to-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' npx prisma db push",
-    "seed-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' RUN_SEED=true npx prisma db seed"
+    "seed-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' RUN_SEED=true npx prisma db seed",
+    "debug:users": "ts-node --compiler-options {\"module\":\"CommonJS\"} scripts/debug-user-registration.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

@@ -80,6 +80,8 @@ model User {
   aiConversations       AIConversation[]
   aiUsageLogs           AIUsageLog[]
   lastOnlineAnnouncedAt DateTime?
+
+  @@index([lastActiveAt(sort: Desc)])
 }
 
 model Interest {
@@ -89,6 +91,8 @@ model Interest {
   icon     String
   category String?
   member   Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
 }
 
 model Member {
@@ -126,6 +130,9 @@ model Member {
   preference         UserPreference?
   videoUrl           String?           @db.Text
   videoUploadedAt    DateTime?
+
+  @@index([userId])
+  @@index([latitude, longitude])
 }
 
 model UserProfileAnalysis {
@@ -144,6 +151,8 @@ model Photo {
   updatedAt  DateTime? @updatedAt
   member     Member?   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId   String?
+
+  @@index([memberId, isApproved])
 }
 
 model Like {
@@ -153,6 +162,8 @@ model Like {
   targetMember Member @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
 
   @@id([sourceUserId, targetUserId])
+  @@index([targetUserId])
+  @@index([sourceUserId, targetUserId])
 }
 
 model Message {
@@ -170,6 +181,10 @@ model Message {
   Member           Member?   @relation(fields: [memberId], references: [id])
   recipient        Member?   @relation("recipient", fields: [recipientId], references: [userId])
   sender           Member?   @relation("sender", fields: [senderId], references: [userId])
+
+  @@index([recipientId, dateRead])
+  @@index([senderId, created(sort: Desc)])
+  @@index([recipientId, senderId])
 }
 
 model Token {
@@ -224,6 +239,8 @@ model Video {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
 }
 
 model ProfileView {
@@ -238,6 +255,8 @@ model ProfileView {
 
   @@unique([viewerId, viewedId])
   @@index([viewedId])
+  @@index([viewedId, viewedAt(sort: Desc)])
+  @@index([viewerId])
 }
 
 enum TokenType {

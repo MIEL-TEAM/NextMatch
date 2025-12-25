@@ -78,12 +78,17 @@ export async function signOutUser() {
 export async function registerUser(
   data: RegisterSchema
 ): Promise<ActionResult<User>> {
+  console.log("📝 [REGISTER] Starting registration for:", data.email);
+
   try {
     const validated = combinedRegisterSchema.safeParse(data);
 
     if (!validated.success) {
+      console.error("❌ [REGISTER] Validation failed:", validated.error.errors);
       return { status: "error", error: validated.error.errors };
     }
+
+    console.log("✅ [REGISTER] Validation passed");
 
     const {
       name,
@@ -115,6 +120,8 @@ export async function registerUser(
         error: "ניתן להעלות עד 3 תמונות",
       };
     }
+
+    console.log("✅ [REGISTER] Creating user and member profile...");
 
     const user = await prisma.user.create({
       data: {
@@ -148,6 +155,26 @@ export async function registerUser(
           },
         },
       },
+      include: {
+        member: {
+          select: {
+            id: true,
+            name: true,
+            created: true,
+          },
+        },
+      },
+    });
+
+    console.log("✅ [REGISTER] User created successfully:", {
+      userId: user.id,
+      email: user.email,
+      hasMember: !!user.member,
+      memberId: user.member?.id,
+      memberCreated: user.member?.created,
+      profileComplete: user.profileComplete,
+      hasPhotos: !!photos && photos.length > 0,
+      photoCount: photos?.length || 0,
     });
 
     const verificationToken = await generateToken(
@@ -160,9 +187,11 @@ export async function registerUser(
       verificationToken.token
     );
 
+    console.log("✅ [REGISTER] Registration complete, verification email sent");
+
     return { status: "success", data: user };
   } catch (error) {
-    console.log(error);
+    console.error("❌ [REGISTER] Registration failed:", error);
     return { status: "error", error: " Something went wrong" };
   }
 }
@@ -298,8 +327,11 @@ export async function completeSocialLoginProfile(
 ): Promise<ActionResult<string>> {
   const session = await getSession();
   if (!session?.user?.id) {
+    console.error("❌ [SOCIAL] No user session found");
     return { status: "error", error: "user not found" };
   }
+
+  console.log("📝 [SOCIAL] Completing profile for:", session.user.email);
 
   try {
     const user = await prisma.user.update({
@@ -333,12 +365,29 @@ export async function completeSocialLoginProfile(
             provider: true,
           },
         },
+        member: {
+          select: {
+            id: true,
+            name: true,
+            created: true,
+          },
+        },
       },
+    });
+
+    console.log("✅ [SOCIAL] Profile completed successfully:", {
+      userId: user.id,
+      email: session.user.email,
+      hasMember: !!user.member,
+      memberId: user.member?.id,
+      memberCreated: user.member?.created,
+      profileComplete: user.profileComplete,
+      provider: user.accounts[0]?.provider,
     });
 
     return { status: "success", data: user.accounts[0].provider };
   } catch (error) {
-    console.error("[completeSocialLoginProfile]", error);
+    console.error("❌ [SOCIAL] Profile completion failed:", error);
     return { status: "error", error: "Failed to complete profile" };
   }
 }

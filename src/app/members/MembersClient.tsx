@@ -35,8 +35,8 @@ export default function MembersClient({
   const {
     locationState,
     showLocationModal,
-    setShowLocationModal,
     handleLocationGranted,
+    handleLocationDismissed,
     stableParams,
   } = useLocationFlow();
 
@@ -127,7 +127,10 @@ export default function MembersClient({
       <LocationPermissionModal
         isOpen={showLocationModal}
         onClose={() => {
-          setShowLocationModal(false);
+          // User dismissed/skipped the modal - remember this choice
+          handleLocationDismissed();
+
+          // Clean up URL if this was a forced prompt
           if (stableParams.forceLocationPrompt) {
             const params = new URLSearchParams(searchParams.toString());
             params.delete("requestLocation");

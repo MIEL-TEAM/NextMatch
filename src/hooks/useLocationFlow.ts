@@ -13,26 +13,70 @@ import type {
   StableLocationParams,
 } from "@/types/members";
 
-// Persistent state key for tracking location flow completion
 const LOCATION_FLOW_KEY = "miel_location_flow_completed";
+const LOCATION_USER_DISMISSED_KEY = "miel_location_user_dismissed";
+const LOCATION_PERMISSION_GRANTED_KEY = "miel_location_permission_granted";
 
-// Helper to check if we've already run the location flow in this session
 function hasCompletedLocationFlow(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return sessionStorage.getItem(LOCATION_FLOW_KEY) === "true";
+    // Check localStorage first (persists across sessions)
+    const completed = localStorage.getItem(LOCATION_FLOW_KEY) === "true";
+    // Also check sessionStorage as fallback for current session
+    const sessionCompleted =
+      sessionStorage.getItem(LOCATION_FLOW_KEY) === "true";
+    return completed || sessionCompleted;
   } catch {
     return false;
   }
 }
 
-// Helper to mark location flow as completed
 function markLocationFlowCompleted(): void {
   if (typeof window === "undefined") return;
   try {
+    localStorage.setItem(LOCATION_FLOW_KEY, "true");
     sessionStorage.setItem(LOCATION_FLOW_KEY, "true");
   } catch {
-    // Silently fail if sessionStorage is not available
+    // Silently fail if storage is not available
+  }
+}
+
+function hasUserDismissedLocationModal(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(LOCATION_USER_DISMISSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function markUserDismissedLocationModal(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LOCATION_USER_DISMISSED_KEY, "true");
+  } catch (error) {
+    console.error("Error marking user dismissed location modal:", error);
+  }
+}
+
+function savePermissionState(granted: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      LOCATION_PERMISSION_GRANTED_KEY,
+      granted ? "true" : "false"
+    );
+  } catch (error) {
+    console.error("Error saving permission state:", error);
+  }
+}
+
+function wasPreviouslyGranted(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(LOCATION_PERMISSION_GRANTED_KEY) === "true";
+  } catch {
+    return false;
   }
 }
 
@@ -209,6 +253,7 @@ export function useLocationFlow() {
 
     const run = async () => {
       try {
+        // Check actual browser permission state
         const hasPermission = await Promise.race([
           checkLocationPermission(),
           new Promise<boolean>((resolve) =>
@@ -219,8 +264,12 @@ export function useLocationFlow() {
         if (cancelled) return;
 
         if (hasPermission) {
+          // Permission already granted - save state and get location
+          savePermissionState(true);
           transitionToState("gettingBrowserLocation");
         } else {
+          // No permission - use DB location
+          savePermissionState(false);
           transitionToState("usingDbLocation");
         }
       } catch {
@@ -257,9 +306,13 @@ export function useLocationFlow() {
         if (cancelled) return;
 
         if (res.granted && res.coordinates) {
+          // Successfully got location - save permission state
+          savePermissionState(true);
           browserLocationRef.current = res.coordinates;
           transitionToState("usingBrowserLocation");
         } else {
+          // Failed to get location
+          savePermissionState(false);
           transitionToState("usingDbLocation");
         }
       } catch {
@@ -349,14 +402,40 @@ export function useLocationFlow() {
     transitionToState("readyToQuery");
   }, [locationState, searchParams]);
 
-  // Show modal
+  // Show modal (with guards to prevent repeated prompts)
   useEffect(() => {
     if (locationState !== "noLocationAvailable") return;
+
+    // Guard 1: If user explicitly requested location (?requestLocation=true), always show
+    if (stableParams.forceLocationPrompt) {
+      setShowLocationModal(true);
+      markLocationFlowCompleted();
+      transitionToState("readyToQuery");
+      return;
+    }
+
+    // Guard 2: If user previously dismissed the modal, don't show it again
+    if (hasUserDismissedLocationModal()) {
+      markLocationFlowCompleted();
+      transitionToState("readyToQuery");
+      return;
+    }
+
+    if (wasPreviouslyGranted()) {
+      markLocationFlowCompleted();
+      transitionToState("readyToQuery");
+      return;
+    }
+
+    if (hasCompletedLocationFlow()) {
+      transitionToState("readyToQuery");
+      return;
+    }
 
     setShowLocationModal(true);
     markLocationFlowCompleted();
     transitionToState("readyToQuery");
-  }, [locationState]);
+  }, [locationState, stableParams.forceLocationPrompt]);
 
   const handleLocationGranted = (coordinates: LocationData) => {
     const router = routerRef.current;
@@ -369,11 +448,19 @@ export function useLocationFlow() {
     params.delete("requestLocation");
 
     urlUpdateAppliedRef.current = true;
+
     markLocationFlowCompleted();
+    savePermissionState(true);
 
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setShowLocationModal(false);
     setInternalLocation(coordinates);
+  };
+
+  const handleLocationDismissed = () => {
+    markUserDismissedLocationModal();
+    markLocationFlowCompleted();
+    setShowLocationModal(false);
   };
 
   return {
@@ -381,6 +468,7 @@ export function useLocationFlow() {
     showLocationModal,
     setShowLocationModal,
     handleLocationGranted,
+    handleLocationDismissed,
     stableParams,
     internalLocation,
   };

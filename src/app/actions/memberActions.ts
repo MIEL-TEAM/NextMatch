@@ -499,7 +499,31 @@ export const getMemberByUserId = cache(async (userId: string) => {
     where: {
       userId: userId,
     },
-    include: {
+    select: {
+      // Core member fields
+      id: true,
+      userId: true,
+      name: true,
+      dateOfBirth: true,
+      gender: true,
+      created: true,
+      updated: true,
+      description: true,
+      city: true,
+      country: true,
+      image: true,
+      boostedUntil: true,
+      videoUrl: true,
+      videoUploadedAt: true,
+
+      // Location fields
+      latitude: true,
+      longitude: true,
+      locationUpdatedAt: true,
+      locationEnabled: true,
+      maxDistance: true,
+
+      // User relation (only needed fields)
       user: {
         select: {
           emailVerified: true,
