@@ -14,10 +14,10 @@ export const useMembersQuery = (
 ) => {
   /**
    * Subscribe to pagination store for reactive updates.
-   * 
+   *
    * CRITICAL: This ensures the query refetches immediately when pagination
    * changes, without waiting for URL sync to complete.
-   * 
+   *
    * The store is the source of truth for pagination state, and URL is just
    * a reflection of that state (with a slight delay due to async updates).
    */
@@ -73,8 +73,6 @@ export const useMembersQuery = (
     };
   }, [paramsString, storePageNumber, storePageSize]);
 
-  const hasLocationParams = queryObj.userLat && queryObj.userLon;
-
   // Create stable query key - queryObj is now stable since it depends on paramsString
   const queryKey = useMemo(() => {
     // Sort entries for consistent key generation
@@ -104,7 +102,9 @@ export const useMembersQuery = (
         signal,
         headers: {
           Accept: "application/json",
-          "Cache-Control": "max-age=60",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
         },
       });
 
@@ -121,11 +121,12 @@ export const useMembersQuery = (
         totalCount: number;
       }>;
     },
-    staleTime: hasLocationParams ? 1000 * 30 : 1000 * 60 * 2,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    staleTime: 0, // ✅ Always fetch fresh data
+    refetchOnWindowFocus: true, // ✅ Refetch when tab is focused
+    refetchOnReconnect: true, // ✅ Refetch on reconnect
+    refetchOnMount: "always", // ✅ Always refetch on mount
     retry: 1,
-    gcTime: 1000 * 60 * 5,
+    gcTime: 0, // ✅ Don't cache in memory
     enabled: options.enabled !== false,
     structuralSharing: true,
     throwOnError: false,

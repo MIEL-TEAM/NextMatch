@@ -14,7 +14,11 @@
     "vercel-build": "prisma generate && prisma db push && next build",
     "push-to-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' npx prisma db push",
     "seed-neon": "DATABASE_URL='postgresql://neondb_owner:npg_FK0O1UXDdysL@ep-still-forest-a5rgodwa-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' RUN_SEED=true npx prisma db seed",
-    "debug:users": "ts-node --compiler-options {\"module\":\"CommonJS\"} scripts/debug-user-registration.ts"
+    "debug:users": "npx ts-node scripts/debug-user-registration.ts",
+    "find-missing": "npx ts-node scripts/find-missing-users.ts",
+    "fix-missing": "npx ts-node scripts/fix-missing-users.ts",
+    "check-prod": "npx ts-node scripts/check-production-db.ts",
+    "fix-prod": "npx ts-node scripts/fix-production-db.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

@@ -3,6 +3,10 @@ import { getMembers, getMembersWithPhotos } from "@/app/actions/memberActions";
 import { getMemberVideosForCards } from "@/app/actions/videoActions";
 import type { GetMemberParams } from "@/types";
 
+// ✅ Disable caching to prevent stale data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
@@ -61,5 +65,14 @@ export async function GET(req: Request) {
     videos: videos[member.userId] || [],
   }));
 
-  return NextResponse.json({ data, totalCount });
+  return NextResponse.json(
+    { data, totalCount },
+    {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
