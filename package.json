@@ -18,7 +18,13 @@
     "find-missing": "npx ts-node scripts/find-missing-users.ts",
     "fix-missing": "npx ts-node scripts/fix-missing-users.ts",
     "check-prod": "npx ts-node scripts/check-production-db.ts",
-    "fix-prod": "npx ts-node scripts/fix-production-db.ts"
+    "fix-prod": "npx ts-node scripts/fix-production-db.ts",
+    "check-oauth": "npx ts-node scripts/check-oauth-users.ts",
+    "fix-oauth-verify": "npx ts-node scripts/fix-oauth-emailverified.ts",
+    "verify-oauth-bug": "npx ts-node scripts/verify-oauth-bug.ts",
+    "find-incomplete": "npx ts-node scripts/find-incomplete-profiles.ts",
+    "fix-member-images": "npx ts-node scripts/fix-oauth-member-images.ts",
+    "sync-member-images": "npx ts-node scripts/sync-all-member-images.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

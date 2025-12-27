@@ -327,22 +327,31 @@ export async function completeSocialLoginProfile(
 ): Promise<ActionResult<string>> {
   const session = await getSession();
   if (!session?.user?.id) {
-    console.error("❌ [SOCIAL] No user session found");
+    console.error("[SOCIAL] No user session found");
     return { status: "error", error: "user not found" };
   }
 
-  console.log("📝 [SOCIAL] Completing profile for:", session.user.email);
-
   try {
+    // Check if user is OAuth and already has emailVerified and image
+    const existingUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        emailVerified: true,
+        oauthVerified: true,
+        image: true,
+      },
+    });
+
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         profileComplete: true,
+        emailVerified: existingUser?.emailVerified || new Date(),
         member: {
           upsert: {
             create: {
               name: session.user.name as string,
-              image: session.user.image,
+              image: existingUser?.image || session.user.image,
               gender: data.gender,
               dateOfBirth: new Date(data.dateOfBirth),
               description: data.description,
@@ -355,6 +364,7 @@ export async function completeSocialLoginProfile(
               description: data.description,
               city: data.city,
               country: data.country,
+              image: existingUser?.image || session.user.image,
             },
           },
         },
@@ -370,24 +380,15 @@ export async function completeSocialLoginProfile(
             id: true,
             name: true,
             created: true,
+            image: true,
           },
         },
       },
     });
 
-    console.log("✅ [SOCIAL] Profile completed successfully:", {
-      userId: user.id,
-      email: session.user.email,
-      hasMember: !!user.member,
-      memberId: user.member?.id,
-      memberCreated: user.member?.created,
-      profileComplete: user.profileComplete,
-      provider: user.accounts[0]?.provider,
-    });
-
     return { status: "success", data: user.accounts[0].provider };
   } catch (error) {
-    console.error("❌ [SOCIAL] Profile completion failed:", error);
+    console.error("[SOCIAL] Profile completion failed:", error);
     return { status: "error", error: "Failed to complete profile" };
   }
 }

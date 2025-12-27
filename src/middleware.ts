@@ -55,6 +55,27 @@ export default auth((req) => {
   }
 
   /* =========================
+     PROFILE COMPLETION ENFORCEMENT
+  ========================= */
+  // Allow authenticated users to access complete-profile
+  if (isLoggedIn && pathname === "/complete-profile") {
+    return NextResponse.next();
+  }
+
+  // If user is authenticated but profile not complete, enforce completion
+  if (
+    isLoggedIn &&
+    !user?.profileComplete &&
+    pathname !== "/complete-profile" &&
+    !publicRoutes.includes(pathname) &&
+    !authActionRoutes.includes(pathname)
+  ) {
+    return NextResponse.redirect(new URL("/complete-profile", nextUrl), {
+      status: 303,
+    });
+  }
+
+  /* =========================
      AUTHENTICATED USER ROUTES
      Logged-in users should not access auth pages
   ========================= */

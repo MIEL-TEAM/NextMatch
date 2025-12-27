@@ -51,6 +51,7 @@ export const {
           },
         });
 
+        // ✅ Handle OAuth providers (Google, Facebook)
         if (
           account?.provider === "google" ||
           account?.provider === "facebook"
@@ -61,10 +62,12 @@ export const {
             oauthVerified: true,
           };
 
+          // Increase trust score for first OAuth verification
           if (existingUser && !existingUser.oauthVerified) {
             updateData.trustScore = (existingUser.trustScore || 0) + 40;
           }
 
+          // Send welcome email for new Google users
           if (
             account.provider === "google" &&
             existingUser &&
@@ -84,6 +87,7 @@ export const {
           });
         }
 
+        // ✅ Handle Credentials provider (email/password)
         if (account?.provider === "credentials") {
           await prisma.user.update({
             where: { email: user.email },
@@ -94,7 +98,7 @@ export const {
           });
         }
       } catch (err) {
-        console.error("signIn error:", err);
+        console.error("[AUTH] Sign-in error:", err);
       }
 
       return true;

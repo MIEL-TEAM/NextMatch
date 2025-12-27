@@ -14,7 +14,7 @@ const usePaginationStore = create<PaginationState>()(
     (set) => ({
       pagination: {
         pageNumber: 1,
-        pageSize: 12,
+        pageSize: 15,
         totalCount: 0,
         totalPages: 1,
       },

@@ -5,9 +5,7 @@ import { signIn } from "next-auth/react";
 
 export default function SocialLogin() {
   const onClick = (provider: "google" | "facebook") => {
-    signIn(provider, {
-      callbackUrl: "/members",
-    });
+    signIn(provider);
   };
 
   return (
