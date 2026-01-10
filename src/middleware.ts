@@ -10,89 +10,45 @@ import {
 export default auth((req) => {
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
-
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
   const isAdmin = user?.role === "ADMIN";
   const isAdminRoute = pathname.startsWith("/admin");
 
-  /* =========================
-     ADMIN ISOLATION
-  ========================= */
-  if (isAdmin) {
-    if (isAdminRoute) return NextResponse.next();
-    return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
+  // Public & auth action routes - always allow
+  if (publicRoutes.includes(pathname) || authActionRoutes.includes(pathname)) {
+    return NextResponse.next();
   }
 
+  // Admin isolation
+  if (isAdmin && !isAdminRoute) {
+    return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
+  }
   if (isAdminRoute && !isAdmin) {
     return NextResponse.redirect(new URL("/", nextUrl), { status: 303 });
   }
 
-  /* =========================
-     PUBLIC ROUTES
-  ========================= */
-  if (publicRoutes.includes(pathname)) {
-    return NextResponse.next();
-  }
-
-  /* =========================
-     AUTH ACTION ROUTES
-     (Handled internally)
-  ========================= */
-  if (authActionRoutes.includes(pathname)) {
-    return NextResponse.next();
-  }
-
-  /* =========================
-     AUTH REQUIRED
-  ========================= */
+  // Handle unauthenticated users
   if (!isLoggedIn) {
-    // Allow unauth users only on specific routes
-    if (unauthOnlyRoutes.includes(pathname)) {
-      return NextResponse.next();
-    }
-    return NextResponse.redirect(new URL("/login", nextUrl), { status: 303 });
+    const allowedRoutes = [...unauthOnlyRoutes, ...registerSuccessRoutes];
+    return allowedRoutes.includes(pathname)
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/login", nextUrl), { status: 303 });
   }
 
-  /* =========================
-     PROFILE COMPLETION ENFORCEMENT
-  ========================= */
-  // Allow authenticated users to access complete-profile
-  if (isLoggedIn && pathname === "/complete-profile") {
-    return NextResponse.next();
+  // Handle authenticated users
+  const blockedRoutes = [...unauthOnlyRoutes, ...registerSuccessRoutes];
+  if (blockedRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/members", nextUrl), { status: 303 });
   }
 
-  // If user is authenticated but profile not complete, enforce completion
-  if (
-    isLoggedIn &&
-    !user?.profileComplete &&
-    pathname !== "/complete-profile" &&
-    !publicRoutes.includes(pathname) &&
-    !authActionRoutes.includes(pathname)
-  ) {
+  // Profile completion check
+  if (!user?.profileComplete && pathname !== "/complete-profile") {
     return NextResponse.redirect(new URL("/complete-profile", nextUrl), {
       status: 303,
     });
   }
 
-  /* =========================
-     AUTHENTICATED USER ROUTES
-     Logged-in users should not access auth pages
-  ========================= */
-  if (unauthOnlyRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/members", nextUrl), {
-      status: 303,
-    });
-  }
-
-  if (registerSuccessRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/members", nextUrl), {
-      status: 303,
-    });
-  }
-
-  // All other routes: allow access
-  // Onboarding enforcement happens in Server Components
   return NextResponse.next();
 });
 

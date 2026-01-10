@@ -20,6 +20,8 @@ import {
   sendWelcomeEmail,
 } from "@/lib/mail";
 import { revalidatePath } from "next/cache";
+import { COOKIE_NAME } from "@/types/cookies";
+import { cookies } from "next/headers";
 
 export async function signInUser(
   data: LoginSchema
@@ -72,6 +74,8 @@ export async function signInUser(
 }
 
 export async function signOutUser() {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_NAME);
   await signOut({ redirectTo: "/" });
 }
 

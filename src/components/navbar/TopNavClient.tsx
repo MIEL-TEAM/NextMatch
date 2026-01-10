@@ -12,7 +12,7 @@ import FiltersWrapper from "./FiltersWrapper";
 import MobileMenu from "./MobileMenu";
 import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
-import type { ProfileCompletionStatus } from "@/app/actions/userActions";
+import type { ProfileCompletionStatus } from "@/types/userAction";
 
 type NavLinkItem = {
   href: string;

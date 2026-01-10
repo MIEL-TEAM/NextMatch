@@ -10,7 +10,7 @@ import {
 } from "@nextui-org/react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import type { ProfileCompletionStatus } from "@/app/actions/userActions";
+import type { ProfileCompletionStatus } from "@/types/userAction";
 
 type ProfileCompletionButtonProps = {
   status: ProfileCompletionStatus;
@@ -23,7 +23,7 @@ export default function ProfileCompletionButton({
     return null;
   }
 
-  const incompleteTasks = status.tasks.filter((task) => !task.completed);
+  const incompleteTasks = status.tasks.filter((task: any) => !task.completed);
 
   if (status.completionPercentage >= 100 && incompleteTasks.length === 0) {
     return (
@@ -96,7 +96,7 @@ export default function ProfileCompletionButton({
           <Divider className="bg-gray-100" />
 
           <div className="space-y-3">
-            {incompleteTasks.map((task) => {
+            {incompleteTasks.map((task: any) => {
               const taskProgress = Math.round(task.progress * 100);
 
               return (
