@@ -1,46 +1,30 @@
 "use server";
 
 import { getSession } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { subMinutes } from "date-fns";
+import {
+  dbGetProfileViews,
+  dbGetRecentProfileView,
+  dbMarkProfileViewsAsSeen,
+  dbUpsertProfileView,
+} from "@/lib/db/viewActions";
 
 export async function recordProfileView(viewerId: string, viewedId: string) {
   if (!viewerId || viewerId === viewedId) return;
 
   try {
-    const recentView = await prisma.profileView.findFirst({
-      where: {
-        viewerId,
-        viewedId,
-        viewedAt: {
-          gt: subMinutes(new Date(), 1),
-        },
-      },
-    });
+    const recentView = await dbGetRecentProfileView(
+      viewerId,
+      viewedId,
+      subMinutes(new Date(), 1)
+    );
 
     if (recentView) {
       return;
     }
 
-    await prisma.profileView.upsert({
-      where: {
-        viewerId_viewedId: {
-          viewerId,
-          viewedId,
-        },
-      },
-      update: {
-        viewedAt: new Date(),
-        seen: false,
-      },
-      create: {
-        viewerId,
-        viewedId,
-        viewedAt: new Date(),
-        seen: false,
-      },
-    });
+    await dbUpsertProfileView(viewerId, viewedId);
 
     await pusherServer.trigger(`private-${viewedId}`, "profile-viewed", {
       viewerId,
@@ -59,21 +43,7 @@ export async function getProfileViews(userId?: string) {
   }
 
   try {
-    const views = await prisma.profileView.findMany({
-      where: { viewedId: userId },
-      orderBy: { viewedAt: "desc" },
-      take: 50,
-      include: {
-        viewer: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            member: true,
-          },
-        },
-      },
-    });
+    const views = await dbGetProfileViews(userId);
 
     return views.map((view) => ({
       ...view.viewer,
@@ -90,13 +60,7 @@ export async function markProfileViewsAsSeen(userId: string) {
   if (!userId) throw new Error("User ID is required");
 
   try {
-    await prisma.profileView.updateMany({
-      where: {
-        viewedId: userId,
-        seen: false,
-      },
-      data: { seen: true },
-    });
+    await dbMarkProfileViewsAsSeen(userId);
 
     return { success: true };
   } catch (error) {

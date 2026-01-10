@@ -1,8 +1,11 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/session";
 import { ActionResult } from "@/types";
+import {
+  dbGetUserPreferences,
+  dbUpdateUserPreferences,
+} from "@/lib/db/userPreferences";
 
 export interface UserPreferences {
   preferredGenders: string;
@@ -14,14 +17,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
   try {
     const userId = await getAuthUserId();
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        preferredGenders: true,
-        preferredAgeMin: true,
-        preferredAgeMax: true,
-      },
-    });
+    const user = await dbGetUserPreferences(userId);
 
     if (!user) return null;
 
@@ -42,13 +38,10 @@ export async function updateUserPreferences(
   try {
     const userId = await getAuthUserId();
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        preferredGenders: preferences.preferredGenders,
-        preferredAgeMin: preferences.preferredAgeMin,
-        preferredAgeMax: preferences.preferredAgeMax,
-      },
+    await dbUpdateUserPreferences(userId, {
+      preferredGenders: preferences.preferredGenders,
+      preferredAgeMin: preferences.preferredAgeMin,
+      preferredAgeMax: preferences.preferredAgeMax,
     });
 
     return { status: "success", data: "העדפות עודכנו בהצלחה" };
@@ -58,7 +51,6 @@ export async function updateUserPreferences(
   }
 }
 
-// Helper function to get default preferences for new users
 export function getDefaultPreferences(): UserPreferences {
   return {
     preferredGenders: "male,female",

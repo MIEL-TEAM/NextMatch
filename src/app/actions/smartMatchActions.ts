@@ -1,57 +1,34 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/session";
 import { PaginatedResponse } from "@/types";
 import { Member } from "@prisma/client";
 import { addYears } from "date-fns";
-
-interface MatchResult {
-  userId: string;
-  score: number;
-  matchReason: string;
-  compatibilityFactors: {
-    ageCompatibility: number;
-    locationCompatibility: number;
-    interestCompatibility: number;
-    personalityCompatibility: number;
-    behavioralCompatibility: number;
-  };
-  premiumInsights?: string;
-}
-
-interface UserBehaviorPattern {
-  preferredAgeRange: [number, number];
-  preferredLocations: string[];
-  interestPriorities: string[];
-  personalityTraits: string[];
-  messagingStyle: string;
-  engagementLevel: number;
-}
-
-interface UserInteraction {
-  id: string;
-  userId: string;
-  targetId: string;
-  action: string;
-  duration?: number;
-  weight: number;
-  timestamp: Date;
-}
-
-interface UserMessage {
-  id: string;
-  senderId: string;
-  recipientId: string;
-  text: string;
-  created: Date;
-}
-
-interface BehaviorAnalysisData {
-  interactions: UserInteraction[];
-  likedUserIds: string[];
-  messages: UserMessage[];
-}
+import {
+  MatchResult,
+  UserBehaviorPattern,
+  UserInteraction,
+  UserMessage,
+  BehaviorAnalysisData,
+} from "@/types/smart-matches";
+import {
+  dbCreateUserInteraction,
+  dbDeleteSmartMatchCache,
+  dbGetLikedProfiles,
+  dbGetMessageRecipients,
+  dbGetPotentialMatches,
+  dbGetRandomMembers,
+  dbGetSmartMatchCache,
+  dbGetUserInteractions,
+  dbGetUserInteractionsWithDetails,
+  dbGetUserLikes,
+  dbGetUserLikesWithDetails,
+  dbGetUserMessages,
+  dbGetUserMessagesWithDetails,
+  dbGetUserPreferences,
+  dbGetCurrentUserProfile,
+  dbSaveSmartMatchCache,
+} from "@/lib/db/smartMatchActions";
 
 export async function trackUserInteraction(
   targetUserId: string,
@@ -80,14 +57,12 @@ export async function trackUserInteraction(
         weight = 1.0;
     }
 
-    const interaction = await prisma.userInteraction.create({
-      data: {
-        userId,
-        targetId: targetUserId,
-        action,
-        duration,
-        weight,
-      },
+    const interaction = await dbCreateUserInteraction({
+      userId,
+      targetId: targetUserId,
+      action,
+      duration,
+      weight,
     });
 
     return interaction;
@@ -115,28 +90,10 @@ export async function getSmartMatches(
       return { items: [], totalCount: 0 };
     }
 
-    // const page = parseInt(pageNumber);
-    // const limit = parseInt(pageSize);
-
-    // Get user behavior data for analysis
     const [interactions, likedUserIds, messagedUserIds] = await Promise.all([
-      prisma.userInteraction.findMany({
-        where: { userId },
-        select: { targetId: true, action: true, weight: true, duration: true },
-        orderBy: { timestamp: "desc" },
-        take: 100,
-      }),
-      prisma.like.findMany({
-        where: { sourceUserId: userId },
-        select: { targetUserId: true },
-        take: 50,
-      }),
-      prisma.message.findMany({
-        where: { senderId: userId },
-        select: { recipientId: true, text: true },
-        orderBy: { created: "desc" },
-        take: 50,
-      }),
+      dbGetUserInteractions(userId),
+      dbGetUserLikes(userId),
+      dbGetUserMessages(userId),
     ]);
 
     const interactedUserIds = [
@@ -146,15 +103,7 @@ export async function getSmartMatches(
     ].filter(Boolean) as string[];
 
     if (interactedUserIds.length === 0) {
-      const randomMembers = await prisma.member.findMany({
-        where: { userId: { not: userId } },
-        include: {
-          interests: { select: { name: true } },
-          user: { select: { emailVerified: true, oauthVerified: true } },
-        },
-        orderBy: { created: "desc" },
-        take: 12,
-      });
+      const randomMembers = await dbGetRandomMembers(userId);
 
       const randomResults = randomMembers.map((member) => ({
         ...member,
@@ -168,14 +117,7 @@ export async function getSmartMatches(
     const uniqueUserIds = Array.from(new Set(interactedUserIds));
 
     // Get user preferences for filtering
-    const userPreferences = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        preferredGenders: true,
-        preferredAgeMin: true,
-        preferredAgeMax: true,
-      },
-    });
+    const userPreferences = await dbGetUserPreferences(userId);
 
     // Build filter conditions - use UI filters first, then fallback to user preferences
     let genderFilter = {};
@@ -237,29 +179,15 @@ export async function getSmartMatches(
       );
     }
 
-    const members = await prisma.member.findMany({
-      where: {
-        userId: { in: uniqueUserIds, not: userId },
-        ...genderFilter,
-        ...ageFilter,
-      },
-      include: {
-        interests: { select: { name: true } },
-        user: { select: { emailVerified: true, oauthVerified: true } },
-      },
-      orderBy: { created: "desc" },
-    });
+    const members = await dbGetPotentialMatches(
+      userId,
+      uniqueUserIds,
+      genderFilter,
+      ageFilter
+    );
 
     if (members.length === 0) {
-      const randomMembers = await prisma.member.findMany({
-        where: { userId: { not: userId } },
-        include: {
-          interests: { select: { name: true } },
-          user: { select: { emailVerified: true, oauthVerified: true } },
-        },
-        orderBy: { created: "desc" },
-        take: 12,
-      });
+      const randomMembers = await dbGetRandomMembers(userId);
 
       const randomResults = randomMembers.map((member) => ({
         ...member,
@@ -271,18 +199,11 @@ export async function getSmartMatches(
     }
 
     // מחיקת cache ישן כדי לקבל טקסטים חדשים ומגוונים
-    await prisma.smartMatchCache.deleteMany({
-      where: { userId },
-    });
+    await dbDeleteSmartMatchCache(userId);
 
     // בדיקה אם יש cache של התאמות עדכני
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
-    const cachedMatches = await prisma.smartMatchCache.findFirst({
-      where: {
-        userId,
-        createdAt: { gte: sixHoursAgo },
-      },
-    });
+    const cachedMatches = await dbGetSmartMatchCache(userId, sixHoursAgo);
 
     if (cachedMatches) {
       const cachedData = JSON.parse(cachedMatches.matchData);
@@ -325,19 +246,7 @@ export async function getSmartMatches(
     );
 
     // Get current user profile
-    const currentUser = await prisma.member.findUnique({
-      where: { userId },
-      include: {
-        interests: { select: { name: true } },
-        user: {
-          select: {
-            preferredGenders: true,
-            preferredAgeMin: true,
-            preferredAgeMax: true,
-          },
-        },
-      },
-    });
+    const currentUser = await dbGetCurrentUserProfile(userId);
 
     if (!currentUser) {
       return { items: [], totalCount: 0 };
@@ -380,12 +289,7 @@ export async function getSmartMatches(
         matchScore: m.matchScore,
       }));
 
-      await prisma.smartMatchCache.create({
-        data: {
-          userId,
-          matchData: JSON.stringify(cacheData),
-        },
-      });
+      await dbSaveSmartMatchCache(userId, cacheData);
     } catch (error) {
       console.error("Error saving match cache:", error);
     }
@@ -404,10 +308,7 @@ async function analyzeUserBehaviorPattern(
   data: BehaviorAnalysisData
 ): Promise<UserBehaviorPattern> {
   // Get liked users' profiles for pattern analysis
-  const likedProfiles = await prisma.member.findMany({
-    where: { userId: { in: data.likedUserIds } },
-    include: { interests: true },
-  });
+  const likedProfiles = await dbGetLikedProfiles(data.likedUserIds);
 
   // Analyze age preferences
   const likedAges = likedProfiles
@@ -847,20 +748,7 @@ function generatePremiumInsights(score: {
 }
 
 export async function getUserLikes(userId: string) {
-  const likes = await prisma.like.findMany({
-    where: { sourceUserId: userId },
-    take: 50,
-  });
-
-  const targetUserIds = likes
-    .map((like) => like.targetUserId)
-    .filter(Boolean) as string[];
-  const targetUsers = await prisma.member.findMany({
-    where: { userId: { in: targetUserIds } },
-    include: {
-      interests: { select: { name: true } },
-    },
-  });
+  const targetUsers = await dbGetUserLikesWithDetails(userId);
 
   return targetUsers.map((user) => ({
     name: user.name || "משתמש",
@@ -872,31 +760,11 @@ export async function getUserLikes(userId: string) {
 }
 
 export async function getUserMessages(userId: string) {
-  const messages = await prisma.message.findMany({
-    where: { senderId: userId },
-    include: {
-      recipient: {
-        select: {
-          name: true,
-          gender: true,
-        },
-      },
-    },
-    orderBy: { created: "desc" },
-    take: 50,
-  });
+  const messages = await dbGetUserMessagesWithDetails(userId);
 
-  const recipients = await prisma.member.findMany({
-    where: {
-      userId: {
-        in: messages.map((m) => m.recipientId).filter(Boolean) as string[],
-      },
-    },
-    select: {
-      userId: true,
-      gender: true,
-    },
-  });
+  const recipients = await dbGetMessageRecipients(
+    messages.map((m) => m.recipientId).filter(Boolean) as string[]
+  );
 
   return messages.map((message) => ({
     text: message.text,
@@ -908,23 +776,7 @@ export async function getUserMessages(userId: string) {
 }
 
 export async function getUserInteractions(userId: string) {
-  const interactions = await prisma.userInteraction.findMany({
-    where: { userId },
-    include: {
-      target: {
-        select: {
-          name: true,
-          gender: true,
-          city: true,
-          dateOfBirth: true,
-        },
-      },
-    },
-    orderBy: {
-      timestamp: "desc",
-    },
-    take: 100,
-  });
+  const interactions = await dbGetUserInteractionsWithDetails(userId);
 
   return interactions.map((i) => ({
     targetName: i.target?.name || "משתמש",

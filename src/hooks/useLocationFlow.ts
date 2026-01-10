@@ -96,7 +96,6 @@ export function useLocationFlow() {
   );
 
   const visitedStatesRef = useRef<Set<LocationState>>(new Set());
-  const urlUpdateAppliedRef = useRef(false);
   const dbLocationRef = useRef<DbLocationStatus | null>(null);
   const browserLocationRef = useRef<LocationData | null>(null);
   const locationStartRef = useRef<number | null>(null);
@@ -327,7 +326,7 @@ export function useLocationFlow() {
     };
   }, [locationState]);
 
-  // Using browser location → update URL
+  // Using browser location → set internal state
   useEffect(() => {
     if (locationState !== "usingBrowserLocation") return;
 
@@ -337,33 +336,13 @@ export function useLocationFlow() {
       return;
     }
 
-    if (urlUpdateAppliedRef.current) {
-      setInternalLocation(coords);
-      markLocationFlowCompleted();
-      transitionToState("readyToQuery");
-      return;
-    }
-
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
-
-    const currentParams = new URLSearchParams(searchParams.toString());
-    currentParams.set("userLat", coords.latitude.toString());
-    currentParams.set("userLon", coords.longitude.toString());
-    currentParams.set("sortByDistance", "true");
-
-    urlUpdateAppliedRef.current = true;
+    // No URL update - just set internal state
     markLocationFlowCompleted();
-
-    router.replace(`${pathname}?${currentParams.toString()}`, {
-      scroll: false,
-    });
-
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState, searchParams]);
+  }, [locationState]);
 
-  // Using DB location → update URL
+  // Using DB location → set internal state
   useEffect(() => {
     if (locationState !== "usingDbLocation") return;
 
@@ -376,31 +355,11 @@ export function useLocationFlow() {
 
     const coords = dbLoc.coordinates;
 
-    if (urlUpdateAppliedRef.current) {
-      setInternalLocation(coords);
-      markLocationFlowCompleted();
-      transitionToState("readyToQuery");
-      return;
-    }
-
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
-
-    const currentParams = new URLSearchParams(searchParams.toString());
-    currentParams.set("userLat", coords.latitude.toString());
-    currentParams.set("userLon", coords.longitude.toString());
-    currentParams.set("sortByDistance", "true");
-
-    urlUpdateAppliedRef.current = true;
+    // No URL update - just set internal state
     markLocationFlowCompleted();
-
-    router.replace(`${pathname}?${currentParams.toString()}`, {
-      scroll: false,
-    });
-
     setInternalLocation(coords);
     transitionToState("readyToQuery");
-  }, [locationState, searchParams]);
+  }, [locationState]);
 
   // Show modal (with guards to prevent repeated prompts)
   useEffect(() => {
@@ -438,23 +397,14 @@ export function useLocationFlow() {
   }, [locationState, stableParams.forceLocationPrompt]);
 
   const handleLocationGranted = (coordinates: LocationData) => {
-    const router = routerRef.current;
-    const pathname = pathnameRef.current;
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("userLat", coordinates.latitude.toString());
-    params.set("userLon", coordinates.longitude.toString());
-    params.set("sortByDistance", "true");
-    params.delete("requestLocation");
-
-    urlUpdateAppliedRef.current = true;
-
+    // No URL update - just set internal state
     markLocationFlowCompleted();
     savePermissionState(true);
 
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setShowLocationModal(false);
     setInternalLocation(coordinates);
+    // Directly transition since we have the location now
+    transitionToState("readyToQuery");
   };
 
   const handleLocationDismissed = () => {

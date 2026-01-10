@@ -1,3 +1,20 @@
+export type MemberCardData = {
+  id: string;
+  userId: string;
+  name: string;
+  dateOfBirth: Date;
+  description: string;
+  image: string | null;
+  updated: Date;
+  created: Date;
+  latitude: number | null;
+  longitude: number | null;
+  user: {
+    oauthVerified: boolean;
+    lastActiveAt: Date | null;
+  };
+};
+
 // Location state machine states
 export type LocationState =
   | "initial"

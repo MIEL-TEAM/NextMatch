@@ -5,7 +5,24 @@ import { add } from "date-fns";
 import { revalidatePath } from "next/cache";
 import { stripe, PREMIUM_PLAN_PRICES } from "@/lib/stripe";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import {
+  dbGetUserForPremiumUpdate,
+  dbUpdateUserPremiumStatus,
+  dbGetUserPremiumStatus,
+  dbUpdateUserPremiumStatusSimple,
+  dbGetUserForCancellation,
+  dbGetUserForSubscriptionReturn,
+  dbUpdateUserCancellation,
+  dbGetUserForDirectCancellation,
+  dbUpdateUserDirectCancellation,
+  dbGetUserForBillingPortal,
+  dbGetUserForReactivation,
+  dbGetUserForSubscriptionCheck,
+  dbUpdateUserSubscriptionStatus,
+  dbGetUserForBoost,
+  dbUpdateUserBoost,
+  dbUpdateUserPremiumActivation,
+} from "@/lib/db/premiumActions";
 
 // Updates premium status when returning from Stripe checkout
 export async function updatePremiumStatusFromStripe(sessionId: string) {
@@ -22,15 +39,7 @@ export async function updatePremiumStatusFromStripe(sessionId: string) {
       console.error("Failed to retrieve Stripe session:", stripeError);
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        isPremium: true,
-        premiumUntil: true,
-        boostsAvailable: true,
-      },
-    });
+    const user = await dbGetUserForPremiumUpdate(session.user.id);
 
     if (!user) {
       throw new Error("משתמש לא נמצא");
@@ -49,22 +58,19 @@ export async function updatePremiumStatusFromStripe(sessionId: string) {
 
     const premiumUntil = add(new Date(), { months });
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        isPremium: true,
-        premiumUntil,
-        boostsAvailable: {
-          increment: boosts,
-        },
-        ...(stripeSession?.customer
-          ? { stripeCustomerId: stripeSession.customer as string }
-          : {}),
-        ...(stripeSession?.subscription
-          ? { stripeSubscriptionId: stripeSession.subscription as string }
-          : {}),
-        canceledAt: null,
+    await dbUpdateUserPremiumStatus(user.id, {
+      isPremium: true,
+      premiumUntil,
+      boostsAvailable: {
+        increment: boosts,
       },
+      ...(stripeSession?.customer
+        ? { stripeCustomerId: stripeSession.customer as string }
+        : {}),
+      ...(stripeSession?.subscription
+        ? { stripeSubscriptionId: stripeSession.subscription as string }
+        : {}),
+      canceledAt: null,
     });
 
     revalidatePath("/premium");
@@ -91,22 +97,7 @@ export async function getPremiumStatus() {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: session.user.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        isPremium: true,
-        premiumUntil: true,
-        boostsAvailable: true,
-        canceledAt: true,
-        stripeSubscriptionId: true,
-      },
-    });
+    const user = await dbGetUserPremiumStatus(session.user.id);
 
     if (!user) {
       throw new Error("משתמש לא נמצא");
@@ -119,29 +110,22 @@ export async function getPremiumStatus() {
 
     // Fix inconsistent states
     if (shouldBePremium && !user.isPremium) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { isPremium: true },
-      });
+      await dbUpdateUserPremiumStatusSimple(user.id, { isPremium: true });
       user.isPremium = true;
     }
 
     const premiumExpired = premiumUntilDate && premiumUntilDate < new Date();
     if (user.isPremium && premiumExpired) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          isPremium: false,
-          canceledAt: user.canceledAt || new Date(),
-        },
+      await dbUpdateUserPremiumStatusSimple(user.id, {
+        isPremium: false,
+        canceledAt: user.canceledAt || new Date(),
       });
       user.isPremium = false;
     }
 
-    // Add activePlan to the returned object
     return {
       ...user,
-      activePlan: "popular", // Default plan - actual plan should be stored in subscription metadata
+      activePlan: "popular",
     };
   } catch (error) {
     console.error("שגיאה בהבאת נתוני פרימיום:", error);
@@ -176,16 +160,10 @@ export async function createCheckoutSession(formData: FormData) {
     }
 
     // Determine the appropriate base URL
-    const isLocalhost =
-      process.env.NODE_ENV === "development" &&
-      process.env.NEXT_PUBLIC_APP_URL?.includes("localhost");
-
-    const baseUrl = isLocalhost
-      ? "http://localhost:3000" // Ensure this matches your local dev port
-      : process.env.NEXT_PUBLIC_APP_URL || "https://miel-love.com";
-
-    // Explicitly log the base URL for debugging
-    console.log("Stripe Checkout Base URL:", baseUrl);
+    const baseUrl =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : process.env.NEXT_PUBLIC_APP_URL || "https://miel-love.com";
 
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -235,20 +213,11 @@ export async function activatePremium(formData: FormData) {
     try {
       const userId = session.user.id;
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          isPremium: true,
-          premiumUntil: add(new Date(), { months }),
-          boostsAvailable: boosts,
-          canceledAt: null,
-        },
-        select: {
-          id: true,
-          isPremium: true,
-          premiumUntil: true,
-          boostsAvailable: true,
-        },
+      await dbUpdateUserPremiumActivation(userId, {
+        isPremium: true,
+        premiumUntil: add(new Date(), { months }),
+        boostsAvailable: boosts,
+        canceledAt: null,
       });
 
       revalidatePath("/premium");
@@ -286,13 +255,7 @@ export async function redirectToCancelSubscription() {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        stripeCustomerId: true,
-        stripeSubscriptionId: true,
-      },
-    });
+    const user = await dbGetUserForCancellation(session.user.id);
 
     if (!user?.stripeCustomerId) {
       throw new Error("לא נמצא מזהה לקוח בסטרייפ עבור המשתמש");
@@ -305,7 +268,11 @@ export async function redirectToCancelSubscription() {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?canceled_action=true`,
+      return_url: `${
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000"
+          : process.env.NEXT_PUBLIC_APP_URL
+      }/premium?canceled_action=true`,
     });
 
     if (!portalSession?.url) {
@@ -327,12 +294,7 @@ export async function processCancellationReturn() {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        stripeSubscriptionId: true,
-      },
-    });
+    const user = await dbGetUserForSubscriptionReturn(session.user.id);
 
     if (!user?.stripeSubscriptionId) {
       throw new Error("לא נמצא מזהה מנוי");
@@ -349,12 +311,9 @@ export async function processCancellationReturn() {
 
     if (isCancelScheduled) {
       // Update user record to reflect the cancellation
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: {
-          canceledAt: new Date(),
-          premiumUntil: currentPeriodEnd,
-        },
+      await dbUpdateUserCancellation(session.user.id, {
+        canceledAt: new Date(),
+        premiumUntil: currentPeriodEnd,
       });
 
       // Revalidate paths
@@ -391,19 +350,7 @@ export async function cancelPremium() {
   }
 
   try {
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        id: session.user.id,
-      },
-      select: {
-        id: true,
-        email: true,
-        isPremium: true,
-        stripeCustomerId: true,
-        stripeSubscriptionId: true,
-        premiumUntil: true,
-      },
-    });
+    const existingUser = await dbGetUserForDirectCancellation(session.user.id);
 
     if (!existingUser) {
       throw new Error("משתמש לא נמצא");
@@ -423,21 +370,10 @@ export async function cancelPremium() {
       }
     }
 
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: existingUser.id,
-      },
-      data: {
-        canceledAt: new Date(),
-      },
-      select: {
-        id: true,
-        email: true,
-        isPremium: true,
-        canceledAt: true,
-        premiumUntil: true,
-      },
-    });
+    const updatedUser = await dbUpdateUserDirectCancellation(
+      existingUser.id,
+      new Date()
+    );
 
     revalidatePath("/premium");
 
@@ -463,14 +399,7 @@ export async function createBillingPortalSession() {
     throw new Error("User not authenticated");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      email: true,
-      stripeCustomerId: true,
-    },
-  });
+  const user = await dbGetUserForBillingPortal(session.user.id);
 
   if (!user) {
     throw new Error("User not found");
@@ -484,7 +413,11 @@ export async function createBillingPortalSession() {
 
   const stripeSession = await stripe.billingPortal.sessions.create({
     customer: user.stripeCustomerId,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium`,
+    return_url: `${
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : process.env.NEXT_PUBLIC_APP_URL
+    }/premium`,
   });
 
   if (!stripeSession?.url) {
@@ -501,14 +434,7 @@ export async function createReactivateSubscriptionSession() {
       throw new Error("משתמש לא מאומת");
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        stripeCustomerId: true,
-        stripeSubscriptionId: true,
-        canceledAt: true,
-      },
-    });
+    const user = await dbGetUserForReactivation(session.user.id);
 
     if (!user?.stripeCustomerId) {
       throw new Error("לא נמצא מזהה לקוח בסטרייפ עבור המשתמש");
@@ -531,7 +457,11 @@ export async function createReactivateSubscriptionSession() {
 
     const stripeSession = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium?strict_renewal_check=true`,
+      return_url: `${
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000"
+          : process.env.NEXT_PUBLIC_APP_URL
+      }/premium?strict_renewal_check=true`,
     });
 
     return {
@@ -550,14 +480,7 @@ export async function checkStripeSubscriptionStatus() {
     throw new Error("לא מורשה");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      stripeSubscriptionId: true,
-      isPremium: true,
-      canceledAt: true,
-    },
-  });
+  const user = await dbGetUserForSubscriptionCheck(session.user.id);
 
   if (user?.stripeSubscriptionId) {
     try {
@@ -596,10 +519,7 @@ export async function checkStripeSubscriptionStatus() {
         (!isCancelScheduled && user.canceledAt);
 
       if (needsUpdate) {
-        await prisma.user.update({
-          where: { id: session.user.id },
-          data: updateData,
-        });
+        await dbUpdateUserSubscriptionStatus(session.user.id, updateData);
 
         revalidatePath("/premium");
         revalidatePath("/");
@@ -633,16 +553,7 @@ export async function boostProfile(formData: FormData) {
     );
     const useMultipleBoosts = formData.get("useMultipleBoosts") === "true";
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: session.user.id,
-      },
-      select: {
-        id: true,
-        isPremium: true,
-        boostsAvailable: true,
-      },
-    });
+    const user = await dbGetUserForBoost(session.user.id);
 
     if (!user) {
       throw new Error("משתמש לא נמצא");
@@ -664,29 +575,11 @@ export async function boostProfile(formData: FormData) {
     const boostDuration = useMultipleBoosts ? boostHours : 24;
     const boostEndTime = add(new Date(), { hours: boostDuration });
 
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        boostsAvailable: {
-          decrement: boostsToUse,
-        },
-        member: {
-          update: {
-            boostedUntil: boostEndTime,
-          },
-        },
-      },
-      select: {
-        boostsAvailable: true,
-        member: {
-          select: {
-            boostedUntil: true,
-          },
-        },
-      },
-    });
+    const updatedUser = await dbUpdateUserBoost(
+      user.id,
+      boostsToUse,
+      boostEndTime
+    );
 
     revalidatePath("/premium");
     revalidatePath("/members");

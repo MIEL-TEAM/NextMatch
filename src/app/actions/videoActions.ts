@@ -1,15 +1,15 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { Video } from "@prisma/client";
 import { cache } from "react";
+import {
+  dbGetMemberVideos,
+  dbGetVideosForMembers,
+} from "@/lib/db/videoActions";
 
 export async function getMemberVideos(memberId: string): Promise<Video[]> {
   try {
-    return await prisma.video.findMany({
-      where: { memberId },
-      orderBy: { createdAt: "desc" },
-    });
+    return await dbGetMemberVideos(memberId);
   } catch {
     return [];
   }
@@ -22,25 +22,7 @@ export const getMemberVideosForCards = cache(
     try {
       if (!memberIds.length) return {};
 
-      const videos = await prisma.video.findMany({
-        where: {
-          member: {
-            userId: {
-              in: memberIds,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          member: {
-            select: {
-              userId: true,
-            },
-          },
-        },
-      });
+      const videos = await dbGetVideosForMembers(memberIds);
 
       const videosByMemberId: Record<
         string,

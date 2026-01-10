@@ -1,8 +1,13 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/session";
 import { pusherServer } from "@/lib/pusher";
+import {
+  dbGetMutualMatchIds,
+  dbGetOutboundLikes,
+  dbGetUserForAnnouncement,
+  dbUpdateUserAnnouncementTime,
+} from "@/lib/db/presenceActions";
 
 export async function announceUserOnline(): Promise<{ success: boolean }> {
   try {
@@ -15,14 +20,7 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
     }
 
     // Fetch user with ANNOUNCEMENT timestamp (not activity timestamp)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        name: true,
-        image: true,
-        lastOnlineAnnouncedAt: true,
-      },
-    });
+    const user = await dbGetUserForAnnouncement(userId);
 
     if (!user) {
       console.log("🔔 [announceUserOnline] User not found");
@@ -50,10 +48,7 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
     );
 
     // Step 1: Users this user liked
-    const likedUsers = await prisma.like.findMany({
-      where: { sourceUserId: userId },
-      select: { targetUserId: true },
-    });
+    const likedUsers = await dbGetOutboundLikes(userId);
 
     const likeIds = likedUsers.map((x) => x.targetUserId);
 
@@ -63,29 +58,18 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
       );
 
       // Still update announcement time to prevent repeat work
-      await prisma.user.update({
-        where: { id: userId },
-        data: { lastOnlineAnnouncedAt: new Date() },
-      });
+      await dbUpdateUserAnnouncementTime(userId);
 
       return { success: true };
     }
 
     // Step 2: Mutual matches (same logic as fetchMutualLikes)
-    const mutualMatches = await prisma.like.findMany({
-      where: {
-        AND: [{ targetUserId: userId }, { sourceUserId: { in: likeIds } }],
-      },
-      select: { sourceUserId: true },
-    });
+    const mutualMatches = await dbGetMutualMatchIds(userId, likeIds);
 
     if (mutualMatches.length === 0) {
       console.log("🔔 [announceUserOnline] No mutual matches found");
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: { lastOnlineAnnouncedAt: new Date() },
-      });
+      await dbUpdateUserAnnouncementTime(userId);
 
       return { success: true };
     }
@@ -122,10 +106,7 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
     );
 
     // Mark announcement time (THIS is the cooldown source)
-    await prisma.user.update({
-      where: { id: userId },
-      data: { lastOnlineAnnouncedAt: new Date() },
-    });
+    await dbUpdateUserAnnouncementTime(userId);
 
     console.log("🔔 [announceUserOnline] ✅ Completed successfully");
     return { success: true };

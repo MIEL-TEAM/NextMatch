@@ -1,8 +1,8 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { differenceInYears } from "date-fns";
+import { dbGetLikesWithTargetMember } from "@/lib/db/matchingProfileActions";
 
 function getAge(dateOfBirth: Date): number {
   return differenceInYears(new Date(), dateOfBirth);
@@ -19,10 +19,7 @@ export async function getMatchingProfileSummary() {
   const userId = session?.user?.id;
   if (!userId) return null;
 
-  const likes = await prisma.like.findMany({
-    where: { sourceUserId: userId },
-    include: { targetMember: true },
-  });
+  const likes = await dbGetLikesWithTargetMember(userId);
 
   const liked = likes.map((l) => l.targetMember);
   if (liked.length === 0) return null;

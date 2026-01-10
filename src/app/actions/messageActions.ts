@@ -3,7 +3,6 @@
 import { MessageSchema, messagesSchema } from "@/lib/schemas/messagesSchema";
 import { ActionResult, MessageDto } from "@/types";
 import { getAuthUserId } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
 import { mapMessageToMessageDto } from "@/lib/mappings";
 import { pusherServer } from "@/lib/pusher";
 import { createChatId } from "@/lib/util";
@@ -13,6 +12,22 @@ import {
   scheduleReminderEmail,
   cancelReminderEmail,
 } from "@/lib/email-rate-limiting";
+import {
+  dbArchiveMessages,
+  dbCreateMessage,
+  dbDeleteMessage,
+  dbDeleteMessagesPermanently,
+  dbGetArchivedMessages,
+  dbGetMessage,
+  dbGetMessageForDto,
+  dbGetMessagesByContainer,
+  dbGetMessagesToDelete,
+  dbGetMessageThread,
+  dbGetStarredMessages,
+  dbGetUnreadMessageCount,
+  dbMarkMessagesAsRead,
+  dbToggleMessageStar,
+} from "@/lib/db/messageActions";
 
 export async function createMessgae(
   recipientUserId: string,
@@ -27,15 +42,7 @@ export async function createMessgae(
 
     const { text } = validated.data;
 
-    const message = await prisma.message.create({
-      data: {
-        text,
-        recipientId: recipientUserId,
-        senderId: userId,
-      },
-
-      select: messageSelect,
-    });
+    const message = await dbCreateMessage(text, recipientUserId, userId);
 
     await trackUserInteraction(recipientUserId, "message").catch((e) =>
       console.error("Failed to track message interaction:", e)
@@ -88,27 +95,7 @@ export async function createMessgae(
 export async function getMessageThread(recipientId: string) {
   try {
     const userId = await getAuthUserId();
-    const messages = await prisma.message.findMany({
-      where: {
-        OR: [
-          {
-            senderId: userId,
-            recipientId,
-            senderDeleted: false,
-          },
-          {
-            senderId: recipientId,
-            recipientId: userId,
-            recipientDeleted: false,
-          },
-        ],
-      },
-
-      orderBy: {
-        created: "asc",
-      },
-      select: messageSelect,
-    });
+    const messages = await dbGetMessageThread(userId, recipientId);
 
     let readCount = 0;
 
@@ -122,10 +109,7 @@ export async function getMessageThread(recipientId: string) {
         )
         .map((message) => message.id);
 
-      await prisma.message.updateMany({
-        where: { id: { in: readMessagesIds } },
-        data: { dateRead: new Date() },
-      });
+      await dbMarkMessagesAsRead(readMessagesIds);
 
       readCount = readMessagesIds.length;
 
@@ -161,25 +145,12 @@ export async function getMessageByContainer(
   try {
     const userId = await getAuthUserId();
 
-    const conditions = {
-      [container === "outbox" ? "senderId" : "recipientId"]: userId,
-      ...(container === "outbox"
-        ? { senderDeleted: false }
-        : { recipientDeleted: false }),
-      isArchived: false,
-    };
-
-    const messages = await prisma.message.findMany({
-      where: {
-        ...conditions,
-        ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
-      },
-      orderBy: {
-        created: "desc",
-      },
-      select: messageSelect,
-      take: limit + 1,
-    });
+    const messages = await dbGetMessagesByContainer(
+      userId,
+      container,
+      cursor,
+      limit
+    );
 
     let nextCursor: string | undefined;
 
@@ -210,26 +181,14 @@ export async function deleteMessage(messageId: string, isOutbox: boolean) {
 
   try {
     const userId = await getAuthUserId();
-    await prisma.message.update({
-      where: { id: messageId },
-      data: { [selector]: true },
-    });
+    await dbDeleteMessage(messageId, selector);
 
-    const messagesToDelete = await prisma.message.findMany({
-      where: {
-        OR: [
-          { recipientId: userId, senderDeleted: true, recipientDeleted: true },
-          { senderId: userId, senderDeleted: true, recipientDeleted: true },
-        ],
-      },
-    });
+    const messagesToDelete = await dbGetMessagesToDelete(userId);
 
     if (messagesToDelete.length > 0) {
-      await prisma.message.deleteMany({
-        where: {
-          OR: messagesToDelete.map((message) => ({ id: message.id })),
-        },
-      });
+      await dbDeleteMessagesPermanently(
+        messagesToDelete.map((message) => message.id)
+      );
     }
   } catch (error) {
     console.log(error);
@@ -241,13 +200,7 @@ export async function getUnreadMessageCount() {
   try {
     const userId = await getAuthUserId();
 
-    return prisma.message.count({
-      where: {
-        recipientId: userId,
-        dateRead: null,
-        recipientDeleted: false,
-      },
-    });
+    return dbGetUnreadMessageCount(userId);
   } catch (error) {
     console.log(error);
     throw error;
@@ -257,10 +210,7 @@ export async function getUnreadMessageCount() {
 export async function toggleMessageStar(messageId: string) {
   try {
     const userId = await getAuthUserId();
-    const message = await prisma.message.findUnique({
-      where: { id: messageId },
-      select: { isStarred: true, senderId: true, recipientId: true },
-    });
+    const message = await dbGetMessage(messageId);
 
     if (
       !message ||
@@ -269,11 +219,10 @@ export async function toggleMessageStar(messageId: string) {
       throw new Error("Unauthorized access to message");
     }
 
-    const updatedMessage = await prisma.message.update({
-      where: { id: messageId },
-      data: { isStarred: !message.isStarred },
-      select: messageSelect,
-    });
+    const updatedMessage = await dbToggleMessageStar(
+      messageId,
+      !message.isStarred
+    );
 
     return mapMessageToMessageDto(updatedMessage);
   } catch (error) {
@@ -286,10 +235,7 @@ export async function toggleMessageArchive(messageId: string) {
   try {
     const userId = await getAuthUserId();
 
-    const message = await prisma.message.findUnique({
-      where: { id: messageId },
-      select: { senderId: true, recipientId: true, isArchived: true },
-    });
+    const message = await dbGetMessage(messageId);
 
     if (
       !message ||
@@ -305,23 +251,9 @@ export async function toggleMessageArchive(messageId: string) {
       throw new Error("Could not determine conversation partner");
     }
 
-    await prisma.message.updateMany({
-      where: {
-        OR: [
-          { senderId: userId, recipientId: partnerId },
+    await dbArchiveMessages(userId, partnerId, !message.isArchived);
 
-          { recipientId: userId, senderId: partnerId },
-        ],
-      },
-      data: {
-        isArchived: !message.isArchived,
-      },
-    });
-
-    const updatedMessage = await prisma.message.findUnique({
-      where: { id: messageId },
-      select: messageSelect,
-    });
+    const updatedMessage = await dbGetMessageForDto(messageId);
 
     return updatedMessage ? mapMessageToMessageDto(updatedMessage) : null;
   } catch (error) {
@@ -334,24 +266,7 @@ export async function getStarredMessages(cursor?: string, limit = 10) {
   try {
     const userId = await getAuthUserId();
 
-    const starredMessages = await prisma.message.findMany({
-      where: {
-        isStarred: true,
-        OR: [
-          { recipientId: userId, recipientDeleted: false },
-          { senderId: userId, senderDeleted: false },
-        ],
-        ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
-      },
-      orderBy: {
-        created: "desc",
-      },
-      select: {
-        ...messageSelect,
-        senderId: true,
-        recipientId: true,
-      },
-    });
+    const starredMessages = await dbGetStarredMessages(userId, cursor);
 
     const conversationMap = new Map<string, (typeof starredMessages)[0]>();
 
@@ -404,24 +319,7 @@ export async function getArchivedMessages(cursor?: string, limit = 10) {
   try {
     const userId = await getAuthUserId();
 
-    const archivedMessages = await prisma.message.findMany({
-      where: {
-        isArchived: true,
-        OR: [
-          { recipientId: userId, recipientDeleted: false },
-          { senderId: userId, senderDeleted: false },
-        ],
-        ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
-      },
-      orderBy: {
-        created: "desc",
-      },
-      select: {
-        ...messageSelect,
-        senderId: true,
-        recipientId: true,
-      },
-    });
+    const archivedMessages = await dbGetArchivedMessages(userId, cursor);
 
     const conversationMap = new Map<string, (typeof archivedMessages)[0]>();
 
@@ -469,18 +367,3 @@ export async function getArchivedMessages(cursor?: string, limit = 10) {
     throw error;
   }
 }
-
-const messageSelect = {
-  id: true,
-  text: true,
-  created: true,
-  dateRead: true,
-  isStarred: true,
-  isArchived: true,
-  sender: {
-    select: { userId: true, name: true, image: true },
-  },
-  recipient: {
-    select: { userId: true, name: true, image: true },
-  },
-};

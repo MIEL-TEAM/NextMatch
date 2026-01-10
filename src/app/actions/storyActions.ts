@@ -1,40 +1,28 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { add } from "date-fns";
 import { ActionResult } from "@/types";
 import { createMessgae } from "./messageActions";
 import { getSession } from "@/lib/session";
-
-type StoryPrivacy = "PUBLIC" | "PREMIUM" | "PRIVATE";
-
-interface Story {
-  id: string;
-  userId: string;
-  imageUrl: string;
-  publicId?: string | null;
-  textOverlay?: string | null;
-  textX?: number | null;
-  textY?: number | null;
-  filter?: string | null;
-  privacy: StoryPrivacy;
-  createdAt: Date;
-  expiresAt: Date;
-  isActive: boolean;
-}
-
-interface StoryWithUser extends Story {
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-  viewCount?: number;
-  reactionCount?: number;
-  hasViewed?: boolean;
-}
+import { Story, StoryPrivacy, StoryWithUser } from "@/types/story";
+import {
+  dbCreateStory,
+  dbCreateStoryReply,
+  dbCreateStoryViews,
+  dbDeleteStory,
+  dbGetCurrentUserBasicInfo,
+  dbGetStoryForDelete,
+  dbGetStoryForMessage,
+  dbGetStoryViews,
+  dbGetStoryWithUserPremium,
+  dbGetTodayStoryCount,
+  dbGetUserForStoryDelete,
+  dbGetUserPremiumStatus,
+  dbGetUserStories,
+  dbGetUsersWithStories,
+} from "@/lib/db/storyActions";
 
 export async function createStory(
   formData: FormData
@@ -61,10 +49,7 @@ export async function createStory(
       return { status: "error", error: "Image URL is required" };
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { isPremium: true },
-    });
+    const user = await dbGetUserPremiumStatus(session.user.id);
 
     if (!user?.isPremium) {
       const today = new Date();
@@ -72,15 +57,11 @@ export async function createStory(
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const todayStoryCount = await prisma.story.count({
-        where: {
-          userId: session.user.id,
-          createdAt: {
-            gte: today,
-            lt: tomorrow,
-          },
-        },
-      });
+      const todayStoryCount = await dbGetTodayStoryCount(
+        session.user.id,
+        today,
+        tomorrow
+      );
 
       if (todayStoryCount >= 1) {
         return {
@@ -94,18 +75,16 @@ export async function createStory(
     const expiresAt = add(new Date(), { hours: 24 });
 
     try {
-      const story = await prisma.story.create({
-        data: {
-          userId: session.user.id,
-          imageUrl,
-          publicId: publicId || null,
-          textOverlay: textOverlay || null,
-          textX: textX,
-          textY: textY,
-          filter: filter || null,
-          privacy,
-          expiresAt,
-        },
+      const story = await dbCreateStory({
+        userId: session.user.id,
+        imageUrl,
+        publicId: publicId || null,
+        textOverlay: textOverlay || null,
+        textX,
+        textY,
+        filter: filter || null,
+        privacy,
+        expiresAt,
       });
 
       revalidatePath("/members");
@@ -149,46 +128,7 @@ export async function getStoryUsers() {
 
     try {
       // Get all users with stories
-      const usersWithStories = await prisma.user.findMany({
-        where: {
-          stories: {
-            some: {
-              isActive: true,
-              expiresAt: {
-                gt: new Date(),
-              },
-            },
-          },
-        },
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          stories: {
-            where: {
-              isActive: true,
-              expiresAt: {
-                gt: new Date(),
-              },
-            },
-            include: {
-              views: {
-                where: {
-                  viewerId: session.user.id,
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          },
-        },
-        orderBy: {
-          stories: {
-            _count: "desc",
-          },
-        },
-      });
+      const usersWithStories = await dbGetUsersWithStories(session.user.id);
 
       const storyUsers = usersWithStories.map((user) => {
         const hasUnviewedStories = user.stories.some(
@@ -209,10 +149,7 @@ export async function getStoryUsers() {
       const currentUserInList = storyUsers.find((user) => user.isCurrentUser);
 
       if (!currentUserInList) {
-        const currentUser = await prisma.user.findUnique({
-          where: { id: session.user.id },
-          select: { id: true, name: true, image: true },
-        });
+        const currentUser = await dbGetCurrentUserBasicInfo(session.user.id);
 
         if (currentUser) {
           storyUsers.push({
@@ -253,51 +190,19 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
     }
 
     try {
-      const stories = await prisma.story.findMany({
-        where: {
-          userId,
-          isActive: true,
-          expiresAt: {
-            gt: new Date(),
-          },
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-          views: {
-            where: {
-              viewerId: session.user.id,
-            },
-          },
-          _count: {
-            select: {
-              views: true,
-              reactions: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
+      const stories = await dbGetUserStories(userId, session.user.id);
 
       const unviewedStoryIds = stories
         .filter((story) => story.views.length === 0)
         .map((story) => story.id);
 
       if (unviewedStoryIds.length > 0 && session.user.id) {
-        await prisma.storyView.createMany({
-          data: unviewedStoryIds.map((storyId) => ({
+        await dbCreateStoryViews(
+          unviewedStoryIds.map((storyId) => ({
             storyId,
             viewerId: session.user.id!,
-          })),
-          skipDuplicates: true,
-        });
+          }))
+        );
 
         try {
           const { pusherServer } = await import("@/lib/pusher");
@@ -383,19 +288,7 @@ export async function getStoryAnalytics(storyId: string): Promise<
       return { status: "error", error: "Not authenticated" };
     }
 
-    const story = await prisma.story.findUnique({
-      where: { id: storyId },
-      select: {
-        id: true,
-        userId: true,
-        user: {
-          select: {
-            isPremium: true,
-            premiumUntil: true,
-          },
-        },
-      },
-    });
+    const story = await dbGetStoryWithUserPremium(storyId);
 
     if (!story) {
       return { status: "error", error: "Story not found" };
@@ -418,21 +311,7 @@ export async function getStoryAnalytics(storyId: string): Promise<
       };
     }
 
-    const storyViews = await prisma.storyView.findMany({
-      where: { storyId },
-      include: {
-        viewer: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-      },
-      orderBy: {
-        viewedAt: "desc",
-      },
-    });
+    const storyViews = await dbGetStoryViews(storyId);
 
     const analytics = {
       storyId: story.id,
@@ -462,18 +341,7 @@ export async function sendStoryMessage(
       return { status: "error", error: "Not authenticated" };
     }
 
-    const story = await prisma.story.findUnique({
-      where: { id: storyId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-      },
-    });
+    const story = await dbGetStoryForMessage(storyId);
 
     if (!story) {
       return { status: "error", error: "Story not found" };
@@ -493,13 +361,11 @@ export async function sendStoryMessage(
       return { status: "error", error: "Failed to send message" };
     }
 
-    await prisma.storyReply.create({
-      data: {
-        storyId,
-        senderId: session.user.id,
-        recipientId: story.userId,
-        messageText,
-      },
+    await dbCreateStoryReply({
+      storyId,
+      senderId: session.user.id,
+      recipientId: story.userId,
+      messageText,
     });
 
     return { status: "success", data: "Message sent successfully!" };
@@ -518,18 +384,13 @@ export async function deleteStory(
       return { status: "error", error: "לא מחובר" };
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
+    const user = await dbGetUserForStoryDelete(session.user.id);
     if (!user) {
       return { status: "error", error: "משתמש לא נמצא" };
     }
 
     // Check if story exists and belongs to user
-    const story = await prisma.story.findUnique({
-      where: { id: storyId },
-      select: { userId: true, publicId: true },
-    });
+    const story = await dbGetStoryForDelete(storyId);
 
     if (!story) {
       return { status: "error", error: "סטורי לא נמצא" };
@@ -540,9 +401,7 @@ export async function deleteStory(
     }
 
     // Delete from database
-    await prisma.story.delete({
-      where: { id: storyId },
-    });
+    await dbDeleteStory(storyId);
 
     // Delete from Cloudinary if publicId exists
     if (story.publicId) {

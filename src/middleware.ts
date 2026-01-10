@@ -20,33 +20,38 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Admin isolation
-  if (isAdmin && !isAdminRoute) {
-    return NextResponse.redirect(new URL("/admin", nextUrl), { status: 303 });
-  }
-  if (isAdminRoute && !isAdmin) {
-    return NextResponse.redirect(new URL("/", nextUrl), { status: 303 });
+  // 1. Admin Logic
+  if (isAdmin) {
+    // If admin is on an admin route, let them pass (skip profile completion check)
+    if (isAdminRoute) {
+      return NextResponse.next();
+    }
+    // If admin is NOT on an admin route, force them to /admin
+    return NextResponse.redirect(new URL("/admin", nextUrl));
   }
 
-  // Handle unauthenticated users
+  // 2. Non-Admin trying to access Admin routes
+  if (isAdminRoute && !isAdmin) {
+    return NextResponse.redirect(new URL("/", nextUrl));
+  }
+
+  // 3. Handle unauthenticated users
   if (!isLoggedIn) {
     const allowedRoutes = [...unauthOnlyRoutes, ...registerSuccessRoutes];
     return allowedRoutes.includes(pathname)
       ? NextResponse.next()
-      : NextResponse.redirect(new URL("/login", nextUrl), { status: 303 });
+      : NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  // Handle authenticated users
+  // 4. Handle authenticated users (block login/register pages)
   const blockedRoutes = [...unauthOnlyRoutes, ...registerSuccessRoutes];
   if (blockedRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/members", nextUrl), { status: 303 });
+    return NextResponse.redirect(new URL("/members", nextUrl));
   }
 
-  // Profile completion check
+  // 5. Profile completion check (Only for non-admins now, since Admins are handled above)
   if (!user?.profileComplete && pathname !== "/complete-profile") {
-    return NextResponse.redirect(new URL("/complete-profile", nextUrl), {
-      status: 303,
-    });
+    return NextResponse.redirect(new URL("/complete-profile", nextUrl));
   }
 
   return NextResponse.next();

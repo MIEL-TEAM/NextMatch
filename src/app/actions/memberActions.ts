@@ -1,30 +1,27 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { GetMemberParams, PaginatedResponse } from "@/types";
 import { Photo } from "@prisma/client";
 import { addYears } from "date-fns";
 import { getAuthUserId } from "@/lib/session";
 import { cache } from "react";
-import { ensureMember } from "@/lib/prismaHelpers";
+import { ensureMember } from "@/lib/db/userActions";
 import { calculateDistance, isValidCoordinates } from "@/lib/locationUtils";
-
-type MemberCardData = {
-  id: string;
-  userId: string;
-  name: string;
-  dateOfBirth: Date;
-  description: string;
-  image: string | null;
-  updated: Date;
-  created: Date;
-  latitude: number | null;
-  longitude: number | null;
-  user: {
-    oauthVerified: boolean;
-    lastActiveAt: Date | null;
-  };
-};
+import { MemberCardData } from "@/types/members";
+import {
+  dbGetAllMemberPhotos,
+  dbGetMemberByUserId,
+  dbGetMemberLocation,
+  dbGetMemberLocationStatus,
+  dbGetMemberPhotos,
+  dbGetMembersWithDistance,
+  dbGetMembersWithPagination,
+  dbGetPhotosWithMembers,
+  dbGetUserPreferences,
+  dbUpdateLastActive,
+  dbUpdateMemberLocation,
+  dbUpdateUserActivity,
+} from "@/lib/db/memberActions";
 
 export async function getMembers({
   ageRange = "18,65",
@@ -52,14 +49,7 @@ export async function getMembers({
 
       // Get user preferences for filtering
       if (userId) {
-        userPreferences = await prisma.user.findUnique({
-          where: { id: userId },
-          select: {
-            preferredGenders: true,
-            preferredAgeMin: true,
-            preferredAgeMax: true,
-          },
-        });
+        userPreferences = await dbGetUserPreferences(userId);
       }
     } catch (error) {
       console.error(
@@ -146,10 +136,7 @@ export async function getMembers({
 
     // Fallback to saved location in DB if URL does not provide coordinates
     if (!hasUserLocation && userId) {
-      const selfMember = await prisma.member.findUnique({
-        where: { userId },
-        select: { latitude: true, longitude: true, locationEnabled: true },
-      });
+      const selfMember = await dbGetMemberLocation(userId);
       if (
         selfMember?.locationEnabled &&
         typeof selfMember.latitude === "number" &&
@@ -165,8 +152,10 @@ export async function getMembers({
     // Parse distance filter (format: "5,50" = min 5km, max 50km)
     let minDistance = 0;
     let maxDistance = 999999;
-    if (distance && distance !== "0,999999") {
-      const [min, max] = distance.split(",").map(Number);
+    const hasDistanceFilter = distance && distance !== "0,999999";
+
+    if (hasDistanceFilter) {
+      const [min, max] = distance!.split(",").map(Number);
       minDistance = min || 0;
       maxDistance = max || 999999;
     }
@@ -183,7 +172,7 @@ export async function getMembers({
     // - withPhoto === "false" → NO filter (show all users including those without photos)
     const shouldFilterByPhoto = withPhoto === "true";
 
-    // Build WHERE clause for filtering
+    // ✅ FIXED: WHERE clause never filters by location existence
     const whereClause = {
       AND: [
         { dateOfBirth: { gte: minDob } },
@@ -204,14 +193,6 @@ export async function getMembers({
           : lastActiveThreshold
             ? [{ updated: { gte: lastActiveThreshold } }]
             : []),
-
-        ...(needsDistanceCalculation
-          ? [
-              { latitude: { not: null } },
-              { longitude: { not: null } },
-              { locationEnabled: true },
-            ]
-          : []),
       ],
       ...(userId && includeSelf !== "true" ? { NOT: { userId } } : {}),
     };
@@ -237,58 +218,57 @@ export async function getMembers({
     };
 
     // Path 1: Distance-based sorting (requires JS calculation)
-    if (
-      needsDistanceCalculation &&
-      userLatNum !== null &&
-      userLonNum !== null
-    ) {
-      // Fetch all matching members (no pagination yet)
-      const allMembers = await prisma.member.findMany({
-        where: whereClause,
-        select: selectFields,
+    if (needsDistanceCalculation) {
+      // 1. Fetch ALL matching members (even those without location)
+      const allMembers = await dbGetMembersWithDistance(
+        whereClause,
+        selectFields
+      );
+      const userLatNum = parseFloat(userLat!);
+      const userLonNum = parseFloat(userLon!);
+
+      // 2. Calculate Distances
+      const membersWithDistance = allMembers.map((member) => {
+        // ✅ Logic: If member has location, calc distance. If not, assign Infinity.
+        if (member.latitude && member.longitude) {
+          const dist = calculateDistance(
+            userLatNum,
+            userLonNum,
+            member.latitude,
+            member.longitude
+          );
+          return { ...member, distance: dist };
+        }
+        // Place members without location at the END
+        return { ...member, distance: Number.MAX_SAFE_INTEGER };
       });
 
-      // Calculate distances and filter by distance range
-      const membersWithDistance = allMembers
-        .map((member) => {
-          if (member.latitude && member.longitude) {
-            const dist = calculateDistance(
-              userLatNum,
-              userLonNum,
-              member.latitude,
-              member.longitude
-            );
-            return { ...member, distance: dist };
-          }
-          return { ...member, distance: undefined };
-        })
-        .filter((member) => {
-          // Filter by distance range if specified
-          if (distance && member.distance !== undefined) {
-            return (
-              member.distance >= minDistance && member.distance <= maxDistance
-            );
-          }
-          return true;
-        });
+      // 3. Filter by distance (ONLY if specific range requested)
+      // If no range filter, we keep everyone.
+      const filteredMembers = hasDistanceFilter
+        ? membersWithDistance.filter(
+            (m) => m.distance >= minDistance && m.distance <= maxDistance
+          )
+        : membersWithDistance;
 
-      // Sort by distance
-      membersWithDistance.sort((a, b) => {
-        const distA = a.distance ?? 999999;
-        const distB = b.distance ?? 999999;
-        return distA - distB;
+      // 4. Sort by Distance
+      filteredMembers.sort((a, b) => {
+        // Safe sort handling Infinity
+        return (
+          (a.distance ?? Number.MAX_SAFE_INTEGER) -
+          (b.distance ?? Number.MAX_SAFE_INTEGER)
+        );
       });
 
-      // Apply pagination in JS
-      const paginatedMembers = membersWithDistance.slice(skip, skip + limit);
+      // 5. Apply pagination in JS
+      const paginatedMembers = filteredMembers.slice(skip, skip + limit);
 
       return {
         items: paginatedMembers,
-        totalCount: membersWithDistance.length,
+        totalCount: filteredMembers.length,
       };
     }
 
-    // Path 2: Database-level sorting and pagination (optimized)
     let orderByField = "updated";
     let orderDirection: "asc" | "desc" = "desc";
 
@@ -307,18 +287,14 @@ export async function getMembers({
     }
 
     // Optimize: Fetch count and members in parallel, with DB pagination
-    const [totalCount, members] = await Promise.all([
-      prisma.member.count({
-        where: whereClause,
-      }),
-      prisma.member.findMany({
-        where: whereClause,
-        select: selectFields,
-        orderBy: { [orderByField]: orderDirection },
-        skip: skip,
-        take: limit,
-      }),
-    ]);
+    const [totalCount, members] = await dbGetMembersWithPagination(
+      whereClause,
+      selectFields,
+      orderByField,
+      orderDirection,
+      skip,
+      limit
+    );
 
     // Add distance field if location is available (but not used for sorting)
     const membersWithOptionalDistance = members.map((member) => {
@@ -362,21 +338,12 @@ export async function updateCurrentUserLocation(
       throw new Error("Invalid coordinates");
     }
 
-    const updated = await prisma.member.update({
-      where: { userId },
-      data: {
-        latitude,
-        longitude,
-        locationEnabled: true,
-        locationUpdatedAt: new Date(),
-        updated: new Date(),
-      },
-      select: {
-        userId: true,
-        latitude: true,
-        longitude: true,
-        locationEnabled: true,
-      },
+    const updated = await dbUpdateMemberLocation(userId, {
+      latitude,
+      longitude,
+      locationEnabled: true,
+      locationUpdatedAt: new Date(),
+      updated: new Date(),
     });
 
     return { status: "success", data: updated } as const;
@@ -393,15 +360,7 @@ export async function updateCurrentUserLocation(
 export const getCurrentUserLocationStatus = cache(async () => {
   try {
     const userId = await getAuthUserId();
-    const member = await prisma.member.findUnique({
-      where: { userId },
-      select: {
-        latitude: true,
-        longitude: true,
-        locationEnabled: true,
-        locationUpdatedAt: true,
-      },
-    });
+    const member = await dbGetMemberLocationStatus(userId);
 
     if (!member) {
       return {
@@ -448,24 +407,10 @@ export async function getMembersWithPhotos(memberIds: string[]) {
       currentUserId = null;
     }
 
-    const photosWithMembers = await prisma.photo.findMany({
-      where: {
-        member: {
-          userId: { in: memberIds },
-        },
-        ...(currentUserId && !memberIds.includes(currentUserId)
-          ? { isApproved: true }
-          : {}),
-      },
-      include: {
-        member: {
-          select: {
-            userId: true,
-          },
-        },
-      },
-      orderBy: { isApproved: "desc" },
-    });
+    const photosWithMembers = await dbGetPhotosWithMembers(
+      memberIds,
+      currentUserId
+    );
 
     const photosByUserId = photosWithMembers.reduce(
       (acc, photo) => {
@@ -495,44 +440,7 @@ export async function getMembersWithPhotos(memberIds: string[]) {
 export const getMemberByUserId = cache(async (userId: string) => {
   if (!userId) return null;
 
-  return prisma.member.findUnique({
-    where: {
-      userId: userId,
-    },
-    select: {
-      // Core member fields
-      id: true,
-      userId: true,
-      name: true,
-      dateOfBirth: true,
-      gender: true,
-      created: true,
-      updated: true,
-      description: true,
-      city: true,
-      country: true,
-      image: true,
-      boostedUntil: true,
-      videoUrl: true,
-      videoUploadedAt: true,
-
-      // Location fields
-      latitude: true,
-      longitude: true,
-      locationUpdatedAt: true,
-      locationEnabled: true,
-      maxDistance: true,
-
-      // User relation (only needed fields)
-      user: {
-        select: {
-          emailVerified: true,
-          oauthVerified: true,
-          lastActiveAt: true,
-        },
-      },
-    },
-  });
+  return dbGetMemberByUserId(userId);
 });
 
 export async function getMemberPhotosByUserId(userId: string) {
@@ -551,17 +459,7 @@ export async function getMemberPhotosByUserId(userId: string) {
       currentUserId = null;
     }
 
-    const member = await prisma.member.findUnique({
-      where: { userId },
-      select: {
-        photos: {
-          where: currentUserId === userId ? {} : { isApproved: true },
-          orderBy: {
-            isApproved: "desc",
-          },
-        },
-      },
-    });
+    const member = await dbGetMemberPhotos(userId, currentUserId === userId);
 
     if (!member) return null;
 
@@ -580,17 +478,7 @@ export async function updateLastActive() {
     const userId = await getAuthUserId();
     await ensureMember(userId);
 
-    // Update both member.updated and user.lastActiveAt for presence system
-    await Promise.all([
-      prisma.member.update({
-        where: { userId },
-        data: { updated: new Date() },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: { lastActiveAt: new Date() },
-      }),
-    ]);
+    await dbUpdateLastActive(userId);
 
     return true;
   } catch (error) {
@@ -605,16 +493,7 @@ export async function getMemberPhotos(userId: string) {
       return [];
     }
 
-    const photos = await prisma.photo.findMany({
-      where: {
-        member: {
-          userId: userId,
-        },
-      },
-      orderBy: {
-        isApproved: "desc",
-      },
-    });
+    const photos = await dbGetAllMemberPhotos(userId);
 
     return photos;
   } catch (error) {
@@ -631,10 +510,7 @@ export async function updateUserActivity() {
     const userId = await getAuthUserId();
     await ensureMember(userId);
 
-    return prisma.member.update({
-      where: { userId },
-      data: { updated: new Date() },
-    });
+    return dbUpdateUserActivity(userId);
   } catch (error) {
     console.error("Error updating user activity:", error);
     return null;

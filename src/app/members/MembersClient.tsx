@@ -38,6 +38,7 @@ export default function MembersClient({
     handleLocationGranted,
     handleLocationDismissed,
     stableParams,
+    internalLocation,
   } = useLocationFlow();
 
   const [likeIds, setLikeIds] = useState<string[]>([]);
@@ -53,6 +54,7 @@ export default function MembersClient({
   const queryEnabled = locationState === "readyToQuery";
   const query = useMembersQuery(searchParams.toString(), {
     enabled: queryEnabled,
+    userLocation: internalLocation,
   });
 
   // Fetch likes

@@ -1,6 +1,5 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import {
   combinedRegisterSchema,
   ProfileSchema,
@@ -22,6 +21,18 @@ import {
 import { revalidatePath } from "next/cache";
 import { COOKIE_NAME } from "@/types/cookies";
 import { cookies } from "next/headers";
+import {
+  dbCreateUserWithMember,
+  dbDeleteToken,
+  dbGetUserByEmail,
+  dbGetUserById,
+  dbGetUserForSocialProfile,
+  dbSetProfileIncomplete,
+  dbUpdateUserEmailVerified,
+  dbUpdateUserPassword,
+  dbUpdateUserSocialProfile,
+  dbUpdateUserWelcomeStatus,
+} from "@/lib/db/authActions";
 
 export async function signInUser(
   data: LoginSchema
@@ -43,10 +54,7 @@ export async function signInUser(
     const user = await getUserByEmail(data.email);
 
     if (user && !user.hasSeenWelcomeMessage) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { hasSeenWelcomeMessage: true },
-      });
+      await dbUpdateUserWelcomeStatus(user.id);
 
       try {
         await sendWelcomeEmail(user.email!, user.name || "חבר חדש");
@@ -82,17 +90,12 @@ export async function signOutUser() {
 export async function registerUser(
   data: RegisterSchema
 ): Promise<ActionResult<User>> {
-  console.log("📝 [REGISTER] Starting registration for:", data.email);
-
   try {
     const validated = combinedRegisterSchema.safeParse(data);
 
     if (!validated.success) {
-      console.error("❌ [REGISTER] Validation failed:", validated.error.errors);
       return { status: "error", error: validated.error.errors };
     }
-
-    console.log("✅ [REGISTER] Validation passed");
 
     const {
       name,
@@ -109,9 +112,7 @@ export async function registerUser(
       preferredAgeMax,
     } = validated.data;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await dbGetUserByEmail(email);
 
     if (existingUser) {
       return { status: "error", error: "User already exists" };
@@ -125,60 +126,36 @@ export async function registerUser(
       };
     }
 
-    console.log("✅ [REGISTER] Creating user and member profile...");
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash: hashedPassword,
-        profileComplete: true,
-        image: photos && photos.length > 0 ? photos[0].url : null,
-        preferredGenders,
-        preferredAgeMin,
-        preferredAgeMax,
-        member: {
-          create: {
-            name,
-            description,
-            city,
-            country,
-            dateOfBirth: new Date(dateOfBirth),
-            gender,
-            image: photos && photos.length > 0 ? photos[0].url : null,
-            ...(photos &&
-              photos.length > 0 && {
-                photos: {
-                  create: photos.map((photo) => ({
-                    url: photo.url,
-                    publicId: photo.publicId,
-                    isApproved: false,
-                  })),
-                },
-              }),
-          },
+    const user = await dbCreateUserWithMember({
+      name,
+      email,
+      passwordHash: hashedPassword,
+      profileComplete: true,
+      image: photos && photos.length > 0 ? photos[0].url : null,
+      preferredGenders,
+      preferredAgeMin,
+      preferredAgeMax,
+      member: {
+        create: {
+          name,
+          description,
+          city,
+          country,
+          dateOfBirth: new Date(dateOfBirth),
+          gender,
+          image: photos && photos.length > 0 ? photos[0].url : null,
+          ...(photos &&
+            photos.length > 0 && {
+              photos: {
+                create: photos.map((photo) => ({
+                  url: photo.url,
+                  publicId: photo.publicId,
+                  isApproved: false,
+                })),
+              },
+            }),
         },
       },
-      include: {
-        member: {
-          select: {
-            id: true,
-            name: true,
-            created: true,
-          },
-        },
-      },
-    });
-
-    console.log("✅ [REGISTER] User created successfully:", {
-      userId: user.id,
-      email: user.email,
-      hasMember: !!user.member,
-      memberId: user.member?.id,
-      memberCreated: user.member?.created,
-      profileComplete: user.profileComplete,
-      hasPhotos: !!photos && photos.length > 0,
-      photoCount: photos?.length || 0,
     });
 
     const verificationToken = await generateToken(
@@ -191,8 +168,6 @@ export async function registerUser(
       verificationToken.token
     );
 
-    console.log("✅ [REGISTER] Registration complete, verification email sent");
-
     return { status: "success", data: user };
   } catch (error) {
     console.error("❌ [REGISTER] Registration failed:", error);
@@ -201,14 +176,11 @@ export async function registerUser(
 }
 
 export async function getUserByEmail(email: string) {
-  return prisma.user.findUnique({
-    where: { email },
-    include: { member: { select: { gender: true } } },
-  });
+  return dbGetUserByEmail(email);
 }
 
 export async function getUserById(id: string) {
-  return prisma.user.findUnique({ where: { id } });
+  return dbGetUserById(id);
 }
 
 export async function verifyEmail(
@@ -235,12 +207,9 @@ export async function verifyEmail(
       return { status: "error", error: "User not found" };
     }
 
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: { emailVerified: new Date() },
-    });
+    await dbUpdateUserEmailVerified(existingUser.id);
 
-    await prisma.token.delete({ where: { id: existingToken.id } });
+    await dbDeleteToken(existingToken.id);
 
     return { status: "success", data: "אתה בפנים!" };
   } catch (error) {
@@ -307,14 +276,9 @@ export async function resetPassword(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: { passwordHash: hashedPassword },
-    });
+    await dbUpdateUserPassword(existingUser.id, hashedPassword);
 
-    await prisma.token.delete({
-      where: { id: existingToken.id },
-    });
+    await dbDeleteToken(existingToken.id);
 
     return {
       status: "success",
@@ -331,64 +295,37 @@ export async function completeSocialLoginProfile(
 ): Promise<ActionResult<string>> {
   const session = await getSession();
   if (!session?.user?.id) {
-    console.error("[SOCIAL] No user session found");
     return { status: "error", error: "user not found" };
   }
 
   try {
     // Check if user is OAuth and already has emailVerified and image
-    const existingUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        emailVerified: true,
-        oauthVerified: true,
-        image: true,
-      },
-    });
+    const existingUser = await dbGetUserForSocialProfile(session.user.id);
 
-    const user = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
+    const user = await dbUpdateUserSocialProfile(
+      session.user.id,
+      {
         profileComplete: true,
         emailVerified: existingUser?.emailVerified || new Date(),
-        member: {
-          upsert: {
-            create: {
-              name: session.user.name as string,
-              image: existingUser?.image || session.user.image,
-              gender: data.gender,
-              dateOfBirth: new Date(data.dateOfBirth),
-              description: data.description,
-              city: data.city,
-              country: data.country,
-            },
-            update: {
-              gender: data.gender,
-              dateOfBirth: new Date(data.dateOfBirth),
-              description: data.description,
-              city: data.city,
-              country: data.country,
-              image: existingUser?.image || session.user.image,
-            },
-          },
-        },
       },
-      include: {
-        accounts: {
-          select: {
-            provider: true,
-          },
-        },
-        member: {
-          select: {
-            id: true,
-            name: true,
-            created: true,
-            image: true,
-          },
-        },
+      {
+        name: session.user.name as string,
+        image: existingUser?.image || session.user.image,
+        gender: data.gender,
+        dateOfBirth: new Date(data.dateOfBirth),
+        description: data.description,
+        city: data.city,
+        country: data.country,
       },
-    });
+      {
+        gender: data.gender,
+        dateOfBirth: new Date(data.dateOfBirth),
+        description: data.description,
+        city: data.city,
+        country: data.country,
+        image: existingUser?.image || session.user.image,
+      }
+    );
 
     return { status: "success", data: user.accounts[0].provider };
   } catch (error) {
@@ -401,14 +338,7 @@ export async function setProfileIncomplete() {
   const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  await prisma.user.update({
-    where: {
-      id: session.user.id,
-    },
-    data: {
-      profileComplete: false,
-    },
-  });
+  await dbSetProfileIncomplete(session.user.id);
 
   revalidatePath("/profile");
   revalidatePath("/members");

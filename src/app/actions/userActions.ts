@@ -7,14 +7,22 @@ import {
 import { ActionResult } from "@/types";
 import { Photo } from "@prisma/client";
 import { getAuthUserId } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
 import { cloudinary } from "@/lib/cloudinary";
-import { ensureMember } from "@/lib/prismaHelpers";
+import { ensureMember } from "@/lib/db/userActions";
 import {
   ProfileCompletionKey,
   ProfileCompletionTask,
   ProfileCompletionStatus,
 } from "@/types/userAction";
+import {
+  dbCreatePhoto,
+  dbDeletePhoto,
+  dbGetUserForNav,
+  dbGetUserIntroStatus,
+  dbGetUserWithMemberProfile,
+  dbUpdateMember,
+  dbUpdateUser,
+} from "@/lib/db/userActions";
 
 export async function updateMemberProfile(
   data: MemberEditSchema,
@@ -32,12 +40,14 @@ export async function updateMemberProfile(
     const { name, description, city, country } = validate.data;
 
     if (nameUpdated) {
-      await prisma.user.update({ where: { id: userId }, data: { name } });
+      await dbUpdateUser(userId, { name });
     }
 
-    const member = await prisma.member.update({
-      where: { userId },
-      data: { name, description, city, country },
+    const member = await dbUpdateMember(userId, {
+      name,
+      description,
+      city,
+      country,
     });
 
     return { status: "success", data: member };
@@ -52,13 +62,10 @@ export async function addImage(url: string, publicId: string) {
     const userId = await getAuthUserId();
     const member = await ensureMember(userId);
 
-    return prisma.photo.create({
-      data: {
-        url,
-        publicId,
-        isApproved: false,
-        memberId: member.id,
-      },
+    return dbCreatePhoto({
+      url,
+      publicId,
+      memberId: member.id,
     });
   } catch (error) {
     console.log("❌ שגיאה בהעלאת תמונה:", error);
@@ -74,15 +81,9 @@ export async function setMainImage(photo: Photo) {
     const userId = await getAuthUserId();
     await ensureMember(userId);
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { image: photo.url },
-    });
+    await dbUpdateUser(userId, { image: photo.url });
 
-    return prisma.member.update({
-      where: { userId },
-      data: { image: photo.url },
-    });
+    return dbUpdateMember(userId, { image: photo.url });
   } catch (error) {
     console.log(error);
     throw error;
@@ -92,10 +93,7 @@ export async function setMainImage(photo: Photo) {
 export async function getUserInfoForNav() {
   try {
     const userId = await getAuthUserId();
-    return prisma.user.findUnique({
-      where: { id: userId },
-      select: { name: true, image: true },
-    });
+    return dbGetUserForNav(userId);
   } catch (error) {
     console.log(error);
     throw error;
@@ -127,38 +125,7 @@ export async function getProfileCompletionStatus(
       return null;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: resolvedUserId },
-      select: {
-        id: true,
-        name: true,
-        member: {
-          select: {
-            userId: true,
-            name: true,
-            description: true,
-            city: true,
-            country: true,
-            gender: true,
-            dateOfBirth: true,
-            image: true,
-            latitude: true,
-            longitude: true,
-            locationEnabled: true,
-            videoUrl: true,
-            photos: {
-              select: { id: true, isApproved: true },
-            },
-            interests: {
-              select: { id: true },
-            },
-            videos: {
-              select: { id: true, isApproved: true },
-            },
-          },
-        },
-      },
-    });
+    const user = await dbGetUserWithMemberProfile(resolvedUserId);
 
     if (!user || !user.member) {
       return null;
@@ -248,7 +215,10 @@ export async function getProfileCompletionStatus(
         description:
           descriptionLength >= PROFILE_COMPLETION_TARGETS.bioLength
             ? "הטקסט שלך נראה מצוין."
-            : `הוסף עוד ${Math.max(0, PROFILE_COMPLETION_TARGETS.bioLength - descriptionLength)} תווים כדי לספר על עצמך.`,
+            : `הוסף עוד ${Math.max(
+                0,
+                PROFILE_COMPLETION_TARGETS.bioLength - descriptionLength
+              )} תווים כדי לספר על עצמך.`,
         actionHref: "/members/edit",
         weight: PROFILE_COMPLETION_WEIGHTS.bio,
         progress: bioProgress,
@@ -311,7 +281,10 @@ export async function getProfileCompletionStatus(
         description:
           interestCount >= PROFILE_COMPLETION_TARGETS.interests
             ? "בחירת תחומי העניין מלאה."
-            : `בחר לפחות ${Math.max(0, PROFILE_COMPLETION_TARGETS.interests - interestCount)} תחומי עניין נוספים כדי לעזור לנו להתאים לך אנשים.`,
+            : `בחר לפחות ${Math.max(
+                0,
+                PROFILE_COMPLETION_TARGETS.interests - interestCount
+              )} תחומי עניין נוספים כדי לעזור לנו להתאים לך אנשים.`,
         actionHref: "/interests",
         weight: PROFILE_COMPLETION_WEIGHTS.interests,
         progress: interestsProgress,
@@ -384,14 +357,7 @@ export async function deleteImage(photo: Photo) {
       await cloudinary.v2.uploader.destroy(photo.publicId);
     }
 
-    return prisma.member.update({
-      where: { userId },
-      data: {
-        photos: {
-          delete: { id: photo.id },
-        },
-      },
-    });
+    return dbDeletePhoto(photo.id, userId);
   } catch (error) {
     console.log(error);
     throw error;
@@ -402,10 +368,7 @@ export async function markIntroAsSeen(): Promise<ActionResult<boolean>> {
   try {
     const userId = await getAuthUserId();
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { hasSeenMembersIntro: true },
-    });
+    await dbUpdateUser(userId, { hasSeenMembersIntro: true });
 
     return { status: "success", data: true };
   } catch (error) {
@@ -416,10 +379,7 @@ export async function markIntroAsSeen(): Promise<ActionResult<boolean>> {
 
 export async function getUserIntroSeen(): Promise<boolean> {
   const userId = await getAuthUserId();
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { hasSeenMembersIntro: true },
-  });
+  const user = await dbGetUserIntroStatus(userId);
 
   return user?.hasSeenMembersIntro ?? false;
 }

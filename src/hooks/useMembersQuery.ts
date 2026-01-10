@@ -6,21 +6,13 @@ import usePaginationStore from "./usePaginationStore";
 
 interface QueryOptions {
   enabled?: boolean;
+  userLocation?: { latitude: number; longitude: number } | null;
 }
 
 export const useMembersQuery = (
   paramsString: string,
   options: QueryOptions = {}
 ) => {
-  /**
-   * Subscribe to pagination store for reactive updates.
-   *
-   * CRITICAL: This ensures the query refetches immediately when pagination
-   * changes, without waiting for URL sync to complete.
-   *
-   * The store is the source of truth for pagination state, and URL is just
-   * a reflection of that state (with a slight delay due to async updates).
-   */
   const { pageNumber: storePageNumber, pageSize: storePageSize } =
     usePaginationStore((state) => state.pagination);
 
@@ -44,7 +36,8 @@ export const useMembersQuery = (
       }
     });
 
-    return {
+    // Base query object from URL params
+    const baseObj = {
       filter: paramsMap.get("filter") || "all",
       ageMin: paramsMap.get("ageMin") || undefined,
       ageMax: paramsMap.get("ageMax") || undefined,
@@ -71,7 +64,20 @@ export const useMembersQuery = (
       distance: paramsMap.get("distance") || undefined,
       sortByDistance: paramsMap.get("sortByDistance") || "false",
     };
-  }, [paramsString, storePageNumber, storePageSize]);
+
+    // Merge in location from options (client state) if available
+    // This overrides URL params if present, or adds them if missing
+    if (options.userLocation) {
+      return {
+        ...baseObj,
+        userLat: options.userLocation.latitude.toString(),
+        userLon: options.userLocation.longitude.toString(),
+        sortByDistance: "true",
+      };
+    }
+
+    return baseObj;
+  }, [paramsString, storePageNumber, storePageSize, options.userLocation]);
 
   // Create stable query key - queryObj is now stable since it depends on paramsString
   const queryKey = useMemo(() => {
