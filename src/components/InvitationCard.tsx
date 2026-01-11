@@ -4,9 +4,11 @@ import { Button } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { IoClose } from "react-icons/io5";
 import Image from "next/image";
+import VideoPlayer from "@/components/video/VideoPlayer";
 
 export interface InvitationCardProps {
   image: string | null;
+  videoUrl?: string | null;
   name: string;
   title: string;
   subtitle?: string;
@@ -17,6 +19,7 @@ export interface InvitationCardProps {
 
 export default function InvitationCard({
   image,
+  videoUrl,
   name,
   title,
   subtitle,
@@ -60,9 +63,17 @@ export default function InvitationCard({
           <IoClose className="text-white" size={22} />
         </button>
 
-        {/* Profile Image - Dominant (50% of card) */}
+        {/* Profile Media - Video or Image */}
         <div className="relative w-full h-[180px]">
-          {image ? (
+          {videoUrl ? (
+            <VideoPlayer
+              url={videoUrl}
+              autoPlay={true}
+              loop={true}
+              muted={true}
+              className="rounded-none"
+            />
+          ) : image ? (
             <Image
               src={image}
               alt={name}

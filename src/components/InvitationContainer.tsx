@@ -25,6 +25,7 @@ export default function InvitationContainer() {
         >
           <InvitationCard
             image={currentInvitation.image}
+            videoUrl={currentInvitation.videoUrl}
             name={currentInvitation.name}
             title={currentInvitation.title}
             subtitle={currentInvitation.subtitle}

@@ -7,6 +7,19 @@ export async function dbGetUserForAnnouncement(userId: string) {
       name: true,
       image: true,
       lastOnlineAnnouncedAt: true,
+      member: {
+        select: {
+          id: true,
+          videoUrl: true,
+          videos: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              url: true,
+            },
+          },
+        },
+      },
     },
   });
 }

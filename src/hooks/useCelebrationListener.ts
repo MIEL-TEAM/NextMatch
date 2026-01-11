@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { pusherClient } from "@/lib/pusher-client";
 import { CelebrationType } from "@/components/CelebrationModal";
 import { newLikeToast } from "@/components/NotificationToast";
-import useInvitationStore from "./useInvitationStore";
+import useInvitationStore, { type Invitation } from "./useInvitationStore";
 import { useRouter } from "next/navigation";
 
 interface MutualMatchData {
@@ -103,20 +103,27 @@ export function useCelebrationListener(
 
     channel.bind(
       "match:online",
-      (data: { userId: string; name: string; image: string | null }) => {
-        showInvitation({
+      (data: {
+        userId: string;
+        name: string;
+        image: string | null;
+        videoUrl?: string | null;
+      }) => {
+        const invitation: Invitation = {
           id: `chat-${data.userId}-${Date.now()}`,
           type: "chat",
           userId: data.userId,
           image: data.image,
+          videoUrl: data.videoUrl || null,
           name: data.name,
           title: `${data.name} זמינה עכשיו לשיחה`,
           ctaText: "שלח/י הודעה",
           onAction: () => {
-            console.log("💬 Navigating to chat with:", data.userId);
             router.push(`/members/${data.userId}/chat`);
           },
-        });
+        };
+
+        showInvitation(invitation);
       }
     );
 

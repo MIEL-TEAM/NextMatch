@@ -78,16 +78,9 @@ export const usePresenceChannel = (
         handleSetMembers(Object.keys(members.members));
         throttledUpdateLastActive();
 
-        // Announce to mutual matches that user is now online
-        // This fires ONCE per true online transition (not on every reconnect)
-        // Cooldown logic in announceUserOnline() prevents spam
-        console.log("🟢 [usePresenceChannel] Calling announceUserOnline()...");
         announceUserOnline()
           .then((result) => {
-            console.log(
-              "🟢 [usePresenceChannel] announceUserOnline result:",
-              result
-            );
+            console.log("Announce user online result:", result);
           })
           .catch((err) => {
             console.error(

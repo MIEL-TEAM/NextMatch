@@ -12,10 +12,7 @@ import {
 export async function announceUserOnline(): Promise<{ success: boolean }> {
   try {
     const userId = await getAuthUserId();
-    console.log("🔔 [announceUserOnline] Called for userId:", userId);
-
     if (!userId) {
-      console.log("🔔 [announceUserOnline] No userId, aborting");
       return { success: false };
     }
 
@@ -23,7 +20,6 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
     const user = await dbGetUserForAnnouncement(userId);
 
     if (!user) {
-      console.log("🔔 [announceUserOnline] User not found");
       return { success: false };
     }
 
@@ -43,20 +39,12 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
       return { success: false };
     }
 
-    console.log(
-      "🔔 [announceUserOnline] Cooldown passed, proceeding with announcement"
-    );
-
     // Step 1: Users this user liked
     const likedUsers = await dbGetOutboundLikes(userId);
 
     const likeIds = likedUsers.map((x) => x.targetUserId);
 
     if (likeIds.length === 0) {
-      console.log(
-        "🔔 [announceUserOnline] No outgoing likes → no mutual matches"
-      );
-
       // Still update announcement time to prevent repeat work
       await dbUpdateUserAnnouncementTime(userId);
 
@@ -67,26 +55,26 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
     const mutualMatches = await dbGetMutualMatchIds(userId, likeIds);
 
     if (mutualMatches.length === 0) {
-      console.log("🔔 [announceUserOnline] No mutual matches found");
-
       await dbUpdateUserAnnouncementTime(userId);
 
       return { success: true };
     }
 
-    console.log(
-      `🔔 [announceUserOnline] Notifying ${mutualMatches.length} mutual matches`,
-      mutualMatches.map((m) => m.sourceUserId)
-    );
+    // Get video URL: prefer Member.videoUrl, fallback to first approved Video
+    const videoUrl =
+      user.member?.videoUrl ||
+      (user.member?.videos && user.member.videos.length > 0
+        ? user.member.videos[0].url
+        : null);
 
     const payload = {
       userId,
       name: user.name || "משתמש",
       image: user.image,
+      videoUrl,
       timestamp: new Date().toISOString(),
     };
 
-    // Fire notifications (best-effort, parallel)
     await Promise.all(
       mutualMatches.map((match) =>
         pusherServer
@@ -108,7 +96,6 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
     // Mark announcement time (THIS is the cooldown source)
     await dbUpdateUserAnnouncementTime(userId);
 
-    console.log("🔔 [announceUserOnline] ✅ Completed successfully");
     return { success: true };
   } catch (error) {
     console.error("🔔 [announceUserOnline] ❌ ERROR:", error);

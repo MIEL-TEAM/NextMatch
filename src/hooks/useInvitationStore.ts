@@ -9,6 +9,7 @@ export interface Invitation {
   type: InvitationType;
   userId: string;
   image: string | null;
+  videoUrl?: string | null;
   name: string;
   title: string;
   subtitle?: string;

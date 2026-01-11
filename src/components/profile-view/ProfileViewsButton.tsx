@@ -2,20 +2,22 @@
 
 import { motion } from "framer-motion";
 import ProfileViewsBell from "./ProfileViewsBell";
-import { useEffect, useState } from "react";
 import { useServerSession } from "@/contexts/SessionContext";
 
 export default function ProfileViewsButton() {
   const { session, status } = useServerSession();
-  const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      setUserId(session.user.id);
-    }
-  }, [session]);
+  const userId = session?.user?.id;
 
-  if (status === "loading" || !userId) return null;
+  if (status === "loading") {
+    return (
+      <div className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/30 backdrop-blur shadow-md border border-white/30">
+        <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!userId) return null;
 
   return (
     <motion.div
