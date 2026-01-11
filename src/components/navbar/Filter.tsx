@@ -16,7 +16,6 @@ export default function Filter() {
     selectOrder,
     filters,
     clientLoaded,
-    isPending,
     selectWithPhoto,
     totalCount,
   } = useFilters();
@@ -83,7 +82,7 @@ export default function Filter() {
                 selectOrder={selectOrder}
                 filters={filters}
                 clientLoaded={clientLoaded}
-                isPending={isPending}
+                // isPending prop removed since useTransition was removed
                 selectWithPhoto={selectWithPhoto}
                 totalCount={totalCount}
               />

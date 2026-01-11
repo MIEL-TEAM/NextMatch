@@ -13,7 +13,7 @@ import type { Session } from "next-auth";
 import MembersLayout from "@/components/memberStyles/MembersLayout";
 import EmptyState from "@/components/EmptyState";
 import HeartLoading from "@/components/HeartLoading";
-import LocationPermissionModal from "@/components/LocationPermissionModal";
+import LocationPermissionBanner from "@/components/LocationPermissionBanner";
 import { StoriesContainer } from "@/components/stories/StoriesContainer";
 import { useCopy } from "@/lib/copy";
 
@@ -34,7 +34,7 @@ export default function MembersClient({
 
   const {
     locationState,
-    showLocationModal,
+    showLocationBanner,
     handleLocationGranted,
     handleLocationDismissed,
     stableParams,
@@ -125,9 +125,9 @@ export default function MembersClient({
         hasSeenIntro={true}
       />
 
-      {/* Location Modal */}
-      <LocationPermissionModal
-        isOpen={showLocationModal}
+      {/* Location Banner */}
+      <LocationPermissionBanner
+        isVisible={showLocationBanner}
         onClose={() => {
           // User dismissed/skipped the modal - remember this choice
           handleLocationDismissed();

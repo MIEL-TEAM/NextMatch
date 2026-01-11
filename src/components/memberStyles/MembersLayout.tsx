@@ -41,7 +41,6 @@ const MembersLayout: React.FC<Props> = ({
 
   const [activeFilter, setActiveFilter] = useState(initialFilter);
 
-  // Sync activeFilter with URL changes
   useEffect(() => {
     const currentFilter = searchParams.get("filter") || "all";
     if (currentFilter !== activeFilter) {
@@ -50,7 +49,6 @@ const MembersLayout: React.FC<Props> = ({
   }, [searchParams, activeFilter]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showIntro, setShowIntro] = useState(() => {
-    // Check localStorage first to prevent flash
     if (typeof window !== "undefined") {
       const hasSeenLocal =
         localStorage.getItem("hasSeenMembersIntro") === "true";
@@ -62,7 +60,6 @@ const MembersLayout: React.FC<Props> = ({
   const [likes, setLikes] = useState<string[]>(likeIds);
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
 
-  const userHasNoLikes = likes.length === 0;
   const membersWithImages = membersData.filter(({ member }) => !!member.image);
   const spotlightMember =
     membersWithImages[currentIndex % membersWithImages.length]?.member || null;
@@ -80,11 +77,9 @@ const MembersLayout: React.FC<Props> = ({
   }, [membersWithImages.length]);
 
   const handleDismissIntro = async () => {
-    // Update localStorage immediately to prevent re-showing
     localStorage.setItem("hasSeenMembersIntro", "true");
     setShowIntro(false);
 
-    // Update database in background without waiting
     fetch("/api/user/intro", { method: "POST" }).catch((error) => {
       console.error("Failed to update intro status:", error);
     });
@@ -99,7 +94,6 @@ const MembersLayout: React.FC<Props> = ({
       setLikes((prev) => prev.filter((id) => id !== memberId));
     }
 
-    // Notify parent component
     onLikeUpdate?.(memberId, isLiked);
   };
 
@@ -201,22 +195,6 @@ const MembersLayout: React.FC<Props> = ({
       />
 
       <AnimatePresence>
-        {userHasNoLikes && !showMotivation && (
-          <motion.div
-            key="no-likes"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-            transition={{ duration: 0.4 }}
-            className="fixed bottom-0 inset-x-0 z-[9999]"
-          >
-            <div className="bg-orange-100 text-orange-800 text-center font-medium py-3 px-6 text-sm sm:text-base shadow-md w-full">
-              🤔 עדיין לא סימנת לייקים. בחר פרופילים שמעניינים אותך כדי שנוכל
-              להציע התאמות טובות יותר!
-            </div>
-          </motion.div>
-        )}
-
         {showMotivation && (
           <motion.div
             key="motivation"

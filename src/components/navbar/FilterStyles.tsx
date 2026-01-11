@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Button,
-  Select,
-  SelectItem,
-  Slider,
-  Spinner,
-  Switch,
-} from "@nextui-org/react";
+import { Button, Select, SelectItem, Slider, Switch } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import React from "react";
 
@@ -27,7 +20,6 @@ interface FilterContentProps {
     withPhoto: boolean;
   };
   clientLoaded: boolean;
-  isPending: boolean;
   selectWithPhoto: (event: any) => void;
   totalCount: number;
 }
@@ -40,7 +32,6 @@ export default function FilterContent({
   selectOrder,
   filters,
   clientLoaded,
-  isPending,
   selectWithPhoto,
   totalCount,
 }: FilterContentProps) {
@@ -53,7 +44,6 @@ export default function FilterContent({
         <div className="text-secondary font-semibold text-xl">
           תוצאות: {totalCount}
         </div>
-        {isPending && <Spinner size="sm" color="secondary" />}
       </motion.div>
 
       <motion.div

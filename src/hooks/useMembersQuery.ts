@@ -36,29 +36,39 @@ export const useMembersQuery = (
       }
     });
 
+    const DEFAULT_FILTERS = {
+      ageRange: "18,65",
+      gender: "male,female",
+      orderBy: "updated",
+      withPhoto: "true",
+      pageSize: "15",
+    };
+
     // Base query object from URL params
     const baseObj = {
       filter: paramsMap.get("filter") || "all",
       ageMin: paramsMap.get("ageMin") || undefined,
       ageMax: paramsMap.get("ageMax") || undefined,
-      ageRange: paramsMap.get("ageRange") || "18,65",
-      gender: paramsMap.get("gender") || "male,female",
-      withPhoto: paramsMap.get("withPhoto") ?? undefined, // Pass through exact value, no defaulting
-      orderBy: paramsMap.get("orderBy") || "updated",
+      ageRange: paramsMap.get("ageRange") || DEFAULT_FILTERS.ageRange,
+      gender: paramsMap.get("gender") || DEFAULT_FILTERS.gender,
+      withPhoto: paramsMap.get("withPhoto") ?? DEFAULT_FILTERS.withPhoto,
+      orderBy: paramsMap.get("orderBy") || DEFAULT_FILTERS.orderBy,
       lastActive: paramsMap.get("lastActive") || undefined,
       city: paramsMap.get("city") || undefined,
       interests: interests.length > 0 ? interests : [],
       onlineOnly: paramsMap.get("onlineOnly") === "true" ? "true" : "false",
       sort: paramsMap.get("sort") || "latest",
-      // Read pageNumber from Zustand store (reactive), fallback to URL, then default to "1"
-      // This ensures immediate reactivity when user clicks pagination
+
       pageNumber:
         storePageNumber?.toString() ||
         paramsMap.get("pageNumber") ||
         paramsMap.get("page") ||
         "1",
-      // Read pageSize from Zustand store first
-      pageSize: storePageSize?.toString() || paramsMap.get("pageSize") || "12",
+
+      pageSize:
+        storePageSize?.toString() ||
+        paramsMap.get("pageSize") ||
+        DEFAULT_FILTERS.pageSize,
       userLat: paramsMap.get("userLat") || undefined,
       userLon: paramsMap.get("userLon") || undefined,
       distance: paramsMap.get("distance") || undefined,

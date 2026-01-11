@@ -112,6 +112,7 @@ export async function registerUser(
       preferredAgeMax,
     } = validated.data;
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const existingUser = await dbGetUserByEmail(email);
 
     if (existingUser) {
