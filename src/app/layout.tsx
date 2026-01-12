@@ -19,20 +19,20 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://miel-love.com"),
-  title: "ככה עושים היכרויות היום - Miel",
+  title: "Miel - ככה עושים היכרויות היום",
   description:
-    "!היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel",
+    "אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין. הצטרפו ל-Miel ותיהנו מחוויית היכרויות מתקדמת.",
   keywords:
     "היכרויות, אפליקציית דייטים, אהבה, מציאת זוגיות, קשרים משמעותיים, מיאל",
   openGraph: {
-    title: "ככה עושים היכרויות היום - Miel",
+    title: "Miel - ככה עושים היכרויות היום",
     description:
-      "היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel!",
+      "אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין. הצטרפו ל-Miel ותיהנו מחוויית היכרויות מתקדמת.",
     url: "https://miel-love.com",
     siteName: "Miel",
     images: [
       {
-        url: "https://miel-love.com/images/social-share.jpg",
+        url: "https://miel-love.com/images/social-share.png",
         width: 1200,
         height: 630,
         alt: "Miel - אפליקציית היכרויות",
@@ -43,10 +43,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ככה עושים היכרויות היום - Miel",
+    title: "Miel - ככה עושים היכרויות היום",
     description:
-      "!היא אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין Miel",
-    images: ["https://miel-love.com/images/social-share.jpg"],
+      "אפליקציית ההיכרויות שמביאה לך את החיבורים הכי מדויקים – בקלות, במהירות ולעניין. הצטרפו ל-Miel ותיהנו מחוויית היכרויות מתקדמת.",
+    images: ["https://miel-love.com/images/social-share.png"],
   },
   robots: {
     index: true,
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://miel-love.com",
   },
-  authors: [{ name: "Miel Team (Almayo Mekonen / Ido Roth)" }],
+  authors: [{ name: "Miel Team" }],
 };
 
 export const viewport: Viewport = {

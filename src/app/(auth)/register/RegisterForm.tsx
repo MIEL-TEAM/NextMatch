@@ -21,6 +21,7 @@ import PhotoUploadForm from "./PhotoUploadForm";
 import SocialLogin from "../login/SocialLogin";
 import Link from "next/link";
 import Image from "next/image";
+import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
 
 const stepSchemas = [
   registerSchema,
@@ -32,6 +33,7 @@ const stepSchemas = [
 const DRAFT_KEY = "miel-registration-draft";
 
 export default function RegisterForm() {
+  useDisableScrollOnlyIfNotNeeded();
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [, setHasDraft] = useState(false);

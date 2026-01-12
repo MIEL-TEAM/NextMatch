@@ -12,8 +12,10 @@ import { useRouter } from "next/navigation";
 import SocialLogin from "./SocialLogin";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
 
 export default function LoginForm() {
+  useDisableScrollOnlyIfNotNeeded();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);

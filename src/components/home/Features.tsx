@@ -28,7 +28,7 @@ export default function FeaturesSection() {
     {
       title: "חוויה מדהימה",
       description: "ממשק יפה ונעים. נטול רעש, מלא רגש. כאן בשבילך ובשביל אהבה.",
-      image: "/images/features-images/three.jpg",
+      image: "/images/features-images/social-share.png",
     },
   ];
 

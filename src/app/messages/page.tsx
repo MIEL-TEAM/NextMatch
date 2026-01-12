@@ -11,6 +11,24 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "הודעות | Miel",
   description: "צפייה וניהול ההודעות שלך עם משתמשים אחרים",
+  openGraph: {
+    title: "הודעות | Miel",
+    description: "צפייה וניהול ההודעות שלך עם משתמשים אחרים",
+    url: "https://miel-love.com/messages",
+    locale: "he_IL",
+    type: "website",
+    images: [
+      {
+        url: "https://miel-love.com/images/social-share.png",
+        width: 1200,
+        height: 630,
+        alt: "הודעות | Miel",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://miel-love.com/messages",
+  },
 };
 
 export const dynamic = "force-dynamic";

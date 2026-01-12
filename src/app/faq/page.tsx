@@ -1,8 +1,21 @@
 import PageContainer from "@/components/PageContainer";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "שאלות נפוצות | מיאל",
-  description: "שאלות נפוצות על אפליקציית מיאל - חיבורים אמיתיים, ללא התמכרות",
+export const metadata: Metadata = {
+  title: "Miel - שאלות נפוצות",
+  description:
+    "שאלות ותשובות נפוצות על אפליקציית מיאל. כל מה שרציתם לדעת על חיבורים אמיתיים, בטיחות ואופן השימוש באפליקציה.",
+  openGraph: {
+    title: "Miel - שאלות נפוצות",
+    description:
+      "שאלות ותשובות נפוצות על אפליקציית מיאל. כל מה שרציתם לדעת על חיבורים אמיתיים, בטיחות ואופן השימוש באפליקציה.",
+    url: "https://miel-love.com/faq",
+    locale: "he_IL",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://miel-love.com/faq",
+  },
 };
 
 export default function FAQPage() {

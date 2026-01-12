@@ -1,8 +1,21 @@
 import PageContainer from "@/components/PageContainer";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "תנאי שימוש | מיאל",
-  description: "תנאי השימוש באפליקציית מיאל",
+export const metadata: Metadata = {
+  title: "Miel - תנאי שימוש",
+  description:
+    "תנאי השימוש באפליקציית מיאל. קראו את התנאים וההגבלות לשימוש באפליקציה ובשירותים שלנו.",
+  openGraph: {
+    title: "Miel - תנאי שימוש",
+    description:
+      "תנאי השימוש באפליקציית מיאל. קראו את התנאים וההגבלות לשימוש באפליקציה ובשירותים שלנו.",
+    url: "https://miel-love.com/terms",
+    locale: "he_IL",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://miel-love.com/terms",
+  },
 };
 
 export default function TermsPage() {

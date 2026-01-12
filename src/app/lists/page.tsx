@@ -12,6 +12,25 @@ export const metadata: Metadata = {
   title: "התאמות אישיות | Miel",
   description:
     "צפה בכל החיבורים וההתאמות האישיות שלך, גלה את מי סימנת בלייק ומי עשוי להתאים לך.",
+  openGraph: {
+    title: "התאמות אישיות | Miel",
+    description:
+      "צפה בכל החיבורים וההתאמות האישיות שלך, גלה את מי סימנת בלייק ומי עשוי להתאים לך.",
+    url: "https://miel-love.com/lists",
+    locale: "he_IL",
+    type: "website",
+    images: [
+      {
+        url: "https://miel-love.com/images/social-share.png",
+        width: 1200,
+        height: 630,
+        alt: "התאמות אישיות | Miel",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://miel-love.com/lists",
+  },
 };
 
 export default async function ListsPage({

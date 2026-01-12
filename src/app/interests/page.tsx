@@ -4,6 +4,30 @@ import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { getSelfProfile } from "@/lib/getSelfProfile";
 import EditInterestsClient from "@/components/interests/InterestsPage";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Miel - תחומי עניין",
+  description: "בחרו תחומי עניין שמתאימים לכם ונגלו התאמות חדשות.",
+  openGraph: {
+    title: "Miel - תחומי עניין",
+    description: "בחרו תחומי עניין שמתאימים לכם ונגלו התאמות חדשות.",
+    url: "https://miel-love.com/interests",
+    locale: "he_IL",
+    type: "website",
+    images: [
+      {
+        url: "https://miel-love.com/images/social-share.png",
+        width: 1200,
+        height: 630,
+        alt: "Miel - תחומי עניין",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://miel-love.com/interests",
+  },
+};
 
 type EditInterestsPageProps = {
   searchParams: Promise<{ userId?: string }>;

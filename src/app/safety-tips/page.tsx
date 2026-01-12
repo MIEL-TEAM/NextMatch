@@ -9,10 +9,23 @@ import {
   MessageSquare,
   AlertTriangle,
 } from "lucide-react";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "טיפים לבטיחות | מיאל",
-  description: "טיפים חשובים לבטיחות בדייטים ובשימוש באפליקציית מיאל",
+export const metadata: Metadata = {
+  title: "Miel - טיפים לבטיחות",
+  description:
+    "טיפים חשובים לבטיחות בדייטים ובשימוש באפליקציית מיאל. המדריך שלכם לגלישה בטוחה ופגישות מוצלחות.",
+  openGraph: {
+    title: "Miel - טיפים לבטיחות",
+    description:
+      "טיפים חשובים לבטיחות בדייטים ובשימוש באפליקציית מיאל. המדריך שלכם לגלישה בטוחה ופגישות מוצלחות.",
+    url: "https://miel-love.com/safety-tips",
+    locale: "he_IL",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://miel-love.com/safety-tips",
+  },
 };
 
 export default function SafetyTipsPage() {

@@ -1,9 +1,29 @@
 import PageContainer from "@/components/PageContainer";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "מדיניות פרטיות | מיאל",
+export const metadata: Metadata = {
+  title: "Miel - מדיניות פרטיות",
   description:
-    "מדיניות הפרטיות של אפליקציית מיאל - כיצד אנו מגנים על המידע שלך",
+    "מדיניות הפרטיות של אפליקציית מיאל - כיצד אנו מגנים על המידע שלך. קראו על המחויבות שלנו לפרטיות ולאבטחת המידע שלכם.",
+  openGraph: {
+    title: "Miel - מדיניות פרטיות",
+    description:
+      "מדיניות הפרטיות של אפליקציית מיאל - כיצד אנו מגנים על המידע שלך. קראו על המחויבות שלנו לפרטיות ולאבטחת המידע שלכם.",
+    url: "https://miel-love.com/privacy",
+    locale: "he_IL",
+    type: "website",
+    images: [
+      {
+        url: "https://miel-love.com/images/social-share.png",
+        width: 1200,
+        height: 630,
+        alt: "Miel - מדיניות פרטיות",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://miel-love.com/privacy",
+  },
 };
 
 export default function PrivacyPage() {
