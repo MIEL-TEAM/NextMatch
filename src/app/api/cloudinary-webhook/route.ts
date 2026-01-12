@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
   let bodyObj: any;
   try {
     bodyObj = JSON.parse(rawBody);
+    console.log(
+      "📨 Cloudinary Webhook Received:",
+      JSON.stringify(bodyObj, null, 2)
+    );
   } catch (err) {
     console.error("❌ Failed to parse JSON body:", err);
     return new Response("Invalid JSON", { status: 400 });

@@ -11,6 +11,10 @@ import { HiPhoto } from "react-icons/hi2";
 import { IoMdCloseCircle } from "react-icons/io";
 import Image from "next/image";
 
+interface ExtendedCloudinaryOptions extends CloudinaryUploadWidgetOptions {
+  moderation?: string;
+}
+
 interface PhotoUploadFormProps {
   onSubmit?: () => void;
 }
@@ -84,7 +88,7 @@ export default function PhotoUploadForm({ onSubmit }: PhotoUploadFormProps) {
     setValue("photos", updatedPhotos, { shouldValidate: true });
   };
 
-  const cloudinaryOptions: CloudinaryUploadWidgetOptions = {
+  const cloudinaryOptions: ExtendedCloudinaryOptions = {
     maxFiles: 1,
     multiple: false,
     cropping: true,
@@ -92,7 +96,8 @@ export default function PhotoUploadForm({ onSubmit }: PhotoUploadFormProps) {
     language: "he",
     showUploadMoreButton: false,
     showPoweredBy: false,
-    folder: "registration/profiles", // Required for unauthenticated uploads during registration
+    folder: "registration/profiles",
+    moderation: "aws_rek",
   };
 
   return (

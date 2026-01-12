@@ -29,7 +29,7 @@ export async function dbCreatePhoto(data: {
   return prisma.photo.create({
     data: {
       ...data,
-      isApproved: false,
+      isApproved: true,
     },
   });
 }

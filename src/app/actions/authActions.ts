@@ -151,7 +151,7 @@ export async function registerUser(
                 create: photos.map((photo) => ({
                   url: photo.url,
                   publicId: photo.publicId,
-                  isApproved: false,
+                  isApproved: true,
                 })),
               },
             }),

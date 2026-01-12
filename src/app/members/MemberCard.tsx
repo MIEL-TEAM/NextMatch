@@ -6,7 +6,6 @@ import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
 import { formatDistance } from "@/lib/locationUtils";
 import { Card, CardFooter } from "@nextui-org/react";
-import { Member } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
@@ -15,21 +14,7 @@ import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastStyle } from "@/hooks/useIsMobile";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
-
-interface MemberCardProps {
-  member: Member & {
-    distance?: number;
-    user?: {
-      oauthVerified?: boolean;
-      lastActiveAt?: Date | null;
-    };
-  };
-  likeIds: string[];
-  memberPhotos?: Array<{ url: string; id: string }>;
-  memberVideos?: Array<{ url: string; id: string }>;
-  onLike?: (memberId: string, isLiked: boolean) => void;
-  isPriority?: boolean;
-}
+import { MemberCardProps } from "@/types/members";
 
 export default function MemberCard({
   member,

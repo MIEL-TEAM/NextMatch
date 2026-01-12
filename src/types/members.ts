@@ -1,3 +1,5 @@
+import { Member, Photo } from "@prisma/client";
+
 export type MemberCardData = {
   id: string;
   userId: string;
@@ -47,3 +49,40 @@ export interface StableLocationParams {
   hasLocation: boolean;
   forceLocationPrompt: boolean;
 }
+
+export interface MemberWithMedia {
+  member: Member;
+  photos: Array<{ url: string; id: string }>;
+  videos: Array<{ url: string; id: string }>;
+}
+
+export interface Props {
+  membersData: MemberWithMedia[];
+  totalCount: number;
+  likeIds: string[];
+  isOnlineFilter: boolean;
+  noResults: boolean;
+  hasSeenIntro: boolean;
+  onLikeUpdate?: (memberId: string, isLiked: boolean) => void;
+}
+
+export interface MemberCardProps {
+  member: Member & {
+    distance?: number;
+    user?: {
+      oauthVerified?: boolean;
+      lastActiveAt?: Date | null;
+    };
+  };
+  likeIds: string[];
+  memberPhotos?: Array<{ url: string; id: string }>;
+  memberVideos?: Array<{ url: string; id: string }>;
+  onLike?: (memberId: string, isLiked: boolean) => void;
+  isPriority?: boolean;
+}
+
+export type MemberPhotosProps = {
+  photos: Photo[] | null;
+  editing?: boolean;
+  mainImageUrl?: string | null;
+};

@@ -23,6 +23,7 @@ import {
   dbUpdateMember,
   dbUpdateUser,
 } from "@/lib/db/userActions";
+import { prisma } from "@/lib/prisma";
 
 export async function updateMemberProfile(
   data: MemberEditSchema,
@@ -353,11 +354,48 @@ export async function deleteImage(photo: Photo) {
     const userId = await getAuthUserId();
     await ensureMember(userId);
 
+    // Get current member to check if this is the main image
+    const member = await prisma.member.findUnique({
+      where: { userId },
+      select: {
+        image: true,
+        photos: {
+          where: { isApproved: true },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
     if (photo.publicId) {
       await cloudinary.v2.uploader.destroy(photo.publicId);
     }
 
-    return dbDeletePhoto(photo.id, userId);
+    await dbDeletePhoto(photo.id, userId);
+
+    // If this was the main image, update Member.image and User.image
+    if (member?.image === photo.url) {
+      // Find next available approved photo (excluding the one we just deleted)
+      const nextPhoto = member.photos.find((p) => p.id !== photo.id);
+      const newImageUrl = nextPhoto?.url || null;
+
+      // Update both User and Member image fields
+      await dbUpdateUser(userId, { image: newImageUrl });
+      await dbUpdateMember(userId, { image: newImageUrl });
+    }
+
+    return { status: "success" };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function removeMainImage() {
+  try {
+    const userId = await getAuthUserId();
+    await dbUpdateUser(userId, { image: null });
+    await dbUpdateMember(userId, { image: null });
+    return { status: "success" };
   } catch (error) {
     console.log(error);
     throw error;

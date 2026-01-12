@@ -2,30 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Member } from "@prisma/client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import FilterButtons from "@/components/FilterButtons";
 import SpotlightMember from "./SpotlightMember";
 import AnimatedBackground from "./AnimatedBackground";
 import MembersGrid from "./MembersGrid";
 import InlineEmptyState from "@/components/EmptyState";
 import { ImageOff } from "lucide-react";
-
-interface MemberWithMedia {
-  member: Member;
-  photos: Array<{ url: string; id: string }>;
-  videos: Array<{ url: string; id: string }>;
-}
-
-interface Props {
-  membersData: MemberWithMedia[];
-  totalCount: number;
-  likeIds: string[];
-  isOnlineFilter: boolean;
-  noResults: boolean;
-  hasSeenIntro: boolean;
-  onLikeUpdate?: (memberId: string, isLiked: boolean) => void;
-}
+import { Props } from "@/types/members";
 
 const MembersLayout: React.FC<Props> = ({
   membersData,
@@ -56,7 +40,7 @@ const MembersLayout: React.FC<Props> = ({
     }
     return !hasSeenIntro;
   });
-  const [showMotivation, setShowMotivation] = useState(false);
+
   const [likes, setLikes] = useState<string[]>(likeIds);
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
 
@@ -88,8 +72,6 @@ const MembersLayout: React.FC<Props> = ({
   const handleLike = (memberId: string, isLiked: boolean) => {
     if (isLiked && !likes.includes(memberId)) {
       setLikes((prev) => [...prev, memberId]);
-      setShowMotivation(true);
-      setTimeout(() => setShowMotivation(false), 3500);
     } else if (!isLiked && likes.includes(memberId)) {
       setLikes((prev) => prev.filter((id) => id !== memberId));
     }
@@ -193,23 +175,6 @@ const MembersLayout: React.FC<Props> = ({
         totalCount={totalCount}
         onLike={handleLike}
       />
-
-      <AnimatePresence>
-        {showMotivation && (
-          <motion.div
-            key="motivation"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ duration: 0.4 }}
-            className="fixed bottom-0 inset-x-0 z-[9999]"
-          >
-            <div className="bg-orange-100 text-orange-800 text-center font-medium py-3 px-6 text-sm sm:text-base shadow-md w-full">
-              🎉 מעולה! המשך כך כדי לשפר את ההתאמות שתקבל!
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

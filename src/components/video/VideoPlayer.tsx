@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 
 interface VideoPlayerProps {
   url: string;
@@ -75,15 +76,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       <div className="absolute bottom-2 left-2 flex gap-2 z-10">
         <button
           onClick={togglePlay}
-          className="bg-black/50 text-white px-2 py-1 rounded"
+          className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
+          aria-label={isPlaying ? "Pause" : "Play"}
         >
-          {isPlaying ? "⏸️" : "▶️"}
+          {isPlaying ? <Pause size={15} /> : <Play size={15} />}
         </button>
         <button
           onClick={toggleMute}
-          className="bg-black/50 text-white px-2 py-1 rounded"
+          className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
+          aria-label={isMuted ? "Unmute" : "Mute"}
         >
-          {isMuted ? "🔇" : "🔊"}
+          {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
         </button>
       </div>
     </div>

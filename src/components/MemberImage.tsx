@@ -16,17 +16,55 @@ import AppModal from "./AppModal";
 type MemberImageProps = {
   photo: Photo | null;
   isPriority?: boolean;
+  onError?: (id: string) => void;
 };
 
 export default function MemberImage({
   photo,
   isPriority = false,
+  onError,
 }: MemberImageProps) {
   const role = useRole();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [hasError, setHasError] = React.useState(false);
 
   if (!photo) return null;
+
+  if (hasError) {
+    return (
+      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-200">
+        <div className="absolute inset-0 flex items-center justify-center opacity-50">
+          <Image
+            width={300}
+            height={300}
+            src="/images/user.png"
+            alt="Content blocked"
+            className="object-cover w-full h-full grayscale"
+          />
+        </div>
+        <div className="absolute bottom-0 w-full bg-gradient-to-t from-red-600/90 to-transparent p-4 rounded-b-2xl">
+          <div className="flex flex-col items-center text-white">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8 mb-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+              />
+            </svg>
+            <span className="font-semibold text-center">התוכן אינו מורשה</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const approve = async (photoId: string) => {
     try {
@@ -60,6 +98,10 @@ export default function MemberImage({
             "opacity-40": !photo?.isApproved && role !== "ADMIN",
           })}
           loading={isPriority ? "eager" : "lazy"}
+          onError={() => {
+            setHasError(true);
+            onError?.(photo.id);
+          }}
         />
       ) : (
         <Image
@@ -70,6 +112,10 @@ export default function MemberImage({
           className="object-cover rounded-2xl"
           loading={isPriority ? "eager" : "lazy"}
           fetchPriority={isPriority ? "high" : "auto"}
+          onError={() => {
+            setHasError(true);
+            onError?.(photo.id);
+          }}
         />
       )}
       {!photo?.isApproved && role !== "ADMIN" && (

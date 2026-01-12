@@ -12,6 +12,7 @@ type ImageButtonProps = {
 
 interface ExtendedCloudinaryOptions extends CloudinaryUploadWidgetOptions {
   language_direction?: string;
+  moderation?: string;
   html_attrs?: {
     dir: "rtl" | "ltr";
   };
@@ -19,12 +20,30 @@ interface ExtendedCloudinaryOptions extends CloudinaryUploadWidgetOptions {
 }
 
 export default function ImageButtonUpload({ onUploadImage }: ImageButtonProps) {
+  const handleUploadSuccess = (result: CloudinaryUploadWidgetResults) => {
+    console.log(
+      "📸 Cloudinary Upload Result:",
+      JSON.stringify(result, null, 2)
+    );
+    if (
+      result.info &&
+      typeof result.info !== "string" &&
+      result.info.moderation
+    ) {
+      console.log(
+        "🛡️ Moderation Info:",
+        JSON.stringify(result.info.moderation, null, 2)
+      );
+    }
+    onUploadImage(result);
+  };
+
   const cloudinaryOptions: ExtendedCloudinaryOptions = {
     maxFiles: 1,
     language: "he",
     uploadPreset: "nm-demo",
+    moderation: "aws_rek",
     language_direction: "rtl",
-
     html_attrs: {
       dir: "rtl",
     },
@@ -105,7 +124,7 @@ export default function ImageButtonUpload({ onUploadImage }: ImageButtonProps) {
   return (
     <CldUploadButton
       options={cloudinaryOptions}
-      onSuccess={onUploadImage}
+      onSuccess={handleUploadSuccess}
       signatureEndpoint="/api/sign-image"
       uploadPreset="nm-demo"
       className={`flex items-center gap-2 border-2 border-secondary text-secondary rounded-lg py-2 px-4 hover:bg-secondary/10`}
