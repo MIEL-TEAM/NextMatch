@@ -6,24 +6,7 @@ import Link from "next/link";
 import { FiBarChart, FiEye, FiStar, FiX } from "react-icons/fi";
 import { getStoryAnalytics } from "@/app/actions/storyActions";
 import { toast } from "sonner";
-
-interface StoryViewer {
-  id: string;
-  name: string;
-  image: string | null;
-  viewedAt: Date;
-}
-
-interface StoryAnalyticsData {
-  storyId: string;
-  totalViews: number;
-  viewers: StoryViewer[];
-}
-
-interface StoryAnalyticsProps {
-  storyId: string;
-  isCurrentUserStory: boolean;
-}
+import { StoryAnalyticsData, StoryAnalyticsProps } from "@/types/stories";
 
 export function StoryAnalytics({
   storyId,

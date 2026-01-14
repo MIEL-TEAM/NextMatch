@@ -1,8 +1,6 @@
 "use client";
 
-interface StoryProgressBarProps {
-  progress: number;
-}
+import { StoryProgressBarProps } from "@/types/stories";
 
 export function StoryProgressBar({ progress }: StoryProgressBarProps) {
   return (

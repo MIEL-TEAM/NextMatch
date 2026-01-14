@@ -1,11 +1,7 @@
 "use client";
 
 import { FiMessageCircle } from "react-icons/fi";
-
-interface StoryReactionsProps {
-  onReaction: (reaction: string) => void;
-  onReply: () => void;
-}
+import { StoryReactionsProps } from "@/types/stories";
 
 export function StoryReactions({ onReaction, onReply }: StoryReactionsProps) {
   const reactions = [

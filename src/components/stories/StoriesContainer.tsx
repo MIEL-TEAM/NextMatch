@@ -6,37 +6,13 @@ import { StoryViewer } from "./StoryViewer";
 import { CreateStoryModal } from "./CreateStoryModal";
 import { getUserStories } from "@/app/actions/storyActions";
 import { toast } from "sonner";
-
-interface Story {
-  id: string;
-  imageUrl: string;
-  textOverlay?: string | null;
-  textX?: number | null;
-  textY?: number | null;
-  createdAt: string | Date;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-}
-
-interface StoriesContainerProps {
-  currentUserId: string;
-}
-
-interface StoryUser {
-  id: string;
-  name: string;
-  image: string | null;
-  hasUnviewedStories: boolean;
-  totalStories: number;
-}
+import { StoryWithUser } from "@/types/story";
+import { StoriesContainerProps, StoryUser } from "@/types/stories";
 
 export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewer, setShowViewer] = useState(false);
-  const [currentStories, setCurrentStories] = useState<Story[]>([]);
+  const [currentStories, setCurrentStories] = useState<StoryWithUser[]>([]);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [allStoryUsers, setAllStoryUsers] = useState<StoryUser[]>([]);
@@ -54,6 +30,12 @@ export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
         return;
       }
 
+      // Remove duplicates based on story ID
+      const uniqueStories = stories.filter(
+        (story, index, self) =>
+          index === self.findIndex((s) => s.id === story.id)
+      );
+
       // Save all users for navigation
       if (allUsers) {
         setAllStoryUsers(allUsers);
@@ -61,7 +43,7 @@ export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
         setCurrentUserIndex(userIndex >= 0 ? userIndex : 0);
       }
 
-      setCurrentStories(stories);
+      setCurrentStories(uniqueStories);
       setCurrentStoryIndex(0);
       setShowViewer(true);
     } catch (error) {
@@ -75,13 +57,19 @@ export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
       const nextUser = allStoryUsers[currentUserIndex + 1];
 
       const stories = await getUserStories(nextUser.id);
-      if (stories.length > 0) {
-        setCurrentStories(stories);
+      // Remove duplicates based on story ID
+      const uniqueStories = stories.filter(
+        (story, index, self) =>
+          index === self.findIndex((s) => s.id === story.id)
+      );
+
+      if (uniqueStories.length > 0) {
+        setCurrentStories(uniqueStories);
         setCurrentStoryIndex(0);
         setCurrentUserIndex(currentUserIndex + 1);
       }
     } else {
-      setShowViewer(false); // Close when no more users
+      setShowViewer(false);
     }
   };
 
@@ -90,8 +78,14 @@ export function StoriesContainer({ currentUserId }: StoriesContainerProps) {
       const prevUser = allStoryUsers[currentUserIndex - 1];
 
       const stories = await getUserStories(prevUser.id);
-      if (stories.length > 0) {
-        setCurrentStories(stories);
+      // Remove duplicates based on story ID
+      const uniqueStories = stories.filter(
+        (story, index, self) =>
+          index === self.findIndex((s) => s.id === story.id)
+      );
+
+      if (uniqueStories.length > 0) {
+        setCurrentStories(uniqueStories);
         setCurrentStoryIndex(0);
         setCurrentUserIndex(currentUserIndex - 1);
       }

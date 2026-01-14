@@ -6,26 +6,12 @@ import { CreateStoryButton } from "./CreateStoryButton";
 import { getStoryUsers } from "@/app/actions/storyActions";
 import { useServerSession } from "@/contexts/SessionContext";
 import { getPusherClient } from "@/lib/pusher-client";
+import { StoryUser, StoriesCarouselProps } from "@/types/stories";
+
 import {
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight,
 } from "react-icons/md";
-
-interface StoryUser {
-  id: string;
-  name: string;
-  image: string | null;
-  hasUnviewedStories: boolean;
-  totalStories: number;
-  isCurrentUser?: boolean;
-}
-
-interface StoriesCarouselProps {
-  onStoryClick: (userId: string, allUsers?: StoryUser[]) => void;
-  onCreateStory: () => void;
-  refreshKey?: number;
-  currentUserId?: string;
-}
 
 export function StoriesCarousel({
   onStoryClick,

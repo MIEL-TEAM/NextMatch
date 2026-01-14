@@ -5,15 +5,7 @@ import { FiX, FiSend } from "react-icons/fi";
 import Image from "next/image";
 import { sendStoryMessage } from "@/app/actions/storyActions";
 import { toast } from "react-hot-toast";
-
-interface StoryMessageModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  storyId: string;
-  storyImageUrl: string;
-  storyOwnerName: string;
-  storyOwnerImage?: string | null;
-}
+import { StoryMessageModalProps } from "@/types/stories";
 
 export function StoryMessageModal({
   isOpen,

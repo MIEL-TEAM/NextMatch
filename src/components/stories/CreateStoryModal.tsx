@@ -6,12 +6,8 @@ import { FiX, FiUpload, FiType } from "react-icons/fi";
 import { Button } from "@nextui-org/react";
 import { toast } from "sonner";
 import { createStory } from "@/app/actions/storyActions";
-
-interface CreateStoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onStoryCreated: () => void;
-}
+import { ArrowUp, ArrowDown, ArrowLeftRight } from "lucide-react";
+import { CreateStoryModalProps } from "@/types/stories";
 
 export function CreateStoryModal({
   isOpen,
@@ -22,6 +18,9 @@ export function CreateStoryModal({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [textOverlay, setTextOverlay] = useState("");
   const [textPosition, setTextPosition] = useState({ x: 0.5, y: 0.3 }); // Default safe position
+  const [imagePosition, setImagePosition] = useState<
+    "center" | "top" | "bottom"
+  >("center");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,8 +59,9 @@ export function CreateStoryModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // איפוס מיקום הטקסט בעת בחירת תמונה חדשה
+    // איפוס מיקום הטקסט והתמונה בעת בחירת תמונה חדשה
     setTextPosition({ x: 0.5, y: 0.3 });
+    setImagePosition("center");
 
     if (!file.type.startsWith("image/")) {
       toast.error("אנא בחר קובץ תמונה");
@@ -186,6 +186,14 @@ export function CreateStoryModal({
                 width={400}
                 height={400}
                 className="w-full h-64 object-cover rounded-lg"
+                style={{
+                  objectPosition:
+                    imagePosition === "top"
+                      ? "center top"
+                      : imagePosition === "bottom"
+                        ? "center bottom"
+                        : "center center",
+                }}
               />
               <button
                 onClick={() => {
@@ -216,23 +224,75 @@ export function CreateStoryModal({
           )}
 
           {imagePreview && (
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FiType size={16} />
-                הוספת טקסט (לא חובה)
-              </label>
-              <textarea
-                value={textOverlay}
-                onChange={(e) => setTextOverlay(e.target.value)}
-                placeholder="הוסף טקסט לסיפור שלך..."
-                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-                rows={3}
-                maxLength={100}
-              />
-              <p className="text-xs text-gray-500 text-right">
-                {textOverlay.length}/100
-              </p>
-            </div>
+            <>
+              {/* Image Position Controls */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  מיקום התמונה
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setImagePosition("top")}
+                    className={`flex-1 px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                      imagePosition === "top"
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    }`}
+                  >
+                    למעלה
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setImagePosition("center")}
+                    className={`flex-1 px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                      imagePosition === "center"
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    }`}
+                  >
+                    מרכז
+                    <ArrowLeftRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setImagePosition("bottom")}
+                    className={`flex-1 px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                      imagePosition === "bottom"
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    }`}
+                  >
+                    למטה
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 text-right">
+                  בחר את המיקום של התמונה במסגרת הסיפור
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <FiType size={16} />
+                  הוספת טקסט (לא חובה)
+                </label>
+                <textarea
+                  value={textOverlay}
+                  onChange={(e) => setTextOverlay(e.target.value)}
+                  placeholder="הוסף טקסט לסיפור שלך..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  rows={3}
+                  maxLength={100}
+                />
+                <p className="text-xs text-gray-500 text-right">
+                  {textOverlay.length}/100
+                </p>
+              </div>
+            </>
           )}
         </div>
 

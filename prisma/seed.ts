@@ -118,7 +118,6 @@ async function seedStories() {
         data: {
           userId,
           imageUrl: storyData.imageUrl,
-          textOverlay: storyData.textOverlay,
           textX: storyData.textX,
           textY: storyData.textY,
           filter: storyData.filter,

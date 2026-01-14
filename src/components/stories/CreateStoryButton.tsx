@@ -1,10 +1,7 @@
 "use client";
 
 import { FiPlus } from "react-icons/fi";
-
-interface CreateStoryButtonProps {
-  onClick: () => void;
-}
+import { CreateStoryButtonProps } from "@/types/stories";
 
 export function CreateStoryButton({ onClick }: CreateStoryButtonProps) {
   return (

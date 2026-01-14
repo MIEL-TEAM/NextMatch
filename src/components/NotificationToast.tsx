@@ -19,23 +19,22 @@ export default function NotificationToast({
   subtitle,
 }: NotificationToastProps) {
   return (
-    <Link
-      href={href}
-      className="flex items-center text-white w-full max-w-[300px] sm:w-auto sm:max-w-[320px]"
-    >
-      <div className="mr-2">
+    <Link href={href} className="flex items-center">
+      <div className="mr-2 flex-shrink-0 w-[40px] h-[40px]">
         <Image
           src={transformImageUrl(image) || "/images/user.png"}
+          height={40}
+          width={40}
           alt="Sender image"
-          className="w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full object-cover border-2 border-white shadow-md hover:border-blue-500 hover:shadow-lg transition-all duration-300"
-          width={50}
-          height={35}
+          className="object-cover rounded-full w-[40px] h-[40px]"
         />
       </div>
 
       <div className="flex flex-grow flex-col justify-center">
-        <div className="font-semibold text-sm sm:text-base">{title}</div>
-        <div className="text-xs sm:text-sm">
+        <div className="font-semibold text-white text-sm sm:text-base">
+          {title}
+        </div>
+        <div className="text-xs text-white">
           {subtitle || "לחץ/י לצפייה בפרופיל"}
         </div>
       </div>

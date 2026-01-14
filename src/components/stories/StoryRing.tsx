@@ -2,20 +2,7 @@
 
 import Image from "next/image";
 import { transformImageUrl } from "@/lib/util";
-
-interface StoryUser {
-  id: string;
-  name: string;
-  image: string | null;
-  hasUnviewedStories: boolean;
-  totalStories: number;
-  isCurrentUser?: boolean;
-}
-
-interface StoryRingProps {
-  user: StoryUser;
-  onClick: () => void;
-}
+import { StoryRingProps } from "@/types/stories";
 
 export function StoryRing({ user, onClick }: StoryRingProps) {
   const ringStyle = user.hasUnviewedStories
@@ -27,7 +14,7 @@ export function StoryRing({ user, onClick }: StoryRingProps) {
   const imageUrl = transformImageUrl(user.image);
 
   return (
-    <div className="flex flex-col items-center flex-shrink-0">
+    <div className="relative flex flex-col items-center flex-shrink-0">
       {/* Story Ring */}
       <div
         className={`relative ${user.isCurrentUser && user.totalStories === 0 ? "" : "p-1"} rounded-full cursor-pointer transition-transform hover:scale-105 ${ringStyle}`}
@@ -54,18 +41,10 @@ export function StoryRing({ user, onClick }: StoryRingProps) {
           </div>
         )}
       </div>
-
       {/* User Name */}
       <span className="text-xs text-gray-600 mt-1 max-w-16 truncate text-center">
         {user.isCurrentUser ? "הסטורי שלך" : user.name}
       </span>
-
-      {/* Story Count Indicator */}
-      {user.totalStories > 1 && (
-        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-          {user.totalStories}
-        </div>
-      )}
     </div>
   );
 }

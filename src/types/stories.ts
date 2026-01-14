@@ -1,69 +1,14 @@
-// Temporary type definitions for Stories feature
-// These will be replaced by Prisma-generated types after migration
+// ============================================
+// STORY UI & COMPONENT TYPES
+// ============================================
+// This file contains UI-specific types for the stories feature
+// For core story data types, see story.ts
 
-export interface Story {
-  id: string;
-  userId: string;
-  imageUrl: string;
-  publicId?: string;
-  textOverlay?: string;
-  textX?: number;
-  textY?: number;
-  filter?: string;
-  privacy: StoryPrivacy;
-  createdAt: Date;
-  expiresAt: Date;
-  isActive: boolean;
-  user: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
-  views: StoryView[];
-  reactions: StoryReaction[];
-  replies: StoryReply[];
-  _count?: {
-    views: number;
-    reactions: number;
-  };
-}
+import { StoryWithUser } from "./story";
 
-export interface StoryView {
-  id: string;
-  storyId: string;
-  viewerId: string;
-  viewedAt: Date;
-}
-
-export interface StoryReaction {
-  id: string;
-  storyId: string;
-  userId: string;
-  reactionType: ReactionType;
-  createdAt: Date;
-}
-
-export interface StoryReply {
-  id: string;
-  storyId: string;
-  senderId: string;
-  recipientId: string;
-  messageText: string;
-  createdAt: Date;
-}
-
-export enum StoryPrivacy {
-  PUBLIC = "PUBLIC",
-  PREMIUM = "PREMIUM",
-  PRIVATE = "PRIVATE",
-}
-
-export enum ReactionType {
-  HEART = "HEART",
-  FIRE = "FIRE",
-  LOVE_EYES = "LOVE_EYES",
-  EYES = "EYES",
-}
+// ============================================
+// USER TYPES FOR STORIES UI
+// ============================================
 
 export interface StoryUser {
   id: string;
@@ -72,4 +17,91 @@ export interface StoryUser {
   hasUnviewedStories: boolean;
   totalStories: number;
   isCurrentUser?: boolean;
+}
+
+export interface StoryViewer {
+  id: string;
+  name: string;
+  image: string | null;
+  viewedAt: Date;
+}
+
+// ============================================
+// ANALYTICS TYPES
+// ============================================
+
+export interface StoryAnalyticsData {
+  storyId: string;
+  totalViews: number;
+  viewers: StoryViewer[];
+}
+
+// ============================================
+// COMPONENT PROPS
+// ============================================
+
+// Container Components
+export interface StoriesContainerProps {
+  currentUserId: string;
+}
+
+export interface StoriesCarouselProps {
+  onStoryClick: (userId: string, allUsers?: StoryUser[]) => void;
+  onCreateStory: () => void;
+  refreshKey?: number;
+  currentUserId?: string;
+}
+
+// Story Ring Component
+export interface StoryRingProps {
+  user: StoryUser;
+  onClick: () => void;
+}
+
+// Story Viewer Component
+export interface StoryViewerProps {
+  isOpen: boolean;
+  stories?: StoryWithUser[];
+  currentStoryIndex: number;
+  onClose: () => void;
+  onNext: () => void;
+  onPrevious: () => void;
+  currentUserId?: string;
+  onStoryDeleted?: (storyId: string) => void;
+}
+
+// Story Creation Components
+export interface CreateStoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onStoryCreated: () => void;
+}
+
+export interface CreateStoryButtonProps {
+  onClick: () => void;
+}
+
+// Story Interaction Components
+export interface StoryMessageModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  storyId: string;
+  storyImageUrl: string;
+  storyOwnerName: string;
+  storyOwnerImage?: string | null;
+}
+
+export interface StoryReactionsProps {
+  onReaction: (reaction: string) => void;
+  onReply: () => void;
+}
+
+export interface StoryAnalyticsProps {
+  storyId: string;
+  isCurrentUserStory: boolean;
+}
+
+// Progress Bar Component
+export interface StoryProgressBarProps {
+  progress: number;
 }

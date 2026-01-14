@@ -331,6 +331,14 @@ export async function getStoryAnalytics(storyId: string): Promise<
   }
 }
 
+// Reaction emoji mapping
+const reactionEmojis: Record<string, string> = {
+  love: "❤️",
+  funny: "😄",
+  fire: "🔥",
+  care: "🤝",
+};
+
 export async function sendStoryMessage(
   storyId: string,
   messageText: string
@@ -351,7 +359,11 @@ export async function sendStoryMessage(
       return { status: "error", error: "Cannot message yourself" };
     }
 
-    const contextualMessage = `🖼️ הגיב/ה על הסטורי שלך: "${messageText}"\n\n📸 תמונת הסטורי: ${story.imageUrl}`;
+    // Check if it's a reaction (short text matching reaction IDs) or a full message
+    const isReaction = Object.keys(reactionEmojis).includes(messageText);
+    const displayText = isReaction ? reactionEmojis[messageText] : messageText;
+
+    const contextualMessage = `🖼️ הגיב/ה על הסטורי שלך: "${displayText}"\n\n📸 תמונת הסטורי: ${story.imageUrl}`;
 
     const result = await createMessgae(story.userId, {
       text: contextualMessage,

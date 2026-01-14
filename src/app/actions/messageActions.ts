@@ -27,6 +27,7 @@ import {
   dbGetUnreadMessageCount,
   dbMarkMessagesAsRead,
   dbToggleMessageStar,
+  dbUpdateMessage,
 } from "@/lib/db/messageActions";
 
 export async function createMessgae(
@@ -176,23 +177,104 @@ export async function getMessageByContainer(
   }
 }
 
-export async function deleteMessage(messageId: string, isOutbox: boolean) {
-  const selector = isOutbox ? "senderDeleted" : "recipientDeleted";
-
+export async function deleteMessage(
+  messageId: string,
+  recipientUserIdOrIsOutbox: string | boolean
+): Promise<ActionResult<string>> {
   try {
     const userId = await getAuthUserId();
+
+    const isFromMessagesList = typeof recipientUserIdOrIsOutbox === "boolean";
+    const isOutbox = isFromMessagesList ? recipientUserIdOrIsOutbox : false;
+
+    const message = await dbGetMessage(messageId);
+    if (!message) {
+      return { status: "error", error: "Message not found" };
+    }
+
+    if (message.senderId !== userId && message.recipientId !== userId) {
+      return { status: "error", error: "Unauthorized to delete this message" };
+    }
+
+    let selector: "senderDeleted" | "recipientDeleted";
+    let recipientUserId: string | null = null;
+
+    if (isFromMessagesList) {
+      selector = isOutbox ? "senderDeleted" : "recipientDeleted";
+    } else {
+      if (message.senderId !== userId) {
+        return { status: "error", error: "Can only delete your own messages" };
+      }
+      selector = "senderDeleted";
+      recipientUserId = recipientUserIdOrIsOutbox as string;
+    }
+
+    // Mark as deleted
     await dbDeleteMessage(messageId, selector);
 
+    // Check if message should be permanently deleted
     const messagesToDelete = await dbGetMessagesToDelete(userId);
-
     if (messagesToDelete.length > 0) {
       await dbDeleteMessagesPermanently(
         messagesToDelete.map((message) => message.id)
       );
     }
+
+    // Notify recipient via Pusher (only in chat context)
+    if (!isFromMessagesList && recipientUserId) {
+      await pusherServer.trigger(
+        createChatId(userId, recipientUserId),
+        "message:delete",
+        messageId
+      );
+    }
+
+    return { status: "success", data: messageId };
   } catch (error) {
     console.log(error);
-    throw error;
+    return { status: "error", error: "Failed to delete message" };
+  }
+}
+
+export async function editMessage(
+  messageId: string,
+  newText: string,
+  recipientUserId: string
+): Promise<ActionResult<MessageDto>> {
+  try {
+    const userId = await getAuthUserId();
+
+    // Validate the new text
+    const validated = messagesSchema.safeParse({ text: newText });
+    if (!validated.success) {
+      return { status: "error", error: validated.error.errors };
+    }
+
+    // Verify the user owns this message
+    const message = await dbGetMessage(messageId);
+    if (!message || message.senderId !== userId) {
+      return { status: "error", error: "Unauthorized to edit this message" };
+    }
+
+    // Update the message
+    const updatedMessage = await dbUpdateMessage(messageId, newText);
+
+    const messageDto = {
+      ...mapMessageToMessageDto(updatedMessage),
+      currentUserId: userId,
+    };
+
+    // Notify recipient via Pusher
+    await pusherServer.trigger(
+      createChatId(userId, recipientUserId),
+      "message:edit",
+      messageDto
+    );
+
+    return { status: "success", data: messageDto };
+  } catch (error) {
+    console.log(error);
+    return { status: "error", error: "Failed to edit message" };
   }
 }
 

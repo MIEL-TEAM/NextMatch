@@ -57,22 +57,40 @@ export default function MessageList({
     );
   }, []);
 
+  const handleEditMessage = useCallback((updatedMessage: MessageDto) => {
+    setMessages((prevMessages) =>
+      prevMessages.map((message) =>
+        message.id === updatedMessage.id ? updatedMessage : message
+      )
+    );
+  }, []);
+
+  const handleDeleteMessage = useCallback((messageId: string) => {
+    setMessages((prevMessages) =>
+      prevMessages.filter((message) => message.id !== messageId)
+    );
+  }, []);
+
   useEffect(() => {
     if (!channelRef.current) {
       channelRef.current = subscribeToPusher(chatId);
       channelRef.current.bind("message:new", handleNewMessage);
       channelRef.current.bind("messages:read", handleReadMessages);
+      channelRef.current.bind("message:edit", handleEditMessage);
+      channelRef.current.bind("message:delete", handleDeleteMessage);
     }
 
     return () => {
       if (channelRef.current) {
         channelRef.current.unbind("message:new", handleNewMessage);
         channelRef.current.unbind("messages:read", handleReadMessages);
+        channelRef.current.unbind("message:edit", handleEditMessage);
+        channelRef.current.unbind("message:delete", handleDeleteMessage);
         unsubscribeFromPusher(chatId);
         channelRef.current = null;
       }
     };
-  }, [chatId, handleNewMessage, handleReadMessages]);
+  }, [chatId, handleNewMessage, handleReadMessages, handleEditMessage, handleDeleteMessage]);
 
   return (
     <div className="overflow-y-auto h-[calc(80vh-200px)] md:h-[calc(100vh-150px)]">

@@ -130,6 +130,7 @@ export async function dbGetMessage(messageId: string) {
   return prisma.message.findUnique({
     where: { id: messageId },
     select: {
+      id: true,
       isStarred: true,
       senderId: true,
       recipientId: true,
@@ -213,5 +214,13 @@ export async function dbGetArchivedMessages(userId: string, cursor?: string) {
       senderId: true,
       recipientId: true,
     },
+  });
+}
+
+export async function dbUpdateMessage(messageId: string, text: string) {
+  return prisma.message.update({
+    where: { id: messageId },
+    data: { text },
+    select: messageSelect,
   });
 }
