@@ -9,9 +9,9 @@ import type { Session } from "next-auth";
 import NavLink from "./NavLink";
 import UserMenu from "./UserMenu";
 import FiltersWrapper from "./FiltersWrapper";
-import MobileMenu from "./MobileMenu";
 import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
+import ChatButton from "./ChatButton";
 import type { ProfileCompletionStatus } from "@/types/userAction";
 
 type NavLinkItem = {
@@ -124,22 +124,26 @@ export default function TopNavClient({
           ],
         }}
       >
-        <NavbarContent justify="start" className="gap-4 items-center">
+        <NavbarContent
+          justify="start"
+          className="w-full justify-center gap-2.5 sm:w-auto sm:justify-between sm:gap-4 items-center"
+        >
           {userInfo ? (
             <>
-              {profileCompletion && (
-                <ProfileCompletionButton status={profileCompletion} />
-              )}
-              {!isAdmin && (
-                <div className="p-2 rounded-full bg-white/20 hover:bg-white/30 shadow-md hover:shadow-lg transition">
-                  <ProfileViewsButton />
-                </div>
-              )}
               <UserMenu
                 userInfo={userInfo}
                 userId={userId || undefined}
                 isAdmin={isAdmin}
               />
+              {!isAdmin && <ProfileViewsButton />}
+              <div className="sm:hidden">
+                <ChatButton initialUnreadCount={initialUnreadCount} />
+              </div>
+              {profileCompletion && (
+                <div className="scale-75 sm:scale-100 -mx-1 sm:mx-0">
+                  <ProfileCompletionButton status={profileCompletion} />
+                </div>
+              )}
             </>
           ) : (
             <div className="hidden sm:flex gap-3">
@@ -180,7 +184,10 @@ export default function TopNavClient({
             ))}
         </NavbarContent>
 
-        <NavbarContent justify="end" className="gap-3 items-center">
+        <NavbarContent
+          justify="end"
+          className="gap-3 items-center hidden sm:flex"
+        >
           <Link
             href="/home"
             className="font-bold tracking-wide text-3xl text-[#8B5A2B]"
@@ -188,7 +195,7 @@ export default function TopNavClient({
             Miel
           </Link>
 
-          <div className="relative flex items-center justify-center w-11 h-11">
+          <div className="relative items-center justify-center w-11 h-11 flex">
             <Image
               src="/images/icons/Logo.png"
               width={35}
@@ -201,7 +208,6 @@ export default function TopNavClient({
       </Navbar>
 
       {!isHomePage && <FiltersWrapper />}
-      {session && !isHomePage && <MobileMenu userId={userId} />}
     </>
   );
 }

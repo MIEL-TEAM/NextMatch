@@ -9,6 +9,7 @@ import { ReactNode } from "react";
 import { IconType } from "react-icons/lib";
 
 type CardWrapperProps = {
+  children?: ReactNode;
   body?: ReactNode;
   headerIcon: IconType;
   headerText: string;
@@ -19,7 +20,7 @@ type CardWrapperProps = {
 };
 
 export default function CardWrapper({
-  body,
+  children,
   headerIcon: Icon,
   headerText,
   subHeaderText,
@@ -46,7 +47,7 @@ export default function CardWrapper({
           </div>
         </CardHeader>
 
-        {body && <CardBody>{body}</CardBody>}
+        {children && <CardBody>{children}</CardBody>}
 
         <CardFooter className="w-full">
           {action && (

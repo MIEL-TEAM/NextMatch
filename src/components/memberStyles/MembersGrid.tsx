@@ -41,10 +41,10 @@ const MembersGrid: React.FC<Props> = ({
 
   const isFetching = useIsFetching({ queryKey: ["members"] }) > 0;
 
-  if (isFetching) {
+    if (isFetching) {
     return (
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 animate-pulse">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 animate-pulse">
           {[...Array(12)].map((_, i) => (
             <div
               key={i}
@@ -58,12 +58,12 @@ const MembersGrid: React.FC<Props> = ({
 
   return (
     <motion.div
-      className="w-screen px-7"
+      className="w-screen px-4 sm:px-7"
       variants={container}
       initial="hidden"
       animate="show"
     >
-      <motion.div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+      <motion.div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {membersData.map(({ member, photos, videos }) => (
           <motion.div
             key={member.id}

@@ -6,12 +6,25 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 export async function sendVerificationEmail(email: string, token: string) {
   let verificationLink = "";
 
-  if (process.env.NODE_ENV === "development") {
-    // Running locally
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const isLocalhost = baseUrl?.includes("localhost");
+
+  if (isDevelopment || isLocalhost) {
     verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+    console.log("📧 [EMAIL] Sending verification email (DEV):", {
+      email,
+      environment: process.env.NODE_ENV,
+      baseUrl,
+      link: verificationLink,
+    });
   } else {
-    // Running in production
     verificationLink = `${baseUrl}/verify-email?token=${token}`;
+    console.log("📧 [EMAIL] Sending verification email (PROD):", {
+      email,
+      environment: process.env.NODE_ENV,
+      baseUrl,
+      link: verificationLink,
+    });
   }
 
   return resend.emails.send({

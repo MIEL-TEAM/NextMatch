@@ -8,7 +8,6 @@ import { SessionProvider } from "@/contexts/SessionContext";
 import MielLayout from "./mielLayout";
 import { Toaster } from "sonner";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
-import MobileBlocker from "@/components/MobileBlocker";
 import { Session } from "next-auth";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
 import InvitationContainer from "@/components/InvitationContainer";
@@ -160,11 +159,8 @@ export default async function RootLayout({
                 isPremium={isPremium}
                 isAdmin={isAdmin}
               >
-                <MobileBlocker />
                 <TopNav />
-                <div className="hidden lg:block">
-                  <MielLayout>{children}</MielLayout>
-                </div>
+                <MielLayout>{children}</MielLayout>
               </Providers>
             </ReactQueryProvider>
           </SessionProvider>

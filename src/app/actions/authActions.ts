@@ -33,6 +33,7 @@ import {
   dbUpdateUserSocialProfile,
   dbUpdateUserWelcomeStatus,
 } from "@/lib/db/authActions";
+import { prisma } from "@/lib/prisma";
 
 export async function signInUser(
   data: LoginSchema
@@ -84,7 +85,7 @@ export async function signInUser(
 export async function signOutUser() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
-  await signOut({ redirectTo: "/" });
+  await signOut({ redirectTo: "/login" });
 }
 
 export async function registerUser(
@@ -180,13 +181,65 @@ export async function getUserByEmail(email: string) {
   return dbGetUserByEmail(email);
 }
 
+export async function registerUserMinimal(
+  email: string
+): Promise<ActionResult<User>> {
+  try {
+    const { minimalRegisterSchema } = await import(
+      "@/lib/schemas/minimalRegisterSchema"
+    );
+
+    const validated = minimalRegisterSchema.safeParse({ email });
+
+    if (!validated.success) {
+      return { status: "error", error: validated.error.errors[0].message };
+    }
+
+    const existingUser = await dbGetUserByEmail(validated.data.email);
+
+    if (existingUser) {
+      return { status: "error", error: "משתמש עם אימייל זה כבר קיים במערכת" };
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        email: validated.data.email,
+        profileComplete: false,
+      },
+    });
+
+    console.log("✅ [REGISTER_MINIMAL] User created:", {
+      userId: user.id,
+      email: user.email,
+      profileComplete: user.profileComplete,
+    });
+
+    const verificationToken = await generateToken(
+      validated.data.email,
+      TokenType.VERIFICATION
+    );
+
+    await sendVerificationEmail(
+      verificationToken.email,
+      verificationToken.token
+    );
+
+    return { status: "success", data: user };
+  } catch (error) {
+    console.error("❌ [REGISTER_MINIMAL] Registration failed:", error);
+    return { status: "error", error: "משהו השתבש, נסה שוב" };
+  }
+}
+
 export async function getUserById(id: string) {
   return dbGetUserById(id);
 }
 
 export async function verifyEmail(
   token: string
-): Promise<ActionResult<string>> {
+): Promise<
+  ActionResult<{ message: string; profileComplete: boolean; email: string }>
+> {
   try {
     const existingToken = await getTokenByToken(token);
 
@@ -209,10 +262,22 @@ export async function verifyEmail(
     }
 
     await dbUpdateUserEmailVerified(existingUser.id);
-
     await dbDeleteToken(existingToken.id);
 
-    return { status: "success", data: "אתה בפנים!" };
+    console.log("✅ [VERIFY_EMAIL] User verified:", {
+      userId: existingUser.id,
+      email: existingUser.email,
+      profileComplete: existingUser.profileComplete,
+    });
+
+    return {
+      status: "success",
+      data: {
+        message: "אתה בפנים!",
+        profileComplete: existingUser.profileComplete ?? false,
+        email: existingUser.email || "",
+      },
+    };
   } catch (error) {
     console.log(error);
     throw error;

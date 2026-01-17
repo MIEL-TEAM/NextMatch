@@ -5,6 +5,7 @@ import {
   unauthOnlyRoutes,
   registerSuccessRoutes,
   authActionRoutes,
+  mobileRoutes,
 } from "./routes";
 
 export default auth((req) => {
@@ -37,14 +38,22 @@ export default auth((req) => {
 
   // 3. Handle unauthenticated users
   if (!isLoggedIn) {
-    const allowedRoutes = [...unauthOnlyRoutes, ...registerSuccessRoutes];
+    const allowedRoutes = [
+      ...unauthOnlyRoutes,
+      ...registerSuccessRoutes,
+      ...mobileRoutes,
+    ];
     return allowedRoutes.includes(pathname)
       ? NextResponse.next()
       : NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   // 4. Handle authenticated users (block login/register pages)
-  const blockedRoutes = [...unauthOnlyRoutes, ...registerSuccessRoutes];
+  const blockedRoutes = [
+    ...unauthOnlyRoutes,
+    ...registerSuccessRoutes,
+    ...mobileRoutes,
+  ];
   if (blockedRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/members", nextUrl));
   }

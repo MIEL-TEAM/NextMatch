@@ -9,6 +9,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ActionResult } from "@/types";
+import { getDeviceAwarePath } from "@/lib/deviceDetection";
 
 type VerifyEmailClientProps = {
   token: string;
@@ -16,7 +17,11 @@ type VerifyEmailClientProps = {
 
 export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
   const router = useRouter();
-  const [result, setResult] = useState<ActionResult<string> | null>(null);
+  const [result, setResult] = useState<ActionResult<{
+    message: string;
+    profileComplete: boolean;
+    email: string;
+  }> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,22 +43,48 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
     verifyToken();
   }, [token]);
 
-  // Show success page with login button
   if (result?.status === "success") {
+    const profileComplete = result.data?.profileComplete ?? false;
+    const userEmail = result.data?.email || "";
+
+    // Store email in localStorage for complete-profile page
+    if (!profileComplete && userEmail) {
+      localStorage.setItem("pendingProfileEmail", userEmail);
+      console.log(
+        "💾 [VERIFY_EMAIL_CLIENT] Stored email in localStorage:",
+        userEmail
+      );
+    }
+
+    console.log("🔍 [VERIFY_EMAIL_CLIENT] Redirect decision:", {
+      profileComplete,
+      redirectPath: profileComplete
+        ? getDeviceAwarePath("login")
+        : "/complete-profile",
+      actionLabel: profileComplete ? "עבור להתחברות" : "השלם פרופיל",
+    });
+
+    const redirectPath = profileComplete
+      ? getDeviceAwarePath("login")
+      : "/complete-profile";
+    const actionLabel = profileComplete ? "עבור להתחברות" : "השלם פרופיל";
+    const subHeaderText = profileComplete
+      ? "מעולה! עכשיו אתה יכול להיכנס ולהתחיל להכיר אנשים מדהימים"
+      : "מעולה! עכשיו תוכל להשלים את הפרופיל שלך ולהתחיל להכיר אנשים מדהימים";
+
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 px-6 sm:px-12">
         <CardWrapper
           headerText="האימייל אומת בהצלחה! 🎉"
           headerIcon={FaCheckCircle}
-          subHeaderText="מעולה! עכשיו אתה יכול להיכנס ולהתחיל להכיר אנשים מדהימים"
-          action={() => router.push("/login")}
-          actionLabel="עבור להתחברות"
+          subHeaderText={subHeaderText}
+          action={() => router.push(redirectPath)}
+          actionLabel={actionLabel}
         />
       </div>
     );
   }
 
-  // Show error page
   if (result?.status === "error") {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-red-50 to-pink-50 px-6 sm:px-12">
@@ -67,7 +98,6 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
     );
   }
 
-  // Show loading page
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 px-6 sm:px-12">
       <CardWrapper

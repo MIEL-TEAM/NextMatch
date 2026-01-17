@@ -203,14 +203,6 @@ export default function HeroSection({ session }: HeroSectionProps) {
             </div>
           </div>
         </div>
-
-        {isClient && mounted && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-40">
-            <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-              <div className="w-1.5 h-3 bg-white/50 rounded-full mt-2 animate-bounce" />
-            </div>
-          </div>
-        )}
       </div>
     </motion.section>
   );

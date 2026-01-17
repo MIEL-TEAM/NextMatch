@@ -14,6 +14,13 @@ export default {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          prompt: "select_account",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
     Facebook({
       clientId: process.env.FACEBOOK_CLIENT_ID,
@@ -45,7 +52,6 @@ export default {
 
           const user = await getUserByEmail(email);
 
-          // Comprehensive validation in one place
           if (!user || !user.email) {
             throw new Error("פרטי התחברות שגויים");
           }

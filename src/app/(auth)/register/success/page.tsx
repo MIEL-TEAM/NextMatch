@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://miel-love.com/register/success",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RegisterSuccessPage() {

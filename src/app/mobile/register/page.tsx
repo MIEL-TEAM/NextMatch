@@ -1,5 +1,5 @@
 import React from "react";
-import RegisterForm from "./RegisterForm";
+import { MobileRegisterPage } from "@/mobile/auth";
 import { Metadata } from "next";
 import DeviceRoutingProvider from "@/components/auth/DeviceRoutingProvider";
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Miel - הרשמה",
     description:
       "הצטרפו לקהילת Miel עוד היום. הצעד הראשון למציאת זוגיות משמעותית מתחיל כאן.",
-    url: "https://miel-love.com/register",
+    url: "https://miel-love.com/mobile/register",
     locale: "he_IL",
     type: "website",
     images: [
@@ -24,16 +24,20 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "https://miel-love.com/register",
+    canonical: "https://miel-love.com/mobile/register",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
   },
 };
 
-export default function RegisterPage() {
+export default function MobileRegisterRoute() {
   return (
     <DeviceRoutingProvider>
-      <div className="h-screen w-screen overflow-hidden">
-        <RegisterForm />
-      </div>
+      <MobileRegisterPage />
     </DeviceRoutingProvider>
   );
 }
