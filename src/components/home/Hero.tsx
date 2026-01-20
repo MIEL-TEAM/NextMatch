@@ -25,7 +25,7 @@ const ActionButton = memo(
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className={`relative px-6 py-3 md:px-8 md:py-3.5 rounded-full text-white text-base md:text-lg font-medium 
+        className={`w-full md:w-64 px-6 py-2 md:px-8 md:py-3.5 rounded-2xl text-white text-base md:text-lg font-medium 
         ${
           primary
             ? "bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg"
@@ -38,7 +38,7 @@ const ActionButton = memo(
     );
 
     if (href) {
-      return <Link href={href}>{ButtonContent}</Link>;
+      return <Link href={href} className="w-full md:w-64">{ButtonContent}</Link>;
     }
     return ButtonContent;
   }
@@ -53,7 +53,7 @@ const TaglineDisplay = memo(
     taglines: string[];
     currentTagline: number;
   }) => (
-    <div className="h-10 md:h-12 relative w-72 md:w-80">
+    <div className="h-10 md:h-12 relative w-full md:w-80">
       <AnimatePresence mode="wait">
         <motion.p
           key={currentTagline}
@@ -61,7 +61,7 @@ const TaglineDisplay = memo(
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -5 }}
           transition={{ duration: 0.3 }}
-          className="text-lg md:text-xl text-white font-medium drop-shadow-md text-center whitespace-nowrap"
+          className="text-base md:text-xl text-white font-medium drop-shadow-md text-center whitespace-nowrap"
           style={{ direction: "rtl" }}
         >
           {taglines[currentTagline]}
@@ -138,12 +138,12 @@ export default function HeroSection({ session }: HeroSectionProps) {
         </div>
       </div>
 
-      <div className="relative z-10 h-full flex flex-col justify-between p-4 md:p-8">
+      <div className="relative z-10 h-full flex flex-col justify-between p-6 md:p-8">
         <div
-          className="text-center md:text-right pt-8 md:pt-12"
+          className="text-center md:text-right pt-4 md:pt-12"
           style={{ direction: "rtl" }}
         >
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 drop-shadow-lg relative inline-block">
+          <h1 className="text-3xl md:text-6xl font-bold text-white mb-2 drop-shadow-lg relative inline-block">
             הדייט שישנה את חייך.
             <div className="h-1.5 md:h-2 bg-orange-500 md:bg-amber-400 mt-1 w-full md:max-w-xs md:ml-auto" />
             {isClient && mounted && (
@@ -157,11 +157,11 @@ export default function HeroSection({ session }: HeroSectionProps) {
           </h1>
         </div>
 
-        <div className="w-full flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
-          <div className="w-full md:w-1/2 flex flex-col items-center md:items-start order-2 md:order-1">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center mb-8 md:mb-16 gap-6 md:gap-8">
+          <div className="w-full md:w-1/2 flex flex-col items-stretch md:items-start order-2 md:order-1">
             {isClient && mounted && session === "guest" ? (
               <div
-                className="flex flex-row justify-center md:justify-start gap-4 flex-wrap"
+                className="flex flex-col md:flex-row justify-center md:justify-start gap-3 md:gap-4"
                 style={{ direction: "rtl" }}
               >
                 <ActionButton href="/register" primary>
@@ -173,7 +173,7 @@ export default function HeroSection({ session }: HeroSectionProps) {
               </div>
             ) : isClient && mounted ? (
               <div
-                className="flex justify-center md:justify-start"
+                className="flex justify-center md:justify-start w-full md:w-auto"
                 style={{ direction: "rtl" }}
               >
                 <ActionButton href="/members" primary>
@@ -185,16 +185,16 @@ export default function HeroSection({ session }: HeroSectionProps) {
 
           <div className="w-full md:w-2/5 order-1 md:order-2">
             <div
-              className="text-right rounded-xl overflow-hidden bg-black/30 backdrop-blur-sm border border-white/10 shadow-lg max-w-lg md:max-w-none mx-auto md:mx-0"
+              className="text-right rounded-xl overflow-hidden bg-black/30 backdrop-blur-sm border border-white/10 shadow-lg"
               style={{ direction: "rtl" }}
             >
-              <div className="bg-gradient-to-r from-amber-500/80 to-orange-600/80 p-3">
-                <h2 className="text-xl md:text-2xl font-bold text-white">
+              <div className="bg-gradient-to-r from-amber-500/80 to-orange-600/80 p-3 md:p-4">
+                <h2 className="text-lg md:text-2xl font-bold text-white">
                   ליצור חיבורים משמעותיים
                 </h2>
               </div>
-              <div className="p-4">
-                <p className="text-white text-sm md:text-base">
+              <div className="p-4 md:p-5">
+                <p className="text-white text-sm md:text-base leading-relaxed">
                   ב-Miel אנחנו מאמינים שכל אחד שמחפש אהבה צריך למצוא אותה.
                   האלגוריתם החכם שלנו מחבר בין אנשים שבאמת מתאימים, כדי שתוכלו
                   לצאת לדייטים משמעותיים - ולא להישאר באפליקציה.

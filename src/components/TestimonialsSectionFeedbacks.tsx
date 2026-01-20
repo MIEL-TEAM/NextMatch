@@ -63,7 +63,6 @@ const TestimonialsSection = () => {
       setIsAutoPlaying(false);
       setIsPaused(true);
 
-      // חזרה לאוטו פליי אחרי 8 שניות
       setTimeout(() => {
         setIsAutoPlaying(true);
         setIsPaused(false);
@@ -72,7 +71,6 @@ const TestimonialsSection = () => {
     [currentIndex]
   );
 
-  // ניהול progress bar
   useEffect(() => {
     if (!isAutoPlaying || isPaused) {
       if (progressIntervalRef.current) {
@@ -97,7 +95,6 @@ const TestimonialsSection = () => {
     };
   }, [isAutoPlaying, isPaused, currentIndex]);
 
-  // מעבר בין testimonials
   useEffect(() => {
     if (!isAutoPlaying || isPaused) {
       if (intervalRef.current) {
@@ -117,7 +114,6 @@ const TestimonialsSection = () => {
     };
   }, [next, isAutoPlaying, isPaused]);
 
-  // ניקוי intervals בסגירה
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -145,18 +141,19 @@ const TestimonialsSection = () => {
   };
 
   return (
-    <section className="py-20 relative overflow-hidden" dir="rtl">
+    <section className="py-12 md:py-20 relative overflow-hidden" dir="rtl">
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black/90" />
       <div className="absolute inset-0 bg-gradient-to-r from-amber-900/5 to-amber-700/5 mix-blend-overlay" />
 
       <div className="max-w-6xl mx-auto relative z-10 px-4 sm:px-6 md:px-8">
+        {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-16 text-center"
+          className="mb-8 md:mb-16 text-center"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white inline-block relative">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white inline-block relative">
             מה המשתמשים שלנו אומרים
             <motion.div
               className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full"
@@ -167,7 +164,76 @@ const TestimonialsSection = () => {
           </h2>
         </motion.div>
 
-        <div className="relative w-full overflow-hidden mx-auto max-w-4xl">
+        {/* Mobile: Simple Slider */}
+        <div className="lg:hidden max-w-md mx-auto">
+          <div 
+            className="relative min-h-[280px] flex items-center touch-pan-y"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              const startX = touch.clientX;
+              
+              const handleTouchMove = (e: TouchEvent) => {
+                const touch = e.touches[0];
+                const diff = startX - touch.clientX;
+                
+                if (Math.abs(diff) > 50) {
+                  if (diff > 0) {
+                    goTo((currentIndex + 1) % testimonials.length);
+                  } else {
+                    goTo((currentIndex - 1 + testimonials.length) % testimonials.length);
+                  }
+                  document.removeEventListener('touchmove', handleTouchMove);
+                  document.removeEventListener('touchend', handleTouchEnd);
+                }
+              };
+              
+              const handleTouchEnd = () => {
+                document.removeEventListener('touchmove', handleTouchMove);
+                document.removeEventListener('touchend', handleTouchEnd);
+              };
+              
+              document.addEventListener('touchmove', handleTouchMove);
+              document.addEventListener('touchend', handleTouchEnd);
+            }}
+          >
+            <div className="w-full">
+              <div 
+                key={currentIndex}
+                className="backdrop-blur-sm bg-white/5 rounded-xl shadow-lg border border-white/10 p-6 transition-opacity duration-300"
+              >
+                <div className="text-4xl text-amber-400/30 font-serif mb-3">״</div>
+                <p className="text-base text-white leading-relaxed mb-4">
+                  {testimonials[currentIndex].content}
+                </p>
+                <div>
+                  <p className="text-base font-semibold text-amber-200">
+                    {testimonials[currentIndex].names}
+                  </p>
+                  <p className="text-xs text-white/60 mt-1">מצאו אהבה במיאל</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dots Navigation */}
+          <div className="mt-6 flex justify-center gap-2">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goTo(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentIndex
+                    ? "bg-amber-500 w-8"
+                    : "bg-white/30"
+                }`}
+                aria-label={`עבור לעדות ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Interactive Slider */}
+        <div className="hidden lg:block relative w-full overflow-hidden mx-auto max-w-4xl">
           <div
             className="relative min-h-[300px] flex items-center"
             onMouseEnter={() => setIsPaused(true)}
@@ -259,52 +325,52 @@ const TestimonialsSection = () => {
               ))}
             </div>
           </div>
-        </div>
 
-        {/* Manual navigation arrows */}
-        <div className="flex justify-center mt-6 gap-4">
-          <button
-            onClick={() =>
-              goTo(
-                (currentIndex - 1 + testimonials.length) % testimonials.length
-              )
-            }
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-            aria-label="עדות קודמת"
-          >
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Navigation arrows */}
+          <div className="flex justify-center mt-6 gap-4">
+            <button
+              onClick={() =>
+                goTo(
+                  (currentIndex - 1 + testimonials.length) % testimonials.length
+                )
+              }
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              aria-label="עדות קודמת"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={() => goTo((currentIndex + 1) % testimonials.length)}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-            aria-label="עדות הבאה"
-          >
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={() => goTo((currentIndex + 1) % testimonials.length)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              aria-label="עדות הבאה"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </section>

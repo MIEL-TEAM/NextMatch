@@ -76,7 +76,7 @@ export default function MobileRegisterPage() {
           quality={90}
         />
 
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       </div>
 
       {/* Content */}
@@ -145,32 +145,6 @@ export default function MobileRegisterPage() {
                 כבר יש לך חשבון?{" "}
                 <span className="font-semibold underline">התחבר</span>
               </Link>
-            </div>
-
-            {/* Legal Links */}
-            <div className="pt-8">
-              <div className="flex items-center justify-center gap-3 text-xs text-white/80 flex-wrap">
-                <Link
-                  href="/terms"
-                  className="hover:text-white transition-colors drop-shadow-md"
-                >
-                  תנאי שימוש
-                </Link>
-                <span>•</span>
-                <Link
-                  href="/privacy"
-                  className="hover:text-white transition-colors drop-shadow-md"
-                >
-                  פרטיות
-                </Link>
-                <span>•</span>
-                <Link
-                  href="/safety-tips"
-                  className="hover:text-white transition-colors drop-shadow-md"
-                >
-                  אבטחה
-                </Link>
-              </div>
             </div>
           </form>
         </div>

@@ -175,32 +175,6 @@ export default function MobileLoginPage() {
               </Link>
             </div>
           </form>
-
-          {/* Legal Links */}
-          <div className="pt-8">
-            <div className="flex items-center justify-center gap-3 text-xs text-white/80 flex-wrap">
-              <Link
-                href="/terms"
-                className="hover:text-white transition-colors drop-shadow-md"
-              >
-                תנאי שימוש
-              </Link>
-              <span>•</span>
-              <Link
-                href="/privacy"
-                className="hover:text-white transition-colors drop-shadow-md"
-              >
-                פרטיות
-              </Link>
-              <span>•</span>
-              <Link
-                href="/safety-tips"
-                className="hover:text-white transition-colors drop-shadow-md"
-              >
-                אבטחה
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

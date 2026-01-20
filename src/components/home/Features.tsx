@@ -1,33 +1,31 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
 import Image from "next/image";
 
 export default function FeaturesSection() {
-  const [activeFeature, setActiveFeature] = useState(0);
-
   const features = [
     {
-      title: "חיבורים אמיתיים",
+      title: "הגנה מלאה",
       description:
-        "האלגוריתם שלנו מתמקד בהתאמות אמיתיות ומשמעותיות, לא רק במראה חיצוני.",
-      image: "/images/couple.jpg",
-    },
-    {
-      title: "פרטיות מתקדמת",
-      description:
-        "הפרטיות שלך חשובה לנו. עם טכנולוגיות אבטחה מתקדמות, אתה בשליטה.",
+        "הבטיחות שלך נתמכת במערכות אנטי-הונאה ייעודיות ומתקדמות",
       image: "/images/features-images/one.jpg",
     },
     {
-      title: "התאמות חכמות",
-      description: "פיתחנו אלגוריתם שמבין לעומק מה חשוב בקשרים יציבים ועמוקים.",
+      title: "התאמה עמוקה",
+      description:
+        "הפוך את זה למשמעותי על ידי חיפוש תחומי עניין משותפים ותשוקות הדדיות",
+      image: "/images/couple.jpg",
+    },
+    {
+      title: "אימות זהות",
+      description:
+        "חברים עם סימני אימות סיפקו את תעודת הזהות הממשלתית שלהם למטרות אימות",
       image: "/images/features-images/two.jpg",
     },
     {
-      title: "חוויה מדהימה",
-      description: "ממשק יפה ונעים. נטול רעש, מלא רגש. כאן בשבילך ובשביל אהבה.",
+      title: "קהילה איכותית",
+      description:
+        "הקהילה שלנו מורכבת מחברים משלמים ומשתמשים חופשיים",
       image: "/images/features-images/social-share.png",
     },
   ];
@@ -35,117 +33,45 @@ export default function FeaturesSection() {
   return (
     <section
       id="features-section"
-      className="py-20 container mx-auto max-w-7xl px-6 overflow-hidden"
+      className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50"
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-16"
-      >
-        <h2
-          className="text-4xl md:text-5xl font-bold mb-6 text-gray-900"
+      <div className="container mx-auto max-w-7xl px-4 md:px-6">
+        {/* Features Grid */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           style={{ direction: "rtl" }}
         >
-          המדע שמאחורי
-          <span className="relative inline-block mx-3">
-            החיבורים
-            <div className="absolute -bottom-1 left-0 right-0 h-3 bg-amber-300/60 -z-10 rounded-full" />
-          </span>
-        </h2>
-        <p
-          className="text-xl text-gray-700 max-w-2xl mx-auto"
-          style={{ direction: "rtl" }}
-        >
-          בנינו את Miel על בסיס מחקר מתקדם על מערכות יחסים כדי לעזור לך למצוא
-          קשר אמיתי
-        </p>
-      </motion.div>
+          {features.map((feature, index) => {
+            return (
+              <div
+                key={index}
+                className="flex flex-col items-center text-center"
+              >
+                {/* Image Container */}
+                <div
+                  className="w-36 h-36 rounded-full overflow-hidden mb-6 shadow-lg relative"
+                >
+                  <Image
+                    src={feature.image}
+                    alt={feature.title}
+                    fill
+                    className="object-cover"
+                    sizes="144px"
+                  />
+                </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-xl border border-amber-100">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeFeature}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="absolute inset-0"
-            >
-              <Image
-                src={features[activeFeature].image}
-                alt={features[activeFeature].title}
-                fill
-                className="object-cover object-center"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </motion.div>
-          </AnimatePresence>
+                {/* Title */}
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
 
-          <div className="absolute inset-0 z-10 pointer-events-none">
-            <div
-              className="w-full h-full"
-              style={{
-                WebkitMaskImage:
-                  "radial-gradient(circle at 45% 30%, rgba(0,0,0,0) 30%, rgba(0,0,0,1) 48%)",
-                WebkitMaskRepeat: "no-repeat",
-                WebkitMaskSize: "cover",
-                backgroundColor: "rgba(0,0,0,0.95)",
-              }}
-            />
-          </div>
-
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-center px-6 z-20">
-            <motion.h3
-              key={activeFeature}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="text-2xl font-semibold text-white drop-shadow-md"
-            >
-              {features[activeFeature].title}
-            </motion.h3>
-            <motion.p
-              key={activeFeature + "-desc"}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="text-white/90 mt-2 max-w-sm mx-auto text-base leading-relaxed drop-shadow-sm"
-            >
-              {features[activeFeature].description}
-            </motion.p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4" style={{ direction: "rtl" }}>
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.02 }}
-              className={`cursor-pointer p-5 rounded-xl border transition-all duration-300 shadow-sm ${
-                activeFeature === index
-                  ? "bg-gradient-to-r from-amber-100 to-orange-100 border-amber-300"
-                  : "bg-white hover:bg-orange-50 border-white/30"
-              }`}
-              onClick={() => setActiveFeature(index)}
-            >
-              <h4 className="text-lg font-semibold text-gray-900">
-                {feature.title}
-              </h4>
-              <p className="text-sm text-gray-600 mt-1">
-                {feature.description}
-              </p>
-              {activeFeature === index && (
-                <motion.div
-                  layoutId="active-line"
-                  className="mt-3 h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                />
-              )}
-            </motion.div>
-          ))}
+                {/* Description */}
+                <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-xs">
+                  {feature.description}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
