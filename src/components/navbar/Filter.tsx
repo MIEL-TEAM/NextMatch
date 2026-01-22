@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { FaFilter } from "react-icons/fa";
 import FilterContent from "./FilterStyles";
+import { useFilterModal } from "@/hooks/useFilterModal";
 
 export default function Filter() {
   const {
@@ -20,23 +21,20 @@ export default function Filter() {
     totalCount,
   } = useFilters();
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { isOpen: isFilterOpen, toggle: toggleFilter } = useFilterModal();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  const toggleFilter = () => {
-    setIsFilterOpen(!isFilterOpen);
-  };
-
   if (!isMounted) return null;
 
   return (
     <div className="relative">
+      {/* Floating button - Hidden on mobile, shown on desktop */}
       <div
-        className="fixed bottom-4 right-4 z-[9999]"
+        className="hidden sm:block fixed bottom-4 right-4 z-[9999]"
         style={{
           position: "fixed",
           bottom: "5rem",
@@ -59,7 +57,7 @@ export default function Filter() {
       <AnimatePresence>
         {isFilterOpen && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-[9000] flex justify-center items-start pt-20"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9000] flex justify-center items-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -67,7 +65,7 @@ export default function Filter() {
             onClick={toggleFilter}
           >
             <motion.div
-              className="bg-white z-[9001] rounded-lg shadow-lg w-full max-w-4xl m-4 p-6"
+              className="bg-white z-[9001] rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto p-6"
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}

@@ -165,7 +165,20 @@ export default async function RootLayout({
             </ReactQueryProvider>
           </SessionProvider>
 
-          <Toaster position="top-center" richColors expand={true} />
+          <Toaster 
+            position="top-center" 
+            richColors 
+            expand={false}
+            visibleToasts={3}
+            toastOptions={{
+              className: 'sm:max-w-md',
+              style: {
+                maxWidth: '400px',
+                width: 'calc(100vw - 32px)',
+                margin: '0 auto',
+              },
+            }}
+          />
           <InvitationContainer />
           <CookieConsentManager />
         </CookieConsentProvider>

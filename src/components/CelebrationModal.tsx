@@ -48,7 +48,7 @@ interface CelebrationModalProps {
   data?: {
     userName?: string;
     userImage?: string;
-    matchedUserId?: string; // 🎯 ID של המשתמש המתאים
+    matchedUserId?: string; 
     matchScore?: number;
     customTitle?: string;
     customSubtitle?: string;
@@ -270,9 +270,9 @@ export default function CelebrationModal({
                 duration: 0.6,
               }}
               className={`
-                relative max-w-md w-full mx-auto
+                relative max-w-md w-full mx-4 sm:mx-auto
                 bg-gradient-to-br ${config.colors.secondary}
-                rounded-3xl shadow-2xl overflow-hidden
+                rounded-3xl sm:rounded-2xl shadow-2xl overflow-hidden
                 border-2 border-white/20
               `}
               onClick={(e) => e.stopPropagation()}
@@ -283,7 +283,7 @@ export default function CelebrationModal({
               />
 
               {/* 🎯 תוכן המודל */}
-              <div className="p-8 text-center">
+              <div className="p-6 sm:p-8 text-center">
                 {/* 🎭 אייקון מרכזי */}
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
@@ -291,12 +291,14 @@ export default function CelebrationModal({
                   transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                   className={`
                     inline-flex items-center justify-center
-                    w-24 h-24 rounded-full mb-6
+                    w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-4 sm:mb-6
                     bg-gradient-to-br ${config.colors.primary}
                     text-white shadow-lg
                   `}
                 >
-                  {config.icon}
+                  <div className="scale-75 sm:scale-100">
+                    {config.icon}
+                  </div>
                 </motion.div>
 
                 {/* 🎊 אמוג'י מרחף */}
@@ -304,7 +306,7 @@ export default function CelebrationModal({
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
-                  className="text-4xl mb-4"
+                  className="text-3xl sm:text-4xl mb-3 sm:mb-4"
                 >
                   {config.emoji}
                 </motion.div>
@@ -314,7 +316,7 @@ export default function CelebrationModal({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className={`text-2xl font-bold mb-3 ${config.colors.accent}`}
+                  className={`text-xl sm:text-2xl font-bold mb-2 sm:mb-3 ${config.colors.accent} leading-tight`}
                 >
                   {config.title}
                 </motion.h2>
@@ -324,7 +326,7 @@ export default function CelebrationModal({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
-                  className="text-gray-700 mb-8 leading-relaxed"
+                  className="text-sm sm:text-base text-gray-700 mb-6 sm:mb-8 leading-relaxed"
                 >
                   {config.subtitle}
                 </motion.p>
@@ -334,7 +336,7 @@ export default function CelebrationModal({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.8, duration: 0.5 }}
-                  className="space-y-3"
+                  className="space-y-2.5 sm:space-y-3"
                 >
                   {/* כפתור ראשי */}
                   {config.actions?.primary && (
@@ -345,9 +347,9 @@ export default function CelebrationModal({
                       }}
                       className={`
                         w-full bg-gradient-to-r ${config.colors.primary}
-                        text-white font-medium py-3 rounded-2xl
-                        hover:scale-105 transition-transform
-                        shadow-lg hover:shadow-xl
+                        text-white font-medium py-2.5 sm:py-3 rounded-2xl sm:rounded-xl text-sm sm:text-base
+                        sm:hover:scale-105 active:scale-95 transition-transform
+                        shadow-lg sm:hover:shadow-xl
                       `}
                       startContent={config.actions.primary.icon}
                     >
@@ -365,8 +367,8 @@ export default function CelebrationModal({
                       }}
                       className={`
                         w-full border-2 ${config.colors.accent}
-                        hover:bg-white/50 transition-colors
-                        rounded-2xl py-3
+                        sm:hover:bg-white/50 active:bg-white/30 transition-colors
+                        rounded-2xl sm:rounded-xl py-2.5 sm:py-3 text-sm sm:text-base
                       `}
                     >
                       {config.actions.secondary.text}
@@ -377,7 +379,7 @@ export default function CelebrationModal({
                   <Button
                     variant="light"
                     onClick={onClose}
-                    className="w-full text-gray-600 hover:text-gray-800 mt-4"
+                    className="w-full text-gray-600 hover:text-gray-800 mt-3 sm:mt-4 text-sm"
                   >
                     ✨ סגור
                   </Button>

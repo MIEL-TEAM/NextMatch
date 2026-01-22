@@ -41,6 +41,8 @@ export default async function TopNav() {
       ? await getProfileCompletionStatus(userId)
       : null;
 
+  const isPremium = session?.user?.isPremium || false;
+
   return (
     <TopNavClient
       session={session}
@@ -50,6 +52,7 @@ export default async function TopNav() {
       initialUnreadCount={initialUnreadCount}
       profileCompletion={profileCompletion}
       isAdmin={isAdmin}
+      isPremium={isPremium}
     />
   );
 }

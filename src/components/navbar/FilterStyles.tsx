@@ -31,26 +31,20 @@ export default function FilterContent({
   selectGender,
   selectOrder,
   filters,
-  clientLoaded,
   selectWithPhoto,
   totalCount,
 }: FilterContentProps) {
   return (
     <div className="flex flex-col md:flex-row justify-around items-center gap-4">
-      <motion.div
-        className="flex gap-2 items-center"
-        whileHover={{ scale: 1.05 }}
-      >
-        <div className="text-secondary font-semibold text-xl">
-          תוצאות: {totalCount}
-        </div>
+
+      {/* Total Count */}
+      <motion.div className="flex gap-2 items-center" whileHover={{ scale: 1.05 }}>
+        <div className="text-secondary font-semibold text-xl">תוצאות: {totalCount}</div>
       </motion.div>
 
-      <motion.div
-        className="flex gap-2 items-center"
-        whileHover={{ scale: 1.05 }}
-      >
-        <div>מגדר:</div>
+      {/* Gender Buttons */}
+      <motion.div className="flex gap-2 items-center" whileHover={{ scale: 1.05 }}>
+        <span className="font-medium">מגדר:</span>
         {gendersList.map(({ icon: Icon, value }) => (
           <Button
             key={value}
@@ -59,18 +53,21 @@ export default function FilterContent({
             color={filters.gender.includes(value) ? "secondary" : "default"}
             onPress={() => selectGender(value)}
             className="hover:scale-110 transition-transform"
+            aria-label={`בחר מגדר ${value}`}
           >
             <Icon size={24} />
           </Button>
         ))}
       </motion.div>
 
-      <motion.div
-        className="flex flex-row items-center gap-2 w-full md:w-1/4"
-        whileHover={{ scale: 1.05 }}
-      >
+      {/* Age Range Slider */}
+      <motion.div className="flex flex-col gap-1 w-full md:w-1/4" whileHover={{ scale: 1.05 }}>
+        <label id="age-range-label" className="text-sm font-medium">
+          טווח גילאים
+        </label>
         <Slider
-          label={clientLoaded ? "טווח גילאים" : ""}
+          aria-labelledby="age-range-label"
+          name="ageRange"
           color="secondary"
           size="sm"
           minValue={18}
@@ -80,16 +77,17 @@ export default function FilterContent({
             const ageValues = Array.isArray(value) ? value : [value, value];
             selectAge(ageValues);
           }}
-          aria-label="בחר/י טווח גילאים"
         />
       </motion.div>
 
-      <motion.div
-        className="flex flex-col items-center"
-        whileHover={{ scale: 1.05 }}
-      >
-        <p className="text-sm">עם תמונה</p>
+      {/* With Photo Switch */}
+      <motion.div className="flex flex-col items-center gap-1" whileHover={{ scale: 1.05 }}>
+        <label id="with-photo-label" className="text-sm cursor-pointer">
+          עם תמונה
+        </label>
         <Switch
+          aria-labelledby="with-photo-label"
+          name="withPhoto"
           color="secondary"
           isSelected={filters.withPhoto}
           size="sm"
@@ -98,8 +96,11 @@ export default function FilterContent({
         />
       </motion.div>
 
+      {/* Order By Select */}
       <motion.div className="w-full md:w-1/4" whileHover={{ scale: 1.05 }}>
         <Select
+          id="order-by-select"
+          name="orderBy"
           size="sm"
           fullWidth
           label="מיין לפי"
@@ -111,7 +112,7 @@ export default function FilterContent({
           className="hover:scale-105 transition-transform"
         >
           {orderByList.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
+            <SelectItem key={item.value} value={item.value} textValue={item.label}>
               {item.label}
             </SelectItem>
           ))}

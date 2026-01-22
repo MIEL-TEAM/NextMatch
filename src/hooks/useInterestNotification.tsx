@@ -60,14 +60,16 @@ export default function InterestNotification({
       toast.custom(
         (t) => (
           <div
-            className="bg-white border border-amber-300 rounded-lg shadow-lg p-4 max-w-md"
+            className="bg-white border-2 border-amber-300 rounded-2xl sm:rounded-xl shadow-2xl p-4 sm:p-3 max-w-[400px] w-full mx-auto"
             dir="rtl"
           >
             <div className="flex items-start gap-3">
-              <div className="text-2xl">✨</div>
-              <div className="flex-1">
-                <h3 className="font-semibold mb-1">השלם את הפרופיל שלך</h3>
-                <p className="text-sm text-gray-600 mb-3">
+              <div className="text-2xl sm:text-xl flex-shrink-0">✨</div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm leading-tight mb-1.5">
+                  השלם את הפרופיל שלך
+                </h3>
+                <p className="text-xs sm:text-[11px] text-gray-600 mb-3 leading-relaxed">
                   הוסף תחומי עניין כדי שנוכל לחבר אותך עם אנשים מתאימים
                 </p>
                 <div className="flex justify-end gap-2">
@@ -75,6 +77,7 @@ export default function InterestNotification({
                     size="sm"
                     variant="light"
                     color="default"
+                    className="min-w-0 text-xs h-8"
                     onPress={() => {
                       const THIRTY_MIN = 30 * 60 * 1000;
                       localStorage.setItem(
@@ -90,6 +93,7 @@ export default function InterestNotification({
                   <Button
                     size="sm"
                     color="warning"
+                    className="min-w-0 text-xs h-8"
                     onPress={() => {
                       router.push(`/interests`);
                       toast.dismiss(t);

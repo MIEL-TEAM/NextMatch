@@ -11,22 +11,25 @@ type NewMessageToastProps = {
 };
 export default function NewMessageToast({ message }: NewMessageToastProps) {
   return (
-    <Link href={`/members/${message.senderId}`} className="flex items-center">
-      <div className="mr-2">
+    <Link 
+      href={`/members/${message.senderId}`} 
+      className="flex items-center gap-3 w-full active:opacity-80 transition-opacity"
+    >
+      <div className="flex-shrink-0">
         <Image
           src={transformImageUrl(message.senderImage) || "/images/user.png"}
-          height={40}
-          width={40}
+          height={44}
+          width={44}
           alt="Sender image"
-          className="object-cover rounded-full"
+          className="object-cover rounded-full border-2 border-white/20"
         />
       </div>
 
-      <div className="flex flex-grow flex-col justify-center">
-        <div className="font-semibold text-white text-sm sm:text-base">
+      <div className="flex flex-col justify-center flex-1 min-w-0">
+        <div className="font-semibold text-white text-sm leading-tight truncate">
           {message.senderName} שלח לך הודעה
         </div>
-        <div className="text-xs text-white">לחץ לעבור להודעה</div>
+        <div className="text-xs text-white/80 mt-0.5">לחץ לעבור להודעה</div>
       </div>
     </Link>
   );

@@ -50,7 +50,7 @@ export default function MobileLoginPage() {
 
   return (
     <div
-      className="min-h-screen w-full relative overflow-y-auto"
+      className="min-h-screen w-full relative"
       style={{
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
@@ -70,7 +70,7 @@ export default function MobileLoginPage() {
           sizes="100vw"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/50" />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       </div>
 
       {/* Content */}
@@ -97,7 +97,7 @@ export default function MobileLoginPage() {
               classNames={{
                 input: "text-base",
                 inputWrapper:
-                  "bg-white/95 backdrop-blur-md border-0 h-14 rounded-xl shadow-lg",
+                  "bg-white/95 backdrop-blur-md border-0 h-12 rounded-xl shadow-lg",
               }}
             />
 
@@ -113,7 +113,7 @@ export default function MobileLoginPage() {
               classNames={{
                 input: "text-base",
                 inputWrapper:
-                  "bg-white/95 backdrop-blur-md border-0 h-14 rounded-xl shadow-lg",
+                  "bg-white/95 backdrop-blur-md border-0 h-12 rounded-xl shadow-lg",
               }}
               endContent={
                 <button
@@ -146,7 +146,7 @@ export default function MobileLoginPage() {
               isLoading={isSubmitting}
               isDisabled={!isValid}
               fullWidth
-              className="bg-[#E37B27] text-white hover:bg-[#D16D1F] h-14 text-base font-semibold rounded-xl shadow-xl transition-all active:scale-[0.98]"
+              className="bg-[#E37B27] text-white hover:bg-[#D16D1F] h-12 text-base font-semibold rounded-xl shadow-xl transition-all active:scale-[0.98]"
               type="submit"
             >
               התחבר

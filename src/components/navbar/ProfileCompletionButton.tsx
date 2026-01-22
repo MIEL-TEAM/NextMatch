@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Button,
   Divider,
@@ -11,6 +12,7 @@ import {
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { ProfileCompletionStatus } from "@/types/userAction";
+import { motion } from "framer-motion";
 
 type ProfileCompletionButtonProps = {
   status: ProfileCompletionStatus;
@@ -19,34 +21,48 @@ type ProfileCompletionButtonProps = {
 export default function ProfileCompletionButton({
   status,
 }: ProfileCompletionButtonProps) {
+  const incompleteTasks = useMemo(
+    () => status?.tasks.filter((task: any) => !task.completed) || [],
+    [status]
+  );
+
   if (!status) {
     return null;
   }
 
-  const incompleteTasks = status.tasks.filter((task: any) => !task.completed);
-
   if (status.completionPercentage >= 100 && incompleteTasks.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-white shadow-inner">
-        <CheckCircle2 className="h-4 w-4 text-emerald-200" />
-        <span className="text-sm font-semibold">הפרופיל שלך מושלם</span>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex items-center gap-2 rounded-full bg-white/20 px-3 sm:px-4 py-1.5 text-white shadow-md backdrop-blur-md border border-white/20"
+      >
+        <CheckCircle2 className="h-4 w-4 text-emerald-300" strokeWidth={2.5} />
+        <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">הפרופיל שלך מושלם</span>
+      </motion.div>
     );
   }
 
   const recommended = status.recommendedAction ?? incompleteTasks[0] ?? null;
 
   return (
-    <Popover placement="bottom-end" showArrow>
+    <Popover placement="bottom-start" showArrow offset={10}>
       <PopoverTrigger>
         <Button
           radius="full"
-          className="relative flex items-center gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946] px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-[1.02]"
+          className="relative flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] min-w-fit h-auto"
+          aria-label={`Profile ${status.completionPercentage}% complete`}
         >
-          <span>שפר פרופיל</span>
-          <span className="rounded-full bg-[#FFC857] px-2 py-1 text-xs font-bold text-[#732400] shadow-md">
+          <span className="whitespace-nowrap">שפר פרופיל</span>
+          <motion.span
+            key={status.completionPercentage}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="rounded-full bg-[#FFC857] px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-[#732400] shadow-md whitespace-nowrap"
+          >
             {status.completionPercentage}%
-          </span>
+          </motion.span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0">

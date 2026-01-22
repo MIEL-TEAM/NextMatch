@@ -19,22 +19,25 @@ export default function NotificationToast({
   subtitle,
 }: NotificationToastProps) {
   return (
-    <Link href={href} className="flex items-center">
-      <div className="mr-2 flex-shrink-0 w-[40px] h-[40px]">
+    <Link 
+      href={href} 
+      className="flex items-center gap-3 w-full active:opacity-80 transition-opacity"
+    >
+      <div className="flex-shrink-0">
         <Image
           src={transformImageUrl(image) || "/images/user.png"}
-          height={40}
-          width={40}
-          alt="Sender image"
-          className="object-cover rounded-full w-[40px] h-[40px]"
+          height={44}
+          width={44}
+          alt="Notification image"
+          className="object-cover rounded-full border-2 border-white/20 w-[44px] h-[44px]"
         />
       </div>
 
-      <div className="flex flex-grow flex-col justify-center">
-        <div className="font-semibold text-white text-sm sm:text-base">
+      <div className="flex flex-col justify-center flex-1 min-w-0">
+        <div className="font-semibold text-white text-sm leading-tight line-clamp-2">
           {title}
         </div>
-        <div className="text-xs text-white">
+        <div className="text-xs text-white/80 mt-0.5 truncate">
           {subtitle || "לחץ/י לצפייה בפרופיל"}
         </div>
       </div>
@@ -57,19 +60,21 @@ export const newLikeToast = (
   image: string | null,
   userId: string
 ) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   toast(
     <NotificationToast
       image={image}
       href={`/members/${userId}`}
-      title={`${name} אהב/ה את הפרופיל שלך! בוא/י לראות מי זה `}
-      subtitle="לחץ/י כאן כדי לצפות בפרופיל שלהם"
+      title={`${name} אהב/ה את הפרופיל שלך!`}
+      subtitle="לחץ/י כאן כדי לצפות בפרופיל"
     />,
     {
       style: {
-        width: "90%",
-        maxWidth: "320px",
-        padding: "10px",
-        borderRadius: "10px",
+        width: isMobile ? "calc(100% - 32px)" : "auto",
+        maxWidth: isMobile ? "400px" : "350px",
+        padding: isMobile ? "12px 16px" : "10px 14px",
+        borderRadius: isMobile ? "16px" : "12px",
+        margin: isMobile ? "0 auto" : "0",
       },
     }
   );

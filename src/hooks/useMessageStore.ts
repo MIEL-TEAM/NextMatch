@@ -22,7 +22,13 @@ const useMessageStore = create<MessageState>()(
       messages: [],
       unreadCount: 0,
       add: (message) =>
-        set((state) => ({ messages: [message, ...state.messages] })),
+        set((state) => {
+          // Prevent duplicates
+          if (state.messages.some((m) => m.id === message.id)) {
+            return state;
+          }
+          return { messages: [message, ...state.messages] };
+        }),
       remove: (id) =>
         set((state) => ({
           messages: state.messages.filter((message) => message.id !== id),
@@ -58,9 +64,13 @@ const useMessageStore = create<MessageState>()(
           ),
         })),
       updateUnreadCount: (amount: number) =>
-        set((state) => ({ unreadCount: state.unreadCount + amount })),
-      setUnreadCount: (count: number) => set(() => ({ unreadCount: count })),
-      resetMessages: () => set({ messages: [] }),
+        set((state) => {
+          const newCount = Math.max(0, state.unreadCount + amount);
+          return { unreadCount: newCount };
+        }),
+      setUnreadCount: (count: number) =>
+        set(() => ({ unreadCount: Math.max(0, count) })),
+      resetMessages: () => set({ messages: [], unreadCount: 0 }),
     }),
 
     { name: "messagesStore" }

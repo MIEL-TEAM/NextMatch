@@ -10,7 +10,9 @@ import {
   DropdownTrigger,
 } from "@nextui-org/react";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import { FiMessageCircle } from "react-icons/fi";
+import { AIChatModal } from "@/components/ai-assistant/AIChatModal";
 
 type UserMenuProps = {
   userInfo: {
@@ -19,28 +21,43 @@ type UserMenuProps = {
   } | null;
   userId?: string | undefined;
   isAdmin?: boolean;
+  isPremium?: boolean;
 };
 
 export default function UserMenu({
   userInfo,
   userId,
   isAdmin = false,
+  isPremium = false,
 }: UserMenuProps) {
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+
   if (!userId) {
     return null;
   }
 
   return (
+    <>
     <Dropdown placement="bottom-end">
-      <DropdownTrigger>
-        <Avatar
-          as="button"
-          className="transition-transform border-2 border-white rounded-full outline outline-2 outline-black bg-black"
-          name={userInfo?.name || "user avatar"}
-          size="md"
-          src={userInfo?.image || "/images/user.png"}
-        />
-      </DropdownTrigger>
+   <DropdownTrigger>
+  <Avatar
+    as="button"
+    
+    className="
+      border-2 border-white rounded-full
+      outline outline-2 outline-black bg-black
+      !w-10 !h-10     
+      sm:!w-10 sm:!h-10   
+      sm:transition-transform
+      sm:hover:scale-105
+      sm:active:scale-95
+    "
+    name={userInfo?.name || 'user avatar'}
+    size="sm"
+    src={userInfo?.image || '/images/user.png'}
+  />
+</DropdownTrigger>
+
 
       <DropdownMenu variant="flat" aria-label="User actions menu">
         <DropdownSection showDivider>
@@ -73,6 +90,17 @@ export default function UserMenu({
           </>
         ) : (
           <>
+            <DropdownItem 
+              key="ai-assistant" 
+              startContent={
+                <FiMessageCircle className="text-lg text-orange-500" />
+              }
+              onPress={() => setIsAIModalOpen(true)}
+              className="text-orange-600"
+            >
+              <span className="font-semibold">🧠 עוזר AI</span>
+            </DropdownItem>
+
             <DropdownItem key="profile" as={Link} href={`/members/${userId}`}>
               הפרופיל שלי
             </DropdownItem>
@@ -96,5 +124,15 @@ export default function UserMenu({
         </DropdownItem>
       </DropdownMenu>
     </Dropdown>
+
+      {/* AI Chat Modal */}
+      {isAIModalOpen && (
+        <AIChatModal
+          userId={userId}
+          isPremium={isPremium}
+          onClose={() => setIsAIModalOpen(false)}
+        />
+      )}
+    </>
   );
 }

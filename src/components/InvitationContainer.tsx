@@ -13,11 +13,13 @@ export default function InvitationContainer() {
         <div
           className="
             fixed
-            bottom-6
-            right-[100px]
-            -translate-x-1/2
+            bottom-4 sm:bottom-6
+            w-[250px]
+            left-4 right-4
+            sm:left-1/2 sm:-translate-x-1/2
+            sm:w-[250px]
             z-50
-            px-4
+            invitation-safe-area
           "
           role="dialog"
           aria-modal="true"
@@ -29,7 +31,6 @@ export default function InvitationContainer() {
             name={currentInvitation.name}
             title={currentInvitation.title}
             subtitle={currentInvitation.subtitle}
-            ctaText={currentInvitation.ctaText}
             onAction={currentInvitation.onAction}
             onDismiss={dismiss}
           />

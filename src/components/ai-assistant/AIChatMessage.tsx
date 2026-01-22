@@ -28,7 +28,7 @@ export function AIChatMessage({ message }: AIChatMessageProps) {
       className={`flex ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`flex gap-3 max-w-[80%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
+        className={`flex gap-3 max-w-[95%] md:max-w-[80%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
       >
         {/* Avatar */}
         <div

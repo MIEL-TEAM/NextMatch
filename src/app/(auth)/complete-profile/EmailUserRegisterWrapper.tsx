@@ -220,8 +220,7 @@ export default function EmailUserRegisterWrapper({
   ];
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh_-_100px)] overflow-hidden text-black px-6 sm:px-12">
-      {" "}
+    <div className="flex items-center justify-center min-h-[calc(100vh_-_100px)] text-black px-6 sm:px-12 py-8">
       <div className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-lg shadow-lg">
         {/* Progress Bar */}
         <div className="space-y-2">

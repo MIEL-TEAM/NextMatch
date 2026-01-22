@@ -8,6 +8,7 @@ import {
   dbGetUserForAnnouncement,
   dbUpdateUserAnnouncementTime,
 } from "@/lib/db/presenceActions";
+import { dbCreateInvitation } from "@/lib/db/invitationActions";
 
 export async function announceUserOnline(): Promise<{ success: boolean }> {
   try {
@@ -75,22 +76,31 @@ export async function announceUserOnline(): Promise<{ success: boolean }> {
       timestamp: new Date().toISOString(),
     };
 
+    const invitationResults = await Promise.all(
+      mutualMatches.map(async (match) => {
+        const invitation = await dbCreateInvitation(
+          match.sourceUserId, // recipient
+          userId, // sender (user who just came online)
+          "chat"
+        );
+        return { recipientId: match.sourceUserId, invitation };
+      })
+    );
+
     await Promise.all(
-      mutualMatches.map((match) =>
-        pusherServer
-          .trigger(`private-${match.sourceUserId}`, "match:online", payload)
-          .then(() =>
-            console.log(
-              `🔔 [announceUserOnline] ✅ Sent to ${match.sourceUserId}`
-            )
-          )
-          .catch((err) =>
-            console.error(
-              `🔔 [announceUserOnline] ❌ Failed to notify ${match.sourceUserId}`,
-              err
-            )
-          )
-      )
+      invitationResults.map(({ recipientId, invitation }) => {
+        if (invitation) {
+          return pusherServer
+            .trigger(`private-${recipientId}`, "match:online", payload)
+            .catch((err) =>
+              console.error(
+                `Failed to send invitation notification to ${recipientId}:`,
+                err
+              )
+            );
+        }
+        return Promise.resolve();
+      })
     );
 
     // Mark announcement time (THIS is the cooldown source)

@@ -81,6 +81,10 @@ model User {
   aiUsageLogs           AIUsageLog[]
   lastOnlineAnnouncedAt DateTime?
 
+  // Invitation relations
+  sentInvitations     Invitation[] @relation("SenderInvitations")
+  receivedInvitations Invitation[] @relation("RecipientInvitations")
+
   @@index([lastActiveAt(sort: Desc)])
 }
 
@@ -366,24 +370,45 @@ model StoryReply {
 }
 
 enum StoryPrivacy {
-  PUBLIC // Everyone can see
-  PREMIUM // Only premium users can see
-  PRIVATE // Only specific users (future feature)
+  PUBLIC
+  PREMIUM
+  PRIVATE
 }
 
 enum ReactionType {
-  HEART // ❤️
-  FIRE // 🔥
-  LOVE_EYES // 😍
-  EYES // 👀
+  HEART
+  FIRE
+  LOVE_EYES
+  EYES
 }
 
-// AI Dating Assistant feature
+model Invitation {
+  id          String @id @default(cuid())
+  recipientId String
+  senderId    String
+  type        String @default("chat")
+  status      String @default("pending")
+
+  createdAt   DateTime  @default(now())
+  seenAt      DateTime?
+  dismissedAt DateTime?
+  acceptedAt  DateTime?
+  expiresAt   DateTime?
+
+  recipient User @relation("RecipientInvitations", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender    User @relation("SenderInvitations", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, status, createdAt(sort: Desc)])
+  @@index([recipientId, dismissedAt])
+  @@index([recipientId, acceptedAt])
+  @@map("invitations")
+}
+
 model AIConversation {
   id        String   @id @default(cuid())
   userId    String
-  title     String? // Optional title for conversation
-  context   Json? // Store conversation context (preferences, current search, etc.)
+  title     String?
+  context   Json?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -398,10 +423,10 @@ model AIConversation {
 model AIMessage {
   id             String   @id @default(cuid())
   conversationId String
-  role           String // "user" or "assistant"
+  role           String
   content        String   @db.Text
-  metadata       Json? // Store suggested matches, actions, etc.
-  tokensUsed     Int? // Track API usage
+  metadata       Json?
+  tokensUsed     Int?
   createdAt      DateTime @default(now())
 
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -410,13 +435,12 @@ model AIMessage {
   @@map("ai_messages")
 }
 
-// Track AI usage for rate limiting and analytics
 model AIUsageLog {
   id        String   @id @default(cuid())
   userId    String
-  action    String // "chat", "match_suggestion", "profile_analysis"
+  action    String
   tokens    Int?
-  cost      Float? // Track cost in credits
+  cost      Float?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

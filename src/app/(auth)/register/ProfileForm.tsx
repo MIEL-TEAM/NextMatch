@@ -31,7 +31,7 @@ export default function ProfileForm() {
           onChange={(event) => setValue("gender", event.target.value)}
           classNames={{
             trigger:
-              "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+              "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
           }}
         >
           {genderList.map((item) => (
@@ -53,7 +53,7 @@ export default function ProfileForm() {
           classNames={{
             input: "text-base",
             inputWrapper:
-              "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+              "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
           }}
         />
       </div>
@@ -69,7 +69,7 @@ export default function ProfileForm() {
         classNames={{
           input: "text-base",
           inputWrapper:
-            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm rounded-xl",
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
         }}
       />
 
@@ -83,7 +83,7 @@ export default function ProfileForm() {
         classNames={{
           input: "text-base",
           inputWrapper:
-            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
         }}
       />
 
@@ -97,7 +97,7 @@ export default function ProfileForm() {
         classNames={{
           input: "text-base",
           inputWrapper:
-            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
         }}
       />
     </div>

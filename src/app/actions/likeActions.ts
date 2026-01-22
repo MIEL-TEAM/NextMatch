@@ -18,6 +18,7 @@ import {
   dbGetTargetLikes,
   dbGetUserEmailName,
 } from "@/lib/db/likeActions";
+import { dbCreateInvitation } from "@/lib/db/invitationActions";
 
 export async function toggleLikeMember(
   targetUserId: string,
@@ -49,7 +50,12 @@ export async function toggleLikeMember(
         // קבלת שמות המשתמשים
         const targetMember = await dbGetMemberNameImage(targetUserId);
 
-        // 🎉 התאמה הדדית! שלח אירוע מיוחד לשני המשתמשים
+        const [invitationForCurrentUser, invitationForTargetUser] = await Promise.all([
+          dbCreateInvitation(userId, targetUserId, "chat"),
+          dbCreateInvitation(targetUserId, userId, "chat"),
+        ]);
+
+        // Send real-time celebration events (best-effort delivery)
         await Promise.all([
           // למשתמש הראשון - שם המשתמש השני
           pusherServer.trigger(`private-${userId}`, "mutual-match", {
@@ -74,6 +80,28 @@ export async function toggleLikeMember(
             timestamp: new Date().toISOString(),
           }),
         ]);
+
+        // Send real-time invitation events ONLY if invitations were created
+        // (Anti-spam: user might be in cooldown or have active invitation)
+        if (invitationForCurrentUser) {
+          pusherServer.trigger(`private-${userId}`, "match:online", {
+            userId: targetUserId,
+            name: targetMember?.name || "משתמש",
+            image: targetMember?.image,
+            videoUrl: invitationForCurrentUser.sender.member?.videoUrl,
+            timestamp: new Date().toISOString(),
+          }).catch((e) => console.error("Failed to send invitation event:", e));
+        }
+
+        if (invitationForTargetUser) {
+          pusherServer.trigger(`private-${targetUserId}`, "match:online", {
+            userId: userId,
+            name: like.sourceMember.name,
+            image: like.sourceMember.image,
+            videoUrl: invitationForTargetUser.sender.member?.videoUrl,
+            timestamp: new Date().toISOString(),
+          }).catch((e) => console.error("Failed to send invitation event:", e));
+        }
 
         // 📧 שלח אימיילים על התאמה הדדית
         const [currentUserData, targetUserData] = await Promise.all([

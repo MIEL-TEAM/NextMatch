@@ -40,18 +40,24 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
 
       if (viewsData.length > previousCount) {
         audioRef.current?.play().catch(() => {});
-        toast.custom(() => (
-          <div className="max-w-sm w-full bg-white border border-orange-200 rounded-xl shadow-xl pointer-events-auto px-4 py-3 animate-enter">
-            <div className="flex flex-col items-center text-center">
-              <p className="text-sm font-semibold text-orange-700">
-                מישהו בדיוק הציץ בפרופיל שלך ✨
-              </p>
-              <p className="text-xs text-orange-500 mt-1">
-                נשמע מסקרן? בוא לראות מי זה
-              </p>
+        toast.custom(
+          () => (
+            <div className="max-w-[400px] w-full bg-white border-2 border-orange-200 rounded-2xl sm:rounded-xl shadow-2xl pointer-events-auto p-4 sm:p-3 mx-auto">
+              <div className="flex flex-col items-center text-center gap-1">
+                <p className="text-sm sm:text-[13px] font-semibold text-orange-700 leading-tight">
+                  מישהו בדיוק הציץ בפרופיל שלך ✨
+                </p>
+                <p className="text-xs text-orange-500">
+                  נשמע מסקרן? בוא לראות מי זה
+                </p>
+              </div>
             </div>
-          </div>
-        ));
+          ),
+          {
+            duration: 4000,
+            position: "top-center",
+          }
+        );
       }
     } catch (error) {
       console.error("שגיאה בהבאת צפיות:", error);
@@ -98,30 +104,31 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
         onOpenChange={setDropdownOpen}
       >
         <DropdownTrigger>
-          <motion.button
-            className="relative bg-gradient-to-br from-white to-amber-50 border border-orange-300/70 backdrop-blur-xl shadow-lg rounded-full p-2.5 hover:shadow-orange-200/50 hover:scale-105 transition duration-300"
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.95 }}
+          <button
+            className="relative flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-white/20 sm:hover:bg-white/30 backdrop-blur-md shadow-md border border-white/20 sm:transition-all sm:duration-200 sm:hover:scale-105 sm:active:scale-95"
+            aria-label={`Profile views${unseenCount > 0 ? ` (${unseenCount} new)` : ""}`}
           >
-            <Bell className="w-5 h-5 text-orange-600" />
-            <AnimatePresence>
+            <Bell className="w-5 h-5 sm:w-4.5 sm:h-4.5 text-white/90" strokeWidth={2} />
+            <AnimatePresence mode="wait">
               {unseenCount > 0 && (
-                <motion.span
+                <motion.div
+                  key={unseenCount}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-md border border-white/30"
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-gradient-to-r from-orange-500 to-rose-600 text-white text-[10px] font-bold rounded-full px-1 shadow-lg border border-white/30"
                 >
-                  {unseenCount}
-                </motion.span>
+                  {unseenCount > 99 ? "99+" : unseenCount}
+                </motion.div>
               )}
             </AnimatePresence>
-          </motion.button>
+          </button>
         </DropdownTrigger>
 
         <DropdownMenu
           aria-label="Profile views"
-          className="w-[420px] max-h-[500px] overflow-y-auto"
+          className="w-[230px] sm:w-[420px] max-h-[70vh] sm:max-h-[500px] overflow-y-auto"
           variant="flat"
           classNames={{
             base: "p-0",

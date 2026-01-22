@@ -210,137 +210,136 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 h-screen overflow-y-auto"
       onClick={onClose}
     >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl h-[600px] flex flex-col overflow-hidden"
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-amber-400 via-orange-500 to-orange-600 text-white px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <span className="text-2xl">🤖</span>
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">העוזר שלך במסע לאהבה</h2>
-              <p className="text-xs text-white/80">
-                {isPremium
-                  ? "♾️ שימוש ללא הגבלה"
-                  : `${dailyUsage}/${maxDailyQueries} שאילתות היום`}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {messages.length > 0 && (
-              <button
-                onClick={handleDeleteClick}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                title="מחק שיחה"
-              >
-                <FiTrash2 className="w-5 h-5" />
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
-              <FiX className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-800">
-          {isLoadingHistory ? (
-            <div className="flex items-center justify-center h-full">
-              <FiRefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
-            </div>
-          ) : (
-            <>
-              {/* Welcome Message */}
-              {isFirstMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center space-y-4 py-8"
-                >
-                  <div className="text-6xl">💕</div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    שלום! אני כאן לעזור לך
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                    אני מכיר את ההעדפות שלך ויכול לעזור לך למצוא את ההתאמה
-                    המושלמת, לשפר את הפרופיל שלך, ולתת טיפים לשיחות.
-                  </p>
-                  <div className="pt-4">
-                    <AIQuickActions onAction={handleQuickAction} />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Messages */}
-              {messages.map((message, index) => (
-                <AIChatMessage
-                  key={message.id}
-                  message={message}
-                  isLatest={index === messages.length - 1}
-                />
-              ))}
-
-              {/* Typing Indicator */}
-              {isLoading && <AITypingIndicator />}
-
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </div>
-
-        {/* Quick Actions (shown after first message) */}
-        {!isFirstMessage && messages.length > 0 && !isLoading && (
-          <div className="px-6 py-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-            <AIQuickActions onAction={handleQuickAction} compact />
-          </div>
-        )}
-
-        {/* Input Area */}
-        <form
-          onSubmit={handleSubmit}
-          className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden my-8"
         >
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="שאל אותי כל דבר..."
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              disabled={isLoading || dailyUsage >= maxDailyQueries}
-            />
-            <button
-              type="submit"
-              disabled={
-                !inputValue.trim() || isLoading || dailyUsage >= maxDailyQueries
-              }
-              className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-            >
-              <FiSend className="w-5 h-5" />
-              <span>שלח</span>
-            </button>
+          {/* Header */}
+          <div className="bg-gradient-to-r from-amber-400 via-orange-500 to-orange-600 text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div>
+                <h2 className="text-lg font-bold">העוזר האישי שלך</h2>
+                <p className="text-xs text-white/80">
+                  {isPremium
+                    ? "♾️ שימוש ללא הגבלה"
+                    : `${dailyUsage}/${maxDailyQueries} שאילתות היום`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {messages.length > 0 && (
+                <button
+                  onClick={handleDeleteClick}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="מחק שיחה"
+                >
+                  <FiTrash2 className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-          {!isPremium && dailyUsage >= maxDailyQueries && (
-            <p className="text-xs text-red-500 mt-2 text-center">
-              הגעת למגבלה היומית. שדרג לפרימיום לשימוש בלתי מוגבל!
-            </p>
+
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-800 min-h-0">
+            {isLoadingHistory ? (
+              <div className="flex items-center justify-center h-full">
+                <FiRefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
+              </div>
+            ) : (
+              <>
+                {/* Welcome Message */}
+                {isFirstMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center space-y-4 py-8"
+                  >
+                    <div className="text-6xl">💕</div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      שלום! אני כאן לעזור לך
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                      אני מכיר את ההעדפות שלך ויכול לעזור לך למצוא את ההתאמה
+                      המושלמת, לשפר את הפרופיל שלך, ולתת טיפים לשיחות.
+                    </p>
+                    <div className="pt-4">
+                      <AIQuickActions onAction={handleQuickAction} />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Messages */}
+                {messages.map((message, index) => (
+                  <AIChatMessage
+                    key={message.id}
+                    message={message}
+                    isLatest={index === messages.length - 1}
+                  />
+                ))}
+
+                {/* Typing Indicator */}
+                {isLoading && <AITypingIndicator />}
+
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
+
+          {/* Quick Actions (shown after first message) */}
+          {!isFirstMessage && messages.length > 0 && !isLoading && (
+            <div className="px-6 py-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
+              <AIQuickActions onAction={handleQuickAction} compact />
+            </div>
           )}
-        </form>
-      </motion.div>
+
+          {/* Input Area */}
+          <form
+            onSubmit={handleSubmit}
+            className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0"
+          >
+            <div className="flex gap-2">
+            <button
+                type="submit"
+                disabled={
+                  !inputValue.trim() || isLoading || dailyUsage >= maxDailyQueries
+                }
+                className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              >
+                <FiSend className="w-5 h-5" />
+              </button>
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="שאל אותי כל דבר..."
+                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                disabled={isLoading || dailyUsage >= maxDailyQueries}
+              />
+          
+            </div>
+            {!isPremium && dailyUsage >= maxDailyQueries && (
+              <p className="text-xs text-red-500 mt-2 text-center">
+                הגעת למגבלה היומית. שדרג לפרימיום לשימוש בלתי מוגבל!
+              </p>
+            )}
+          </form>
+        </motion.div>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <AppModal

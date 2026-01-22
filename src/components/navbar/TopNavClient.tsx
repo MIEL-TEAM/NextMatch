@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { Session } from "next-auth";
+import { FaFilter } from "react-icons/fa";
 
 import NavLink from "./NavLink";
 import UserMenu from "./UserMenu";
@@ -13,6 +14,7 @@ import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
 import ChatButton from "./ChatButton";
 import type { ProfileCompletionStatus } from "@/types/userAction";
+import { useFilterModal } from "@/hooks/useFilterModal";
 
 type NavLinkItem = {
   href: string;
@@ -32,6 +34,7 @@ type TopNavClientProps = {
   initialUnreadCount: number;
   profileCompletion: ProfileCompletionStatus | null;
   isAdmin: boolean;
+  isPremium: boolean;
 };
 
 export default function TopNavClient({
@@ -42,8 +45,11 @@ export default function TopNavClient({
   initialUnreadCount,
   profileCompletion,
   isAdmin,
+  isPremium,
 }: TopNavClientProps) {
   const pathname = usePathname();
+  const { toggle: toggleFilter } = useFilterModal();
+  const isOnMembersPage = pathname === "/members";
 
   const isAuthPage =
     pathname.includes("/login") ||
@@ -126,21 +132,36 @@ export default function TopNavClient({
       >
         <NavbarContent
           justify="start"
-          className="w-full justify-center gap-2.5 sm:w-auto sm:justify-between sm:gap-4 items-center"
+          className="w-full justify-between sm:w-auto sm:justify-evenly gap-6 sm:gap-4 items-center px-2 sm:px-0"
         >
           {userInfo ? (
             <>
-              <UserMenu
-                userInfo={userInfo}
-                userId={userId || undefined}
-                isAdmin={isAdmin}
-              />
-              {!isAdmin && <ProfileViewsButton />}
-              <div className="sm:hidden">
-                <ChatButton initialUnreadCount={initialUnreadCount} />
+           
+              <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
+                <UserMenu
+                  userInfo={userInfo}
+                  userId={userId || undefined}
+                  isAdmin={isAdmin}
+                  isPremium={isPremium}
+                />
+                {!isAdmin && <ProfileViewsButton />}
+                
+                {/* Mobile-only buttons */}
+                <div className="sm:hidden flex items-center gap-3">
+                  {isOnMembersPage && !isAdmin && (
+                    <button
+                      onClick={toggleFilter}
+                      className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20 active:scale-95"
+                      aria-label="פתח סינון"
+                    >
+                      <FaFilter className="w-5 h-5 text-white/90" />
+                    </button>
+                  )}
+                  <ChatButton initialUnreadCount={initialUnreadCount} />
+                </div>
               </div>
               {profileCompletion && (
-                <div className="scale-75 sm:scale-100 -mx-1 sm:mx-0">
+                <div className="flex-shrink-0">
                   <ProfileCompletionButton status={profileCompletion} />
                 </div>
               )}

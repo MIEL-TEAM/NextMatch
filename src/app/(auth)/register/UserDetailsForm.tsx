@@ -23,7 +23,7 @@ export default function UserDetailsForm() {
         classNames={{
           input: "text-base",
           inputWrapper:
-            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
         }}
       />
       <Input
@@ -36,7 +36,7 @@ export default function UserDetailsForm() {
         classNames={{
           input: "text-base",
           inputWrapper:
-            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
         }}
       />
       <Input
@@ -50,7 +50,7 @@ export default function UserDetailsForm() {
         classNames={{
           input: "text-base",
           inputWrapper:
-            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-12 rounded-xl",
+            "bg-white border border-gray-200 hover:border-gray-300 shadow-sm h-14 rounded-xl",
         }}
         endContent={
           <button

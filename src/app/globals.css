@@ -81,9 +81,65 @@
   }
 }
 
-/* toast style */
+/* Toast Styles - Mobile Optimized */
 .Toastify__toast {
   background: linear-gradient(to right, #ffdb7d, #fca652, #e67620) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  padding: 12px 16px !important;
+  min-height: auto !important;
+}
+
+@media (min-width: 640px) {
+  .Toastify__toast {
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+  }
+}
+
+/* Sonner toast mobile optimizations */
+[data-sonner-toast] {
+  width: calc(100vw - 32px) !important;
+  max-width: 400px !important;
+  margin: 0 auto !important;
+}
+
+@media (min-width: 640px) {
+  [data-sonner-toast] {
+    width: auto !important;
+    max-width: 350px !important;
+  }
+}
+
+/* Smooth toast animations */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToTop {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.Toastify__toast--entering {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.Toastify__toast--exiting {
+  animation: slideOutToTop 0.2s ease-in;
 }
 
 input,
@@ -95,4 +151,23 @@ textarea {
   body {
     padding-bottom: 60px;
   }
+}
+
+/* Invitation Card Mobile Optimizations */
+@media (max-width: 640px) {
+  /* Ensure invitation cards are above mobile nav but below modals */
+  [role="dialog"][aria-modal="true"] {
+    z-index: 40;
+  }
+  
+  /* Safe area for mobile invitation cards */
+  .invitation-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch optimization for invitation interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

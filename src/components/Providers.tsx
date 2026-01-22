@@ -5,6 +5,7 @@ import useMessageStore from "@/hooks/useMessageStore";
 import { useNotificationChannel } from "@/hooks/useNotificationChannel";
 import { usePresenceChannel } from "@/hooks/usePresenceChannel";
 import { useCelebrationListener } from "@/hooks/useCelebrationListener";
+import { useInvitationLoader } from "@/hooks/useInvitationLoader";
 import { NextUIProvider } from "@nextui-org/react";
 import React, { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
@@ -14,7 +15,6 @@ import InterestNotification from "@/hooks/useInterestNotification";
 import CelebrationModal, {
   useCelebration,
 } from "@/components/CelebrationModal";
-import { AIAssistantButton } from "@/components/ai-assistant";
 import { usePathname } from "next/navigation";
 
 type ProvidersProps = {
@@ -31,7 +31,6 @@ export default function Providers({
   userId,
   profileComplete,
   initialUnreadCount,
-  isPremium = false,
   isAdmin = false,
 }: ProvidersProps) {
   const pathname = usePathname();
@@ -94,6 +93,9 @@ export default function Providers({
     showCelebration
   );
 
+  // Load pending invitations from backend on app startup
+  useInvitationLoader();
+
   // Interest notification: only eligible on /members routes
   const isOnMembersPage =
     pathname === "/members" || pathname.startsWith("/members/");
@@ -110,11 +112,30 @@ export default function Providers({
 
   return (
     <NextUIProvider>
-      <Toaster position="top-center" richColors />
+      <Toaster 
+        position="top-center" 
+        richColors 
+        expand={false}
+        visibleToasts={3}
+        toastOptions={{
+          className: 'sm:max-w-md',
+          style: {
+            maxWidth: '400px',
+            width: 'calc(100vw - 32px)',
+            margin: '0 auto',
+          },
+        }}
+      />
       <ToastContainer
-        position="bottom-right"
+        position="top-right"
         hideProgressBar
-        className="z-50"
+        className="!top-[80px] sm:!top-6 !right-4 !left-4 sm:!left-auto z-50"
+        toastClassName="!mb-3 !rounded-2xl sm:!rounded-xl !shadow-xl"
+        bodyClassName="!p-0"
+        limit={3}
+        newestOnTop
+        closeButton={false}
+        autoClose={5000}
       />
 
       {shouldShowInterestNotification && userId && (
@@ -131,12 +152,7 @@ export default function Providers({
           type={celebration.type}
           data={celebration.data}
         />
-      )}
-
-      {!isForbiddenRoute && !isAdmin && userId && profileComplete && (
-        <AIAssistantButton userId={userId} isPremium={isPremium} />
-      )}
-
+      )}      
       {children}
     </NextUIProvider>
   );

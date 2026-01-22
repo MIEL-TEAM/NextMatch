@@ -103,27 +103,47 @@ export function useCelebrationListener(
 
     channel.bind(
       "match:online",
-      (data: {
+      async (data: {
         userId: string;
         name: string;
         image: string | null;
         videoUrl?: string | null;
       }) => {
-        const invitation: Invitation = {
-          id: `chat-${data.userId}-${Date.now()}`,
-          type: "chat",
-          userId: data.userId,
-          image: data.image,
-          videoUrl: data.videoUrl || null,
-          name: data.name,
-          title: `${data.name} זמינה עכשיו לשיחה`,
-          ctaText: "שלח/י הודעה",
-          onAction: () => {
-            router.push(`/members/${data.userId}/chat`);
-          },
-        };
+        // Real-time delivery: Load invitation from backend to get the database ID
+        // This ensures we can mark it as seen/accepted/dismissed
+        try {
+          const res = await fetch("/api/invitations");
+          const invitations = await res.json();
+          
+          // Find the invitation for this sender
+          const matchingInvitation = invitations.find(
+            (inv: any) => inv.sender.id === data.userId
+          );
 
-        showInvitation(invitation);
+          if (matchingInvitation) {
+            const invitation: Invitation = {
+              id: matchingInvitation.id, // Use database ID
+              type: "chat",
+              userId: data.userId,
+              image: data.image,
+              videoUrl: data.videoUrl || null,
+              name: data.name,
+              title: `${data.name} זמינה לשיחה`,
+              onAction: async () => {
+                // Mark as accepted on backend
+                await fetch(`/api/invitations/${matchingInvitation.id}/accept`, {
+                  method: "POST",
+                }).catch((e) => console.error("Failed to accept invitation:", e));
+                
+                router.push(`/members/${data.userId}/chat`);
+              },
+            };
+
+            showInvitation(invitation);
+          }
+        } catch (error) {
+          console.error("Failed to load invitation:", error);
+        }
       }
     );
 

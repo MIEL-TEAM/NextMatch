@@ -21,6 +21,7 @@ type CardWrapperProps = {
 
 export default function CardWrapper({
   children,
+  body,
   headerIcon: Icon,
   headerText,
   subHeaderText,
@@ -47,7 +48,7 @@ export default function CardWrapper({
           </div>
         </CardHeader>
 
-        {children && <CardBody>{children}</CardBody>}
+        {(children || body) && <CardBody>{body || children}</CardBody>}
 
         <CardFooter className="w-full">
           {action && (
