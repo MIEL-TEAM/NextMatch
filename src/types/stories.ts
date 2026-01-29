@@ -1,14 +1,4 @@
-// ============================================
-// STORY UI & COMPONENT TYPES
-// ============================================
-// This file contains UI-specific types for the stories feature
-// For core story data types, see story.ts
-
 import { StoryWithUser } from "./story";
-
-// ============================================
-// USER TYPES FOR STORIES UI
-// ============================================
 
 export interface StoryUser {
   id: string;
@@ -26,19 +16,11 @@ export interface StoryViewer {
   viewedAt: Date;
 }
 
-// ============================================
-// ANALYTICS TYPES
-// ============================================
-
 export interface StoryAnalyticsData {
   storyId: string;
   totalViews: number;
   viewers: StoryViewer[];
 }
-
-// ============================================
-// COMPONENT PROPS
-// ============================================
 
 // Container Components
 export interface StoriesContainerProps {
@@ -82,15 +64,6 @@ export interface CreateStoryButtonProps {
 }
 
 // Story Interaction Components
-export interface StoryMessageModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  storyId: string;
-  storyImageUrl: string;
-  storyOwnerName: string;
-  storyOwnerImage?: string | null;
-}
-
 export interface StoryReactionsProps {
   onReaction: (reaction: string) => void;
   onReply: () => void;

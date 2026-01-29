@@ -100,11 +100,11 @@ export function StoriesCarousel({
   if (loading) {
     return (
       <div className="relative">
-        <div className="flex gap-3 px-6 py-4 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 md:gap-3 px-3 md:px-6 py-3 md:py-4 overflow-x-auto scrollbar-hide">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-full animate-pulse"
+              className="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 bg-gray-200 rounded-full animate-pulse"
             />
           ))}
         </div>
@@ -117,11 +117,11 @@ export function StoriesCarousel({
 
   return (
     <div className="relative">
-      {/* Left Arrow */}
+      {/* Left Arrow - Hidden on mobile */}
       {canScrollLeft && (
         <button
           onClick={scrollLeft}
-          className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 transition-colors duration-200 drop-shadow-lg"
+          className="hidden md:block absolute left-2 top-1/2 transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 transition-colors duration-200 drop-shadow-lg"
           style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }}
           aria-label="Scroll left"
         >
@@ -129,11 +129,11 @@ export function StoriesCarousel({
         </button>
       )}
 
-      {/* Right Arrow */}
+      {/* Right Arrow - Hidden on mobile */}
       {canScrollRight && (
         <button
           onClick={scrollRight}
-          className="absolute right-[-10px] top-[50px] transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 transition-colors duration-200 drop-shadow-lg"
+          className="hidden md:block absolute right-[-10px] top-[50px] transform -translate-y-1/2 z-10 text-gray-600 hover:text-gray-800 transition-colors duration-200 drop-shadow-lg"
           style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }}
           aria-label="Scroll right"
         >
@@ -141,18 +141,19 @@ export function StoriesCarousel({
         </button>
       )}
 
-      {/* Fade Effects */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent z-5 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent z-5 pointer-events-none" />
+      {/* Fade Effects - Reduced on mobile */}
+      <div className="absolute left-0 top-0 bottom-0 w-6 md:w-12 bg-gradient-to-r from-white via-white/80 to-transparent z-5 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-6 md:w-12 bg-gradient-to-l from-white via-white/80 to-transparent z-5 pointer-events-none" />
 
-      {/* Stories Container */}
+      {/* Stories Container - Optimized for mobile */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-3 px-8 py-4 overflow-x-auto scrollbar-hide"
+        className="flex gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x"
         onScroll={checkScrollability}
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {currentUser ? (

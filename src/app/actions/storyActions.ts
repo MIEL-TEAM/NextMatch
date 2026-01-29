@@ -25,7 +25,7 @@ import {
 } from "@/lib/db/storyActions";
 
 export async function createStory(
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResult<Story>> {
   try {
     const session = await getSession();
@@ -60,7 +60,7 @@ export async function createStory(
       const todayStoryCount = await dbGetTodayStoryCount(
         session.user.id,
         today,
-        tomorrow
+        tomorrow,
       );
 
       if (todayStoryCount >= 1) {
@@ -98,7 +98,7 @@ export async function createStory(
             storyId: story.id,
             userId: session.user.id,
             timestamp: new Date().toISOString(),
-          }
+          },
         );
       } catch (pusherError) {
         console.warn("Failed to send story creation update:", pusherError);
@@ -132,7 +132,7 @@ export async function getStoryUsers() {
 
       const storyUsers = usersWithStories.map((user) => {
         const hasUnviewedStories = user.stories.some(
-          (story) => story.views.length === 0
+          (story) => story.views.length === 0,
         );
 
         return {
@@ -201,7 +201,7 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
           unviewedStoryIds.map((storyId) => ({
             storyId,
             viewerId: session.user.id!,
-          }))
+          })),
         );
 
         try {
@@ -213,7 +213,7 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
               userId,
               storyIds: unviewedStoryIds,
               timestamp: new Date().toISOString(),
-            }
+            },
           );
         } catch (pusherError) {
           console.warn("Failed to send story view update:", pusherError);
@@ -252,7 +252,7 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
 
 export async function reactToStory(
   storyId: string,
-  reactionType: string
+  reactionType: string,
 ): Promise<ActionResult<string>> {
   try {
     const session = await getSession();
@@ -341,8 +341,8 @@ const reactionEmojis: Record<string, string> = {
 
 export async function sendStoryMessage(
   storyId: string,
-  messageText: string
-): Promise<ActionResult<string>> {
+  messageText: string,
+): Promise<ActionResult<{ userId: string }>> {
   try {
     const session = await getSession();
     if (!session?.user?.id) {
@@ -363,10 +363,9 @@ export async function sendStoryMessage(
     const isReaction = Object.keys(reactionEmojis).includes(messageText);
     const displayText = isReaction ? reactionEmojis[messageText] : messageText;
 
-    const contextualMessage = `🖼️ הגיב/ה על הסטורי שלך: "${displayText}"\n\n📸 תמונת הסטורי: ${story.imageUrl}`;
-
+    // Send only the message text without the image
     const result = await createMessgae(story.userId, {
-      text: contextualMessage,
+      text: displayText,
     });
 
     if (result.status === "error") {
@@ -380,7 +379,7 @@ export async function sendStoryMessage(
       messageText,
     });
 
-    return { status: "success", data: "Message sent successfully!" };
+    return { status: "success", data: { userId: story.userId } };
   } catch (error) {
     console.error("Error sending story message:", error);
     return { status: "error", error: "Failed to send message" };
@@ -388,7 +387,7 @@ export async function sendStoryMessage(
 }
 
 export async function deleteStory(
-  storyId: string
+  storyId: string,
 ): Promise<ActionResult<string>> {
   try {
     const session = await getSession();

@@ -1,14 +1,7 @@
 import CardInnerWrapper from "@/components/CardInnerWrapper";
 import ChatForm from "./ChatForm";
-import { getMessageThread } from "@/app/actions/messageActions";
 import { getAuthUserId } from "@/lib/session";
-import { createChatId } from "@/lib/util";
-import dynamic from "next/dynamic";
-import HeartLoading from "@/components/HeartLoading";
-
-const MessageList = dynamic(() => import("./MessageList"), {
-  loading: () => <HeartLoading message="טוען הודעות..." />,
-});
+import ChatContainer from "./ChatContainer";
 
 type UserParamsProps = {
   params: Promise<{ userId: string }>;
@@ -16,21 +9,12 @@ type UserParamsProps = {
 
 export default async function ChatPage({ params }: UserParamsProps) {
   const userId = await getAuthUserId();
-  const { userId: paramsUserId } = await params;
-
-  const messages = await getMessageThread(paramsUserId);
-  const chatId = createChatId(userId, paramsUserId);
+  await params; // Ensure params are resolved
 
   return (
     <CardInnerWrapper
       header="צ&lsquo;אט"
-      body={
-        <MessageList
-          currentUserId={userId}
-          initialMessages={messages}
-          chatId={chatId}
-        />
-      }
+      body={<ChatContainer currentUserId={userId} />}
       footer={<ChatForm />}
     />
   );

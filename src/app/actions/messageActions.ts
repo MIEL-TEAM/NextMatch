@@ -114,10 +114,18 @@ export async function getMessageThread(recipientId: string) {
 
       readCount = readMessagesIds.length;
 
+      // Notify both users about read messages
       await pusherServer.trigger(
         createChatId(recipientId, userId),
         "messages:read",
         readMessagesIds
+      );
+      
+      // Also notify the sender's private channel so their sidebar updates
+      await pusherServer.trigger(
+        `private-${recipientId}`,
+        "messages:read",
+        { readBy: userId, messageIds: readMessagesIds }
       );
 
       // 📧 Cancel any reminder emails for messages that were just read

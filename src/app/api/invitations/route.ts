@@ -1,12 +1,18 @@
-
-
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/session";
-import { dbGetPendingInvitations } from "@/lib/db/invitationActions";
+import {
+  dbGetPendingInvitations,
+  dbCleanupExpiredInvitations,
+} from "@/lib/db/invitationActions";
 
 export async function GET() {
   try {
     const userId = await getAuthUserId();
+
+    // Auto-cleanup expired invitations (non-blocking)
+    dbCleanupExpiredInvitations().catch((error) => {
+      console.error("[Invitation Cleanup] Failed:", error);
+    });
 
     const invitations = await dbGetPendingInvitations(userId);
 
@@ -28,7 +34,7 @@ export async function GET() {
     console.error("[GET /api/invitations] Error:", error);
     return NextResponse.json(
       { error: "Failed to fetch invitations" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

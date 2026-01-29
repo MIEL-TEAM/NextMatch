@@ -128,7 +128,7 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
 
         <DropdownMenu
           aria-label="Profile views"
-          className="w-[230px] sm:w-[420px] max-h-[70vh] sm:max-h-[500px] overflow-y-auto"
+          className="w-[360px] sm:w-[420px] max-h-[70vh] sm:max-h-[500px] overflow-y-auto"
           variant="flat"
           classNames={{
             base: "p-0",

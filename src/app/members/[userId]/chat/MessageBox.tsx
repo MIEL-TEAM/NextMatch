@@ -2,7 +2,7 @@
 
 import PresenceAvatar from "@/components/PresenceAvatar";
 import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
-import { MessageDto } from "@/types";
+import { MessageBoxProps } from "@/types/chat";
 import Image from "next/image";
 
 import clsx from "clsx";
@@ -11,11 +11,6 @@ import { useRouter } from "next/navigation";
 import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "react-hot-toast";
-
-type MessageBoxProps = {
-  message: MessageDto;
-  currentUserId: string;
-};
 
 function MessageBox({ message, currentUserId }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;

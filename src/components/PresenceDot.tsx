@@ -1,9 +1,8 @@
 "use client";
 
 import { Member } from "@prisma/client";
-import { GoDot, GoDotFill } from "react-icons/go";
+import { GoDotFill } from "react-icons/go";
 import { usePresence } from "@/hooks/usePresence";
-import { getPresenceClasses } from "@/lib/presence";
 
 type PresenceProps = {
   member: Member & {
@@ -13,53 +12,40 @@ type PresenceProps = {
   };
   showLabel?: boolean;
   size?: "sm" | "md" | "lg";
+  className?: string;
 };
 
 const SIZE_CONFIG = {
-  sm: { dot: 24, dotBg: 28 },
-  md: { dot: 32, dotBg: 36 },
-  lg: { dot: 40, dotBg: 44 },
+  sm: { dot: 12, text: "text-xs", padding: "px-2 py-0.5" },
+  md: { dot: 14, text: "text-sm", padding: "px-2.5 py-1" },
+  lg: { dot: 16, text: "text-base", padding: "px-3 py-1.5" },
 };
 
 export default function PresenceDot({
   member,
-  showLabel = false,
+  showLabel = true,
   size = "md",
+  className = "",
 }: PresenceProps) {
   const presence = usePresence(member.userId, member.user?.lastActiveAt);
-  const classes = getPresenceClasses(presence.status);
   const sizeConfig = SIZE_CONFIG[size];
 
-  if (presence.status === "offline" && !showLabel) {
+  // Only show when online
+  if (presence.status !== "online") {
     return null;
   }
 
   return (
-    <div className="flex items-center gap-1.5">
-      <div
-        className="relative flex-shrink-0"
-        title={presence.label || "לא פעיל/ה"}
-        aria-label={presence.status}
-      >
-        {/* White background for contrast */}
-        <GoDot
-          size={sizeConfig.dotBg}
-          className="fill-white z-10 absolute -top-[2px] -right-[2px] drop-shadow-sm"
-        />
-        {/* Main status dot with beautiful green glow when online */}
-        <GoDotFill
-          size={sizeConfig.dot}
-          className={`${classes.dot} ${
-            presence.isOnline
-              ? "animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]"
-              : ""
-          } border-2 border-white rounded-full z-20 transition-all duration-300`}
-        />
-      </div>
-
-      {showLabel && presence.label && (
-        <span className={`text-xs ${classes.text} whitespace-nowrap`}>
-          {presence.label}
+    <div className={`inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full ${sizeConfig.padding} shadow-md ${className}`}>
+      {/* Green online dot */}
+      <GoDotFill
+        size={sizeConfig.dot}
+        className="fill-green-500 animate-pulse"
+      />
+      
+      {showLabel && (
+        <span className={`${sizeConfig.text} font-medium text-gray-700 whitespace-nowrap`}>
+          מחובר/ת
         </span>
       )}
     </div>

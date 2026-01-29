@@ -13,6 +13,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { FiMessageCircle } from "react-icons/fi";
 import { AIChatModal } from "@/components/ai-assistant/AIChatModal";
+import type { ProfileCompletionStatus } from "@/types/userAction";
 
 type UserMenuProps = {
   userInfo: {
@@ -22,6 +23,7 @@ type UserMenuProps = {
   userId?: string | undefined;
   isAdmin?: boolean;
   isPremium?: boolean;
+  profileCompletion?: ProfileCompletionStatus | null;
 };
 
 export default function UserMenu({
@@ -29,12 +31,16 @@ export default function UserMenu({
   userId,
   isAdmin = false,
   isPremium = false,
+  profileCompletion,
 }: UserMenuProps) {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   if (!userId) {
     return null;
   }
+
+  const incompleteTasks = profileCompletion?.tasks.filter((task: any) => !task.completed) || [];
+  const recommended = profileCompletion?.recommendedAction ?? incompleteTasks[0] ?? null;
 
   return (
     <>
@@ -100,6 +106,22 @@ export default function UserMenu({
             >
               <span className="font-semibold">🧠 עוזר AI</span>
             </DropdownItem>
+
+            {profileCompletion && profileCompletion.completionPercentage < 100 && (
+              <DropdownItem 
+                key="profile-completion"
+                as={Link}
+                href={recommended?.actionHref || "/members/edit"}
+                className="sm:hidden bg-gradient-to-r from-orange-50 to-red-50"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-semibold text-orange-600">שפר פרופיל</span>
+                  <span className="text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                    {profileCompletion.completionPercentage}%
+                  </span>
+                </div>
+              </DropdownItem>
+            )}
 
             <DropdownItem key="profile" as={Link} href={`/members/${userId}`}>
               הפרופיל שלי

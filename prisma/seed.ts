@@ -32,6 +32,7 @@ async function seedMembers() {
               locationEnabled: cityLocation ? true : false,
               locationUpdatedAt: cityLocation ? new Date() : null,
               maxDistance: 50,
+              coverImage: member.image,
             },
           },
         },
@@ -53,6 +54,7 @@ async function seedMembers() {
               description: member.description,
               country: member.country,
               image: member.image,
+              coverImage: member.image,
 
               latitude: cityLocation?.lat || null,
               longitude: cityLocation?.lng || null,
@@ -69,14 +71,13 @@ async function seedMembers() {
           },
         },
       });
-    })
+    }),
   );
 }
 
 async function seedStories() {
   console.log("Seeding stories...");
 
-  // Get all users to map emails to user IDs
   const users = await prisma.user.findMany({
     select: { id: true, email: true },
   });
@@ -91,13 +92,11 @@ async function seedStories() {
         return;
       }
 
-      // Calculate creation time (hours ago)
       const createdAt = add(new Date(), { hours: -storyData.hoursAgo });
       const expiresAt = add(createdAt, {
         hours: storyData.expiresInHours || 24,
       });
 
-      // Check if story already exists
       const existingStory = await prisma.story.findFirst({
         where: {
           userId,
@@ -127,10 +126,45 @@ async function seedStories() {
           isActive: true,
         },
       });
-    })
+    }),
   );
 
   console.log("Stories seeded successfully!");
+}
+
+async function seedVideos() {
+  console.log("Seeding videos...");
+
+  const members = await prisma.member.findMany({
+    select: { id: true },
+  });
+
+  await Promise.all(
+    members.map(async (member) => {
+      const existingVideo = await prisma.video.findFirst({
+        where: {
+          memberId: member.id,
+          url: "/video/car.mp4",
+        },
+      });
+
+      if (existingVideo) {
+        console.log(`Video already exists for member ${member.id}`);
+        return;
+      }
+
+      await prisma.video.create({
+        data: {
+          url: "/video/car.mp4",
+          memberId: member.id,
+          isApproved: true,
+          duration: 30,
+        },
+      });
+    }),
+  );
+
+  console.log("Videos seeded successfully!");
 }
 
 async function seedAdmin() {
@@ -157,6 +191,9 @@ async function main() {
 
     console.log("Seeding stories...");
     await seedStories();
+
+    console.log("Seeding videos...");
+    await seedVideos();
   }
 
   console.log("Seeding admin...");

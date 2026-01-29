@@ -123,13 +123,14 @@ export default function Providers({
             maxWidth: '400px',
             width: 'calc(100vw - 32px)',
             margin: '0 auto',
+            zIndex: 100001,
           },
         }}
       />
       <ToastContainer
         position="top-right"
         hideProgressBar
-        className="!top-[80px] sm:!top-6 !right-4 !left-4 sm:!left-auto z-50"
+        className="!top-[80px] sm:!top-6 !right-4 !left-4 sm:!left-auto !z-[100001]"
         toastClassName="!mb-3 !rounded-2xl sm:!rounded-xl !shadow-xl"
         bodyClassName="!p-0"
         limit={3}

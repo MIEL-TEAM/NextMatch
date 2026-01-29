@@ -14,7 +14,7 @@ export default function CardInnerWrapper({
 }: CardInnerWrapperProps) {
   return (
     <>
-      <CardHeader>
+      <CardHeader className="flex-shrink-0">
         {typeof header === "string" ? (
           <div className="text-2xl font-semibold text-secondary">{header}</div>
         ) : (
@@ -22,9 +22,9 @@ export default function CardInnerWrapper({
         )}
       </CardHeader>
       <Divider />
-      <CardBody className="text-right">{body}</CardBody>
+      <CardBody className="text-right flex-1 overflow-y-auto">{body}</CardBody>
 
-      {footer && <CardFooter>{footer}</CardFooter>}
+      {footer && <CardFooter className="flex-shrink-0">{footer}</CardFooter>}
     </>
   );
 }

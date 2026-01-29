@@ -10,6 +10,7 @@ import { Textarea } from "@nextui-org/input";
 import { useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 
 import { HiPaperAirplane } from "react-icons/hi2";
 
@@ -31,12 +32,20 @@ export default function ChatForm() {
   }, [setFocus]);
 
   const onSubmit = async (data: MessageSchema) => {
-    const result = await createMessgae(params.userId, data);
+    // Reset form immediately for better UX
+    reset();
+    
+    try {
+      const result = await createMessgae(params.userId, data);
 
-    if (result.status === "error") {
-      handleFormServerError(result, setError);
-    } else {
-      reset();
+      if (result.status === "error") {
+        handleFormServerError(result, setError);
+        toast.error("Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    } finally {
       setTimeout(() => {
         setFocus("text");
       }, 50);

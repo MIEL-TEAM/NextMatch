@@ -49,7 +49,6 @@ export default function ProfileCompletionButton({
     <Popover placement="bottom-start" showArrow offset={10}>
       <PopoverTrigger>
         <Button
-          radius="full"
           className="relative flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] min-w-fit h-auto"
           aria-label={`Profile ${status.completionPercentage}% complete`}
         >
@@ -59,7 +58,7 @@ export default function ProfileCompletionButton({
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="rounded-full bg-[#FFC857] px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-[#732400] shadow-md whitespace-nowrap"
+            className="rounded-lg bg-[#FFC857] px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-[#732400] shadow-md whitespace-nowrap"
           >
             {status.completionPercentage}%
           </motion.span>

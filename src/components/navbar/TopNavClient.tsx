@@ -13,6 +13,7 @@ import FiltersWrapper from "./FiltersWrapper";
 import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
 import ChatButton from "./ChatButton";
+import UnreadCountSync from "../UnreadCountSync";
 import type { ProfileCompletionStatus } from "@/types/userAction";
 import { useFilterModal } from "@/hooks/useFilterModal";
 
@@ -113,10 +114,11 @@ export default function TopNavClient({
 
   return (
     <>
+      {!isAdmin && <UnreadCountSync initialUnreadCount={initialUnreadCount} />}
       <Navbar
         maxWidth="full"
         className="bg-gradient-to-r from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
-        backdrop-blur-lg shadow-md border-b border-white/20"
+        backdrop-blur-lg shadow-md border-b border-white/20 z-[100000] relative"
         classNames={{
           item: [
             "text-lg",
@@ -136,32 +138,47 @@ export default function TopNavClient({
         >
           {userInfo ? (
             <>
-           
-              <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
+              {/* Mobile: All icons consistently visible */}
+              <div className="sm:hidden w-full flex items-center justify-between gap-2">
                 <UserMenu
                   userInfo={userInfo}
                   userId={userId || undefined}
                   isAdmin={isAdmin}
                   isPremium={isPremium}
+                  profileCompletion={profileCompletion}
+                />
+                {!isAdmin && (
+                  <>
+                    <ProfileViewsButton />
+                    {isOnMembersPage ? (
+                      <button
+                        onClick={toggleFilter}
+                        className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20 active:scale-95"
+                        aria-label="פתח סינון"
+                      >
+                        <FaFilter className="w-5 h-5 text-white/90" />
+                      </button>
+                    ) : (
+                      <div className="w-10 h-10" />
+                    )}
+                    <ChatButton initialUnreadCount={initialUnreadCount} />
+                  </>
+                )}
+              </div>
+
+              {/* Desktop: Original layout */}
+              <div className="hidden sm:flex items-center gap-3 sm:gap-5 flex-shrink-0">
+                <UserMenu
+                  userInfo={userInfo}
+                  userId={userId || undefined}
+                  isAdmin={isAdmin}
+                  isPremium={isPremium}
+                  profileCompletion={profileCompletion}
                 />
                 {!isAdmin && <ProfileViewsButton />}
-                
-                {/* Mobile-only buttons */}
-                <div className="sm:hidden flex items-center gap-3">
-                  {isOnMembersPage && !isAdmin && (
-                    <button
-                      onClick={toggleFilter}
-                      className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20 active:scale-95"
-                      aria-label="פתח סינון"
-                    >
-                      <FaFilter className="w-5 h-5 text-white/90" />
-                    </button>
-                  )}
-                  <ChatButton initialUnreadCount={initialUnreadCount} />
-                </div>
               </div>
               {profileCompletion && (
-                <div className="flex-shrink-0">
+                <div className="hidden sm:flex flex-shrink-0">
                   <ProfileCompletionButton status={profileCompletion} />
                 </div>
               )}

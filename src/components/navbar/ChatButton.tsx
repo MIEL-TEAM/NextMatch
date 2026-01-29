@@ -5,10 +5,7 @@ import useMessageStore from "@/hooks/useMessageStore";
 import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-
-type ChatButtonProps = {
-  initialUnreadCount: number;
-};
+import { ChatButtonProps } from "@/types/chat";
 
 export default function ChatButton({ initialUnreadCount }: ChatButtonProps) {
   const storeUnreadCount = useMessageStore((state) => state.unreadCount);

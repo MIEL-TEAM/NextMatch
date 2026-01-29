@@ -75,14 +75,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       <div className="absolute bottom-2 left-2 flex gap-2 z-10">
         <button
-          onClick={togglePlay}
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePlay();
+          }}
           className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
           aria-label={isPlaying ? "Pause" : "Play"}
         >
           {isPlaying ? <Pause size={15} /> : <Play size={15} />}
         </button>
         <button
-          onClick={toggleMute}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleMute();
+          }}
           className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
           aria-label={isMuted ? "Unmute" : "Mute"}
         >

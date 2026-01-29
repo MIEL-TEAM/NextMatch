@@ -60,13 +60,15 @@ export default function InvitationCard({
         {/* Background Media - Video or Image */}
         <div className="absolute inset-0">
           {videoUrl ? (
-            <VideoPlayer
-              url={videoUrl}
-              autoPlay={true}
-              loop={true}
-              muted={true}
-              className="rounded-none w-full h-full"
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <VideoPlayer
+                url={videoUrl}
+                autoPlay={true}
+                loop={true}
+                muted={true}
+                className="rounded-none w-full h-full"
+              />
+            </div>
           ) : image ? (
             <Image
               src={image}

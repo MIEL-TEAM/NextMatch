@@ -131,12 +131,6 @@ export default function MemberCard({
         onMouseLeave={handleMouseLeave}
       >
         <div className="relative aspect-square overflow-hidden rounded-t-lg group">
-          {memberVideos.length > 0 && (
-            <span className="absolute top-2 right-14 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-md z-50">
-              חדש 🎬
-            </span>
-          )}
-
           {showVideo && activeVideo && !videoError && (
             <div className="absolute inset-0 z-40 overflow-hidden">
               <video
@@ -167,9 +161,6 @@ export default function MemberCard({
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABAgEAf6qL9wAAAABJRU5ErkJggg=="
           />
 
-          {/* OAuth Verification Ribbon */}
-          {member.user?.oauthVerified && <VerifiedRibbon />}
-
           <div className="absolute top-2 left-2 z-50 flex gap-1.5 items-center">
             <LikeButton
               loading={loading}
@@ -194,7 +185,7 @@ export default function MemberCard({
             )}
           </div>
 
-          {/* Bottom-left media counters + location like dating.com */}
+          {/* Bottom-left media counters + location + verification */}
           <div className="absolute bottom-2 left-2 z-50 flex items-center gap-1.5">
             <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
               <Camera className="w-3.5 h-3.5" />
@@ -202,6 +193,7 @@ export default function MemberCard({
                 {Math.max(memberPhotos.length, member.image ? 1 : 0)}
               </span>
             </div>
+    
             {memberVideos.length > 0 && (
               <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
                 <Video className="w-3.5 h-3.5" />
@@ -218,6 +210,8 @@ export default function MemberCard({
                 </span>
               </div>
             )}
+        {/* OAuth Verification Badge */}
+        {member.user?.oauthVerified && <VerifiedRibbon />}
           </div>
 
           {/* Removed centered strip */}

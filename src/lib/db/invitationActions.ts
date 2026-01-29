@@ -1,10 +1,14 @@
 import { prisma } from "@/lib/prisma";
 
 const COOLDOWN_HOURS = 12;
+const MAX_ACTIVE_INVITATIONS = 5;
 
-
-export async function dbCanReceiveInvitation(userId: string): Promise<boolean> {
-  const activeInvitation = await prisma.invitation.findFirst({
+export async function dbCanReceiveInvitation(
+  userId: string,
+  senderId: string,
+): Promise<boolean> {
+  // Check 1: Count active invitations
+  const activeCount = await prisma.invitation.count({
     where: {
       recipientId: userId,
       status: {
@@ -13,27 +17,31 @@ export async function dbCanReceiveInvitation(userId: string): Promise<boolean> {
     },
   });
 
-  if (activeInvitation) {
+  if (activeCount >= MAX_ACTIVE_INVITATIONS) {
+    console.log(
+      `[Invitation] User ${userId} has max active invitations (${activeCount})`,
+    );
     return false;
   }
 
   const cooldownTime = new Date(Date.now() - COOLDOWN_HOURS * 60 * 60 * 1000);
 
-  const recentDismissOrAccept = await prisma.invitation.findFirst({
+  const recentFromSender = await prisma.invitation.findFirst({
     where: {
       recipientId: userId,
+      senderId: senderId,
       OR: [
+        { status: { in: ["pending", "seen"] } },
         { dismissedAt: { gte: cooldownTime } },
         { acceptedAt: { gte: cooldownTime } },
       ],
     },
-    orderBy: [
-      { dismissedAt: "desc" },
-      { acceptedAt: "desc" },
-    ],
   });
 
-  if (recentDismissOrAccept) {
+  if (recentFromSender) {
+    console.log(
+      `[Invitation] User ${userId} in cooldown with sender ${senderId}`,
+    );
     return false;
   }
 
@@ -43,16 +51,17 @@ export async function dbCanReceiveInvitation(userId: string): Promise<boolean> {
 export async function dbCreateInvitation(
   recipientId: string,
   senderId: string,
-  type: string = "chat"
+  type: string = "chat",
 ) {
-  // Enforce anti-spam: check if user can receive invitation
-  const canReceive = await dbCanReceiveInvitation(recipientId);
-  
+  const canReceive = await dbCanReceiveInvitation(recipientId, senderId);
+
   if (!canReceive) {
+    console.log(
+      `[Invitation] Cannot create invitation from ${senderId} to ${recipientId}`,
+    );
     return null;
   }
 
-  // Create invitation
   const invitation = await prisma.invitation.create({
     data: {
       recipientId,
@@ -76,6 +85,9 @@ export async function dbCreateInvitation(
     },
   });
 
+  console.log(
+    `[Invitation] Created invitation ${invitation.id} from ${senderId} to ${recipientId}`,
+  );
   return invitation;
 }
 
@@ -111,9 +123,6 @@ export async function dbGetPendingInvitations(userId: string) {
   });
 }
 
-/**
- * Get a single invitation by ID
- */
 export async function dbGetInvitationById(invitationId: string) {
   return prisma.invitation.findUnique({
     where: { id: invitationId },
@@ -134,10 +143,6 @@ export async function dbGetInvitationById(invitationId: string) {
   });
 }
 
-/**
- * Mark invitation as "seen"
- * Transition: pending → seen
- */
 export async function dbMarkInvitationSeen(invitationId: string) {
   return prisma.invitation.update({
     where: { id: invitationId },
@@ -148,11 +153,6 @@ export async function dbMarkInvitationSeen(invitationId: string) {
   });
 }
 
-/**
- * Mark invitation as "dismissed"
- * Transition: pending/seen → dismissed
- * Starts cooldown period
- */
 export async function dbDismissInvitation(invitationId: string) {
   return prisma.invitation.update({
     where: { id: invitationId },
@@ -163,11 +163,6 @@ export async function dbDismissInvitation(invitationId: string) {
   });
 }
 
-/**
- * Mark invitation as "accepted"
- * Transition: pending/seen → accepted
- * Starts cooldown period
- */
 export async function dbAcceptInvitation(invitationId: string) {
   return prisma.invitation.update({
     where: { id: invitationId },
@@ -178,10 +173,6 @@ export async function dbAcceptInvitation(invitationId: string) {
   });
 }
 
-/**
- * Cleanup expired invitations (optional - can be run via cron)
- * Mark invitations older than 24 hours as expired
- */
 export async function dbCleanupExpiredInvitations() {
   const expiryTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

@@ -150,32 +150,32 @@ export function CreateStoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">יצירת סיפור</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white rounded-t-3xl md:rounded-xl max-w-md w-full max-h-[92vh] md:max-h-[90vh] overflow-y-auto flex flex-col">
+        <div className="flex items-center justify-between p-3 md:p-4 border-b flex-shrink-0">
+          <h2 className="text-base md:text-lg font-semibold">יצירת סיפור</h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 active:text-gray-700 md:hover:text-gray-700 p-1"
           >
             <FiX size={20} />
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-3 md:p-4 space-y-3 md:space-y-4 flex-1 overflow-y-auto">
           {!imagePreview ? (
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-orange-400 transition-colors"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 text-center cursor-pointer active:border-orange-400 md:hover:border-orange-400 transition-colors touch-manipulation"
             >
-              <FiUpload size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600">לחץ כדי להעלות תמונה</p>
-              <p className="text-sm text-gray-400 mt-2">גודל מקסימלי: 5MB</p>
+              <FiUpload size={40} className="mx-auto text-gray-400 mb-3 md:mb-4 md:w-12 md:h-12" />
+              <p className="text-gray-600 text-sm md:text-base">לחץ כדי להעלות תמונה</p>
+              <p className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2">גודל מקסימלי: 5MB</p>
             </div>
           ) : (
             <div
               ref={imageContainerRef}
-              className="relative cursor-pointer"
+              className="relative cursor-pointer touch-none"
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
@@ -185,7 +185,7 @@ export function CreateStoryModal({
                 alt="תצוגה מקדימה של הסיפור"
                 width={400}
                 height={400}
-                className="w-full h-64 object-cover rounded-lg"
+                className="w-full h-56 md:h-64 object-cover rounded-lg"
                 style={{
                   objectPosition:
                     imagePosition === "top"
@@ -200,9 +200,9 @@ export function CreateStoryModal({
                   setSelectedImage(null);
                   setImagePreview(null);
                 }}
-                className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70 z-10"
+                className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1.5 active:bg-opacity-70 md:hover:bg-opacity-70 z-10 touch-manipulation"
               >
-                <FiX size={16} />
+                <FiX size={14} />
               </button>
 
               {textOverlay && (
@@ -215,7 +215,7 @@ export function CreateStoryModal({
                   }}
                   onMouseDown={handleMouseDown}
                 >
-                  <p className="text-white text-xl font-bold text-center px-4 py-2 bg-black bg-opacity-50 rounded-lg max-w-xs backdrop-blur-sm drop-shadow-lg">
+                  <p className="text-white text-base md:text-xl font-bold text-center px-3 md:px-4 py-1.5 md:py-2 bg-black bg-opacity-50 rounded-lg max-w-[250px] md:max-w-xs backdrop-blur-sm drop-shadow-lg">
                     {textOverlay}
                   </p>
                 </div>
@@ -227,68 +227,68 @@ export function CreateStoryModal({
             <>
               {/* Image Position Controls */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-xs md:text-sm font-medium text-gray-700">
                   מיקום התמונה
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 md:gap-2">
                   <button
                     type="button"
                     onClick={() => setImagePosition("top")}
-                    className={`flex-1 px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 px-2 md:px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation ${
                       imagePosition === "top"
-                        ? "bg-orange-500 text-white border-orange-500"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                        ? "bg-gradient-to-r from-[#F6D365] to-[#E37B27] text-white border-[#E37B27]"
+                        : "bg-white text-gray-700 border-gray-300 active:border-orange-400 md:hover:border-orange-400"
                     }`}
                   >
                     למעלה
-                    <ArrowUp className="w-4 h-4" />
+                    <ArrowUp className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setImagePosition("center")}
-                    className={`flex-1 px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 px-2 md:px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation ${
                       imagePosition === "center"
-                        ? "bg-orange-500 text-white border-orange-500"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                        ? "bg-gradient-to-r from-[#F6D365] to-[#E37B27] text-white border-[#E37B27]"
+                        : "bg-white text-gray-700 border-gray-300 active:border-orange-400 md:hover:border-orange-400"
                     }`}
                   >
                     מרכז
-                    <ArrowLeftRight className="w-4 h-4" />
+                    <ArrowLeftRight className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setImagePosition("bottom")}
-                    className={`flex-1 px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 px-2 md:px-4 py-2 rounded-lg border transition-all flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation ${
                       imagePosition === "bottom"
-                        ? "bg-orange-500 text-white border-orange-500"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                        ? "bg-gradient-to-r from-[#F6D365] to-[#E37B27] text-white border-[#E37B27]"
+                        : "bg-white text-gray-700 border-gray-300 active:border-orange-400 md:hover:border-orange-400"
                     }`}
                   >
                     למטה
-                    <ArrowDown className="w-4 h-4" />
+                    <ArrowDown className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 text-right">
+                <p className="text-[10px] md:text-xs text-gray-500 text-right">
                   בחר את המיקום של התמונה במסגרת הסיפור
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <FiType size={16} />
+                <label className="flex items-center gap-2 text-xs md:text-sm font-medium text-gray-700">
+                  <FiType size={14} className="md:w-4 md:h-4" />
                   הוספת טקסט (לא חובה)
                 </label>
                 <textarea
                   value={textOverlay}
                   onChange={(e) => setTextOverlay(e.target.value)}
                   placeholder="הוסף טקסט לסיפור שלך..."
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm md:text-base"
                   rows={3}
                   maxLength={100}
                 />
-                <p className="text-xs text-gray-500 text-right">
+                <p className="text-[10px] md:text-xs text-gray-500 text-right">
                   {textOverlay.length}/100
                 </p>
               </div>
@@ -297,11 +297,11 @@ export function CreateStoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t flex gap-3">
+        <div className="p-3 md:p-4 border-t flex gap-2 md:gap-3 pb-safe flex-shrink-0">
           <Button
             variant="bordered"
             onClick={handleClose}
-            className="flex-1"
+            className="flex-1 text-sm md:text-base touch-manipulation"
             disabled={isUploading}
           >
             ביטול
@@ -309,7 +309,7 @@ export function CreateStoryModal({
           <Button
             color="primary"
             onClick={handleCreateStory}
-            className="flex-1 bg-gradient-to-r from-orange-400 to-orange-600"
+            className="flex-1 bg-gradient-to-r from-[#F6D365] to-[#E37B27] text-sm md:text-base touch-manipulation"
             disabled={!selectedImage || isUploading}
             isLoading={isUploading}
           >

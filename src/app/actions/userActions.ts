@@ -27,7 +27,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function updateMemberProfile(
   data: MemberEditSchema,
-  nameUpdated: boolean
+  nameUpdated: boolean,
 ): Promise<ActionResult<any>> {
   try {
     const userId = await getAuthUserId();
@@ -91,6 +91,76 @@ export async function setMainImage(photo: Photo) {
   }
 }
 
+export async function updateCoverImage(url: string, publicId?: string) {
+  try {
+    const userId = await getAuthUserId();
+    await ensureMember(userId);
+
+    // Delete old cover image from Cloudinary if it exists
+    const currentMember = await prisma.member.findUnique({
+      where: { userId },
+      select: { coverImage: true, coverImagePublicId: true },
+    });
+
+    // Try to delete old cover image if it exists
+    if (currentMember?.coverImage) {
+      // Use stored publicId if available, otherwise try to extract from URL
+      const oldPublicId = currentMember.coverImagePublicId;
+
+      if (oldPublicId) {
+        try {
+          // publicId already includes the folder path (e.g., "user_uploads/abc123")
+          await cloudinary.v2.uploader.destroy(oldPublicId);
+        } catch (error) {
+          console.log(
+            "Failed to delete old cover image from Cloudinary:",
+            error,
+          );
+        }
+      }
+    }
+
+    // Store both the URL and publicId for future deletion
+    return dbUpdateMember(userId, {
+      coverImage: url,
+      coverImagePublicId: publicId || null,
+    });
+  } catch (error) {
+    console.log("❌ Error updating cover image:", error);
+    throw error;
+  }
+}
+
+export async function removeCoverImage() {
+  try {
+    const userId = await getAuthUserId();
+    await ensureMember(userId);
+
+    const currentMember = await prisma.member.findUnique({
+      where: { userId },
+      select: { coverImage: true, coverImagePublicId: true },
+    });
+
+    // Delete from Cloudinary if publicId exists
+    if (currentMember?.coverImagePublicId) {
+      try {
+        // publicId already includes the folder path (e.g., "user_uploads/abc123")
+        await cloudinary.v2.uploader.destroy(currentMember.coverImagePublicId);
+      } catch (error) {
+        console.log("Failed to delete cover image from Cloudinary:", error);
+      }
+    }
+
+    return dbUpdateMember(userId, {
+      coverImage: null,
+      coverImagePublicId: null,
+    });
+  } catch (error) {
+    console.log("❌ Error removing cover image:", error);
+    throw error;
+  }
+}
+
 export async function getUserInfoForNav() {
   try {
     const userId = await getAuthUserId();
@@ -118,7 +188,7 @@ const PROFILE_COMPLETION_WEIGHTS: Record<ProfileCompletionKey, number> = {
 };
 
 export async function getProfileCompletionStatus(
-  userIdOverride?: string
+  userIdOverride?: string,
 ): Promise<ProfileCompletionStatus | null> {
   try {
     const resolvedUserId = userIdOverride ?? (await getAuthUserId());
@@ -139,7 +209,7 @@ export async function getProfileCompletionStatus(
     const pendingPhotoCount = member.photos.length - approvedPhotoCount;
     const galleryProgress = Math.min(
       approvedPhotoCount / PROFILE_COMPLETION_TARGETS.galleryPhotos,
-      1
+      1,
     );
     const mainPhotoProgress =
       approvedPhotoCount > 0 || Boolean(member.image)
@@ -151,13 +221,13 @@ export async function getProfileCompletionStatus(
     const interestCount = member.interests.length;
     const interestsProgress = Math.min(
       interestCount / PROFILE_COMPLETION_TARGETS.interests,
-      1
+      1,
     );
 
     const descriptionLength = member.description?.trim().length ?? 0;
     const bioProgress = Math.min(
       descriptionLength / PROFILE_COMPLETION_TARGETS.bioLength,
-      1
+      1,
     );
 
     const basicFields = [
@@ -218,7 +288,7 @@ export async function getProfileCompletionStatus(
             ? "הטקסט שלך נראה מצוין."
             : `הוסף עוד ${Math.max(
                 0,
-                PROFILE_COMPLETION_TARGETS.bioLength - descriptionLength
+                PROFILE_COMPLETION_TARGETS.bioLength - descriptionLength,
               )} תווים כדי לספר על עצמך.`,
         actionHref: "/members/edit",
         weight: PROFILE_COMPLETION_WEIGHTS.bio,
@@ -284,7 +354,7 @@ export async function getProfileCompletionStatus(
             ? "בחירת תחומי העניין מלאה."
             : `בחר לפחות ${Math.max(
                 0,
-                PROFILE_COMPLETION_TARGETS.interests - interestCount
+                PROFILE_COMPLETION_TARGETS.interests - interestCount,
               )} תחומי עניין נוספים כדי לעזור לנו להתאים לך אנשים.`,
         actionHref: "/interests",
         weight: PROFILE_COMPLETION_WEIGHTS.interests,
@@ -327,15 +397,15 @@ export async function getProfileCompletionStatus(
     const completionPercentage = Math.round(
       tasks.reduce(
         (total, task) => total + task.weight * Math.min(task.progress, 1),
-        0
-      )
+        0,
+      ),
     );
 
     const recommendedAction =
       tasks
         .filter((task) => !task.completed)
         .sort(
-          (a, b) => b.weight * (1 - b.progress) - a.weight * (1 - a.progress)
+          (a, b) => b.weight * (1 - b.progress) - a.weight * (1 - a.progress),
         )[0] ?? null;
 
     return {

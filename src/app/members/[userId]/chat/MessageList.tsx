@@ -1,23 +1,17 @@
 "use client";
 
-import { MessageDto } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { formatShortDateTime } from "@/lib/util";
 import { Channel } from "pusher-js";
 import useMessageStore from "@/hooks/useMessageStore";
-
 import { subscribeToPusher, unsubscribeFromPusher } from "@/lib/pusher-client";
+import { MessageDto } from "@/types";
+import { MessageListProps } from "@/types/chat";
 
 const MessageBox = dynamic(() => import("./MessageBox"), {
   ssr: false,
 });
-
-type MessageListProps = {
-  initialMessages: { messages: MessageDto[]; readCount: number };
-  currentUserId: string;
-  chatId: string;
-};
 
 export default function MessageList({
   initialMessages,
@@ -28,6 +22,19 @@ export default function MessageList({
   const setReadCount = useRef(false);
   const [messages, setMessages] = useState(initialMessages.messages);
   const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
+  const addMessageToChat = useMessageStore((state) => state.addMessageToChat);
+  const updateMessageInChat = useMessageStore(
+    (state) => state.updateMessageInChat,
+  );
+  const removeMessageFromChat = useMessageStore(
+    (state) => state.removeMessageFromChat,
+  );
+  const setCachedMessages = useMessageStore((state) => state.setCachedMessages);
+
+  // Sync messages when initialMessages change
+  useEffect(() => {
+    setMessages(initialMessages.messages);
+  }, [initialMessages.messages]);
 
   useEffect(() => {
     if (!setReadCount.current) {
@@ -36,40 +43,82 @@ export default function MessageList({
     }
   }, [initialMessages.readCount, updateUnreadCount]);
 
-  const handleNewMessage = useCallback((message: MessageDto) => {
-    if (!message.created) message.created = new Date().toISOString();
-    if (!message.dateRead) message.dateRead = null;
+  const handleNewMessage = useCallback(
+    (message: MessageDto) => {
+      if (!message.created) message.created = new Date().toISOString();
+      if (!message.dateRead) message.dateRead = null;
 
-    setMessages((prevMessages) => {
-      if (prevMessages.some((msg) => msg.id === message.id))
-        return prevMessages;
-      return [...prevMessages, message];
-    });
-  }, []);
+      setMessages((prevMessages) => {
+        if (prevMessages.some((msg) => msg.id === message.id))
+          return prevMessages;
+        const newMessages = [...prevMessages, message];
 
-  const handleReadMessages = useCallback((messageIds: string[]) => {
-    setMessages((prevMessages) =>
-      prevMessages.map((message) =>
-        messageIds.includes(message.id)
-          ? { ...message, dateRead: formatShortDateTime(new Date()) }
-          : message
-      )
-    );
-  }, []);
+        // Update cache
+        addMessageToChat(chatId, message);
+        setCachedMessages(chatId, newMessages);
 
-  const handleEditMessage = useCallback((updatedMessage: MessageDto) => {
-    setMessages((prevMessages) =>
-      prevMessages.map((message) =>
-        message.id === updatedMessage.id ? updatedMessage : message
-      )
-    );
-  }, []);
+        return newMessages;
+      });
+    },
+    [chatId, addMessageToChat, setCachedMessages],
+  );
 
-  const handleDeleteMessage = useCallback((messageId: string) => {
-    setMessages((prevMessages) =>
-      prevMessages.filter((message) => message.id !== messageId)
-    );
-  }, []);
+  const handleReadMessages = useCallback(
+    (messageIds: string[]) => {
+      setMessages((prevMessages) => {
+        const updatedMessages = prevMessages.map((message) =>
+          messageIds.includes(message.id)
+            ? { ...message, dateRead: formatShortDateTime(new Date()) }
+            : message,
+        );
+
+        // Update cache
+        messageIds.forEach((msgId) => {
+          updateMessageInChat(chatId, msgId, {
+            dateRead: formatShortDateTime(new Date()),
+          });
+        });
+        setCachedMessages(chatId, updatedMessages);
+
+        return updatedMessages;
+      });
+    },
+    [chatId, updateMessageInChat, setCachedMessages],
+  );
+
+  const handleEditMessage = useCallback(
+    (updatedMessage: MessageDto) => {
+      setMessages((prevMessages) => {
+        const updatedMessages = prevMessages.map((message) =>
+          message.id === updatedMessage.id ? updatedMessage : message,
+        );
+
+        // Update cache
+        updateMessageInChat(chatId, updatedMessage.id, updatedMessage);
+        setCachedMessages(chatId, updatedMessages);
+
+        return updatedMessages;
+      });
+    },
+    [chatId, updateMessageInChat, setCachedMessages],
+  );
+
+  const handleDeleteMessage = useCallback(
+    (messageId: string) => {
+      setMessages((prevMessages) => {
+        const updatedMessages = prevMessages.filter(
+          (message) => message.id !== messageId,
+        );
+
+        // Update cache
+        removeMessageFromChat(chatId, messageId);
+        setCachedMessages(chatId, updatedMessages);
+
+        return updatedMessages;
+      });
+    },
+    [chatId, removeMessageFromChat, setCachedMessages],
+  );
 
   useEffect(() => {
     if (!channelRef.current) {
@@ -90,14 +139,22 @@ export default function MessageList({
         channelRef.current = null;
       }
     };
-  }, [chatId, handleNewMessage, handleReadMessages, handleEditMessage, handleDeleteMessage]);
+  }, [
+    chatId,
+    handleNewMessage,
+    handleReadMessages,
+    handleEditMessage,
+    handleDeleteMessage,
+  ]);
 
   return (
-    <div className="overflow-y-auto h-[calc(80vh-200px)] md:h-[calc(100vh-150px)]">
+    <div className="h-full">
       {messages.length === 0 ? (
-        "עדיין לא התחלתם שיחה ☺️"
+        <div className="flex items-center justify-center h-full text-gray-500">
+          עדיין לא התחלתם שיחה ☺️
+        </div>
       ) : (
-        <div>
+        <div className="space-y-2">
           {messages.map((message) => (
             <MessageBox
               key={message.id}

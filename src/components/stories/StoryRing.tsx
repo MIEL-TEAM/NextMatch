@@ -15,20 +15,20 @@ export function StoryRing({ user, onClick }: StoryRingProps) {
 
   return (
     <div className="relative flex flex-col items-center flex-shrink-0">
-      {/* Story Ring */}
+      {/* Story Ring - Responsive sizing */}
       <div
-        className={`relative ${user.isCurrentUser && user.totalStories === 0 ? "" : "p-1"} rounded-full cursor-pointer transition-transform hover:scale-105 ${ringStyle}`}
+        className={`relative ${user.isCurrentUser && user.totalStories === 0 ? "" : "p-0.5 md:p-1"} rounded-full cursor-pointer transition-transform active:scale-95 md:hover:scale-105 ${ringStyle}`}
         onClick={onClick}
       >
         <div
-          className={`w-14 h-14 ${user.isCurrentUser && user.totalStories === 0 ? "" : "bg-white rounded-full p-0.5"}`}
+          className={`w-14 h-14 md:w-16 md:h-16 ${user.isCurrentUser && user.totalStories === 0 ? "" : "bg-white rounded-full p-0.5"}`}
         >
           <div className="w-full h-full rounded-full overflow-hidden">
             <Image
               src={imageUrl || "/images/user.png"}
               alt={user.name}
-              width={56}
-              height={56}
+              width={64}
+              height={64}
               className="w-full h-full object-cover rounded-full"
             />
           </div>
@@ -36,13 +36,13 @@ export function StoryRing({ user, onClick }: StoryRingProps) {
 
         {/* Plus Icon for Current User with No Stories */}
         {user.isCurrentUser && user.totalStories === 0 && (
-          <div className="absolute bottom-0 right-0 bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border-2 border-white">
+          <div className="absolute bottom-0 right-0 bg-gradient-to-r from-[#F6D365] to-[#E37B27] text-white rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-xs font-bold border-2 border-white shadow-md">
             +
           </div>
         )}
       </div>
-      {/* User Name */}
-      <span className="text-xs text-gray-600 mt-1 max-w-16 truncate text-center">
+      {/* User Name - Responsive text */}
+      <span className="text-[10px] md:text-xs text-gray-600 mt-1 max-w-[56px] md:max-w-[64px] truncate text-center leading-tight">
         {user.isCurrentUser ? "הסטורי שלך" : user.name}
       </span>
     </div>

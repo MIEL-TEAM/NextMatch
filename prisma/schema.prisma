@@ -100,25 +100,27 @@ model Interest {
 }
 
 model Member {
-  id           String    @id @default(cuid())
-  userId       String    @unique
-  name         String
-  dateOfBirth  DateTime
-  gender       String
-  created      DateTime  @default(now())
-  updated      DateTime  @default(now())
-  description  String
-  city         String
-  country      String
-  image        String?
-  boostedUntil DateTime?
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  name               String
+  dateOfBirth        DateTime
+  gender             String
+  created            DateTime  @default(now())
+  updated            DateTime  @default(now())
+  description        String
+  city               String
+  country            String
+  image              String?
+  coverImage         String?
+  coverImagePublicId String?
+  boostedUntil       DateTime?
 
   // Location fields
-  latitude          Float? // GPS coordinates
+  latitude          Float?
   longitude         Float?
-  locationUpdatedAt DateTime? // When location was last updated
-  locationEnabled   Boolean   @default(false) // User opted in for location
-  maxDistance       Int?      @default(50) // Max distance preference in KM
+  locationUpdatedAt DateTime?
+  locationEnabled   Boolean   @default(false)
+  maxDistance       Int?      @default(50)
 
   sourceLikes        Like[]            @relation("source")
   targetLikes        Like[]            @relation("target")

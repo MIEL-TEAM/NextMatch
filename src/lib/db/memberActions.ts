@@ -21,7 +21,7 @@ export async function dbGetMemberLocation(userId: string) {
 
 export async function dbGetMembersWithDistance(
   whereClause: Prisma.MemberWhereInput,
-  selectFields: Prisma.MemberSelect
+  selectFields: Prisma.MemberSelect,
 ) {
   return prisma.member.findMany({
     where: whereClause,
@@ -35,7 +35,7 @@ export async function dbGetMembersWithPagination(
   orderByField: string,
   orderDirection: "asc" | "desc",
   skip: number,
-  limit: number
+  limit: number,
 ) {
   return Promise.all([
     prisma.member.count({
@@ -53,7 +53,7 @@ export async function dbGetMembersWithPagination(
 
 export async function dbUpdateMemberLocation(
   userId: string,
-  data: Prisma.MemberUpdateInput
+  data: Prisma.MemberUpdateInput,
 ) {
   return prisma.member.update({
     where: { userId },
@@ -81,7 +81,7 @@ export async function dbGetMemberLocationStatus(userId: string) {
 
 export async function dbGetPhotosWithMembers(
   memberIds: string[],
-  currentUserId: string | null
+  currentUserId: string | null,
 ) {
   return prisma.photo.findMany({
     where: {
@@ -121,6 +121,8 @@ export async function dbGetMemberByUserId(userId: string) {
       city: true,
       country: true,
       image: true,
+      coverImage: true,
+      coverImagePublicId: true,
       boostedUntil: true,
       videoUrl: true,
       videoUploadedAt: true,
@@ -146,7 +148,7 @@ export async function dbGetMemberByUserId(userId: string) {
 
 export async function dbGetMemberPhotos(
   userId: string,
-  isSelf: boolean = false
+  isSelf: boolean = false,
 ) {
   return prisma.member.findUnique({
     where: { userId },

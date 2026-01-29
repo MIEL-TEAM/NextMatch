@@ -1,14 +1,11 @@
 import { transformImageUrl } from "@/lib/util";
 import { MessageDto } from "@/types";
+import { NewMessageToastProps } from "@/types/chat";
 import { Image } from "@nextui-org/react";
 import Link from "next/link";
 import React from "react";
 import { toast } from "react-toastify";
 import { getToastStyle } from "@/hooks/useIsMobile";
-
-type NewMessageToastProps = {
-  message: MessageDto;
-};
 export default function NewMessageToast({ message }: NewMessageToastProps) {
   return (
     <Link 

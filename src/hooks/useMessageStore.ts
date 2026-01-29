@@ -1,26 +1,14 @@
 import { MessageDto } from "@/types";
+import { MessageState } from "@/types/messageStore";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-type MessageState = {
-  messages: MessageDto[];
-  unreadCount: number;
-  add: (message: MessageDto) => void;
-  remove: (id: string) => void;
-  set: (messages: MessageDto[]) => void;
-  toggleStar: (id: string) => void;
-  toggleArchive: (id: string) => void;
-  updateById: (id: string, updates: Partial<MessageDto>) => void;
-  updateUnreadCount: (amount: number) => void;
-  setUnreadCount: (count: number) => void;
-  resetMessages: () => void;
-};
-
 const useMessageStore = create<MessageState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       messages: [],
       unreadCount: 0,
+      chatCache: {},
       add: (message) =>
         set((state) => {
           // Prevent duplicates
@@ -36,7 +24,7 @@ const useMessageStore = create<MessageState>()(
       set: (messages) =>
         set((state) => {
           const map = new Map(
-            [...state.messages, ...messages].map((m) => [m.id, m])
+            [...state.messages, ...messages].map((m) => [m.id, m]),
           );
           const uniqueMessages = Array.from(map.values());
           return { messages: uniqueMessages };
@@ -46,7 +34,7 @@ const useMessageStore = create<MessageState>()(
           messages: state.messages.map((message) =>
             message.id === id
               ? { ...message, isStarred: !message.isStarred }
-              : message
+              : message,
           ),
         })),
       toggleArchive: (id) =>
@@ -54,13 +42,13 @@ const useMessageStore = create<MessageState>()(
           messages: state.messages.map((message) =>
             message.id === id
               ? { ...message, isArchived: !message.isArchived }
-              : message
+              : message,
           ),
         })),
       updateById: (id, updates) =>
         set((state) => ({
           messages: state.messages.map((message) =>
-            message.id === id ? { ...message, ...updates } : message
+            message.id === id ? { ...message, ...updates } : message,
           ),
         })),
       updateUnreadCount: (amount: number) =>
@@ -71,10 +59,91 @@ const useMessageStore = create<MessageState>()(
       setUnreadCount: (count: number) =>
         set(() => ({ unreadCount: Math.max(0, count) })),
       resetMessages: () => set({ messages: [], unreadCount: 0 }),
-    }),
 
-    { name: "messagesStore" }
-  )
+      // Cache methods
+      getCachedMessages: (chatId: string) => {
+        const cache = get().chatCache[chatId];
+        return cache?.messages || null;
+      },
+
+      setCachedMessages: (chatId: string, messages: MessageDto[]) =>
+        set((state) => ({
+          chatCache: {
+            ...state.chatCache,
+            [chatId]: {
+              messages,
+              lastFetched: Date.now(),
+            },
+          },
+        })),
+
+      isCacheValid: (chatId: string, maxAge: number = 5 * 60 * 1000) => {
+        const cache = get().chatCache[chatId];
+        if (!cache) return false;
+        return Date.now() - cache.lastFetched < maxAge;
+      },
+
+      addMessageToChat: (chatId: string, message: MessageDto) =>
+        set((state) => {
+          const cache = state.chatCache[chatId];
+          if (!cache) return state;
+
+          const existingMessages = cache.messages;
+          if (existingMessages.some((m) => m.id === message.id)) {
+            return state;
+          }
+
+          return {
+            chatCache: {
+              ...state.chatCache,
+              [chatId]: {
+                messages: [...existingMessages, message],
+                lastFetched: cache.lastFetched,
+              },
+            },
+          };
+        }),
+
+      updateMessageInChat: (
+        chatId: string,
+        messageId: string,
+        updates: Partial<MessageDto>,
+      ) =>
+        set((state) => {
+          const cache = state.chatCache[chatId];
+          if (!cache) return state;
+
+          return {
+            chatCache: {
+              ...state.chatCache,
+              [chatId]: {
+                messages: cache.messages.map((msg) =>
+                  msg.id === messageId ? { ...msg, ...updates } : msg,
+                ),
+                lastFetched: cache.lastFetched,
+              },
+            },
+          };
+        }),
+
+      removeMessageFromChat: (chatId: string, messageId: string) =>
+        set((state) => {
+          const cache = state.chatCache[chatId];
+          if (!cache) return state;
+
+          return {
+            chatCache: {
+              ...state.chatCache,
+              [chatId]: {
+                messages: cache.messages.filter((msg) => msg.id !== messageId),
+                lastFetched: cache.lastFetched,
+              },
+            },
+          };
+        }),
+    }),
+    { name: "messagesStore" },
+  ),
 );
 
 export default useMessageStore;
