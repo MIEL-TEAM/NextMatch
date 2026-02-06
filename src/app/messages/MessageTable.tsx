@@ -21,13 +21,7 @@ import { Search, MessageSquare } from "lucide-react";
 import InlineEmptyState from "@/components/EmptyState";
 import { useMessagesQuery } from "@/hooks/useMessagesQuery";
 import { useSearchParams } from "next/navigation";
-
-type TableProps = {
-  initialMessages: MessageDto[];
-  nextCursor?: string;
-  isArchived?: boolean;
-  isStarred?: boolean;
-};
+import { TableProps } from "@/types/messageStore";
 
 export default function MessageTable({
   initialMessages,

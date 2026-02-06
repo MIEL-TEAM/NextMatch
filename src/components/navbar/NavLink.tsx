@@ -4,12 +4,7 @@ import useMessageStore from "@/hooks/useMessageStore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-
-type NavLinkProps = {
-  href: string;
-  label: string;
-  initialUnreadCount?: number;
-};
+import type { NavLinkProps } from "@/types/navigation";
 
 export default function NavLink({
   href,

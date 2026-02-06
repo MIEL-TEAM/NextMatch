@@ -4,6 +4,7 @@ import {
   getUserInfoForNav,
 } from "@/app/actions/userActions";
 import { getUnreadMessageCount } from "@/app/actions/messageActions";
+import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
 import TopNavClient from "./TopNavClient";
 
 export default async function TopNav() {
@@ -43,6 +44,17 @@ export default async function TopNav() {
 
   const isPremium = session?.user?.isPremium || false;
 
+  // Get user location for search functionality
+  let userLocation = null;
+  if (userId && !isAdmin) {
+    try {
+      const locationStatus = await getCurrentUserLocationStatus();
+      userLocation = locationStatus.coordinates;
+    } catch (error) {
+      console.warn("Failed to load user location:", error);
+    }
+  }
+
   return (
     <TopNavClient
       session={session}
@@ -53,6 +65,7 @@ export default async function TopNav() {
       profileCompletion={profileCompletion}
       isAdmin={isAdmin}
       isPremium={isPremium}
+      userLocation={userLocation}
     />
   );
 }

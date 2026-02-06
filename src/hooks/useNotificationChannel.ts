@@ -9,7 +9,7 @@ import { MessageDto } from "@/types";
 
 function debounce<T extends (...args: any[]) => any>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout | null = null;
   return (...args: Parameters<T>) => {
@@ -25,7 +25,7 @@ function debounce<T extends (...args: any[]) => any>(
 
 export const useNotificationChannel = (
   userId: string | null,
-  profileComplete: boolean
+  profileComplete: boolean,
 ) => {
   const channelRef = useRef<Channel | null>(null);
   const addMessage = useMessageStore((state) => state.add);
@@ -38,7 +38,7 @@ export const useNotificationChannel = (
         updateUnreadCount(count);
         pendingUnreadUpdatesRef.current = 0;
       }, 500),
-    [updateUnreadCount]
+    [updateUnreadCount],
   );
 
   const handleNewMessage = useCallback(
@@ -62,7 +62,7 @@ export const useNotificationChannel = (
         debouncedUpdateUnreadCount(pendingUnreadUpdatesRef.current);
       }
     },
-    [addMessage, debouncedUpdateUnreadCount]
+    [addMessage, debouncedUpdateUnreadCount],
   );
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export function useProfileViewsRealtime(userId: string, onNewView: () => void) {
         if (data.viewerId && data.viewerId !== userId) {
           onNewView();
         }
-      }
+      },
     );
 
     return () => {
@@ -146,4 +146,24 @@ export function useNotificationSound() {
   }, []);
 
   return { audioRef, playSound };
+}
+
+// Listen for new notifications via Pusher
+export function useNewNotificationListener(
+  userId: string,
+  onNewNotification: (notification: any) => void,
+) {
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel =
+      pusherClient.channel(`private-${userId}`) ||
+      pusherClient.subscribe(`private-${userId}`);
+
+    channel.bind("notification:new", onNewNotification);
+
+    return () => {
+      channel.unbind("notification:new", onNewNotification);
+    };
+  }, [userId, onNewNotification]);
 }

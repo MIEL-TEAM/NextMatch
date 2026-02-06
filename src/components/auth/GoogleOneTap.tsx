@@ -3,34 +3,6 @@
 import { useEffect } from "react";
 import { signIn } from "next-auth/react";
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-            cancel_on_tap_outside?: boolean;
-            auto_select?: boolean;
-            itp_support?: boolean;
-            use_fedcm_for_prompt?: boolean;
-          }) => void;
-          prompt: (
-            notification?: (notification: {
-              isNotDisplayed: () => boolean;
-              isSkippedMoment: () => boolean;
-              isDismissedMoment?: () => boolean;
-              getDismissedReason?: () => string;
-            }) => void
-          ) => void;
-          cancel: () => void;
-        };
-      };
-    };
-  }
-}
-
 export default function GoogleOneTap() {
   useEffect(() => {
     if (typeof window === "undefined") return;

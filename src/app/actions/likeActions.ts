@@ -19,10 +19,14 @@ import {
   dbGetUserEmailName,
 } from "@/lib/db/likeActions";
 import { dbCreateInvitation } from "@/lib/db/invitationActions";
+import {
+  notifyNewLike,
+  notifyMutualMatch,
+} from "@/lib/notifications/notificationService";
 
 export async function toggleLikeMember(
   targetUserId: string,
-  isLiked: boolean
+  isLiked: boolean,
 ): Promise<{ success: boolean; error?: string; alreadyLiked?: boolean }> {
   try {
     const userId = await getAuthUserId();
@@ -34,7 +38,7 @@ export async function toggleLikeMember(
 
       // Track the like interaction for smart matching
       await trackUserInteraction(targetUserId, "like").catch((e) =>
-        console.error("Failed to track like interaction:", e)
+        console.error("Failed to track like interaction:", e),
       );
 
       // בדיקה אם זה לייק הדדי
@@ -50,10 +54,29 @@ export async function toggleLikeMember(
         // קבלת שמות המשתמשים
         const targetMember = await dbGetMemberNameImage(targetUserId);
 
-        const [invitationForCurrentUser, invitationForTargetUser] = await Promise.all([
-          dbCreateInvitation(userId, targetUserId, "chat"),
-          dbCreateInvitation(targetUserId, userId, "chat"),
-        ]);
+        const [invitationForCurrentUser, invitationForTargetUser] =
+          await Promise.all([
+            dbCreateInvitation(userId, targetUserId, "chat"),
+            dbCreateInvitation(targetUserId, userId, "chat"),
+          ]);
+
+        // Create mutual match notifications
+        await Promise.all([
+          notifyMutualMatch(
+            userId,
+            targetUserId,
+            targetMember?.name || "משתמש",
+            targetMember?.image || null,
+          ),
+          notifyMutualMatch(
+            targetUserId,
+            userId,
+            like.sourceMember.name,
+            like.sourceMember.image,
+          ),
+        ]).catch((e) =>
+          console.error("Failed to create mutual match notifications:", e),
+        );
 
         // Send real-time celebration events (best-effort delivery)
         await Promise.all([
@@ -84,23 +107,27 @@ export async function toggleLikeMember(
         // Send real-time invitation events ONLY if invitations were created
         // (Anti-spam: user might be in cooldown or have active invitation)
         if (invitationForCurrentUser) {
-          pusherServer.trigger(`private-${userId}`, "match:online", {
-            userId: targetUserId,
-            name: targetMember?.name || "משתמש",
-            image: targetMember?.image,
-            videoUrl: invitationForCurrentUser.sender.member?.videoUrl,
-            timestamp: new Date().toISOString(),
-          }).catch((e) => console.error("Failed to send invitation event:", e));
+          pusherServer
+            .trigger(`private-${userId}`, "match:online", {
+              userId: targetUserId,
+              name: targetMember?.name || "משתמש",
+              image: targetMember?.image,
+              videoUrl: invitationForCurrentUser.sender.member?.videoUrl,
+              timestamp: new Date().toISOString(),
+            })
+            .catch((e) => console.error("Failed to send invitation event:", e));
         }
 
         if (invitationForTargetUser) {
-          pusherServer.trigger(`private-${targetUserId}`, "match:online", {
-            userId: userId,
-            name: like.sourceMember.name,
-            image: like.sourceMember.image,
-            videoUrl: invitationForTargetUser.sender.member?.videoUrl,
-            timestamp: new Date().toISOString(),
-          }).catch((e) => console.error("Failed to send invitation event:", e));
+          pusherServer
+            .trigger(`private-${targetUserId}`, "match:online", {
+              userId: userId,
+              name: like.sourceMember.name,
+              image: like.sourceMember.image,
+              videoUrl: invitationForTargetUser.sender.member?.videoUrl,
+              timestamp: new Date().toISOString(),
+            })
+            .catch((e) => console.error("Failed to send invitation event:", e));
         }
 
         // 📧 שלח אימיילים על התאמה הדדית
@@ -115,9 +142,9 @@ export async function toggleLikeMember(
             currentUserData.email,
             currentUserData.name || "משתמש",
             targetMember.name,
-            targetUserId
+            targetUserId,
           ).catch((e) =>
-            console.error("Failed to send match email to current user:", e)
+            console.error("Failed to send match email to current user:", e),
           );
         }
 
@@ -126,9 +153,9 @@ export async function toggleLikeMember(
             targetUserData.email,
             targetUserData.name || "משתמש",
             like.sourceMember.name,
-            userId
+            userId,
           ).catch((e) =>
-            console.error("Failed to send match email to target user:", e)
+            console.error("Failed to send match email to target user:", e),
           );
         }
       } else {
@@ -138,6 +165,14 @@ export async function toggleLikeMember(
           image: like.sourceMember.image,
           userId: like.sourceMember.userId,
         });
+
+        // Create like notification
+        await notifyNewLike(
+          targetUserId,
+          userId,
+          like.sourceMember.name,
+          like.sourceMember.image,
+        ).catch((e) => console.error("Failed to create like notification:", e));
       }
     }
 

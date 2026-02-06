@@ -32,24 +32,20 @@ export default function MemberSidebar({
   const channelRef = useRef<Channel | null>(null);
   const setUnreadCount = useMessageStore((state) => state.setUnreadCount);
   
-  // Extract userId from pathname like /members/[userId]/chat
   const activeUserId = pathname.includes('/chat') 
     ? pathname.split('/')[2] 
     : null;
 
-  // Update global unread count based on conversations
   const updateGlobalCount = useCallback((convs: Conversation[]) => {
     const totalUnread = convs.reduce((sum, conv) => sum + conv.unreadCount, 0);
     setUnreadCount(totalUnread);
   }, [setUnreadCount]);
 
-  // Fetch conversations function
   const fetchConversations = useCallback(async () => {
     const result = await getRecentConversations(5);
     if (result.success) {
       let convs = result.conversations as Conversation[];
       
-      // If user is currently in a chat, ensure that conversation shows 0 unread
       if (activeUserId) {
         convs = convs.map((conv) =>
           conv.userId === activeUserId ? { ...conv, unreadCount: 0 } : conv
@@ -62,31 +58,24 @@ export default function MemberSidebar({
     setLoading(false);
   }, [activeUserId, updateGlobalCount]);
 
-  // Initial fetch
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Subscribe to Pusher for real-time updates
   useEffect(() => {
     if (!session?.user?.id) return;
 
     const privateChannel = subscribeToPusher(`private-${session.user.id}`);
     channelRef.current = privateChannel;
 
-    // Handle new messages - refresh (active chat will automatically be set to 0)
     const handleNewMessage = () => {
       fetchConversations();
     };
 
-    // Handle messages being read
     const handleMessagesRead = (data: { readBy?: string }) => {
-      // If someone else read YOUR messages while you're chatting with them,
-      // don't refetch because your active chat already shows 0 unread
       if (data?.readBy && data.readBy === activeUserId) {
         return;
       }
-      // Otherwise refresh to get accurate counts
       fetchConversations();
     };
 
@@ -104,17 +93,14 @@ export default function MemberSidebar({
   }, [session?.user?.id, fetchConversations, activeUserId]);
 
   return (
-    // Hide completely on mobile, show on desktop
-    <Card   className="
-    relative hidden md:flex w-full md:mt-10 md:h-[80vh]
-    overflow-hidden shadow-xl
-    bg-[#F19A4A]
-  "
-  >
+    <Card className="
+      relative hidden md:flex w-full md:mt-10 md:h-[80vh]
+      overflow-hidden shadow-xl
+      bg-[#F19A4A]
+    ">
+      <div className="pointer-events-none absolute inset-0 bg-[#F19A4A]/10" />
 
-<div className="pointer-events-none absolute inset-0 bg-[#F19A4A]/10" />
-
-      <CardBody className="w-full overflow-y-auto flex-1 space-y-6">
+      <CardBody className="w-full overflow-y-auto flex-1">
         {/* Recent Conversations Section */}
         <div className="px-4 pt-4">
           {loading ? (
@@ -128,14 +114,14 @@ export default function MemberSidebar({
             />
           )}
         </div>
-
+      </CardBody>
+      
+      <CardFooter className="w-full pb-4 px-4 flex flex-col gap-3">
         {/* Divider */}
-        <div className="px-4">
-          <div className="border-t-2 border-white/20"></div>
-        </div>
+        <div className="w-full border-t-2 border-white/20 mb-1"></div>
 
         {/* Navigation Links */}
-        <nav className="flex flex-col text-center px-4 text-xl gap-3">
+        <nav className="flex flex-col text-center w-full text-xl gap-3">
           {navLinks.map((link) => (
             <Link
               href={link.href}
@@ -150,14 +136,13 @@ export default function MemberSidebar({
             </Link>
           ))}
         </nav>
-      </CardBody>
-      
-      <CardFooter className="w-full pb-4 px-4">
+
+        {/* Back Button */}
         <Button
           as={Link}
           href="/members"
           fullWidth
-          className="bg-white text-[#E37B27] hover:bg-white/90 font-bold shadow-lg"
+          className="bg-white text-[#E37B27] hover:bg-white/50 font-bold shadow-lg mt-2"
         >
           חזרה לדף הקודם
         </Button>

@@ -21,8 +21,8 @@ export default function UnreadCountSync({ initialUnreadCount }: UnreadCountSyncP
   const [isMobile, setIsMobile] = useState(false);
 
   // Extract userId from pathname if in a chat
-  const activeUserId = pathname?.includes('/chat') 
-    ? pathname.split('/')[2] 
+  const activeUserId = pathname?.includes('/chat')
+    ? pathname.split('/')[2]
     : null;
 
   // Check if we're on a member page (where MemberSidebar handles count updates on desktop)
@@ -33,7 +33,7 @@ export default function UnreadCountSync({ initialUnreadCount }: UnreadCountSyncP
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768); // md breakpoint
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -55,6 +55,9 @@ export default function UnreadCountSync({ initialUnreadCount }: UnreadCountSyncP
     channelRef.current = privateChannel;
 
     const handleNewMessage = async (data: { senderId?: string }) => {
+      // Do not increment unread count if the message was sent by the current user
+      if (data?.senderId === session.user.id) return;
+
       if (!activeUserId || data?.senderId !== activeUserId) {
         updateUnreadCount(1);
       }

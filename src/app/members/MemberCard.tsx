@@ -9,12 +9,12 @@ import { Card, CardFooter } from "@nextui-org/react";
 import Link from "next/link";
 import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
-import MemberImageCarousel from "@/components/MemberImageCarousel";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastStyle } from "@/hooks/useIsMobile";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
 import { MemberCardProps } from "@/types/members";
+import Carousel from "@/components/MemberImageCarousel";
 
 export default function MemberCard({
   member,
@@ -149,9 +149,8 @@ export default function MemberCard({
           <Image
             alt={member.name}
             src={transformImageUrl(imageUrl) || "/images/user.png"}
-            className={`w-full h-full object-cover transition-all duration-200 ease-in-out transform group-hover:scale-105 ${
-              showVideo ? "opacity-0" : "opacity-100"
-            }`}
+            className={`w-full h-full object-cover transition-all duration-200 ease-in-out transform group-hover:scale-105 ${showVideo ? "opacity-0" : "opacity-100"
+              }`}
             fill
             sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw"
             loading={isPriority ? "eager" : "lazy"}
@@ -193,7 +192,7 @@ export default function MemberCard({
                 {Math.max(memberPhotos.length, member.image ? 1 : 0)}
               </span>
             </div>
-    
+
             {memberVideos.length > 0 && (
               <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
                 <Video className="w-3.5 h-3.5" />
@@ -210,8 +209,8 @@ export default function MemberCard({
                 </span>
               </div>
             )}
-        {/* OAuth Verification Badge */}
-        {member.user?.oauthVerified && <VerifiedRibbon />}
+            {/* OAuth Verification Badge */}
+            {member.user?.oauthVerified && <VerifiedRibbon />}
           </div>
 
           {/* Removed centered strip */}
@@ -264,13 +263,16 @@ export default function MemberCard({
 
   return (
     <div className="group">
-      <MemberImageCarousel
-        images={memberPhotos}
+      <Carousel<{ url: string; id: string }>
+        items={memberPhotos}
         onIndexChange={setCurrentIndex}
-        prioritizeFirstImage
+        showArrows={true}
       >
-        {(currentImage) => renderCardContent(currentImage.url, isPriority)}
-      </MemberImageCarousel>
+        {(currentImage) =>
+          renderCardContent(currentImage.url, isPriority)
+        }
+      </Carousel>
+
     </div>
   );
 }

@@ -29,10 +29,11 @@ import {
   dbToggleMessageStar,
   dbUpdateMessage,
 } from "@/lib/db/messageActions";
+import { notifyNewMessage } from "@/lib/notifications/notificationService";
 
 export async function createMessgae(
   recipientUserId: string,
-  data: MessageSchema
+  data: MessageSchema,
 ): Promise<ActionResult<MessageDto>> {
   try {
     const userId = await getAuthUserId();
@@ -46,7 +47,7 @@ export async function createMessgae(
     const message = await dbCreateMessage(text, recipientUserId, userId);
 
     await trackUserInteraction(recipientUserId, "message").catch((e) =>
-      console.error("Failed to track message interaction:", e)
+      console.error("Failed to track message interaction:", e),
     );
 
     const messageDto = {
@@ -57,13 +58,29 @@ export async function createMessgae(
     await pusherServer.trigger(
       createChatId(userId, recipientUserId),
       "message:new",
-      messageDto
+      messageDto,
     );
     await pusherServer.trigger(
       `private-${recipientUserId}`,
       "message:new",
-      messageDto
+      messageDto,
     );
+
+    await pusherServer.trigger(
+      `private-${userId}`,
+      "message:new",
+      messageDto,
+    );
+
+    // Create notification for recipient
+    await notifyNewMessage(
+      recipientUserId,
+      userId,
+      messageDto.senderName || "משתמש",
+      messageDto.senderImage || null,
+      message.id,
+      text,
+    ).catch((e) => console.error("Failed to create notification:", e));
 
     const conversationId = createChatId(userId, recipientUserId);
 
@@ -73,7 +90,7 @@ export async function createMessgae(
       conversationId,
       userId,
       recipientUserId,
-      text
+      text,
     );
 
     // Schedule reminder email for 2 hours later if message still unread
@@ -82,7 +99,7 @@ export async function createMessgae(
         message.id,
         conversationId,
         recipientUserId,
-        2
+        2,
       );
     }
 
@@ -106,7 +123,7 @@ export async function getMessageThread(recipientId: string) {
           (message) =>
             message.dateRead === null &&
             message.recipient?.userId &&
-            message.sender?.userId === recipientId
+            message.sender?.userId === recipientId,
         )
         .map((message) => message.id);
 
@@ -118,15 +135,14 @@ export async function getMessageThread(recipientId: string) {
       await pusherServer.trigger(
         createChatId(recipientId, userId),
         "messages:read",
-        readMessagesIds
+        readMessagesIds,
       );
-      
+
       // Also notify the sender's private channel so their sidebar updates
-      await pusherServer.trigger(
-        `private-${recipientId}`,
-        "messages:read",
-        { readBy: userId, messageIds: readMessagesIds }
-      );
+      await pusherServer.trigger(`private-${recipientId}`, "messages:read", {
+        readBy: userId,
+        messageIds: readMessagesIds,
+      });
 
       // 📧 Cancel any reminder emails for messages that were just read
       for (const messageId of readMessagesIds) {
@@ -149,7 +165,7 @@ export async function getMessageThread(recipientId: string) {
 export async function getMessageByContainer(
   container?: string | null,
   cursor?: string,
-  limit = 10
+  limit = 10,
 ) {
   try {
     const userId = await getAuthUserId();
@@ -158,7 +174,7 @@ export async function getMessageByContainer(
       userId,
       container,
       cursor,
-      limit
+      limit,
     );
 
     let nextCursor: string | undefined;
@@ -187,7 +203,7 @@ export async function getMessageByContainer(
 
 export async function deleteMessage(
   messageId: string,
-  recipientUserIdOrIsOutbox: string | boolean
+  recipientUserIdOrIsOutbox: string | boolean,
 ): Promise<ActionResult<string>> {
   try {
     const userId = await getAuthUserId();
@@ -224,7 +240,7 @@ export async function deleteMessage(
     const messagesToDelete = await dbGetMessagesToDelete(userId);
     if (messagesToDelete.length > 0) {
       await dbDeleteMessagesPermanently(
-        messagesToDelete.map((message) => message.id)
+        messagesToDelete.map((message) => message.id),
       );
     }
 
@@ -233,7 +249,7 @@ export async function deleteMessage(
       await pusherServer.trigger(
         createChatId(userId, recipientUserId),
         "message:delete",
-        messageId
+        messageId,
       );
     }
 
@@ -247,7 +263,7 @@ export async function deleteMessage(
 export async function editMessage(
   messageId: string,
   newText: string,
-  recipientUserId: string
+  recipientUserId: string,
 ): Promise<ActionResult<MessageDto>> {
   try {
     const userId = await getAuthUserId();
@@ -276,7 +292,7 @@ export async function editMessage(
     await pusherServer.trigger(
       createChatId(userId, recipientUserId),
       "message:edit",
-      messageDto
+      messageDto,
     );
 
     return { status: "success", data: messageDto };
@@ -311,7 +327,7 @@ export async function toggleMessageStar(messageId: string) {
 
     const updatedMessage = await dbToggleMessageStar(
       messageId,
-      !message.isStarred
+      !message.isStarred,
     );
 
     return mapMessageToMessageDto(updatedMessage);
@@ -377,7 +393,7 @@ export async function getStarredMessages(cursor?: string, limit = 10) {
     });
 
     const groupedMessages = Array.from(conversationMap.values()).sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime(),
     );
 
     const paginated = groupedMessages.slice(0, limit + 1);
@@ -430,7 +446,7 @@ export async function getArchivedMessages(cursor?: string, limit = 10) {
     });
 
     const groupedMessages = Array.from(conversationMap.values()).sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime(),
     );
 
     const paginated = groupedMessages.slice(0, limit + 1);

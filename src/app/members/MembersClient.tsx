@@ -69,6 +69,11 @@ export default function MembersClient({
     };
   }, [currentSession?.user?.id]);
 
+  // Check if we're in search mode (must be before early returns)
+  const searchCity = searchParams.get("city");
+  const searchInterests = searchParams.getAll("interests");
+  const isSearchMode = !!(searchCity || searchInterests.length > 0);
+
   if (!isClientReady) return null;
 
   const fullyLoaded =
@@ -97,8 +102,8 @@ export default function MembersClient({
   if (!data || (data.length === 0 && !isOnlineFilter)) {
     return (
       <EmptyState
-        message={t("members.no_results.header")}
-        subMessage={t("members.no_results.subtitle")}
+        message={isSearchMode ? "לא נמצאו תוצאות לחיפוש זה" : t("members.no_results.header")}
+        subMessage={isSearchMode ? "נסה לשנות את קריטריוני החיפוש" : t("members.no_results.subtitle")}
         icon
       />
     );

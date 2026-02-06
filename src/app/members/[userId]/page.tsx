@@ -1,4 +1,4 @@
-import { getMemberByUserId } from "@/app/actions/memberActions";
+import { getMemberByUserId, getMemberPhotos } from "@/app/actions/memberActions";
 import { getUserInterestsByUserId } from "@/app/actions/interestsAction";
 import { getMemberVideos } from "@/app/actions/videoActions";
 import { notFound } from "next/navigation";
@@ -25,8 +25,8 @@ export default async function MemberDetailedPage({
   const session = await getSession();
   const isOwnProfile = session?.user?.id === userId;
 
- 
-  let member, interests, memberVideos;
+
+  let member, interests, memberVideos, photos;
 
   if (isOwnProfile) {
     const profile = await getSelfProfile(userId);
@@ -40,12 +40,14 @@ export default async function MemberDetailedPage({
       category: interest.category,
     }));
     memberVideos = profile.videos;
+    photos = profile.photos;
   } else {
     member = await getMemberByUserId(userId);
     if (!member) return notFound();
 
     interests = await getUserInterestsByUserId(userId);
     memberVideos = await getMemberVideos(member.id);
+    photos = await getMemberPhotos(member.userId);
   }
 
   const likeIds = await fetchCurrentUserLikeIds();
@@ -76,6 +78,7 @@ export default async function MemberDetailedPage({
             userId={userId}
             isOwnProfile={isOwnProfile}
             initialLiked={likeIds.includes(member.userId)}
+            photos={photos}
           />
         </div>
 
@@ -105,7 +108,7 @@ export default async function MemberDetailedPage({
               </div>
             </div>
           )}
-          
+
           <Divider />
           <InterestsSection interests={interests} isOwnProfile={isOwnProfile} />
           {isOwnProfile && (

@@ -1,21 +1,10 @@
 import { useState } from "react";
-import { MessageDto } from "@/types";
 import { Button, Tooltip } from "@nextui-org/react";
 import { Trash, Star, Archive } from "lucide-react";
 import { timeAgo } from "@/lib/util";
 import AppModal from "@/components/AppModal";
+import { MessageTableCellProps } from "@/types/messageStore";
 
-type MessageTableCellProps = {
-  item: MessageDto;
-  columnKey: string;
-  isOutbox: boolean;
-  deleteMessage: (message: MessageDto) => void;
-  starMessage: (message: MessageDto) => void;
-  archiveMessage: (message: MessageDto) => void;
-  isDeleting: boolean;
-  isStarring: boolean;
-  isArchiving: boolean;
-};
 
 export default function MessageTableCell({
   item,

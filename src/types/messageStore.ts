@@ -29,3 +29,22 @@ export type MessageState = {
   ) => void;
   removeMessageFromChat: (chatId: string, messageId: string) => void;
 };
+
+export type MessageTableCellProps = {
+  item: MessageDto;
+  columnKey: string;
+  isOutbox: boolean;
+  deleteMessage: (message: MessageDto) => void;
+  starMessage: (message: MessageDto) => void;
+  archiveMessage: (message: MessageDto) => void;
+  isDeleting: boolean;
+  isStarring: boolean;
+  isArchiving: boolean;
+};
+
+export type TableProps = {
+  initialMessages: MessageDto[];
+  nextCursor?: string;
+  isArchived?: boolean;
+  isStarred?: boolean;
+};

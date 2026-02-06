@@ -32,6 +32,8 @@ export async function getMembers({
   withPhoto, // No default - API route handles normalization
   onlineOnly = "false",
   lastActive,
+  city,
+  interests,
   userLat,
   userLon,
   distance,
@@ -193,6 +195,22 @@ export async function getMembers({
           : lastActiveThreshold
             ? [{ updated: { gte: lastActiveThreshold } }]
             : []),
+        // City filter
+        ...(city && city.trim()
+          ? [{ city: { contains: city.trim(), mode: "insensitive" as const } }]
+          : []),
+        // Interests filter
+        ...(interests && interests.length > 0
+          ? [
+              {
+                interests: {
+                  some: {
+                    name: { in: interests },
+                  },
+                },
+              },
+            ]
+          : []),
       ],
       ...(userId && includeSelf !== "true" ? { NOT: { userId } } : {}),
     };

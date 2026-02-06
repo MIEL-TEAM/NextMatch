@@ -11,13 +11,14 @@ import {
   toggleLikeMember,
   fetchCurrentUserLikeIds,
 } from "../actions/likeActions";
-import MemberImageCarousel from "@/components/MemberImageCarousel";
+
 import { useInteractionTracking } from "@/hooks/useInteractionTracking";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { Camera } from "lucide-react";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
+import Carousel from "@/components/MemberImageCarousel";
 
 type SmartMemberCardProps = {
   member: Member & {
@@ -327,11 +328,14 @@ export default function SmartMemberCard({
   return (
     <div className="flex flex-col justify-between h-full smart-member-card-container">
       <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl smart-member-card">
-        <MemberImageCarousel images={photos} prioritizeFirstImage={true}>
-          {(currentImage, isPriority) =>
-            renderCardContent(currentImage.url, isPriority)
+        <Carousel<{ url: string; id: string }>
+          items={photos}
+          showArrows={true}
+        >
+          {(currentImage, index) =>
+            renderCardContent(currentImage.url, index === 0)
           }
-        </MemberImageCarousel>
+        </Carousel>
       </div>
     </div>
   );

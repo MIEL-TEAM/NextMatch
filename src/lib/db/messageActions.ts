@@ -18,7 +18,7 @@ const messageSelect = {
 export async function dbCreateMessage(
   text: string,
   recipientId: string,
-  senderId: string
+  senderId: string,
 ) {
   return prisma.message.create({
     data: {
@@ -64,7 +64,7 @@ export async function dbGetMessagesByContainer(
   userId: string,
   container: string | undefined | null,
   cursor?: string,
-  limit = 10
+  limit = 10,
 ) {
   const conditions = {
     [container === "outbox" ? "senderId" : "recipientId"]: userId,
@@ -89,7 +89,7 @@ export async function dbGetMessagesByContainer(
 
 export async function dbDeleteMessage(
   messageId: string,
-  selector: "senderDeleted" | "recipientDeleted"
+  selector: "senderDeleted" | "recipientDeleted",
 ) {
   return prisma.message.update({
     where: { id: messageId },
@@ -141,7 +141,7 @@ export async function dbGetMessage(messageId: string) {
 
 export async function dbToggleMessageStar(
   messageId: string,
-  isStarred: boolean
+  isStarred: boolean,
 ) {
   return prisma.message.update({
     where: { id: messageId },
@@ -153,7 +153,7 @@ export async function dbToggleMessageStar(
 export async function dbArchiveMessages(
   userId: string,
   partnerId: string,
-  isArchived: boolean
+  isArchived: boolean,
 ) {
   return prisma.message.updateMany({
     where: {

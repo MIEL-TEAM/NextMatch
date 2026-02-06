@@ -86,3 +86,11 @@ export type MemberPhotosProps = {
   editing?: boolean;
   mainImageUrl?: string | null;
 };
+
+export interface CarouselProps<T> {
+  items: T[];
+  children: (item: T, index: number) => React.ReactNode;
+  onIndexChange?: (index: number) => void;
+  enableSwipe?: boolean;
+  showArrows?: boolean;
+}

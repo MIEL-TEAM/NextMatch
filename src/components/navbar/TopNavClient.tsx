@@ -4,39 +4,15 @@ import { Navbar, NavbarContent, Button } from "@nextui-org/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import type { Session } from "next-auth";
-import { FaFilter } from "react-icons/fa";
 
 import NavLink from "./NavLink";
 import UserMenu from "./UserMenu";
-import FiltersWrapper from "./FiltersWrapper";
 import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
 import ChatButton from "./ChatButton";
 import UnreadCountSync from "../UnreadCountSync";
-import type { ProfileCompletionStatus } from "@/types/userAction";
-import { useFilterModal } from "@/hooks/useFilterModal";
-
-type NavLinkItem = {
-  href: string;
-  label: string;
-};
-
-type UserInfoForNav = {
-  name: string | null;
-  image: string | null;
-};
-
-type TopNavClientProps = {
-  session: Session | null;
-  userInfo: UserInfoForNav | null;
-  userId: string | null;
-  links: NavLinkItem[];
-  initialUnreadCount: number;
-  profileCompletion: ProfileCompletionStatus | null;
-  isAdmin: boolean;
-  isPremium: boolean;
-};
+import SearchButton from "../search/SearchButton";
+import type { TopNavClientProps } from "@/types/navigation";
 
 export default function TopNavClient({
   session,
@@ -47,10 +23,10 @@ export default function TopNavClient({
   profileCompletion,
   isAdmin,
   isPremium,
+  userLocation,
 }: TopNavClientProps) {
+  
   const pathname = usePathname();
-  const { toggle: toggleFilter } = useFilterModal();
-  const isOnMembersPage = pathname === "/members";
 
   const isAuthPage =
     pathname.includes("/login") ||
@@ -149,18 +125,11 @@ export default function TopNavClient({
                 />
                 {!isAdmin && (
                   <>
+                    <SearchButton 
+                      userLocation={userLocation}
+                      className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20"
+                    />
                     <ProfileViewsButton />
-                    {isOnMembersPage ? (
-                      <button
-                        onClick={toggleFilter}
-                        className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20 active:scale-95"
-                        aria-label="פתח סינון"
-                      >
-                        <FaFilter className="w-5 h-5 text-white/90" />
-                      </button>
-                    ) : (
-                      <div className="w-10 h-10" />
-                    )}
                     <ChatButton initialUnreadCount={initialUnreadCount} />
                   </>
                 )}
@@ -175,7 +144,12 @@ export default function TopNavClient({
                   isPremium={isPremium}
                   profileCompletion={profileCompletion}
                 />
-                {!isAdmin && <ProfileViewsButton />}
+                {!isAdmin && (
+                  <>
+                    <SearchButton userLocation={userLocation} />
+                    <ProfileViewsButton />
+                  </>
+                )}
               </div>
               {profileCompletion && (
                 <div className="hidden sm:flex flex-shrink-0">
@@ -227,7 +201,7 @@ export default function TopNavClient({
           className="gap-3 items-center hidden sm:flex"
         >
           <Link
-            href="/home"
+            href="/members"
             className="font-bold tracking-wide text-3xl text-[#8B5A2B]"
           >
             Miel
@@ -244,8 +218,6 @@ export default function TopNavClient({
           </div>
         </NavbarContent>
       </Navbar>
-
-      {!isHomePage && <FiltersWrapper />}
     </>
   );
 }

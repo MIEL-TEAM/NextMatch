@@ -85,7 +85,9 @@
 .Toastify__toast {
   background: linear-gradient(to right, #ffdb7d, #fca652, #e67620) !important;
   border-radius: 16px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.2),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
   padding: 12px 16px !important;
   min-height: auto !important;
 }
@@ -159,7 +161,7 @@ textarea {
   [role="dialog"][aria-modal="true"] {
     z-index: 40;
   }
-  
+
   /* Safe area for mobile invitation cards */
   .invitation-safe-area {
     padding-bottom: env(safe-area-inset-bottom);
@@ -170,4 +172,29 @@ textarea {
 .touch-manipulation {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #f97316, #ea580c);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #ea580c, #c2410c);
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 #f1f1f1;
 }

@@ -85,6 +85,13 @@ model User {
   sentInvitations     Invitation[] @relation("SenderInvitations")
   receivedInvitations Invitation[] @relation("RecipientInvitations")
 
+  // Notification relations
+  notifications          Notification[] @relation("UserNotifications")
+  triggeredNotifications Notification[] @relation("ActorNotifications")
+
+  // Notification preferences
+  notificationPreferences Json? @default("{\"newMessage\": {\"toast\": true, \"sound\": true, \"push\": true}, \"newLike\": {\"toast\": false, \"sound\": true, \"push\": true}, \"mutualMatch\": {\"toast\": true, \"sound\": true, \"push\": true}, \"profileView\": {\"toast\": false, \"sound\": false, \"push\": true}, \"storyView\": {\"toast\": false, \"sound\": false, \"push\": false}, \"matchOnline\": {\"toast\": true, \"sound\": true, \"push\": true}}")
+
   @@index([lastActiveAt(sort: Desc)])
 }
 
@@ -355,14 +362,14 @@ model StoryReaction {
   story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([storyId, userId]) // One reaction per user per story
+  @@unique([storyId, userId])
 }
 
 model StoryReply {
   id          String   @id @default(cuid())
   storyId     String
   senderId    String
-  recipientId String // Story owner
+  recipientId String
   messageText String
   createdAt   DateTime @default(now())
 
@@ -449,4 +456,70 @@ model AIUsageLog {
 
   @@index([userId, createdAt])
   @@map("ai_usage_logs")
+}
+
+// Notification System
+model Notification {
+  id     String           @id @default(cuid())
+  userId String
+  type   NotificationType
+
+  // Content
+  title   String
+  message String
+  icon    String?
+
+  // Actor (who triggered this notification)
+  actorId    String?
+  actorName  String?
+  actorImage String?
+
+  // Related data
+  relatedId String?
+  linkUrl   String?
+  data      Json?
+
+  // State management
+  isRead  Boolean @default(false)
+  isSeen  Boolean @default(false)
+  isToast Boolean @default(false)
+
+  // Grouping and batching
+  groupKey  String?
+  batchSize Int?    @default(1)
+
+  // Priority (1-10, higher = more important)
+  priority Int @default(5)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+  seenAt    DateTime?
+  expiresAt DateTime?
+
+  // Relations
+  user  User  @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@index([userId, type, createdAt(sort: Desc)])
+  @@index([userId, groupKey, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  NEW_LIKE
+  MUTUAL_MATCH
+  PROFILE_VIEW
+  STORY_VIEW
+  STORY_REPLY
+  STORY_REACTION
+  MATCH_ONLINE
+  SYSTEM
+  ACHIEVEMENT
+  PROFILE_BOOST
+  SMART_MATCH
 }

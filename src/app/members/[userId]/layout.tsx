@@ -19,7 +19,6 @@ export default async function Layout({ children, params }: UserLayoutProps) {
 
   const navLinks = [
     { name: "פרופיל", href: `${basePath}` },
-    { name: "תמונות", href: `${basePath}/photos` },
     { name: "צ'אט", href: `${basePath}/chat` },
   ];
 

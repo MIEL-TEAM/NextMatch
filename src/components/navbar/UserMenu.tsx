@@ -13,18 +13,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { FiMessageCircle } from "react-icons/fi";
 import { AIChatModal } from "@/components/ai-assistant/AIChatModal";
-import type { ProfileCompletionStatus } from "@/types/userAction";
-
-type UserMenuProps = {
-  userInfo: {
-    name: string | null;
-    image: string | null;
-  } | null;
-  userId?: string | undefined;
-  isAdmin?: boolean;
-  isPremium?: boolean;
-  profileCompletion?: ProfileCompletionStatus | null;
-};
+import type { UserMenuProps } from "@/types/navigation";
 
 export default function UserMenu({
   userInfo,
@@ -33,6 +22,7 @@ export default function UserMenu({
   isPremium = false,
   profileCompletion,
 }: UserMenuProps) {
+
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   if (!userId) {

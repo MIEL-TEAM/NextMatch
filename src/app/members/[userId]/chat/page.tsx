@@ -2,6 +2,8 @@ import CardInnerWrapper from "@/components/CardInnerWrapper";
 import ChatForm from "./ChatForm";
 import { getAuthUserId } from "@/lib/session";
 import ChatContainer from "./ChatContainer";
+import { getRecentConversations } from "@/app/actions/conversationActions";
+import { redirect } from "next/navigation";
 
 type UserParamsProps = {
   params: Promise<{ userId: string }>;
@@ -9,7 +11,16 @@ type UserParamsProps = {
 
 export default async function ChatPage({ params }: UserParamsProps) {
   const userId = await getAuthUserId();
-  await params; // Ensure params are resolved
+  const { userId: recipientId } = await params;
+
+  if (userId === recipientId) {
+    const result = await getRecentConversations(1);
+
+    if (result.success && result.conversations.length > 0) {
+      const mostRecentConversation = result.conversations[0];
+      redirect(`/members/${mostRecentConversation.userId}/chat`);
+    }
+  }
 
   return (
     <CardInnerWrapper

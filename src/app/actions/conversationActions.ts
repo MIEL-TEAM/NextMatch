@@ -78,8 +78,8 @@ export async function getRecentConversations(limit: number = 5) {
         unreadCount,
         isOnline: otherUser.user?.lastActiveAt
           ? new Date().getTime() -
-              new Date(otherUser.user.lastActiveAt).getTime() <
-            5 * 60 * 1000
+          new Date(otherUser.user.lastActiveAt).getTime() <
+          5 * 60 * 1000
           : false,
       });
 

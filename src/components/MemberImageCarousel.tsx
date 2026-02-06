@@ -3,34 +3,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSwipeable } from "react-swipeable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CarouselProps } from "@/types/members";
 
-interface MemberImageCarouselProps {
-  images: Array<{ url: string; id: string }>;
-  children: (
-    currentImage: { url: string; id: string },
-    isPriority: boolean
-  ) => React.ReactNode;
-  onIndexChange?: (index: number) => void;
-  prioritizeFirstImage?: boolean;
-}
-
-export default function MemberImageCarousel({
-  images,
+export default function Carousel<T>({
+  items,
   children,
   onIndexChange,
-  prioritizeFirstImage = false,
-}: MemberImageCarouselProps) {
-  const uniqueImages = images.reduce(
-    (unique, img) => {
-      if (!img || !img.url) return unique;
-      if (!unique.some((item) => item.url === img.url)) {
-        unique.push(img);
-      }
-      return unique;
-    },
-    [] as Array<{ url: string; id: string }>
-  );
-
+  enableSwipe = true,
+  showArrows = true,
+}: CarouselProps<T>) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const prevIndexRef = useRef(currentIndex);
 
@@ -42,37 +23,28 @@ export default function MemberImageCarousel({
   }, [currentIndex, onIndexChange]);
 
   const goToIndex = (newIndex: number) => {
-    if (uniqueImages.length <= 1) return;
-
+    if (items.length <= 1) return;
     let validIndex = newIndex;
-    if (validIndex < 0) validIndex = uniqueImages.length - 1;
-    if (validIndex >= uniqueImages.length) validIndex = 0;
-
+    if (validIndex < 0) validIndex = items.length - 1;
+    if (validIndex >= items.length) validIndex = 0;
     setCurrentIndex(validIndex);
   };
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => goToIndex(currentIndex + 1),
-    onSwipedRight: () => goToIndex(currentIndex - 1),
+    onSwipedLeft: () => enableSwipe && goToIndex(currentIndex + 1),
+    onSwipedRight: () => enableSwipe && goToIndex(currentIndex - 1),
     trackMouse: true,
   });
 
-  if (uniqueImages.length === 0) {
-    return children(
-      { url: "/images/user.png", id: "default" },
-      prioritizeFirstImage
-    );
-  }
+  if (items.length === 0) return null;
 
-  const safeIndex = Math.min(currentIndex, uniqueImages.length - 1);
-  const currentImage = uniqueImages[safeIndex];
-  const isPriority = prioritizeFirstImage && currentIndex === 0;
+  const currentItem = items[Math.min(currentIndex, items.length - 1)];
 
   return (
     <div {...handlers} className="relative w-full h-full overflow-hidden group">
-      {children(currentImage, isPriority)}
+      {children(currentItem, currentIndex)}
 
-      {uniqueImages.length > 1 && (
+      {showArrows && items.length > 1 && (
         <>
           <button
             onClick={(e) => {
@@ -84,7 +56,7 @@ export default function MemberImageCarousel({
               bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               transform hover:scale-105 active:scale-95"
-            aria-label="תמונה קודמת"
+            aria-label="Previous"
             type="button"
           >
             <ChevronLeft className="text-white w-4 h-4" />
@@ -100,7 +72,7 @@ export default function MemberImageCarousel({
               bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full p-1.5
               opacity-0 group-hover:opacity-100 transition-opacity duration-300
               transform hover:scale-105 active:scale-95"
-            aria-label="תמונה הבאה"
+            aria-label="Next"
             type="button"
           >
             <ChevronRight className="text-white w-4 h-4" />
