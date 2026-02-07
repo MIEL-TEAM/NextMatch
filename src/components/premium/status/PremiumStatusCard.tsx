@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { Button, Progress } from "@nextui-org/react";
 import { FiHome, FiX, FiRefreshCw, FiSettings, FiCheck } from "react-icons/fi";
-import confetti from "canvas-confetti";
 
 interface PremiumStatusCardProps {
   premiumUntil: Date | null;
@@ -38,33 +37,38 @@ export function PremiumStatusCard({
         return Math.random() * (max - min) + min;
       };
 
-      (function frame() {
-        const timeLeft = animationEnd - Date.now();
+      // Dynamically import confetti to avoid SSR issues
+      import("canvas-confetti").then((module) => {
+        const confetti = module.default;
 
-        if (timeLeft <= 0) return;
+        (function frame() {
+          const timeLeft = animationEnd - Date.now();
 
-        confetti({
-          particleCount: 3,
-          angle: randomInRange(55, 125),
-          spread: randomInRange(50, 70),
-          origin: { y: 0.6 },
-          colors: ["#F59E0B", "#FBBF24", "#fcd34d"],
-          zIndex: 9999,
-        });
+          if (timeLeft <= 0) return;
 
-        requestAnimationFrame(frame);
-      })();
+          confetti({
+            particleCount: 3,
+            angle: randomInRange(55, 125),
+            spread: randomInRange(50, 70),
+            origin: { y: 0.6 },
+            colors: ["#F59E0B", "#FBBF24", "#fcd34d"],
+            zIndex: 9999,
+          });
+
+          requestAnimationFrame(frame);
+        })();
+      });
     }
   }, [showConfetti]);
 
   const daysRemaining = premiumUntil
     ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(premiumUntil).getTime() - new Date().getTime()) /
-            (1000 * 60 * 60 * 24)
-        )
+      0,
+      Math.ceil(
+        (new Date(premiumUntil).getTime() - new Date().getTime()) /
+        (1000 * 60 * 60 * 24)
       )
+    )
     : 0;
 
   const endDate = premiumUntil

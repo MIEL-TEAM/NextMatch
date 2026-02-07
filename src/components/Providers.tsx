@@ -12,10 +12,14 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from "sonner";
 import InterestNotification from "@/hooks/useInterestNotification";
-import CelebrationModal, {
-  useCelebration,
-} from "@/components/CelebrationModal";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+
+const CelebrationModal = dynamic(
+  () => import("@/components/CelebrationModal"),
+  { ssr: false }
+);
+import { useCelebration } from "@/components/CelebrationModal";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -112,9 +116,9 @@ export default function Providers({
 
   return (
     <NextUIProvider>
-      <Toaster 
-        position="top-center" 
-        richColors 
+      <Toaster
+        position="top-center"
+        richColors
         expand={false}
         visibleToasts={3}
         toastOptions={{
@@ -153,7 +157,7 @@ export default function Providers({
           type={celebration.type}
           data={celebration.data}
         />
-      )}      
+      )}
       {children}
     </NextUIProvider>
   );
