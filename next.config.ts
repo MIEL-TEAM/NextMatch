@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     largePageDataBytes: 128 * 1024,
   },
 
-  serverExternalPackages: [],
+  serverExternalPackages: ["bcryptjs"],
 
   async headers() {
     return [
