@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import confetti from "canvas-confetti";
 
 interface ConfettiEffectProps {
   isActive: boolean;
@@ -11,31 +10,36 @@ export function ConfettiEffect({
   duration = 3000,
 }: ConfettiEffectProps) {
   useEffect(() => {
-    if (isActive) {
+    if (isActive && typeof window !== 'undefined') {
       const animationEnd = Date.now() + duration;
 
       const randomInRange = (min: number, max: number) => {
         return Math.random() * (max - min) + min;
       };
 
-      (function frame() {
-        const timeLeft = animationEnd - Date.now();
+      // Dynamic import to avoid SSR issues
+      import('canvas-confetti').then((module) => {
+        const confetti = module.default;
 
-        if (timeLeft <= 0) return;
+        (function frame() {
+          const timeLeft = animationEnd - Date.now();
 
-        confetti({
-          particleCount: 3,
-          angle: randomInRange(55, 125),
-          spread: randomInRange(50, 70),
-          origin: { y: 0.6 },
-          colors: ["#F59E0B", "#FBBF24", "#fcd34d"],
-          zIndex: 9999,
-        });
+          if (timeLeft <= 0) return;
 
-        requestAnimationFrame(frame);
-      })();
+          confetti({
+            particleCount: 3,
+            angle: randomInRange(55, 125),
+            spread: randomInRange(50, 70),
+            origin: { y: 0.6 },
+            colors: ["#F59E0B", "#FBBF24", "#fcd34d"],
+            zIndex: 9999,
+          });
+
+          requestAnimationFrame(frame);
+        })();
+      });
     }
   }, [isActive, duration]);
 
-  return null; // This is a behavior-only component with no UI
+  return null;
 }

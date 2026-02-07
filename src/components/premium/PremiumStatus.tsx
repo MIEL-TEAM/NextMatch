@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Button, Progress } from "@nextui-org/react";
 import { FiHome, FiCheck } from "react-icons/fi";
-import confetti from "canvas-confetti";
 
 interface PremiumStatusProps {
   premiumUntil: Date | null;
@@ -57,7 +56,7 @@ export default function PremiumStatus({
 
   // Trigger confetti animation
   useEffect(() => {
-    if (showConfetti) {
+    if (showConfetti && typeof window !== 'undefined') {
       const duration = 3 * 1000;
       const animationEnd = Date.now() + duration;
 
@@ -65,22 +64,27 @@ export default function PremiumStatus({
         return Math.random() * (max - min) + min;
       };
 
-      (function frame() {
-        const timeLeft = animationEnd - Date.now();
+      // Dynamic import to avoid SSR issues
+      import('canvas-confetti').then((module) => {
+        const confetti = module.default;
 
-        if (timeLeft <= 0) return;
+        (function frame() {
+          const timeLeft = animationEnd - Date.now();
 
-        confetti({
-          particleCount: 3,
-          angle: randomInRange(55, 125),
-          spread: randomInRange(50, 70),
-          origin: { y: 0.6 },
-          colors: ["#F59E0B", "#FBBF24", "#fcd34d"],
-          zIndex: 9999,
-        });
+          if (timeLeft <= 0) return;
 
-        requestAnimationFrame(frame);
-      })();
+          confetti({
+            particleCount: 3,
+            angle: randomInRange(55, 125),
+            spread: randomInRange(50, 70),
+            origin: { y: 0.6 },
+            colors: ["#F59E0B", "#FBBF24", "#fcd34d"],
+            zIndex: 9999,
+          });
+
+          requestAnimationFrame(frame);
+        })();
+      });
     }
   }, [showConfetti]);
 

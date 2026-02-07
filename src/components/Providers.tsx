@@ -12,14 +12,10 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from "sonner";
 import InterestNotification from "@/hooks/useInterestNotification";
-import dynamic from "next/dynamic";
+import CelebrationModal, {
+  useCelebration,
+} from "@/components/CelebrationModal";
 import { usePathname } from "next/navigation";
-
-const CelebrationModal = dynamic(
-  () => import("@/components/CelebrationModal"),
-  { ssr: false }
-);
-import { useCelebration } from "@/components/CelebrationModal";
 
 type ProvidersProps = {
   children: ReactNode;

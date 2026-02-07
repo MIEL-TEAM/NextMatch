@@ -29,7 +29,7 @@ export function PremiumStatusCard({
 
   // Trigger confetti animation
   useEffect(() => {
-    if (showConfetti) {
+    if (showConfetti && typeof window !== 'undefined') {
       const duration = 3 * 1000;
       const animationEnd = Date.now() + duration;
 
@@ -37,8 +37,8 @@ export function PremiumStatusCard({
         return Math.random() * (max - min) + min;
       };
 
-      // Dynamically import confetti to avoid SSR issues
-      import("canvas-confetti").then((module) => {
+      // Dynamic import to avoid SSR issues
+      import('canvas-confetti').then((module) => {
         const confetti = module.default;
 
         (function frame() {
