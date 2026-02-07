@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     largePageDataBytes: 128 * 1024,
   },
 
-  serverExternalPackages: ["bcryptjs"],
+  serverExternalPackages: ["bcryptjs", "canvas-confetti", "pusher-js"],
 
   async headers() {
     return [
