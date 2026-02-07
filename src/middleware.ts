@@ -70,4 +70,5 @@ export const config = {
   matcher: [
     "/((?!api|_next/static|_next/image|images|favicon.ico|sitemap.xml|robots.txt|manifest.json|browserconfig.xml).*)",
   ],
+  runtime: "nodejs",
 };
