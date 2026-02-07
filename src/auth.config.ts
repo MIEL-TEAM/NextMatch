@@ -6,7 +6,6 @@ import Facebook from "next-auth/providers/facebook";
 import type { NextAuthConfig } from "next-auth";
 import { loginSchema } from "./lib/schemas/loginSchema";
 import { getUserByEmail } from "./app/actions/authActions";
-import { compare } from "bcryptjs";
 
 export default {
   providers: [
@@ -60,6 +59,8 @@ export default {
             throw new Error("אנא אמת את כתובת האימייל שלך לפני ההתחברות");
           }
 
+          // Dynamic import to avoid SSR issues with bcryptjs
+          const { compare } = await import("bcryptjs");
           if (
             !user.passwordHash ||
             !(await compare(password, user.passwordHash))
