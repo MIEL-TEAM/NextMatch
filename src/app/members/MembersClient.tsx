@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useSearchPreferencesStore } from "@/stores/searchPreferencesStore";
 
@@ -19,10 +19,12 @@ import { StoriesContainer } from "@/components/stories/StoriesContainer";
 import { useCopy } from "@/lib/copy";
 
 export default function MembersClient({
+
   serverSession,
 }: {
   serverSession: Session | null;
 }) {
+  console.log("RENDER MembersClient");
   const { t } = useCopy("empty_state");
   const [isClientReady, setIsClientReady] = useState(false);
   useEffect(() => setIsClientReady(true), []);
@@ -53,10 +55,15 @@ export default function MembersClient({
   }, []);
 
   const queryEnabled = locationState === "readyToQuery";
-  const query = useMembersQuery(searchParams.toString(), {
-    enabled: queryEnabled,
-    userLocation: internalLocation,
-  });
+  const queryOptions = useMemo(
+    () => ({
+      enabled: queryEnabled,
+      userLocation: internalLocation,
+    }),
+    [queryEnabled, internalLocation]
+  );
+
+  const query = useMembersQuery(searchParams.toString(), queryOptions);
 
   // Fetch likes
   useEffect(() => {

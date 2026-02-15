@@ -20,6 +20,8 @@ import VerifiedRibbon from "@/components/VerifiedRibbon";
 import Carousel from "@/components/MemberImageCarousel";
 import { SmartMemberCardProps } from "@/types/smart-matches";
 
+import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
+
 export default function SmartMemberCard({
   member,
   memberPhotos = [],
@@ -27,6 +29,10 @@ export default function SmartMemberCard({
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(false);
   const trackInteractions = useInteractionTracking(member.userId);
+
+  // Visibility tracking for batched views
+  const visibilityRef = useVisibilityTracking(member.userId);
+
   const router = useRouter();
   const likeCheckedRef = useRef(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -157,7 +163,14 @@ export default function SmartMemberCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="w-full"
-      ref={cardRef}
+      ref={(node) => {
+        // Merge refs: one for existing logic, one for new batcher
+        cardRef.current = node;
+        // visibilityRef is a RefObject, we can assign to current if it exists
+        if (visibilityRef && typeof visibilityRef === 'object') {
+          (visibilityRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
+      }}
     >
       <Card
         isPressable

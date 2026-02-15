@@ -224,9 +224,9 @@ export async function getSmartMatchesOrchestrator(userId: string): Promise<
         matchScore: score.total,
         matchReason: topInsight
           ? {
-              text: topInsight.text,
-              tags: insights.slice(1, 3).map((i) => i.text),
-            }
+            text: topInsight.text,
+            tags: insights.slice(1, 3).map((i) => i.text),
+          }
           : { text: "", tags: [] },
       };
     }),
@@ -275,10 +275,14 @@ export async function trackInteraction(
   });
 
   // Invalidate cache to reflect new learning immediately
-  await invalidateSmartMatchCache(userId);
-  console.log(
-    `[SmartMatch] Cache invalidated for user ${userId} due to interaction: ${action}`,
-  );
+  // EXCEPTION: 'view' interactions happen frequently and shouldn't trigger a full re-calc/re-fetch
+  // This prevents infinite loops where View -> Invalidate -> Refetch -> View
+  if (action !== "view") {
+    await invalidateSmartMatchCache(userId);
+    console.log(
+      `[SmartMatch] Cache invalidated for user ${userId} due to interaction: ${action}`
+    );
+  }
 
   return interaction;
 }

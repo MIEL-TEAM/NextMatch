@@ -110,6 +110,8 @@ export const useMembersQuery = (
     ],
   );
 
+  console.log("QUERY KEY", queryKey);
+
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {

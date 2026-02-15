@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { trackUserInteraction } from "@/app/actions/smartMatchActions";
 
 // Silent error handler for production
@@ -10,32 +10,13 @@ const handleError = (error: any) => {
   }
 };
 
+
+
 export function useInteractionTracking(targetUserId: string) {
-  const viewStartTime = useRef<number | null>(null);
-  const interactionSent = useRef<boolean>(false);
   const profileClickSent = useRef<boolean>(false);
 
-  useEffect(() => {
-    if (!targetUserId || interactionSent.current) return;
-
-    viewStartTime.current = Date.now();
-
-    trackUserInteraction(targetUserId, "view").catch(handleError);
-    interactionSent.current = true;
-
-    return () => {
-      if (viewStartTime.current) {
-        const duration = Math.floor(
-          (Date.now() - viewStartTime.current) / 1000
-        );
-        if (duration > 5) {
-          trackUserInteraction(targetUserId, "view").catch(
-            handleError
-          );
-        }
-      }
-    };
-  }, [targetUserId]);
+  // Note: View tracking is now handled by useVisibilityTracking and InteractionBatcher
+  // to prevent request storms and ensure visibility-based tracking.
 
   const trackInteractions = {
     like: () => trackUserInteraction(targetUserId, "like").catch(handleError),

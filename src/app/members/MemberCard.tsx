@@ -16,6 +16,8 @@ import VerifiedRibbon from "@/components/VerifiedRibbon";
 import { MemberCardProps } from "@/types/members";
 import Carousel from "@/components/MemberImageCarousel";
 
+import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
+
 export default function MemberCard({
   member,
   likeIds,
@@ -24,6 +26,9 @@ export default function MemberCard({
   onLike,
   isPriority = false,
 }: MemberCardProps) {
+  // Add visibility tracking for batched views
+  const visibilityRef = useVisibilityTracking(member.userId);
+
   const [hasLiked, setHasLiked] = useState<boolean>(
     likeIds.includes(member.userId)
   );
@@ -252,11 +257,15 @@ export default function MemberCard({
       memberPhotos.length === 1
         ? memberPhotos[0].url
         : member.image || "/images/user.png";
-    return renderCardContent(defaultImage, true);
+    return (
+      <div className="w-full h-full" ref={visibilityRef}>
+        {renderCardContent(defaultImage, true)}
+      </div>
+    );
   }
 
   return (
-    <div className="group">
+    <div className="group" ref={visibilityRef}>
       <Carousel<{ url: string; id: string }>
         items={memberPhotos}
         onIndexChange={setCurrentIndex}

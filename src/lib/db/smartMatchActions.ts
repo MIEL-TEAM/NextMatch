@@ -18,6 +18,29 @@ export async function dbCreateUserInteraction(data: {
   });
 }
 
+export async function dbCreateBatchedInteractions(
+  userId: string,
+  targetIds: string[],
+  action: string = "view"
+) {
+  if (!targetIds.length) return { count: 0 };
+
+  // Create interaction records
+  const interactions = targetIds.map((targetId) => ({
+    userId,
+    targetId,
+    action,
+    weight: 0.5, // Views have lower weight than likes
+    duration: 0,
+    timestamp: new Date(),
+  }));
+
+  return prisma.userInteraction.createMany({
+    data: interactions,
+    skipDuplicates: true, // Prevent errors if unique constraints exist (though unlikely for interactions)
+  });
+}
+
 export async function dbGetUserInteractions(userId: string) {
   return prisma.userInteraction.findMany({
     where: { userId },
