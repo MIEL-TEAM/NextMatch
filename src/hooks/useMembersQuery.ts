@@ -146,12 +146,12 @@ export const useMembersQuery = (
         totalCount: number;
       }>;
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    refetchOnMount: "always",
+    refetchOnMount: false,
     retry: 1,
-    gcTime: 0,
+    gcTime: 1000 * 60 * 5,
     enabled: options.enabled !== false && isHydrated,
     structuralSharing: true,
     throwOnError: false,
