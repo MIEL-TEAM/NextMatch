@@ -116,15 +116,16 @@ model Member {
   gender             String
   created            DateTime  @default(now())
   updated            DateTime  @default(now())
+  lastActiveAt       DateTime?
   description        String
   city               String
   country            String
+
   image              String?
   coverImage         String?
   coverImagePublicId String?
   boostedUntil       DateTime?
 
-  // Location fields
   latitude          Float?
   longitude         Float?
   locationUpdatedAt DateTime?
@@ -148,7 +149,15 @@ model Member {
 
   @@index([userId])
   @@index([latitude, longitude])
+
+  @@index([gender])
+  @@index([city])
+  @@index([created(sort: Desc)])
+  @@index([dateOfBirth])
+  @@index([gender, dateOfBirth])
+  @@index([lastActiveAt(sort: Desc)])
 }
+
 
 model UserProfileAnalysis {
   userId    String   @id
@@ -233,9 +242,16 @@ model UserInteraction {
   duration  Int?
   timestamp DateTime @default(now())
   weight    Float    @default(1.0)
+
   user      Member   @relation("userInteractions", fields: [userId], references: [userId], onDelete: Cascade)
   target    Member   @relation("targetInteractions", fields: [targetId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, timestamp(sort: Desc)])
+  @@index([targetId])
+  @@index([userId, action])
+  @@index([userId, targetId])
 }
+
 
 model UserPreference {
   id             String   @id @default(cuid())
@@ -282,13 +298,13 @@ enum TokenType {
 model SmartMatchCache {
   id        String   @id @default(cuid())
   userId    String
-  matchData String   @db.Text // JSON string
+  matchData String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, createdAt])
+  @@index([userId, updatedAt(sort: Desc)])
   @@map("smart_match_cache")
 }
 
@@ -479,7 +495,6 @@ model AIUsageLog {
   @@map("ai_usage_logs")
 }
 
-// Notification System
 model Notification {
   id     String           @id @default(cuid())
   userId String

@@ -19,12 +19,12 @@ import { StoriesContainer } from "@/components/stories/StoriesContainer";
 import { useCopy } from "@/lib/copy";
 
 export default function MembersClient({
-
   serverSession,
 }: {
   serverSession: Session | null;
 }) {
   console.log("RENDER MembersClient");
+
   const { t } = useCopy("empty_state");
   const [isClientReady, setIsClientReady] = useState(false);
   useEffect(() => setIsClientReady(true), []);
@@ -45,16 +45,11 @@ export default function MembersClient({
   } = useLocationFlow();
 
   const [likeIds, setLikeIds] = useState<string[]>([]);
-  const [minLoadingComplete, setMinLoadingComplete] = useState(false);
   const mountedRef = useRef(true);
 
-  // Smooth minimum loading time
-  useEffect(() => {
-    const t = setTimeout(() => setMinLoadingComplete(true), 600);
-    return () => clearTimeout(t);
-  }, []);
-
+  // 🔹 Query enabled only when hydration ready
   const queryEnabled = locationState === "readyToQuery";
+
   const queryOptions = useMemo(
     () => ({
       enabled: queryEnabled,
@@ -65,7 +60,7 @@ export default function MembersClient({
 
   const query = useMembersQuery(searchParams.toString(), queryOptions);
 
-  // Fetch likes
+  // 🔹 Fetch like IDs (non-blocking)
   useEffect(() => {
     if (currentSession?.user?.id) {
       fetchCurrentUserLikeIds()
@@ -77,29 +72,21 @@ export default function MembersClient({
     };
   }, [currentSession?.user?.id]);
 
-  // Check if we're in search mode (must be before early returns)
-  // Check if we're in search mode (must be before early returns)
+  // 🔹 Search mode detection
   const preferences = useSearchPreferencesStore((state) => state.preferences);
   const discoveryMode = useSearchPreferencesStore(
-    (state) => state.discoveryMode,
+    (state) => state.discoveryMode
   );
 
-  const searchCity = preferences?.city;
-  const searchInterests = preferences?.interests;
   const isSearchMode = !!(
-    searchCity ||
-    (searchInterests && searchInterests.length > 0)
+    preferences?.city ||
+    (preferences?.interests && preferences.interests.length > 0)
   );
 
   if (!isClientReady) return null;
 
-  const fullyLoaded =
-    locationState === "readyToQuery" &&
-    minLoadingComplete &&
-    query.isSuccess &&
-    query.data;
-
-  if (!fullyLoaded) {
+  // 🔥 NEW: Only show spinner if NO DATA exists
+  if (!query.data && query.isLoading) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -111,14 +98,24 @@ export default function MembersClient({
     );
   }
 
+  if (!query.data) return null;
+
   const { data, totalCount } = query.data;
   const isOnlineFilter = discoveryMode === "activity";
 
   if (!data || (data.length === 0 && !isOnlineFilter)) {
     return (
       <EmptyState
-        message={isSearchMode ? "לא נמצאו תוצאות לחיפוש זה" : t("members.no_results.header")}
-        subMessage={isSearchMode ? "נסה לשנות את קריטריוני החיפוש" : t("members.no_results.subtitle")}
+        message={
+          isSearchMode
+            ? "לא נמצאו תוצאות לחיפוש זה"
+            : t("members.no_results.header")
+        }
+        subMessage={
+          isSearchMode
+            ? "נסה לשנות את קריטריוני החיפוש"
+            : t("members.no_results.subtitle")
+        }
         icon
       />
     );
@@ -149,10 +146,8 @@ export default function MembersClient({
       <LocationPermissionBanner
         isVisible={showLocationBanner}
         onClose={() => {
-          // User dismissed/skipped the modal - remember this choice
           handleLocationDismissed();
 
-          // Clean up URL if this was a forced prompt
           if (stableParams.forceLocationPrompt) {
             const params = new URLSearchParams(searchParams.toString());
             params.delete("requestLocation");

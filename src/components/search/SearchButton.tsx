@@ -36,7 +36,7 @@ export default function SearchButton({
         `}
         aria-label="חיפוש"
       >
-        <IoIosSearch className="text-xl text-white" />
+        <IoIosSearch className="text-2xl text-white" />
       </motion.button>
 
       <SearchModal

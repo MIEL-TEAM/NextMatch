@@ -127,6 +127,7 @@ export async function dbGetMemberByUserId(userId: string) {
       boostedUntil: true,
       videoUrl: true,
       videoUploadedAt: true,
+      lastActiveAt: true,
 
       // Location fields
       latitude: true,
@@ -168,7 +169,10 @@ export async function dbUpdateLastActive(userId: string) {
   return Promise.all([
     prisma.member.update({
       where: { userId },
-      data: { updated: new Date() },
+      data: {
+        updated: new Date(),
+        lastActiveAt: new Date()
+      },
     }),
     prisma.user.update({
       where: { id: userId },
@@ -193,6 +197,9 @@ export async function dbGetAllMemberPhotos(userId: string) {
 export async function dbUpdateUserActivity(userId: string) {
   return prisma.member.update({
     where: { userId },
-    data: { updated: new Date() },
+    data: {
+      updated: new Date(),
+      lastActiveAt: new Date()
+    },
   });
 }
