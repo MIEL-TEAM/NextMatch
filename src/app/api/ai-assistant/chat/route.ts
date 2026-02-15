@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     if (dailyUsage >= maxDailyQueries) {
       return NextResponse.json(
         { error: "Daily limit reached" },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
     // Handle different intents with specific actions
     if (intent === "find_matches") {
       try {
-        const matches = await getSmartMatches("1", "5");
+        const matches = await getSmartMatches();
         if (matches.items.length > 0) {
           metadata.matches = await Promise.all(
             matches.items.slice(0, 3).map(async (m) => {
@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
                 matchScore: m.matchScore,
                 reason: detailedReason,
               };
-            })
+            }),
           );
         }
       } catch (error) {
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
     });
 
     console.log(
-      `✅ AI Chat: ${user.name} - ${duration}ms - ${tokensUsed} tokens`
+      `✅ AI Chat: ${user.name} - ${duration}ms - ${tokensUsed} tokens`,
     );
 
     return NextResponse.json({
@@ -257,7 +257,7 @@ export async function POST(req: NextRequest) {
     console.error("AI Chat Error:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

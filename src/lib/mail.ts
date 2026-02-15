@@ -218,7 +218,7 @@ export async function sendNewMatchEmail(
   recipientEmail: string,
   recipientName: string,
   matchName: string,
-  matchId: string
+  matchId: string,
 ) {
   let matchLink = "";
 
@@ -292,7 +292,7 @@ export async function sendNewMessageEmail(
   senderName: string,
   messagePreview: string,
   senderId: string,
-  senderGender?: string
+  senderGender?: string,
 ) {
   let messageLink = "";
 

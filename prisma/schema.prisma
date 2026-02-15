@@ -50,6 +50,7 @@ model User {
 
   // Activity tracking
   lastActiveAt DateTime?
+  isOnline     Boolean   @default(false)
 
   // Email notification preferences
   emailNotifications Json? @default("{\"newMessage\": true, \"newMatch\": true, \"newLike\": false}")
@@ -62,12 +63,13 @@ model User {
   member                Member?
   Transaction           Transaction[]
   accounts              Account[]
-  hasSeenMembersIntro   Boolean           @default(false)
-  hasSeenWelcomeMessage Boolean           @default(false)
+  hasSeenMembersIntro   Boolean               @default(false)
+  hasSeenWelcomeMessage Boolean               @default(false)
   adminAuditLogs        AdminAuditLog[]
-  viewedProfiles        ProfileView[]     @relation("ViewerProfileViews")
-  profileViewers        ProfileView[]     @relation("ViewedProfileViews")
+  viewedProfiles        ProfileView[]         @relation("ViewerProfileViews")
+  profileViewers        ProfileView[]         @relation("ViewedProfileViews")
   SmartMatchCache       SmartMatchCache[]
+  searchPreference      UserSearchPreference?
 
   // Stories relations
   stories        Story[]
@@ -288,6 +290,25 @@ model SmartMatchCache {
 
   @@index([userId, createdAt])
   @@map("smart_match_cache")
+}
+
+model UserSearchPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  gender    String[] @default(["male", "female"])
+  ageMin    Int      @default(18)
+  ageMax    Int      @default(65)
+  city      String?
+  interests String[] @default([])
+  withPhoto Boolean  @default(true)
+  orderBy   String   @default("updated")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_search_preferences")
 }
 
 enum Role {

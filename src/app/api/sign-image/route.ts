@@ -31,16 +31,6 @@ export async function POST(request: Request) {
           { status: 401 }
         );
       }
-
-      console.log(
-        "📸 Registration upload request (unauthenticated) to folder:",
-        folder
-      );
-    } else {
-      console.log(
-        "📸 Authenticated upload request from user:",
-        session.user.id
-      );
     }
 
     // Generate Cloudinary signature

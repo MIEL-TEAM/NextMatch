@@ -1,7 +1,7 @@
 "use server";
 
 import { GetMemberParams, PaginatedResponse } from "@/types";
-import { Photo } from "@prisma/client";
+import { Photo, Prisma } from "@prisma/client";
 import { addYears } from "date-fns";
 import { getAuthUserId } from "@/lib/session";
 import { cache } from "react";
@@ -29,7 +29,7 @@ export async function getMembers({
   orderBy = "updated",
   pageNumber = "1",
   pageSize = "12",
-  withPhoto, // No default - API route handles normalization
+  withPhoto,
   onlineOnly = "false",
   lastActive,
   city,
@@ -40,7 +40,7 @@ export async function getMembers({
   sortByDistance = "false",
   includeSelf,
 }: GetMemberParams): Promise<
-  PaginatedResponse<MemberCardData & { distance?: number }>
+  PaginatedResponse<MemberCardData & { distance?: number | null }>
 > {
   try {
     let userId: string | null = null;
@@ -49,24 +49,21 @@ export async function getMembers({
     try {
       userId = await getAuthUserId();
 
-      // Get user preferences for filtering
       if (userId) {
         userPreferences = await dbGetUserPreferences(userId);
       }
     } catch (error) {
       console.error(
         "Error fetching current user ID:",
-        error ? JSON.stringify(error) : "Unknown error"
+        error ? JSON.stringify(error) : "Unknown error",
       );
       userId = null;
     }
 
-    // Use user preferences if available, otherwise use provided parameters
     let finalAgeRange = ageRange;
     let finalGender = gender;
 
     if (userPreferences) {
-      // Use user's preferred age range if no specific age range is provided
       if (
         ageRange === "18,100" &&
         userPreferences.preferredAgeMin &&
@@ -75,18 +72,27 @@ export async function getMembers({
         finalAgeRange = `${userPreferences.preferredAgeMin},${userPreferences.preferredAgeMax}`;
       }
 
-      // Use user's preferred genders if no specific gender filter is provided
+
       if (gender === "male,female" && userPreferences.preferredGenders) {
         finalGender = userPreferences.preferredGenders;
       }
     }
 
-    const [minAge, maxAge] = finalAgeRange.split(",");
+    // Parse age range and ensure min <= max (guard against invalid state)
+    let minAgeNum = parseInt(finalAgeRange.split(",")[0], 10) || 18;
+    let maxAgeNum = parseInt(finalAgeRange.split(",")[1], 10) || 65;
+    if (minAgeNum > maxAgeNum) {
+      [minAgeNum, maxAgeNum] = [maxAgeNum, minAgeNum];
+    }
+    minAgeNum = Math.max(18, Math.min(100, minAgeNum));
+    maxAgeNum = Math.max(18, Math.min(100, maxAgeNum));
 
     const currentDate = new Date();
-
-    const minDob = addYears(currentDate, -parseInt(maxAge) - 1);
-    const maxDob = addYears(currentDate, -parseInt(minAge));
+    // Correct birthdate bounds: age [25,32] => birthDate BETWEEN (today-32y) AND (today-25y)
+    // Person who is 32 → born 32 years ago → dateOfBirth >= minDob (today - 32)
+    // Person who is 25 → born 25 years ago → dateOfBirth <= maxDob (today - 25)
+    const minDob = addYears(currentDate, -maxAgeNum);
+    const maxDob = addYears(currentDate, -minAgeNum);
 
     const selectedGender = finalGender.split(",");
 
@@ -107,12 +113,12 @@ export async function getMembers({
           break;
         case "1week":
           lastActiveThreshold = new Date(
-            now.getTime() - 7 * 24 * 60 * 60 * 1000
+            now.getTime() - 7 * 24 * 60 * 60 * 1000,
           );
           break;
         case "1month":
           lastActiveThreshold = new Date(
-            now.getTime() - 30 * 24 * 60 * 60 * 1000
+            now.getTime() - 30 * 24 * 60 * 60 * 1000,
           );
           break;
         case "any":
@@ -182,13 +188,13 @@ export async function getMembers({
         { gender: { in: selectedGender } },
         ...(shouldFilterByPhoto
           ? [
-              {
-                OR: [
-                  { image: { not: null } },
-                  { photos: { some: { isApproved: true } } },
-                ],
-              },
-            ]
+            {
+              OR: [
+                { image: { not: null } },
+                { photos: { some: { isApproved: true } } },
+              ],
+            },
+          ]
           : []),
         ...(onlineOnly === "true"
           ? [{ updated: { gte: onlineThreshold } }]
@@ -196,26 +202,98 @@ export async function getMembers({
             ? [{ updated: { gte: lastActiveThreshold } }]
             : []),
         // City filter
+        // Google Places returns "City, Country" but DB stores just "City"
+        // Extract city name before comma for proper matching
         ...(city && city.trim()
-          ? [{ city: { contains: city.trim(), mode: "insensitive" as const } }]
+          ? [
+            {
+              city: {
+                contains: city.split(",")[0].trim(),
+                mode: "insensitive" as const,
+              },
+            },
+          ]
           : []),
         // Interests filter
         ...(interests && interests.length > 0
           ? [
-              {
-                interests: {
-                  some: {
-                    name: { in: interests },
-                  },
+            {
+              interests: {
+                some: {
+                  name: { in: interests },
                 },
               },
-            ]
+            },
+          ]
           : []),
       ],
       ...(userId && includeSelf !== "true" ? { NOT: { userId } } : {}),
     };
 
     // Optimize: Use select to fetch only needed fields (not include)
+    // --- Discovery Mode Logic ---
+
+    // 1. "Activity" Mode: Show only users active in the last 2 minutes
+    if (orderBy === "activity") {
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+
+      // Override onlineOnly logic if activity mode is selected
+      // We push this directly into whereClause
+      (whereClause.AND as any[]).push({
+        user: { lastActiveAt: { gte: twoMinutesAgo } }
+      });
+    }
+
+    // 2. "Newest" Mode: Show only users created in the last 7 days
+    if (orderBy === "newest") {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      (whereClause.AND as any[]).push({
+        created: { gte: sevenDaysAgo }
+      });
+    }
+
+    // --- Sorting Logic ---
+    let prismaOrderBy:
+      | Prisma.MemberOrderByWithRelationInput
+      | Prisma.MemberOrderByWithRelationInput[] = { updated: "desc" };
+
+    switch (orderBy) {
+      case "smart":
+        // Smart Sort: Active -> Newest
+        prismaOrderBy = [
+          { user: { lastActiveAt: "desc" } },
+          { created: "desc" },
+        ];
+        break;
+
+      case "activity":
+        // Activity Sort: Just by lastActiveAt
+        prismaOrderBy = [
+          { user: { lastActiveAt: "desc" } }
+        ];
+        break;
+
+      case "newest":
+        // Newest Sort: Just by created
+        prismaOrderBy = [
+          { created: "desc" }
+        ];
+        break;
+
+      case "distance":
+        // Handled by JS sorting if needed, otherwise no specific DB sort needed (or fallback)
+        break;
+
+      default:
+        // Default fallback (behaves like smart)
+        prismaOrderBy = [
+          { user: { lastActiveAt: "desc" } },
+          { created: "desc" },
+        ];
+    }
+
+    // Fetch from DB
     const selectFields = {
       id: true,
       userId: true,
@@ -240,7 +318,7 @@ export async function getMembers({
       // 1. Fetch ALL matching members (even those without location)
       const allMembers = await dbGetMembersWithDistance(
         whereClause,
-        selectFields
+        selectFields,
       );
       const userLatNum = parseFloat(userLat!);
       const userLonNum = parseFloat(userLon!);
@@ -253,20 +331,23 @@ export async function getMembers({
             userLatNum,
             userLonNum,
             member.latitude,
-            member.longitude
+            member.longitude,
           );
           return { ...member, distance: dist };
         }
         // Place members without location at the END
-        return { ...member, distance: Number.MAX_SAFE_INTEGER };
+        return { ...member, distance: null };
       });
 
       // 3. Filter by distance (ONLY if specific range requested)
       // If no range filter, we keep everyone.
       const filteredMembers = hasDistanceFilter
         ? membersWithDistance.filter(
-            (m) => m.distance >= minDistance && m.distance <= maxDistance
-          )
+          (m) =>
+            m.distance != null &&
+            m.distance >= minDistance &&
+            m.distance <= maxDistance,
+        )
         : membersWithDistance;
 
       // 4. Sort by Distance
@@ -278,7 +359,6 @@ export async function getMembers({
         );
       });
 
-      // 5. Apply pagination in JS
       const paginatedMembers = filteredMembers.slice(skip, skip + limit);
 
       return {
@@ -287,34 +367,14 @@ export async function getMembers({
       };
     }
 
-    let orderByField = "updated";
-    let orderDirection: "asc" | "desc" = "desc";
-
-    switch (orderBy) {
-      case "newest":
-        orderByField = "created";
-        orderDirection = "desc";
-        break;
-      case "online":
-        orderByField = "updated";
-        orderDirection = "desc";
-        break;
-      default:
-        orderByField = "updated";
-        orderDirection = "desc";
-    }
-
-    // Optimize: Fetch count and members in parallel, with DB pagination
     const [totalCount, members] = await dbGetMembersWithPagination(
       whereClause,
       selectFields,
-      orderByField,
-      orderDirection,
+      prismaOrderBy,
       skip,
-      limit
+      limit,
     );
 
-    // Add distance field if location is available (but not used for sorting)
     const membersWithOptionalDistance = members.map((member) => {
       if (
         hasUserLocation &&
@@ -327,7 +387,7 @@ export async function getMembers({
           userLatNum,
           userLonNum,
           member.latitude,
-          member.longitude
+          member.longitude,
         );
         return { ...member, distance: dist };
       }
@@ -346,7 +406,7 @@ export async function getMembers({
 
 export async function updateCurrentUserLocation(
   latitude: number,
-  longitude: number
+  longitude: number,
 ) {
   try {
     const userId = await getAuthUserId();
@@ -420,14 +480,14 @@ export async function getMembersWithPhotos(memberIds: string[]) {
     } catch (error) {
       console.error(
         "Error fetching current user ID:",
-        error ? JSON.stringify(error) : "Unknown error"
+        error ? JSON.stringify(error) : "Unknown error",
       );
       currentUserId = null;
     }
 
     const photosWithMembers = await dbGetPhotosWithMembers(
       memberIds,
-      currentUserId
+      currentUserId,
     );
 
     const photosByUserId = photosWithMembers.reduce(
@@ -443,13 +503,13 @@ export async function getMembersWithPhotos(memberIds: string[]) {
 
         return acc;
       },
-      {} as Record<string, Array<{ url: string; id: string }>>
+      {} as Record<string, Array<{ url: string; id: string }>>,
     );
     return photosByUserId;
   } catch (error) {
     console.error(
       "Error fetching member photos in batch:",
-      error ? JSON.stringify(error) : "Unknown error"
+      error ? JSON.stringify(error) : "Unknown error",
     );
     return {};
   }
@@ -472,7 +532,7 @@ export async function getMemberPhotosByUserId(userId: string) {
     } catch (error) {
       console.error(
         "Error fetching current user ID:",
-        error ? JSON.stringify(error) : "Unknown error"
+        error ? JSON.stringify(error) : "Unknown error",
       );
       currentUserId = null;
     }
@@ -485,7 +545,7 @@ export async function getMemberPhotosByUserId(userId: string) {
   } catch (error) {
     console.error(
       "Error fetching member photos by user ID:",
-      error ? JSON.stringify(error) : "Unknown error"
+      error ? JSON.stringify(error) : "Unknown error",
     );
     return null;
   }
@@ -517,7 +577,7 @@ export async function getMemberPhotos(userId: string) {
   } catch (error) {
     console.error(
       "Error fetching member photos:",
-      error ? JSON.stringify(error) : "Unknown error"
+      error ? JSON.stringify(error) : "Unknown error",
     );
     return [];
   }

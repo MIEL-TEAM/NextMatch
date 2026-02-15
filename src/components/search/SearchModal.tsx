@@ -8,29 +8,85 @@ import {
   ModalFooter,
   Button,
 } from "@nextui-org/react";
+import { useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import SearchHeader from "./SearchHeader";
 import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
 import InterestSelector from "./InterestSelector";
-import FilterPanel from "./FilterPanel";
-import { useSearch } from "@/hooks/useSearch";
-import { useFilters } from "@/hooks/useFilters";
+import UnifiedFilterPanel from "./UnifiedFilterPanel";
+import { useUserSearchPreferences } from "@/hooks/useUserSearchPreferences";
+import { useSearchPreferencesStore } from "@/stores/searchPreferencesStore";
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userLocation?: { latitude: number; longitude: number } | null;
 }
 
 export default function SearchModal({
   isOpen,
   onClose,
-  userLocation,
 }: SearchModalProps) {
-  const search = useSearch({ 
-    userLocation,
-    onSearchComplete: onClose, // Close modal after search
+  const [isSearching, setIsSearching] = useState(false);
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
+  // Use unified search preferences from database
+  const {
+    preferences,
+    isLoading,
+    setCity,
+    toggleInterest,
+    setGender,
+    setAgeRange,
+    setWithPhoto,
+    setOrderBy,
+    hasActiveFilters,
+  } = useUserSearchPreferences({
+    userId: userId || "",
+    enabled: !!userId,
   });
-  const filters = useFilters();
+
+  const executeSearch = useCallback(async () => {
+    if (!preferences) return;
+
+    setIsSearching(true);
+
+    try {
+      // STEP 1: Get updatePreferences from Zustand store
+      const { updatePreferences: updateStorePreferences } =
+        useSearchPreferencesStore.getState();
+
+      // STEP 2: Update preferences (this auto-resets pagination to page 1)
+      // React Query will see queryKey change and automatically refetch
+      await updateStorePreferences({
+        gender: preferences.gender,
+        ageMin: preferences.ageMin,
+        ageMax: preferences.ageMax,
+        city: preferences.city,
+        interests: preferences.interests,
+        withPhoto: preferences.withPhoto,
+        orderBy: preferences.orderBy,
+      });
+
+      // STEP 3: Close modal immediately
+      // No navigation needed - React Query handles refetch automatically
+      onClose();
+    } catch (error) {
+      console.error("Search execution failed:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [preferences, onClose]);
+
+  // Can search if there are active filters or city/interests
+  const canSearch =
+    hasActiveFilters ||
+    (preferences?.city && preferences.city.length > 0) ||
+    (preferences?.interests && preferences.interests.length > 0);
+
+  if (isLoading || !preferences || !userId) {
+    return null; // Or loading skeleton
+  }
 
   return (
     <Modal
@@ -52,34 +108,41 @@ export default function SearchModal({
         {() => (
           <>
             <ModalHeader className="pb-3">
-              <SearchHeader
-              />
+              <SearchHeader />
             </ModalHeader>
 
             <ModalBody>
               <div className="space-y-4">
-                {/* שימוש בקומפוננטה הקיימת! */}
-                <FilterPanel filters={filters} />
-                
-                {/* חיפוש לפי עיר */}
+                {/* Unified Filter Panel - Single Source of Truth */}
+                <UnifiedFilterPanel
+                  preferences={preferences}
+                  onGenderChange={setGender}
+                  onAgeRangeChange={setAgeRange}
+                  onWithPhotoChange={setWithPhoto}
+                  onOrderByChange={setOrderBy}
+                />
+
+                {/* City Search */}
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                   <GooglePlacesAutocomplete
-                    value={search.citySearch}
-                    onChange={search.setCitySearch}
-                    onEnterPress={search.executeSearch}
+                    value={preferences.city || ""}
+                    onChange={(city) => setCity(city)}
+                    onEnterPress={executeSearch}
                   />
                 </div>
 
-                {/* תחומי עניין */}
+                {/* Interests */}
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm font-medium text-gray-700">חיפוש לפי תחומי עניין</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      חיפוש לפי תחומי עניין
+                    </span>
                     <span className="text-base">🧡</span>
                   </div>
                   <div className="max-h-[200px] overflow-y-auto pr-1">
                     <InterestSelector
-                      selectedInterests={search.selectedInterests}
-                      onToggleInterest={search.toggleInterest}
+                      selectedInterests={preferences.interests}
+                      onToggleInterest={toggleInterest}
                     />
                   </div>
                 </div>
@@ -92,11 +155,11 @@ export default function SearchModal({
                 variant="solid"
                 size="lg"
                 className="w-full font-bold"
-                onPress={search.executeSearch}
-                isLoading={search.isSearching}
-                isDisabled={!search.canSearch}
+                onPress={executeSearch}
+                isLoading={isSearching}
+                isDisabled={!canSearch}
               >
-                {search.isSearching ? "מחפש..." : "צפה/י בהתאמות"}
+                {isSearching ? "מחפש..." : "צפה/י בהתאמות"}
               </Button>
             </ModalFooter>
           </>

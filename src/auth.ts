@@ -51,7 +51,6 @@ export const {
           },
         });
 
-        // ✅ Handle OAuth providers (Google, Facebook)
         if (
           account?.provider === "google" ||
           account?.provider === "facebook"
@@ -62,12 +61,10 @@ export const {
             oauthVerified: true,
           };
 
-          // Increase trust score for first OAuth verification
           if (existingUser && !existingUser.oauthVerified) {
             updateData.trustScore = (existingUser.trustScore || 0) + 40;
           }
 
-          // Send welcome email for new Google users
           if (
             account.provider === "google" &&
             existingUser &&
@@ -87,7 +84,6 @@ export const {
           });
         }
 
-        // ✅ Handle Credentials provider (email/password)
         if (account?.provider === "credentials") {
           await prisma.user.update({
             where: { email: user.email },
@@ -155,5 +151,49 @@ export const {
   pages: {
     signIn: "/login",
     error: "/login",
+  },
+
+  events: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google" && user.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { member: true },
+          });
+
+          const currentImage = dbUser?.member?.image;
+
+          const needsUpload =
+            dbUser?.member &&
+            (!currentImage || !currentImage.includes("cloudinary"));
+
+          if (needsUpload) {
+            const googleImage = (profile as any)?.picture || user.image;
+
+            if (googleImage) {
+              const highResImage = googleImage.replace(/=s\d+/g, "=s512");
+
+              const { uploadFromUrl } = await import("./lib/cloudinary");
+
+              console.log("[AUTH] Uploading Google image to Cloudinary:", highResImage);
+
+              const uploadResult = await uploadFromUrl(highResImage);
+
+              await prisma.member.update({
+                where: { userId: dbUser.id },
+                data: {
+                  image: uploadResult.secure_url,
+                },
+              });
+
+              console.log("[AUTH] Updated member image from Google");
+            }
+          }
+        } catch (error) {
+          console.error("[AUTH] Failed to sync Google image:", error);
+        }
+      }
+    },
   },
 });

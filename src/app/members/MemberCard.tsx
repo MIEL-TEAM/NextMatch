@@ -44,11 +44,7 @@ export default function MemberCard({
     () => calculateAge(member.dateOfBirth),
     [member.dateOfBirth]
   );
-  const distanceText = useMemo(
-    () =>
-      member.distance !== undefined ? formatDistance(member.distance) : null,
-    [member.distance]
-  );
+
 
   useEffect(() => {
     setVideoError(false);
@@ -201,19 +197,18 @@ export default function MemberCard({
                 </span>
               </div>
             )}
-            {member.distance !== undefined && (
-              <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
-                <MapPin className="w-3.5 h-3.5" />
-                <span className="text-[11px] leading-none font-medium">
-                  {distanceText}
-                </span>
-              </div>
-            )}
-            {/* OAuth Verification Badge */}
+            {typeof member.distance === "number" &&
+              Number.isFinite(member.distance) && (
+                <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span className="text-[11px] leading-none font-medium">
+                    {formatDistance(member.distance)}
+                  </span>
+                </div>
+              )}
             {member.user?.oauthVerified && <VerifiedRibbon />}
           </div>
 
-          {/* Removed centered strip */}
           <CardFooter className="pointer-events-none absolute bottom-0 left-0 right-0 z-40 px-2 pb-2" />
         </div>
 
@@ -249,7 +244,6 @@ export default function MemberCard({
       memberVideos.length,
       memberPhotos.length,
       age,
-      distanceText,
     ]
   );
 

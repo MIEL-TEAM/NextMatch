@@ -14,6 +14,8 @@ import InvitationContainer from "@/components/InvitationContainer";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieConsentManager } from "@/components/cookies";
 import { getServerConsentCookie } from "@/lib/cookies/cookieUtils.server";
+import { SearchPreferencesProvider } from "@/providers/SearchPreferencesProvider";
+import PresenceProvider from "@/components/providers/PresenceProvider";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -152,22 +154,26 @@ export default async function RootLayout({
           <SessionProvider session={session as Session}>
             {!session?.user && !isAdmin && <GoogleOneTap />}
             <ReactQueryProvider>
-              <Providers
-                userId={userId}
-                profileComplete={profileComplete}
-                initialUnreadCount={initialUnreadCount}
-                isPremium={isPremium}
-                isAdmin={isAdmin}
-              >
-                <TopNav />
-                <MielLayout>{children}</MielLayout>
-              </Providers>
+              <SearchPreferencesProvider>
+                <PresenceProvider>
+                  <Providers
+                    userId={userId}
+                    profileComplete={profileComplete}
+                    initialUnreadCount={initialUnreadCount}
+                    isPremium={isPremium}
+                    isAdmin={isAdmin}
+                  >
+                    <TopNav />
+                    <MielLayout>{children}</MielLayout>
+                  </Providers>
+                </PresenceProvider>
+              </SearchPreferencesProvider>
             </ReactQueryProvider>
           </SessionProvider>
 
-          <Toaster 
-            position="top-center" 
-            richColors 
+          <Toaster
+            position="top-center"
+            richColors
             expand={false}
             visibleToasts={3}
             toastOptions={{

@@ -163,9 +163,8 @@ export default function MessageTable({
                     ) {
                       return (
                         <TableCell
-                          className={`${
-                            !item.dateRead && !isOutbox ? "font-semibold" : ""
-                          }`}
+                          className={`${!item.dateRead && !isOutbox ? "font-semibold" : ""
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <Avatar
@@ -201,9 +200,8 @@ export default function MessageTable({
                     }
                     return (
                       <TableCell
-                        className={`${
-                          !item.dateRead && !isOutbox ? "font-semibold" : ""
-                        }`}
+                        className={`${!item.dateRead && !isOutbox ? "font-semibold" : ""
+                          }`}
                       >
                         <MessageTableCell
                           item={item}

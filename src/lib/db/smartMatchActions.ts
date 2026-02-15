@@ -50,6 +50,7 @@ export async function dbGetRandomMembers(userId: string) {
     include: {
       interests: { select: { name: true } },
       user: { select: { emailVerified: true, oauthVerified: true } },
+      photos: true,
     },
     orderBy: { created: "desc" },
     take: 12,
@@ -82,6 +83,7 @@ export async function dbGetPotentialMatches(
     include: {
       interests: { select: { name: true } },
       user: { select: { emailVerified: true, oauthVerified: true } },
+      photos: true,
     },
     orderBy: { created: "desc" },
   });

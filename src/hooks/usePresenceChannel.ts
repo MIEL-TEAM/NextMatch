@@ -3,7 +3,7 @@ import usePresenceStore from "./usePresenceStore";
 import { Channel, Members } from "pusher-js";
 import { pusherClient } from "@/lib/pusher-client";
 import { updateLastActive } from "@/app/actions/memberActions";
-import { announceUserOnline } from "@/app/actions/presenceActions";
+import { updateUserPresence } from "@/app/actions/presenceActions";
 
 function throttle<T extends (...args: any[]) => any>(
   func: T,
@@ -78,7 +78,7 @@ export const usePresenceChannel = (
         handleSetMembers(Object.keys(members.members));
         throttledUpdateLastActive();
 
-        announceUserOnline()
+        updateUserPresence()
           .then((result) => {
             console.log("Announce user online result:", result);
           })

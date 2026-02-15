@@ -1,5 +1,7 @@
 import { Member, Photo } from "@prisma/client";
 
+export type DiscoveryMode = "smart" | "activity" | "newest" | "distance";
+
 export type MemberCardData = {
   id: string;
   userId: string;

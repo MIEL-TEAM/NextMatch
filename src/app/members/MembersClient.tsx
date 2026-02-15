@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { useSearchPreferencesStore } from "@/stores/searchPreferencesStore";
 
 import { useMembersQuery } from "@/hooks/useMembersQuery";
 import { useLocationFlow } from "@/hooks/useLocationFlow";
@@ -70,9 +71,18 @@ export default function MembersClient({
   }, [currentSession?.user?.id]);
 
   // Check if we're in search mode (must be before early returns)
-  const searchCity = searchParams.get("city");
-  const searchInterests = searchParams.getAll("interests");
-  const isSearchMode = !!(searchCity || searchInterests.length > 0);
+  // Check if we're in search mode (must be before early returns)
+  const preferences = useSearchPreferencesStore((state) => state.preferences);
+  const discoveryMode = useSearchPreferencesStore(
+    (state) => state.discoveryMode,
+  );
+
+  const searchCity = preferences?.city;
+  const searchInterests = preferences?.interests;
+  const isSearchMode = !!(
+    searchCity ||
+    (searchInterests && searchInterests.length > 0)
+  );
 
   if (!isClientReady) return null;
 
@@ -95,9 +105,7 @@ export default function MembersClient({
   }
 
   const { data, totalCount } = query.data;
-  const isOnlineFilter =
-    searchParams.get("filter") === "online" ||
-    searchParams.get("onlineOnly") === "true";
+  const isOnlineFilter = discoveryMode === "activity";
 
   if (!data || (data.length === 0 && !isOnlineFilter)) {
     return (

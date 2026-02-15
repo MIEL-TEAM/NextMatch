@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import FilterButtons from "@/components/FilterButtons";
+import DiscoverySortControl from "@/components/search/DiscoverySortControl";
 import SpotlightMember from "./SpotlightMember";
 import AnimatedBackground from "./AnimatedBackground";
 import MembersGrid from "./MembersGrid";
@@ -20,17 +19,6 @@ const MembersLayout: React.FC<Props> = ({
   hasSeenIntro,
   onLikeUpdate,
 }) => {
-  const searchParams = useSearchParams();
-  const initialFilter = searchParams.get("filter") || "all";
-
-  const [activeFilter, setActiveFilter] = useState(initialFilter);
-
-  useEffect(() => {
-    const currentFilter = searchParams.get("filter") || "all";
-    if (currentFilter !== activeFilter) {
-      setActiveFilter(currentFilter);
-    }
-  }, [searchParams, activeFilter]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showIntro, setShowIntro] = useState(() => {
     if (typeof window !== "undefined") {
@@ -147,10 +135,7 @@ const MembersLayout: React.FC<Props> = ({
           />
         )}
 
-        <FilterButtons
-          activeFilter={activeFilter}
-          setActiveFilter={setActiveFilter}
-        />
+        <DiscoverySortControl />
       </motion.div>
 
       {(membersData.length === 0 || noResults) && (

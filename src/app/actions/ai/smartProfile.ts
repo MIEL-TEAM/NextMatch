@@ -1,22 +1,16 @@
 import { OpenAI } from "openai";
 import { prisma } from "@/lib/prisma";
 import {
-  getUserLikes,
-  getUserMessages,
-  getUserInteractions,
-} from "../smartMatchActions";
+  dbGetUserLikesWithDetails,
+  dbGetUserMessagesWithDetails,
+  dbGetMessageRecipients,
+  dbGetUserInteractionsWithDetails,
+} from "@/lib/db/smartMatchActions";
+import { PremiumAnalysisResult } from "@/types/smart-matches";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
-interface PremiumAnalysisResult {
-  content: string;
-  insights: {
-    confidenceScore: number;
-    primaryTraits: string[];
-    compatibilityFactors: string[];
-    recommendedImprovements: string[];
-  };
-}
+
 
 export async function analyzeUserBehaviorWithPremiumAI(
   userId: string,
@@ -97,9 +91,8 @@ export async function analyzeUserBehaviorWithPremiumAI(
 ## 📊 נתוני התנהגות מתקדמים:
 
 ### ניתוח לייקים (${likes.length} לייקים):
-${
-  likes.length > 0
-    ? likes
+${likes.length > 0
+      ? likes
         .slice(0, 10)
         .map((l, i) => {
           const age =
@@ -110,21 +103,20 @@ ${
           return `${i + 1}. גיל: ${age}, עיר: ${l.city || "לא צוין"}, מגדר: ${l.gender || "לא צוין"}, תחומי עניין: ${interestsText}`;
         })
         .join("\n")
-    : "לא ניתנו לייקים עדיין"
-}
+      : "לא ניתנו לייקים עדיין"
+    }
 
 ### ניתוח הודעות (${messages.length} הודעות):
-${
-  messages.length > 0
-    ? messages
+${messages.length > 0
+      ? messages
         .slice(0, 5)
         .map(
           (m, i) =>
             `${i + 1}. "${m.text.substring(0, 100)}..." (אורך: ${m.text.length} תווים) - אל: ${m.recipientName}`
         )
         .join("\n")
-    : "לא נשלחו הודעות"
-}
+      : "לא נשלחו הודעות"
+    }
 
 סגנון הודעות: ${messagingAnalysis.style}
 אורך ממוצע: ${messagingAnalysis.averageLength} תווים
@@ -132,9 +124,9 @@ ${
 
 ### ניתוח אינטראקציות (${interactions.length} אינטראקציות):
 ${Object.entries(interactionStats)
-  .filter(([key]) => key !== "totalWeight")
-  .map(([action, count]) => `- ${action}: ${count} פעמים`)
-  .join("\n")}
+      .filter(([key]) => key !== "totalWeight")
+      .map(([action, count]) => `- ${action}: ${count} פעמים`)
+      .join("\n")}
 משקל אינטראקציות כולל: ${interactionStats.totalWeight || 0}
 
 ### דפוסי התנהגות:
@@ -363,4 +355,47 @@ function extractStructuredInsights(
     compatibilityFactors,
     recommendedImprovements: improvements,
   };
+}
+
+export async function getUserLikes(userId: string) {
+  const targetUsers = await dbGetUserLikesWithDetails(userId);
+  return targetUsers.map((user) => ({
+    name: user.name || "משתמש",
+    gender: user.gender || "לא צוין",
+    city: user.city || "לא צוין",
+    dateOfBirth: user.dateOfBirth || new Date(),
+    interests: user.interests || [],
+  }));
+}
+
+export async function getUserMessages(userId: string) {
+  const messages = await dbGetUserMessagesWithDetails(userId);
+  const recipients = await dbGetMessageRecipients(
+    messages.map((m) => m.recipientId).filter(Boolean) as string[]
+  );
+
+  return messages.map((message) => ({
+    text: message.text,
+    recipientName: message.recipient?.name || "משתמש",
+    recipientGender:
+      recipients.find((r) => r.userId === message.recipientId)?.gender ||
+      "לא צוין",
+  }));
+}
+
+export async function getUserInteractions(userId: string) {
+  const interactions = await dbGetUserInteractionsWithDetails(userId);
+
+  return interactions.map((i) => ({
+    targetName: i.target?.name || "משתמש",
+    targetGender: i.target?.gender || "לא צוין",
+    targetCity: i.target?.city || "לא צוין",
+    targetAge: i.target?.dateOfBirth
+      ? new Date().getFullYear() - new Date(i.target.dateOfBirth).getFullYear()
+      : null,
+    duration: i.duration || 0,
+    action: i.action,
+    timestamp: i.timestamp,
+    weight: i.weight || 1.0,
+  }));
 }

@@ -3,109 +3,118 @@ import { useMemo } from "react";
 import type { GetMemberParams } from "@/types";
 import type { Member } from "@prisma/client";
 import usePaginationStore from "./usePaginationStore";
+import { useSearchPreferencesStore } from "@/stores/searchPreferencesStore";
 
 interface QueryOptions {
   enabled?: boolean;
   userLocation?: { latitude: number; longitude: number } | null;
 }
 
+function normalizeCityForQuery(city: string | null): string | undefined {
+  if (!city) return undefined;
+  const trimmed = city.split(",")[0].trim();
+  return trimmed.length >= 2 ? trimmed : undefined;
+}
+
 export const useMembersQuery = (
-  paramsString: string,
-  options: QueryOptions = {}
+  _urlParamsIgnored: string,
+  options: QueryOptions = {},
 ) => {
+  const isHydrated = useSearchPreferencesStore((state) => state.isHydrated);
+  const preferences = useSearchPreferencesStore((state) => state.preferences);
+  const discoveryMode = useSearchPreferencesStore(
+    (state) => state.discoveryMode,
+  );
+
   const { pageNumber: storePageNumber, pageSize: storePageSize } =
     usePaginationStore((state) => state.pagination);
 
   const queryObj = useMemo((): GetMemberParams => {
-    const params = new URLSearchParams(paramsString);
-    const paramsMap = new Map<string, string>();
-
-    // Collect all params
-    const entries: [string, string][] = [];
-    params.forEach((value, key) => {
-      entries.push([key, value]);
-      // Store last value for non-array params
-      paramsMap.set(key, value);
-    });
-
-    // Get all interests values (can be multiple)
-    const interests: string[] = [];
-    entries.forEach(([key, value]) => {
-      if (key === "interests") {
-        interests.push(value);
-      }
-    });
-
-    const DEFAULT_FILTERS = {
-      ageRange: "18,65",
-      gender: "male,female",
+    const safePreferences = preferences || {
+      gender: ["male", "female"],
+      ageMin: 18,
+      ageMax: 65,
+      city: null,
+      interests: [],
+      withPhoto: true,
       orderBy: "updated",
-      withPhoto: "true",
-      pageSize: "15",
     };
 
-    // Base query object from URL params
-    const baseObj = {
-      filter: paramsMap.get("filter") || "all",
-      ageMin: paramsMap.get("ageMin") || undefined,
-      ageMax: paramsMap.get("ageMax") || undefined,
-      ageRange: paramsMap.get("ageRange") || DEFAULT_FILTERS.ageRange,
-      gender: paramsMap.get("gender") || DEFAULT_FILTERS.gender,
-      withPhoto: paramsMap.get("withPhoto") ?? DEFAULT_FILTERS.withPhoto,
-      orderBy: paramsMap.get("orderBy") || DEFAULT_FILTERS.orderBy,
-      lastActive: paramsMap.get("lastActive") || undefined,
-      city: paramsMap.get("city") || undefined,
-      interests: interests.length > 0 ? interests : [],
-      onlineOnly: paramsMap.get("onlineOnly") === "true" ? "true" : "false",
-      sort: paramsMap.get("sort") || "latest",
-
-      pageNumber:
-        storePageNumber?.toString() ||
-        paramsMap.get("pageNumber") ||
-        paramsMap.get("page") ||
-        "1",
-
-      pageSize:
-        storePageSize?.toString() ||
-        paramsMap.get("pageSize") ||
-        DEFAULT_FILTERS.pageSize,
-      userLat: paramsMap.get("userLat") || undefined,
-      userLon: paramsMap.get("userLon") || undefined,
-      distance: paramsMap.get("distance") || undefined,
-      sortByDistance: paramsMap.get("sortByDistance") || "false",
+    const baseQuery: GetMemberParams = {
+      gender: safePreferences.gender.join(","),
+      ageRange: `${safePreferences.ageMin},${safePreferences.ageMax}`,
+      orderBy: discoveryMode, // Strictly use discoveryMode
+      withPhoto: safePreferences.withPhoto ? "true" : "false",
+      pageNumber: storePageNumber?.toString() || "1",
+      pageSize: storePageSize?.toString() || "15",
     };
 
-    // Merge in location from options (client state) if available
-    // This overrides URL params if present, or adds them if missing
-    if (options.userLocation) {
-      return {
-        ...baseObj,
-        userLat: options.userLocation.latitude.toString(),
-        userLon: options.userLocation.longitude.toString(),
-        sortByDistance: "true",
-      };
+    const normalizedCity = normalizeCityForQuery(safePreferences.city);
+    if (normalizedCity) {
+      baseQuery.city = normalizedCity;
     }
 
-    return baseObj;
-  }, [paramsString, storePageNumber, storePageSize, options.userLocation]);
+    if (safePreferences.interests && safePreferences.interests.length > 0) {
+      baseQuery.interests = safePreferences.interests;
+    }
 
-  // Create stable query key - queryObj is now stable since it depends on paramsString
-  const queryKey = useMemo(() => {
-    // Sort entries for consistent key generation
-    const stableObj = Object.entries(queryObj)
-      .filter(([, value]) => value !== undefined && value !== null)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+    if (options.userLocation) {
+      baseQuery.userLat = options.userLocation.latitude.toString();
+      baseQuery.userLon = options.userLocation.longitude.toString();
+      baseQuery.sortByDistance = "true";
+    }
 
-    return ["members", stableObj];
-  }, [queryObj]);
+    return baseQuery;
+  }, [
+    preferences,
+    discoveryMode,
+    storePageNumber,
+    storePageSize,
+    options.userLocation,
+  ]);
+
+  const genderKey = preferences?.gender?.join(",") ?? "male,female";
+  const ageMin = preferences?.ageMin ?? 18;
+  const ageMax = preferences?.ageMax ?? 65;
+  const cityKey = normalizeCityForQuery(preferences?.city ?? null) ?? "";
+  const interestsKey = (preferences?.interests ?? []).join(",");
+  const withPhoto = preferences?.withPhoto ?? true;
+
+  const queryKey = useMemo(
+    () => [
+      "members",
+      genderKey,
+      ageMin,
+      ageMax,
+      cityKey,
+      interestsKey,
+      withPhoto,
+      discoveryMode,
+      storePageNumber ?? 1,
+      storePageSize ?? 15,
+      options.userLocation?.latitude ?? null,
+      options.userLocation?.longitude ?? null,
+    ],
+    [
+      genderKey,
+      ageMin,
+      ageMax,
+      cityKey,
+      interestsKey,
+      withPhoto,
+      discoveryMode,
+      storePageNumber,
+      storePageSize,
+      options.userLocation?.latitude,
+      options.userLocation?.longitude,
+    ],
+  );
 
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
       const query = new URLSearchParams();
 
-      // Build query string from queryObj
       Object.entries(queryObj).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach((v) => query.append(key, v));
@@ -137,13 +146,13 @@ export const useMembersQuery = (
         totalCount: number;
       }>;
     },
-    staleTime: 0, // ✅ Always fetch fresh data
-    refetchOnWindowFocus: true, // ✅ Refetch when tab is focused
-    refetchOnReconnect: true, // ✅ Refetch on reconnect
-    refetchOnMount: "always", // ✅ Always refetch on mount
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: "always",
     retry: 1,
-    gcTime: 0, // ✅ Don't cache in memory
-    enabled: options.enabled !== false,
+    gcTime: 0,
+    enabled: options.enabled !== false && isHydrated,
     structuralSharing: true,
     throwOnError: false,
   });

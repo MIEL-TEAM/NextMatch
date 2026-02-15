@@ -1,4 +1,5 @@
 RUN_SEED=true npx prisma db seed
+npx prisma migrate reset --force
 npm run push-to-neon
 npm run seed-neon
 npm run ngrok

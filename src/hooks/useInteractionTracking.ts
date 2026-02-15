@@ -29,7 +29,7 @@ export function useInteractionTracking(targetUserId: string) {
           (Date.now() - viewStartTime.current) / 1000
         );
         if (duration > 5) {
-          trackUserInteraction(targetUserId, "view", duration).catch(
+          trackUserInteraction(targetUserId, "view").catch(
             handleError
           );
         }

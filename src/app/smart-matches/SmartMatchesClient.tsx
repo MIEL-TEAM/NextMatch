@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Member } from "@prisma/client";
 import { Heart, Zap, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,15 +15,13 @@ type MemberPhoto = {
 };
 
 type EnhancedMember = Member & {
-  matchReason?: string;
+  matchReason?: { text: string; tags: string[] } | string;
   matchScore?: number;
   premiumInsights?: string;
+  photos?: MemberPhoto[];
 };
 
 export default function SmartMatchesClient() {
-  const [memberPhotos, setMemberPhotos] = useState<
-    Record<string, MemberPhoto[]>
-  >({});
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -94,27 +92,6 @@ export default function SmartMatchesClient() {
     }
   };
 
-  useEffect(() => {
-    async function fetchMemberPhotos(members: Member[]) {
-      try {
-        const memberIds = members.map((m) => m.id);
-        const response = await fetch(
-          `/api/smart-matches/photos?ids=${memberIds.join(",")}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setMemberPhotos(data.photos);
-        }
-      } catch (error) {
-        console.error("Error fetching member photos:", error);
-      }
-    }
-
-    if (memoizedMembers.length > 0) {
-      fetchMemberPhotos(memoizedMembers);
-    }
-  }, [memoizedMembers]);
-
   function handleNextPage() {
     if (page * pageSize < totalCount) {
       setPage(page + 1);
@@ -142,8 +119,13 @@ export default function SmartMatchesClient() {
     show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300 } },
   };
 
+  const matchText =
+    memoizedMembers.length === 1
+      ? "נמצאה התאמה מושלמת אחת עבורך"
+      : `נמצאו ${memoizedMembers.length} התאמות איכותיות עבורך`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50 py-8">
+    <div className="min-h-screen bg-[#FDFCF8] py-8">
       <AppModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -156,74 +138,87 @@ export default function SmartMatchesClient() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="px-7"
+        className="px-4 sm:px-7 w-screen"
       >
         <div className="flex flex-col items-center">
           {/* Premium Header */}
           <motion.div
-            className="mb-8 flex flex-col items-center gap-6"
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5 }}
+            className="mb-10 flex flex-col items-center gap-6"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <div className="text-center">
               <motion.h1
-                className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 bg-clip-text text-transparent"
+                className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight"
                 initial={{ y: -20 }}
                 animate={{ y: 0 }}
               >
-                🧠 החיבורים החכמים שלך
+                החיבורים החכמים שלך
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-lg text-gray-600 mt-2"
+                className="text-lg text-gray-500 mt-3 font-light"
               >
-                מופעל על ידי בינה מלאכותית מתקדמת • מבוסס על ההעדפות שלך
+                מופעל על ידי בינה מלאכותית • מותאם אישית אליך
               </motion.p>
             </div>
 
             {/* Control Panel */}
-            <div className="flex flex-wrap items-center gap-4 justify-center">
+            <div className="flex flex-wrap items-center gap-3 justify-center">
               <motion.button
                 onClick={handleRefreshClick}
                 disabled={refreshing}
-                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all font-medium shadow-lg disabled:opacity-50"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="px-6 py-2.5 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-all font-medium text-sm shadow-sm disabled:opacity-50 flex items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {refreshing ? (
-                  <span className="flex items-center gap-2">
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    מעדכן...
-                  </span>
+                  <>
+                    <div className="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>מעדכן...</span>
+                  </>
                 ) : (
-                  "🔄 רענון ניתוח AI"
+                  <>
+                    <Zap className="w-3 h-3" />
+                    <span>רענון AI</span>
+                  </>
                 )}
               </motion.button>
 
               <motion.button
                 onClick={() => setShowStats(!showStats)}
-                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className={`px-6 py-2.5 rounded-full transition-all font-medium text-sm shadow-sm flex items-center gap-2 border ${showStats
+                  ? "bg-orange-50 border-orange-200 text-orange-700"
+                  : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                  }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <TrendingUp className="w-4 h-4 inline mr-2" />
+                <TrendingUp className="w-3 h-3" />
                 סטטיסטיקות
               </motion.button>
 
-              {/* Score Filter */}
-              <select
-                value={filterScore}
-                onChange={(e) => setFilterScore(Number(e.target.value))}
-                className="px-4 py-3 rounded-full border-2 border-orange-200 bg-white text-gray-700 font-medium shadow-md focus:border-orange-400 focus:outline-none"
-              >
-                <option value={0}>כל ההתאמות</option>
-                <option value={95}>זיווגים מושלמים (95%+)</option>
-                <option value={90}>התאמות מעולות (90%+)</option>
-                <option value={80}>התאמות טובות (80%+)</option>
-              </select>
+              {/* Score Filter - Custom Minimal Select */}
+              <div className="relative">
+                <select
+                  value={filterScore}
+                  onChange={(e) => setFilterScore(Number(e.target.value))}
+                  className="appearance-none px-4 py-2.5 pr-8 pl-4 rounded-full border border-gray-200 bg-white text-gray-700 text-sm font-medium shadow-sm focus:border-gray-400 focus:outline-none cursor-pointer hover:border-gray-300"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "left 0.7rem center",
+                    backgroundSize: "1em",
+                  }}
+                >
+                  <option value={0}>כל ההתאמות</option>
+                  <option value={90}>התאמות מושלמות (90%+)</option>
+                  <option value={80}>התאמות טובות (80%+)</option>
+                </select>
+              </div>
             </div>
           </motion.div>
 
@@ -231,53 +226,55 @@ export default function SmartMatchesClient() {
           <AnimatePresence>
             {showStats && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-8 w-full max-w-4xl"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: "auto", marginBottom: 32 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                className="w-full max-w-4xl overflow-hidden"
               >
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-orange-100">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
-                    📊 ניתוח ההתאמות שלך
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">
+                    ניתוח ההתאמות שלך
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="text-center p-4 bg-gradient-to-b from-orange-100 to-orange-50 rounded-xl">
-                      <div className="text-2xl font-bold text-orange-700">
+                    <div className="text-center p-4 bg-orange-50/50 rounded-xl border border-orange-100">
+                      <div className="text-2xl font-bold text-gray-900">
                         {matchStats.perfect}
                       </div>
-                      <div className="text-sm text-orange-600">
-                        התאמות מעולות (90%+)
+                      <div className="text-xs text-gray-500 mt-1">
+                        מושלמות (90%+)
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-b from-amber-100 to-amber-50 rounded-xl">
-                      <div className="text-2xl font-bold text-amber-700">
+                    <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="text-2xl font-bold text-gray-900">
                         {matchStats.excellent}
                       </div>
-                      <div className="text-sm text-amber-600">
-                        התאמות טובות <br />
-                        (75-89%)
+                      <div className="text-xs text-gray-500 mt-1">
+                        מצוינות (75%+)
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-b from-yellow-100 to-yellow-50 rounded-xl">
-                      <div className="text-2xl font-bold text-yellow-700">
+                    <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="text-2xl font-bold text-gray-900">
                         {matchStats.good}
                       </div>
-                      <div className="text-sm text-yellow-600">
-                        פוטנציאל טוב <br />
-                        (60-74%)
+                      <div className="text-xs text-gray-500 mt-1">
+                        טובות (60%+)
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-b from-gray-100 to-gray-50 rounded-xl">
-                      <div className="text-2xl font-bold text-gray-600">
+                    <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="text-2xl font-bold text-gray-900">
                         {matchStats.average}%
                       </div>
-                      <div className="text-sm text-gray-600">ציון ממוצע</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        ציון ממוצע
+                      </div>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-b from-orange-200 to-orange-100 rounded-xl">
-                      <div className="text-2xl font-bold text-orange-800">
+                    <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="text-2xl font-bold text-gray-900">
                         {matchStats.highest}%
                       </div>
-                      <div className="text-sm text-orange-700">הציון הגבוה</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        הכי גבוה
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -288,19 +285,16 @@ export default function SmartMatchesClient() {
           {/* Error State */}
           {isError && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center p-6 bg-red-50 border border-red-200 rounded-2xl mb-8 max-w-md"
+              className="text-center p-6 bg-red-50 border border-red-100 rounded-2xl mb-8 max-w-md"
             >
-              <div className="text-red-600 text-lg font-medium mb-2">
+              <div className="text-red-600 font-medium mb-2">
                 שגיאה בטעינת ההתאמות
               </div>
-              <p className="text-red-500 text-sm mb-4">
-                בעיה ברשת או בשרת - נסה שוב
-              </p>
               <button
                 onClick={() => refetch()}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                className="text-sm underline text-red-500 hover:text-red-700"
               >
                 נסה שוב
               </button>
@@ -312,17 +306,12 @@ export default function SmartMatchesClient() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-16"
+              className="text-center py-24"
             >
               <div className="flex items-center justify-center mb-4">
-                <div className="animate-spin w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full"></div>
+                <div className="animate-spin w-8 h-8 border-2 border-gray-200 border-t-orange-500 rounded-full"></div>
               </div>
-              <div className="text-orange-600 text-xl font-semibold mb-2">
-                🧠 המערכת מנתחת...
-              </div>
-              <div className="text-gray-600 text-sm">
-                בודקת התאמות אישיות מתקדמות עבורך
-              </div>
+              <div className="text-gray-400 text-sm">מחפש התאמות...</div>
             </motion.div>
           ) : memoizedMembers.length > 0 ? (
             <>
@@ -330,34 +319,30 @@ export default function SmartMatchesClient() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 text-center"
+                className="mb-8 text-center"
               >
-                <p className="text-gray-600">
-                  נמצאו{" "}
-                  <span className="font-bold text-orange-600">
-                    {memoizedMembers.length}
-                  </span>{" "}
-                  התאמות איכותיות עבורך
+                <p className="text-gray-500 text-sm">
+                  {matchText}
                   {filterScore > 0 && ` (מעל ${filterScore}%)`}
                 </p>
               </motion.div>
 
-              {/* Members Grid */}
+              {/* Members Grid - Refactored to Grid for responsive 5 columns */}
               <motion.div
                 variants={container}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6 items-stretch mb-12"
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 w-full mb-16 items-start"
               >
                 {memoizedMembers.map((member, index) => (
                   <motion.div
                     key={member.id}
                     variants={item}
-                    className="smart-member-card-container"
+                    className="smart-member-card-container w-full"
                   >
                     <SmartMemberCard
                       member={member}
-                      memberPhotos={memberPhotos[member.id] || []}
+                      memberPhotos={member.photos || []}
                       index={index}
                     />
                   </motion.div>
@@ -365,107 +350,62 @@ export default function SmartMatchesClient() {
               </motion.div>
 
               {/* Pagination */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                className="flex justify-center items-center gap-6"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-3 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-full hover:from-orange-500 hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
-                  onClick={handlePrevPage}
-                  disabled={page === 1}
+              {Math.ceil(totalCount / pageSize) > 1 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-center items-center gap-4"
                 >
-                  ← הקודם
-                </motion.button>
+                  <button
+                    className="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    onClick={handlePrevPage}
+                    disabled={page === 1}
+                  >
+                    → הקודם
+                  </button>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600 font-medium">
-                    עמוד {page} מתוך {Math.ceil(totalCount / pageSize)}
+                  <span className="text-gray-400 text-sm font-medium">
+                    {page} / {Math.ceil(totalCount / pageSize)}
                   </span>
-                </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-3 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-full hover:from-orange-500 hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
-                  onClick={handleNextPage}
-                  disabled={page * pageSize >= totalCount}
-                >
-                  הבא →
-                </motion.button>
-              </motion.div>
+                  <button
+                    className="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    onClick={handleNextPage}
+                    disabled={page * pageSize >= totalCount}
+                  >
+                    הבא  ←
+                  </button>
+                </motion.div>
+              )}
             </>
           ) : (
             /* Empty State */
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-center p-12 border-2 border-dashed border-orange-300 rounded-3xl bg-gradient-to-r from-amber-50 to-orange-50 shadow-xl w-full max-w-lg"
+              className="text-center p-12 max-w-lg mx-auto"
             >
-              <motion.div
-                initial={{ y: -10 }}
-                animate={{ y: 0 }}
-                transition={{
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  duration: 2,
-                }}
-              >
-                <Heart className="h-20 w-20 text-orange-400 mb-6 mx-auto" />
-              </motion.div>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Heart className="h-8 w-8 text-gray-400" />
+              </div>
 
-              <h3 className="text-3xl font-bold mb-4 text-orange-800">
+              <h3 className="text-xl font-bold mb-2 text-gray-900">
                 עדיין אין התאמות
               </h3>
 
-              <p className="mb-8 text-orange-700 leading-relaxed text-lg">
-                כדי שהמערכת תלמד את ההעדפות שלך ותמצא התאמות מושלמות, עליך:
+              <p className="mb-8 text-gray-500 text-sm leading-relaxed">
+                המערכת לומדת את ההעדפות שלך תוך כדי תנועה.
+                <br />
+                התחל לדפדף כדי לעזור לנו למצוא לך התאמות.
               </p>
 
-              <div className="space-y-4 mb-8 text-right">
-                <div className="flex items-center gap-3 bg-white/60 p-3 rounded-xl">
-                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">
-                    1
-                  </div>
-                  <span className="text-orange-800">
-                    לבקר בפרופילים של משתמשים
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 bg-white/60 p-3 rounded-xl">
-                  <div className="w-8 h-8 bg-pink-500 text-white rounded-full flex items-center justify-center font-bold">
-                    2
-                  </div>
-                  <span className="text-orange-800">
-                    לסמן לייקים למי שמעניין אותך
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 bg-white/60 p-3 rounded-xl">
-                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
-                    3
-                  </div>
-                  <span className="text-orange-800">
-                    לשלוח הודעות ולהתחיל שיחות
-                  </span>
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full hover:from-orange-600 hover:to-pink-600 transition-all font-bold text-lg shadow-lg"
+              <button
+                className="px-8 py-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-all font-medium text-sm shadow-lg"
                 onClick={() => router.push("/members")}
               >
-                <Zap className="w-5 h-5 inline mr-2" />
-                התחל לדפדף בפרופילים
-              </motion.button>
-
-              <p className="mt-6 text-sm text-orange-600">
-                ככל שתשתמש יותר, המערכת תלמד טוב יותר את ההעדפות שלך
-              </p>
+                התחל לדפדף
+              </button>
             </motion.div>
           )}
         </div>

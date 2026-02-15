@@ -32,8 +32,9 @@ export async function dbGetMembersWithDistance(
 export async function dbGetMembersWithPagination(
   whereClause: Prisma.MemberWhereInput,
   selectFields: Prisma.MemberSelect,
-  orderByField: string,
-  orderDirection: "asc" | "desc",
+  orderBy:
+    | Prisma.MemberOrderByWithRelationInput
+    | Prisma.MemberOrderByWithRelationInput[],
   skip: number,
   limit: number,
 ) {
@@ -44,7 +45,7 @@ export async function dbGetMembersWithPagination(
     prisma.member.findMany({
       where: whereClause,
       select: selectFields,
-      orderBy: { [orderByField]: orderDirection },
+      orderBy: orderBy,
       skip: skip,
       take: limit,
     }),

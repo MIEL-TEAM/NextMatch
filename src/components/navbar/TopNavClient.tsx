@@ -23,9 +23,8 @@ export default function TopNavClient({
   profileCompletion,
   isAdmin,
   isPremium,
-  userLocation,
 }: TopNavClientProps) {
-  
+
   const pathname = usePathname();
 
   const isAuthPage =
@@ -125,8 +124,7 @@ export default function TopNavClient({
                 />
                 {!isAdmin && (
                   <>
-                    <SearchButton 
-                      userLocation={userLocation}
+                    <SearchButton
                       className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20"
                     />
                     <ProfileViewsButton />
@@ -146,7 +144,7 @@ export default function TopNavClient({
                 />
                 {!isAdmin && (
                   <>
-                    <SearchButton userLocation={userLocation} />
+                    <SearchButton />
                     <ProfileViewsButton />
                   </>
                 )}

@@ -1,7 +1,12 @@
+import { Member } from "@prisma/client";
+
 export interface MatchResult {
   userId: string;
   score: number;
-  matchReason: string;
+  matchReason: {
+    text: string;
+    tags: string[];
+  };
   compatibilityFactors: {
     ageCompatibility: number;
     locationCompatibility: number;
@@ -19,6 +24,16 @@ export interface UserBehaviorPattern {
   personalityTraits: string[];
   messagingStyle: string;
   engagementLevel: number;
+}
+
+export interface PremiumAnalysisResult {
+  content: string;
+  insights: {
+    confidenceScore: number;
+    primaryTraits: string[];
+    compatibilityFactors: string[];
+    recommendedImprovements: string[];
+  };
 }
 
 export interface UserInteraction {
@@ -44,3 +59,17 @@ export interface BehaviorAnalysisData {
   likedUserIds: string[];
   messages: UserMessage[];
 }
+
+export type SmartMemberCardProps = {
+  member: Member & {
+    matchReason?: { text: string; tags: string[] } | string;
+    matchScore?: number;
+    premiumInsights?: string;
+    user?: {
+      oauthVerified?: boolean;
+      lastActiveAt?: Date | null;
+    };
+  };
+  memberPhotos?: Array<{ url: string; id: string }>;
+  index?: number;
+};
