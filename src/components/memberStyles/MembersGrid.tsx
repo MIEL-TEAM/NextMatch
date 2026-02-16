@@ -41,7 +41,7 @@ const MembersGrid: React.FC<Props> = ({
 
   const isFetching = useIsFetching({ queryKey: ["members"] }) > 0;
 
-    if (isFetching) {
+  if (isFetching) {
     return (
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 animate-pulse">
@@ -63,7 +63,7 @@ const MembersGrid: React.FC<Props> = ({
       initial="hidden"
       animate="show"
     >
-      <motion.div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+      <motion.div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-4">
         {membersData.map(({ member, photos, videos }) => (
           <motion.div
             key={member.id}

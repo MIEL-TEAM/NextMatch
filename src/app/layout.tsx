@@ -15,7 +15,7 @@ import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieConsentManager } from "@/components/cookies";
 import { getServerConsentCookie } from "@/lib/cookies/cookieUtils.server";
 import { SearchPreferencesProvider } from "@/providers/SearchPreferencesProvider";
-import PresenceProvider from "@/components/providers/PresenceProvider";
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -77,31 +77,15 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Check pathname for optimization
-  const isForbiddenRoute = false;
+  const [session, cookieConsent] = await Promise.all([
+    getSession(),
+    getServerConsentCookie(),
+  ]);
 
-  // ✅ SINGLE auth call for entire request tree via React Cache
-  const session = await getSession();
   const userId = session?.user?.id || null;
   const profileComplete = session?.user.profileComplete as boolean;
   const isPremium = session?.user?.isPremium as boolean;
   const isAdmin = session?.user?.role === "ADMIN";
-
-  // ✅ SKIP all queries on forbidden routes
-  let initialUnreadCount = 0;
-  if (userId && !isAdmin && !isForbiddenRoute) {
-    try {
-      const { getUnreadMessageCount } = await import(
-        "@/app/actions/messageActions"
-      );
-      initialUnreadCount = await getUnreadMessageCount();
-    } catch (error) {
-      console.warn("Failed to load initial unread count in layout:", error);
-    }
-  }
-
-  // Get cookie consent from server
-  const cookieConsent = await getServerConsentCookie();
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -155,18 +139,15 @@ export default async function RootLayout({
             {!session?.user && !isAdmin && <GoogleOneTap />}
             <ReactQueryProvider>
               <SearchPreferencesProvider>
-                <PresenceProvider>
-                  <Providers
-                    userId={userId}
-                    profileComplete={profileComplete}
-                    initialUnreadCount={initialUnreadCount}
-                    isPremium={isPremium}
-                    isAdmin={isAdmin}
-                  >
-                    <TopNav />
-                    <MielLayout>{children}</MielLayout>
-                  </Providers>
-                </PresenceProvider>
+                <Providers
+                  userId={userId}
+                  profileComplete={profileComplete}
+                  isPremium={isPremium}
+                  isAdmin={isAdmin}
+                >
+                  <TopNav />
+                  <MielLayout>{children}</MielLayout>
+                </Providers>
               </SearchPreferencesProvider>
             </ReactQueryProvider>
           </SessionProvider>

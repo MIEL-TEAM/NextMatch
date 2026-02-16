@@ -82,6 +82,9 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
                     src={imageUrl}
                     alt={spotlight.name || "Profile image"}
                     className="object-cover"
+                    width={600}
+                    height={800}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     style={{
                       width: "100%",
                       height: "100%",
