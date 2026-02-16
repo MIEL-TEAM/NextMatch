@@ -26,8 +26,7 @@ export default function MembersClient({
   console.log("RENDER MembersClient");
 
   const { t } = useCopy("empty_state");
-  const [isClientReady, setIsClientReady] = useState(false);
-  useEffect(() => setIsClientReady(true), []);
+
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -83,7 +82,7 @@ export default function MembersClient({
     (preferences?.interests && preferences.interests.length > 0)
   );
 
-  if (!isClientReady) return null;
+
 
   // 🔥 NEW: Only show spinner if NO DATA exists
   if (!query.data && query.isLoading) {

@@ -20,14 +20,19 @@ const MembersLayout: React.FC<Props> = ({
   onLikeUpdate,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showIntro, setShowIntro] = useState(() => {
-    if (typeof window !== "undefined") {
+  const [showIntro, setShowIntro] = useState(!hasSeenIntro);
+
+  useEffect(() => {
+    if (!hasSeenIntro) {
       const hasSeenLocal =
+        typeof window !== "undefined" &&
         localStorage.getItem("hasSeenMembersIntro") === "true";
-      return !hasSeenIntro && !hasSeenLocal;
+
+      if (hasSeenLocal) {
+        setShowIntro(false);
+      }
     }
-    return !hasSeenIntro;
-  });
+  }, [hasSeenIntro]);
 
   const [likes, setLikes] = useState<string[]>(likeIds);
   const [isChangingSpotlight, setIsChangingSpotlight] = useState(false);
