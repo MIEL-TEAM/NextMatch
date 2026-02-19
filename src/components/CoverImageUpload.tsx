@@ -15,7 +15,7 @@ import {
 } from "next-cloudinary";
 import { updateCoverImage, removeCoverImage } from "@/app/actions/userActions";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
+
 import { Camera, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -43,12 +43,7 @@ export default function CoverImageUpload({
 
         await updateCoverImage(url, publicId);
 
-        toast.success("תמונת הכיסוי עודכנה בהצלחה!", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.success("תמונת הכיסוי עודכנה בהצלחה!");
 
         onSuccess?.();
         onClose();
@@ -56,12 +51,7 @@ export default function CoverImageUpload({
       }
     } catch (error) {
       console.error("Error uploading cover image:", error);
-      toast.error("שגיאה בהעלאת תמונת הכיסוי", {
-        style: {
-          ...getToastStyle(),
-          textAlign: "center",
-        },
-      });
+      toast.error("שגיאה בהעלאת תמונת הכיסוי");
     } finally {
       setLoading(false);
     }
@@ -72,24 +62,14 @@ export default function CoverImageUpload({
     try {
       await removeCoverImage();
 
-      toast.success("תמונת הכיסוי הוסרה בהצלחה", {
-        style: {
-          ...getToastStyle(),
-          textAlign: "center",
-        },
-      });
+      toast.success("תמונת הכיסוי הוסרה בהצלחה");
 
       onSuccess?.();
       onClose();
       window.location.reload();
     } catch (error) {
       console.error("Error removing cover image:", error);
-      toast.error("שגיאה בהסרת תמונת הכיסוי", {
-        style: {
-          ...getToastStyle(),
-          textAlign: "center",
-        },
-      });
+      toast.error("שגיאה בהסרת תמונת הכיסוי");
     } finally {
       setLoading(false);
     }

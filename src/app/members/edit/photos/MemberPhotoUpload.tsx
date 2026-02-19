@@ -6,30 +6,22 @@ import { CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
 
 export default function MemberPhotoUpload() {
   const router = useRouter();
   const onAddImage = async (result: CloudinaryUploadWidgetResults) => {
-    if (result.info && typeof result.info === "object") {
+    if (result.info && typeof result.info !== "string") {
       try {
-        await addImage(result.info.secure_url, result.info.public_id);
+        const imageId = result.info.public_id;
+        const imageUrl = result.info.secure_url;
+        await addImage(imageUrl, imageId);
+        toast.success("התמונה נוספה בהצלחה, המתן לאישור");
         router.refresh();
-        toast.success("התמונה הועלתה בהצלחה", {
-          style: getToastStyle(),
-        });
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "בעיה בהעלאת התמונה",
-          {
-            style: getToastStyle(),
-          }
-        );
+      } catch (error: any) {
+        toast.error(error.message);
       }
     } else {
-      toast.error("בעיה בהעלאת התמונה", {
-        style: getToastStyle(),
-      });
+      toast.error("שגיאה בהעלאת התמונה");
     }
   };
 

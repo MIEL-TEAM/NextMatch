@@ -5,7 +5,6 @@ import { Member, Photo } from "@prisma/client";
 import { CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { updateCoverImage } from "@/app/actions/userActions";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import ProfileCover from "./profile/ProfileCover";
 import ProfileAvatar from "./profile/ProfileAvatar";
@@ -59,23 +58,12 @@ export default function DesktopProfileView({
 
         await updateCoverImage(url, publicId);
 
-        toast.success("התמונה שלך עודכנה בהצלחה!", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
-
+        toast.success("התמונה שלך עודכנה בהצלחה!");
         window.location.reload();
       }
     } catch (error) {
       console.error("Error uploading cover image:", error);
-      toast.error("שגיאה בהעלאת התמונה", {
-        style: {
-          ...getToastStyle(),
-          textAlign: "center",
-        },
-      });
+      toast.error("שגיאה בהעלאת התמונה");
     }
   };
 
@@ -86,35 +74,15 @@ export default function DesktopProfileView({
 
       if (result.success) {
         setHasLiked(!hasLiked);
-        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים");
       } else if (result.alreadyLiked) {
-        toast.error(`כבר עשית לייק ל${member.name}`, {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.error(`כבר עשית לייק ל${member.name}`);
       } else {
-        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר");
       }
     } catch (error) {
       console.log(error);
-      toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
-        style: {
-          ...getToastStyle(),
-          textAlign: "center",
-        },
-      });
+      toast.error("אירעה שגיאה, נסו שוב מאוחר יותר");
     } finally {
       setLoading(false);
     }
@@ -133,21 +101,11 @@ export default function DesktopProfileView({
         await navigator.clipboard.writeText(
           `${window.location.origin}/members/${userId}`
         );
-        toast.success("קישור לפרופיל הועתק", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.success("קישור לפרופיל הועתק");
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
-        toast.error("שגיאה בשיתוף הפרופיל", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.error("שגיאה בשיתוף הפרופיל");
       }
     } finally {
       setIsSharing(false);

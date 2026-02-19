@@ -1,0 +1,13 @@
+---
+description: "Database is single source of truth"
+alwaysApply: true
+---
+
+## Database Authority Rules
+
+- Database is the single source of truth.
+- Do not store persistent filters in localStorage.
+- Search filters must be read from user_search_preferences.
+- SmartMatches must always load preferences from DB.
+- Never maintain multiple sources of filter state.
+- All preference changes must invalidate smart_match_cache.

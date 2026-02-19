@@ -1,0 +1,12 @@
+---
+description: "Protect AI assistant production constraints"
+---
+
+## AI Rules
+
+- AI endpoints must require authentication.
+- Enforce daily rate limits (5 free / 999 premium).
+- Never expose OpenAI API key to client.
+- Always log tokensUsed for cost tracking.
+- AI must use real DB data for matches and insights.
+- Do not fabricate data.

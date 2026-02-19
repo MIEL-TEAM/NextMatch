@@ -1,0 +1,13 @@
+---
+description: "Protect OAuth and profile completion flow"
+alwaysApply: true
+---
+
+## OAuth Rules
+
+- Never hardcode callbackUrl to "/members".
+- Redirect logic must check profileComplete.
+- OAuth users without Member must go to /complete-profile.
+- Member creation must happen via completeSocialLoginProfile().
+- Do not create Member inside NextAuth signIn callback.
+- profileComplete must only be true after Member exists.

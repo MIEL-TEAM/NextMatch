@@ -1,7 +1,6 @@
 import React from "react";
 import LoginForm from "./LoginForm";
 import { Metadata } from "next";
-import DeviceRoutingProvider from "@/components/auth/DeviceRoutingProvider";
 
 export const metadata: Metadata = {
   title: "Miel - התחברות",
@@ -22,10 +21,8 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <DeviceRoutingProvider>
-      <div className="h-screen w-screen overflow-hidden">
-        <LoginForm />
-      </div>
-    </DeviceRoutingProvider>
+    <div className="h-screen w-screen overflow-hidden">
+      <LoginForm />
+    </div>
   );
 }

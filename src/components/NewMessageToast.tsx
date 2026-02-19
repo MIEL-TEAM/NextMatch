@@ -3,13 +3,12 @@ import { MessageDto } from "@/types";
 import { NewMessageToastProps } from "@/types/chat";
 import { Image } from "@nextui-org/react";
 import Link from "next/link";
-import React from "react";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
+
 export default function NewMessageToast({ message }: NewMessageToastProps) {
   return (
-    <Link 
-      href={`/members/${message.senderId}`} 
+    <Link
+      href={`/members/${message.senderId}`}
       className="flex items-center gap-3 w-full active:opacity-80 transition-opacity"
     >
       <div className="flex-shrink-0">
@@ -32,8 +31,11 @@ export default function NewMessageToast({ message }: NewMessageToastProps) {
   );
 }
 
-export const newMessageToast = (message: MessageDto) => {
-  toast(<NewMessageToast message={message} />, {
-    style: getToastStyle(),
-  });
-};
+export function useNewMessageToast() {
+
+  const showNewMessageToast = (message: MessageDto) => {
+    toast(<NewMessageToast message={message} />);
+  };
+
+  return { showNewMessageToast };
+}

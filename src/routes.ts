@@ -16,11 +16,7 @@ export const unauthOnlyRoutes = [
   "/reset-password",
 ];
 
-export const mobileRoutes = [
-  "/mobile/login",
-  "/mobile/register",
-  "/mobile/register/success",
-];
+
 
 // UI-only step after registration (allowed without session)
 export const registerSuccessRoutes = ["/register/success"];

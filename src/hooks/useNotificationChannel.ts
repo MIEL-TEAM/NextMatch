@@ -3,7 +3,7 @@
 import { Channel } from "pusher-js";
 import { useRef, useEffect, useCallback, useMemo } from "react";
 import useMessageStore from "./useMessageStore";
-import { newMessageToast } from "@/components/NewMessageToast";
+import { useNewMessageToast } from "@/components/NewMessageToast";
 import { pusherClient } from "@/lib/pusher-client";
 import { MessageDto } from "@/types";
 
@@ -31,6 +31,7 @@ export const useNotificationChannel = (
   const addMessage = useMessageStore((state) => state.add);
   const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
   const pendingUnreadUpdatesRef = useRef(0);
+  const { showNewMessageToast } = useNewMessageToast();
 
   const debouncedUpdateUnreadCount = useMemo(
     () =>
@@ -57,12 +58,12 @@ export const useNotificationChannel = (
         pendingUnreadUpdatesRef.current += 1;
         debouncedUpdateUnreadCount(pendingUnreadUpdatesRef.current);
       } else if (!isInChat) {
-        newMessageToast(message);
+        showNewMessageToast(message);
         pendingUnreadUpdatesRef.current += 1;
         debouncedUpdateUnreadCount(pendingUnreadUpdatesRef.current);
       }
     },
-    [addMessage, debouncedUpdateUnreadCount],
+    [addMessage, debouncedUpdateUnreadCount, showNewMessageToast],
   );
 
   useEffect(() => {
@@ -73,7 +74,6 @@ export const useNotificationChannel = (
       channelRef.current = channel;
 
       channel.bind("message:new", handleNewMessage);
-      // like:new מטופל ב־useCelebrationListener
     }
 
     return () => {
@@ -142,13 +142,12 @@ export function useNotificationSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playSound = useCallback(() => {
-    audioRef.current?.play().catch(() => {});
+    audioRef.current?.play().catch(() => { });
   }, []);
 
   return { audioRef, playSound };
 }
 
-// Listen for new notifications via Pusher
 export function useNewNotificationListener(
   userId: string,
   onNewNotification: (notification: any) => void,

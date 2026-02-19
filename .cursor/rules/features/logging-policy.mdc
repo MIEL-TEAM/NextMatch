@@ -1,0 +1,10 @@
+---
+description: "Enforce clean production logging"
+---
+
+## Logging Rules
+
+- Log only errors in production.
+- Do not log user emails on success paths.
+- Remove verbose debug logs before final code.
+- Never log sensitive data (tokens, passwords).

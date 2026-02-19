@@ -34,11 +34,10 @@ export default function MielLayout({ children }: MielLayoutProps) {
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 overflow-auto ${
-        isHomePage
-          ? "bg-transparent"
-          : "bg-gradient-to-b from-amber-50 to-orange-50"
-      }`}
+      className={`fixed inset-0 overflow-auto [scrollbar-gutter:stable] ${isHomePage
+        ? "bg-transparent"
+        : "bg-gradient-to-b from-amber-50 to-orange-50"
+        }`}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div

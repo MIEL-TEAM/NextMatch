@@ -18,7 +18,6 @@ import PreferencesForm from "../register/PreferencesForm";
 import PhotoUploadForm from "../register/PhotoUploadForm";
 import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
 import { completeEmailRegistrationProfile } from "@/app/actions/completeProfileActions";
-import { getDeviceAwarePath } from "@/lib/deviceDetection";
 import { toast } from "react-toastify";
 
 const stepSchemas = [
@@ -177,7 +176,7 @@ export default function EmailUserRegisterWrapper({
           localStorage.removeItem(DRAFT_KEY);
           localStorage.removeItem("pendingProfileEmail");
           toast.success("הפרופיל הושלם בהצלחה! כעת תוכל להתחבר");
-          router.push(getDeviceAwarePath("login"));
+          router.push("/login");
         } else {
           console.error("[EMAIL_WRAPPER] Error:", result.error);
           handleFormServerError(result, setError);

@@ -11,7 +11,6 @@ import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
 import { MemberCardProps } from "@/types/members";
 import Carousel from "@/components/MemberImageCarousel";
@@ -61,9 +60,7 @@ export default function MemberCard({
       e.stopPropagation();
 
       if (!hasLiked && likeIds.includes(member.userId)) {
-        toast.error(`כבר עשית לייק ל${member.name}`, {
-          style: getToastStyle(),
-        });
+        toast.error(`כבר עשית לייק ל${member.name}`);
         return;
       }
 
@@ -80,19 +77,13 @@ export default function MemberCard({
             onLike(member.userId, newLikedState);
           }
         } else if (result.alreadyLiked) {
-          toast.error(`כבר עשית לייק ל${member.name}`, {
-            style: getToastStyle(),
-          });
+          toast.error(`כבר עשית לייק ל${member.name}`);
         } else {
-          toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
-            style: getToastStyle(),
-          });
+          toast.error("אירעה שגיאה, נסו שוב מאוחר יותר");
         }
       } catch (error) {
         console.error("Like toggle error:", error);
-        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
-          style: getToastStyle(),
-        });
+        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר");
       } finally {
         setLoading(false);
       }
@@ -132,7 +123,7 @@ export default function MemberCard({
         onMouseLeave={handleMouseLeave}
       >
         <div className="relative aspect-square overflow-hidden rounded-t-lg group">
-          {showVideo && activeVideo && !videoError && (
+          {showVideo && activeVideo && !videoError ? (
             <div className="absolute inset-0 z-40 overflow-hidden">
               <video
                 src={activeVideo}
@@ -145,21 +136,20 @@ export default function MemberCard({
                 onError={handleVideoError}
               />
             </div>
+          ) : (
+            <Image
+              alt={member.name}
+              src={transformImageUrl(imageUrl) || "/images/user.png"}
+              className={`w-full h-full object-cover transition-all duration-200 ease-in-out transform group-hover:scale-105`}
+              fill
+              sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw"
+              loading={isPriority ? "eager" : "lazy"}
+              fetchPriority={isPriority ? "high" : "low"}
+              priority={isPriority}
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABAgEAf6qL9wAAAABJRU5ErkJggg=="
+            />
           )}
-
-          <Image
-            alt={member.name}
-            src={transformImageUrl(imageUrl) || "/images/user.png"}
-            className={`w-full h-full object-cover transition-all duration-200 ease-in-out transform group-hover:scale-105 ${showVideo ? "opacity-0" : "opacity-100"
-              }`}
-            fill
-            sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw"
-            loading={isPriority ? "eager" : "lazy"}
-            fetchPriority={isPriority ? "high" : "low"}
-            priority={isPriority}
-            placeholder="blur"
-            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABAgEAf6qL9wAAAABJRU5ErkJggg=="
-          />
 
           <div className="absolute top-2 left-2 z-50 flex gap-1.5 items-center">
             <LikeButton

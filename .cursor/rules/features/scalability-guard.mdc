@@ -1,0 +1,15 @@
+---
+description: "Prevent performance regressions and scalability issues"
+alwaysApply: true
+---
+
+## Scalability Guard
+
+- Avoid full table scans in production queries.
+- Always consider indexing when adding new filters.
+- Never introduce blocking loops in server actions.
+- Prefer database-level pagination over in-memory slicing.
+- Avoid unbounded queries (always use take / limit).
+- Use Promise.all for independent parallel queries.
+- Be cautious with include in Prisma queries (avoid include: true).
+- Any new filter must be evaluated for index impact.

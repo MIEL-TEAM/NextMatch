@@ -1,0 +1,11 @@
+---
+description: "Prevent silent business logic regressions"
+alwaysApply: true
+---
+
+## Production Safety
+
+- Do not change business logic without explaining the impact.
+- Do not modify auth, search, or premium logic silently.
+- If modifying smart match algorithm, explain reasoning.
+- Never remove validation without justification.

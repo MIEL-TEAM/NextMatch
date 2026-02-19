@@ -1,4 +1,3 @@
-import { getSession } from "@/lib/session";
 import MembersClient from "./MembersClient";
 import { Metadata } from "next";
 
@@ -25,7 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function MembersPage() {
-  const session = await getSession();
-  return <MembersClient serverSession={session} />;
+export default function MembersPage() {
+  return <MembersClient />;
 }

@@ -13,7 +13,7 @@ import ProfileForm from "../register/ProfileForm";
 import { Button, Input } from "@nextui-org/react";
 import { completeEmailRegistrationProfile } from "@/app/actions/completeProfileActions";
 import { toast } from "react-toastify";
-import { getDeviceAwarePath } from "@/lib/deviceDetection";
+
 
 type EmailUserProfileFormProps = {
   email?: string;
@@ -52,7 +52,7 @@ export default function EmailUserProfileForm({
       // Clear localStorage
       localStorage.removeItem("pendingProfileEmail");
       toast.success("הפרופיל הושלם בהצלחה! כעת תוכל להתחבר");
-      router.push(getDeviceAwarePath("login"));
+      router.push("/login");
     } else {
       const errorMessage =
         typeof result.error === "string"

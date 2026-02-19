@@ -9,7 +9,6 @@ import { FaCheckCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ActionResult } from "@/types";
-import { getDeviceAwarePath } from "@/lib/deviceDetection";
 
 type VerifyEmailClientProps = {
   token: string;
@@ -25,22 +24,29 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      try {
-        const verificationResult = await verifyEmail(token);
+    if (!token) {
+      setResult({
+        status: "error",
+        error: "Invalid token",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    verifyEmail(token)
+      .then((verificationResult) => {
         setResult(verificationResult);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.log(error);
         setResult({
           status: "error",
-          error: "שגיאה באימות האימייל",
+          error: "Something went wrong",
         });
-      } finally {
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    };
-
-    verifyToken();
+      });
   }, [token]);
 
   if (result?.status === "success") {
@@ -59,13 +65,13 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
     console.log("🔍 [VERIFY_EMAIL_CLIENT] Redirect decision:", {
       profileComplete,
       redirectPath: profileComplete
-        ? getDeviceAwarePath("login")
+        ? "/login"
         : "/complete-profile",
       actionLabel: profileComplete ? "עבור להתחברות" : "השלם פרופיל",
     });
 
     const redirectPath = profileComplete
-      ? getDeviceAwarePath("login")
+      ? "/login"
       : "/complete-profile";
     const actionLabel = profileComplete ? "עבור להתחברות" : "השלם פרופיל";
     const subHeaderText = profileComplete

@@ -1,0 +1,14 @@
+---
+description: "Enforce test awareness for critical business logic"
+alwaysApply: true
+---
+
+## Test Integrity
+
+- If a change affects filtering, search, auth, premium, or AI – suggest relevant tests.
+- Never modify query logic without verifying edge cases.
+- If updating age or city filtering logic, verify boundary conditions.
+- If modifying OAuth or profile completion flow, verify user creation and redirect paths.
+- If touching premium logic, verify subscription state transitions.
+- For SmartMatch changes, validate deterministic behavior for identical inputs.
+- Prefer integration-level validation over only unit assumptions.

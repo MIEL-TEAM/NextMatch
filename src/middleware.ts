@@ -5,7 +5,6 @@ import {
   unauthOnlyRoutes,
   registerSuccessRoutes,
   authActionRoutes,
-  mobileRoutes,
 } from "./routes";
 
 export default auth((req) => {
@@ -23,11 +22,9 @@ export default auth((req) => {
 
   // 1. Admin Logic
   if (isAdmin) {
-    // If admin is on an admin route, let them pass (skip profile completion check)
     if (isAdminRoute) {
       return NextResponse.next();
     }
-    // If admin is NOT on an admin route, force them to /admin
     return NextResponse.redirect(new URL("/admin", nextUrl));
   }
 
@@ -41,7 +38,6 @@ export default auth((req) => {
     const allowedRoutes = [
       ...unauthOnlyRoutes,
       ...registerSuccessRoutes,
-      ...mobileRoutes,
     ];
     return allowedRoutes.includes(pathname)
       ? NextResponse.next()
@@ -52,13 +48,12 @@ export default auth((req) => {
   const blockedRoutes = [
     ...unauthOnlyRoutes,
     ...registerSuccessRoutes,
-    ...mobileRoutes,
   ];
   if (blockedRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/members", nextUrl));
   }
 
-  // 5. Profile completion check (Only for non-admins now, since Admins are handled above)
+  // 5. Profile completion check
   if (!user?.profileComplete && pathname !== "/complete-profile") {
     return NextResponse.redirect(new URL("/complete-profile", nextUrl));
   }

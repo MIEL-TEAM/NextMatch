@@ -12,7 +12,6 @@ import DeleteButton from "./DeleteButton";
 import MemberImage from "./MemberImage";
 import StarButton from "./StarButton";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
 import { MemberPhotosProps } from "@/types/members";
 
 export default function MemberPhotos({
@@ -39,9 +38,7 @@ export default function MemberPhotos({
     try {
       await setMainImage(photo);
       router.refresh();
-      toast.success("תמונת הפרופיל עודכנה בהצלחה", {
-        style: getToastStyle(),
-      });
+      toast.success("תמונת הפרופיל עודכנה בהצלחה");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -55,9 +52,7 @@ export default function MemberPhotos({
     try {
       await deleteImage(photo);
       router.refresh();
-      toast.success("התמונה נמחקה בהצלחה", {
-        style: getToastStyle(),
-      });
+      toast.success("התמונה נמחקה בהצלחה");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -70,7 +65,7 @@ export default function MemberPhotos({
     try {
       await removeMainImage();
       router.refresh();
-      toast.success("תמונת הפרופיל הוסרה בהצלחה", { style: getToastStyle() });
+      toast.success("תמונת הפרופיל הוסרה בהצלחה");
     } catch (error: any) {
       toast.error(error.message);
     } finally {

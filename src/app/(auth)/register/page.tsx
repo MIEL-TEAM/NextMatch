@@ -1,7 +1,6 @@
 import React from "react";
 import RegisterForm from "./RegisterForm";
 import { Metadata } from "next";
-import DeviceRoutingProvider from "@/components/auth/DeviceRoutingProvider";
 
 export const metadata: Metadata = {
   title: "Miel - הרשמה",
@@ -30,10 +29,8 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <DeviceRoutingProvider>
-      <div className="h-screen w-screen overflow-hidden">
-        <RegisterForm />
-      </div>
-    </DeviceRoutingProvider>
+    <div className="h-screen w-screen overflow-hidden">
+      <RegisterForm />
+    </div>
   );
 }

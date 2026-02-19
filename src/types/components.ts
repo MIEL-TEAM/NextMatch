@@ -69,12 +69,4 @@ export type ProvidersProps = {
   unreadCount?: number;
 };
 
-export type DeviceRoutingProviderProps = {
-  children: React.ReactNode;
-  enabled?: boolean;
-};
 
-export type DeviceRedirectProps = {
-  enabled?: boolean;
-  mobileThreshold?: number;
-};

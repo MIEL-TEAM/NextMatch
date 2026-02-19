@@ -11,7 +11,6 @@ import { getSession } from "@/lib/session";
 import VideoUploadSection from "@/components/video/VideoUploadSection";
 import VideoPlayer from "@/components/video/VideoPlayer";
 import { getSelfProfile } from "@/lib/getSelfProfile";
-import MobileProfileWrapper from "@/components/MobileProfileWrapper";
 import DesktopProfileView from "@/components/DesktopProfileView";
 
 interface MemberDetailedPageProps {
@@ -61,26 +60,15 @@ export default async function MemberDetailedPage({
   // רכיב התוכן של הדף
   const pageContent = (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Mobile Profile View - Only on mobile */}
-      <MobileProfileWrapper
-        member={member}
-        userId={userId}
-        isOwnProfile={isOwnProfile}
-        initialLiked={likeIds.includes(member.userId)}
-      />
-
       {/* Scrollable content - includes desktop profile and other content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Desktop Profile View - Only on desktop */}
-        <div className="hidden md:block">
-          <DesktopProfileView
-            member={member}
-            userId={userId}
-            isOwnProfile={isOwnProfile}
-            initialLiked={likeIds.includes(member.userId)}
-            photos={photos}
-          />
-        </div>
+        <DesktopProfileView
+          member={member}
+          userId={userId}
+          isOwnProfile={isOwnProfile}
+          initialLiked={likeIds.includes(member.userId)}
+          photos={photos}
+        />
 
         {/* Content section */}
         <div className="flex flex-col gap-6 p-4">

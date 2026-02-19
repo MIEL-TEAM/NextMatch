@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+## Core Architecture Rules
+
+- Follow server-first architecture (Next.js App Router).
+- Business logic must live in Server Actions.
+- API routes are only for webhooks, external integrations, or specialized endpoints.
+- Never place Prisma queries inside Client Components.
+- Never duplicate business logic between Server Actions and API routes.
+- Middleware is responsible for route protection only.
+- Use TypeScript strictly. No any.

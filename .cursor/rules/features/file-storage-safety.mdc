@@ -1,0 +1,10 @@
+---
+description: "Protect file upload architecture"
+---
+
+## File Storage Rules
+
+- Use signed URLs for S3 uploads.
+- Client must upload directly to S3 or Cloudinary.
+- Server must validate upload completion before DB write.
+- Do not proxy file uploads through Next.js server.

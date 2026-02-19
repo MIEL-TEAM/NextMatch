@@ -1,0 +1,11 @@
+---
+description: "Protect premium and subscription integrity"
+---
+
+## Premium Rules
+
+- Premium status must be derived from database.
+- Never trust client-side premium flags.
+- Stripe webhooks are authoritative.
+- Boost usage must decrement boostsAvailable atomically.
+- Never grant premium without webhook verification.

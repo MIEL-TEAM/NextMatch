@@ -8,7 +8,6 @@ import { toggleLikeMember } from "@/app/actions/likeActions";
 import { Member } from "@prisma/client";
 import { toast } from "react-toastify";
 import LikeButton from "./LikeButton";
-import { getToastStyle } from "@/hooks/useIsMobile";
 import { useRouter } from "next/navigation";
 import PresenceDot from "./PresenceDot";
 
@@ -43,36 +42,16 @@ export default function ProfileHeader({
       if (result.success) {
         setHasLiked(!hasLiked);
         onLikeToggle?.(member.userId, hasLiked);
-        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים");
       } else if (result.alreadyLiked) {
-        toast.error(`כבר עשית לייק ל${member.name}`, {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.error(`כבר עשית לייק ל${member.name}`);
       } else {
-        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.error("אירעה שגיאה, נסו שוב מאוחר יותר");
       }
     } catch (error) {
       console.log(error);
       setHasLiked(likeIds.includes(member.userId));
-      toast.error("אירעה שגיאה, נסו שוב מאוחר יותר", {
-        style: {
-          ...getToastStyle(),
-          textAlign: "center",
-        },
-      });
+      toast.error("אירעה שגיאה, נסו שוב מאוחר יותר");
     } finally {
       setLoading(false);
     }
@@ -96,21 +75,11 @@ export default function ProfileHeader({
         await navigator.clipboard.writeText(
           `${window.location.origin}/members/${member.userId}`
         );
-        toast.success("קישור לפרופיל הועתק", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.success("קישור לפרופיל הועתק");
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
-        toast.error("שגיאה בשיתוף הפרופיל", {
-          style: {
-            ...getToastStyle(),
-            textAlign: "center",
-          },
-        });
+        toast.error("שגיאה בשיתוף הפרופיל");
       }
     } finally {
       setIsSharing(false);

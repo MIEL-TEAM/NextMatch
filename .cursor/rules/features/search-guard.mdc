@@ -1,0 +1,15 @@
+---
+description: "Protect search filtering system"
+---
+
+## Search Rules
+
+- Always normalize age range (18-100, min <= max).
+- Age filtering must use correct birthdate bounds:
+  minDob = today - maxAge
+  maxDob = today - minAge
+- Never use object references inside React Query queryKey.
+- Query keys must contain only primitives.
+- City filters must normalize "City, Country" to "City".
+- Never compare city using full Google Places string.
+- Avoid infinite re-render loops caused by filter syncing.

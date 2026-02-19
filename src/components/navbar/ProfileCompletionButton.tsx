@@ -46,7 +46,7 @@ export default function ProfileCompletionButton({
   const recommended = status.recommendedAction ?? incompleteTasks[0] ?? null;
 
   return (
-    <Popover placement="bottom-start" showArrow offset={10}>
+    <Popover placement="bottom-start" showArrow offset={10} shouldBlockScroll={false}>
       <PopoverTrigger>
         <Button
           className="relative flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] min-w-fit h-auto"

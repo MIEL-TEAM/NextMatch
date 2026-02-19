@@ -1,8 +1,7 @@
-"use client";
-
 import React from "react";
 import { motion } from "framer-motion";
 import MemberCard from "@/app/members/MemberCard";
+import MembersSkeleton from "@/components/memberStyles/MembersSkeleton";
 import PaginationComponent from "@/components/PaginationComponent";
 import { Member } from "@prisma/client";
 import { useIsFetching } from "@tanstack/react-query";
@@ -42,18 +41,7 @@ const MembersGrid: React.FC<Props> = ({
   const isFetching = useIsFetching({ queryKey: ["members"] }) > 0;
 
   if (isFetching) {
-    return (
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 animate-pulse">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-gray-200 h-[220px] sm:h-[260px] rounded-xl"
-            />
-          ))}
-        </div>
-      </div>
-    );
+    return <MembersSkeleton />;
   }
 
   return (

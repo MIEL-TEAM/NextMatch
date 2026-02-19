@@ -1,0 +1,10 @@
+---
+description: "Protect real-time messaging integrity"
+---
+
+## Real-Time Rules
+
+- Pusher channels must be authenticated.
+- Never expose private channel without validation.
+- Real-time events must mirror DB writes.
+- Do not emit events before DB commit.

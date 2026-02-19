@@ -92,7 +92,7 @@ export default function TopNavClient({
       {!isAdmin && <UnreadCountSync initialUnreadCount={initialUnreadCount} />}
       <Navbar
         maxWidth="full"
-        className="bg-gradient-to-r from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
+        className="bg-gradient-to-r h-[80px] from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
         backdrop-blur-lg shadow-md border-b border-white/20 z-[100000] relative"
         classNames={{
           item: [
@@ -193,26 +193,29 @@ export default function TopNavClient({
               />
             ))}
         </NavbarContent>
-
         <NavbarContent
           justify="end"
           className="gap-3 items-center hidden sm:flex"
         >
-          <Link
-            href="/members"
-            className="font-bold tracking-wide text-3xl text-[#8B5A2B]"
-          >
-            Miel
-          </Link>
-
-          <div className="relative items-center justify-center w-11 h-11 flex">
-            <Image
-              src="/images/icons/Logo.png"
-              width={35}
-              height={35}
-              alt="logo"
-              className="object-contain w-auto h-auto"
-            />
+          <div className="flex flex-col items-center leading-[0.6]">
+            <Link
+              href="/members"
+              className="font-medium text-[34px] text-[#8B5A2B] -mt-1"
+            >
+              <div
+                className="relative w-11 h-11"
+              >
+                <Image
+                  src="/images/icons/Logo.png"
+                  width={35}
+                  height={35}
+                  alt="logo"
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              Miel
+            </Link>
           </div>
         </NavbarContent>
       </Navbar>

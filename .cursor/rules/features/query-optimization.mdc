@@ -1,0 +1,13 @@
+---
+description: "Prevent N+1 queries and performance regressions"
+alwaysApply: true
+---
+
+## Query Optimization Rules
+
+- Prefer select over include in Prisma queries.
+- Never use include: true.
+- List views must limit related data (e.g. take: 1 photo).
+- Use Promise.all for parallel queries.
+- Never introduce N+1 patterns.
+- Paginated queries must use database-level pagination.

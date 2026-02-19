@@ -13,5 +13,5 @@ export default async function TestMembersPage() {
     return <div>No session - please login</div>;
   }
 
-  return <MembersClient serverSession={session} />;
+  return <MembersClient />;
 }

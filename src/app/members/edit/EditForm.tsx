@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { getToastStyle } from "@/hooks/useIsMobile";
 
 type EditFormProps = {
   member: Member;
@@ -48,9 +47,7 @@ export default function EditForm({ member }: EditFormProps) {
     const result = await updateMemberProfile(data, nameUpdated);
 
     if (result.status === "success") {
-      toast.success("הפרופיל עודכן בהצלחה!", {
-        style: getToastStyle(),
-      });
+      toast.success("הפרופיל עודכן בהצלחה");
       router.refresh();
       reset({ ...data });
     } else {
