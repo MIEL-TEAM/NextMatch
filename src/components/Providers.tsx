@@ -5,7 +5,9 @@ import useMessageStore from "@/hooks/useMessageStore";
 import { useNotificationChannel } from "@/hooks/useNotificationChannel";
 import { usePresenceChannel } from "@/hooks/usePresenceChannel";
 import { useCelebrationListener } from "@/hooks/useCelebrationListener";
+import { useRevealChannel } from "@/hooks/useRevealChannel";
 import { useInvitationLoader } from "@/hooks/useInvitationLoader";
+import useCelebrationStore from "@/hooks/useCelebrationStore";
 import { NextUIProvider } from "@nextui-org/react";
 import React, { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
@@ -86,12 +88,18 @@ export default function Providers({
 
   usePresenceChannel(shouldEnableChannels ? userId : null, profileComplete);
   useNotificationChannel(shouldEnableChannels ? userId : null, profileComplete);
+  useRevealChannel(shouldEnableChannels ? userId : null, profileComplete);
 
   const { celebration, showCelebration, closeCelebration } = useCelebration();
   useCelebrationListener(
     shouldEnableChannels ? userId : undefined,
     showCelebration
   );
+
+  const setCelebrationOpen = useCelebrationStore((s) => s.setOpen);
+  useEffect(() => {
+    setCelebrationOpen(celebration.isOpen);
+  }, [celebration.isOpen, setCelebrationOpen]);
 
   // Load pending invitations from backend on app startup
   useInvitationLoader();

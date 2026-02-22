@@ -148,17 +148,23 @@ async function seedVideos() {
         },
       });
 
-      if (existingVideo) {
-        console.log(`Video already exists for member ${member.id}`);
-        return;
+      if (!existingVideo) {
+        await prisma.video.create({
+          data: {
+            url: "/video/car.mp4",
+            memberId: member.id,
+            isApproved: true,
+            duration: 30,
+          },
+        });
       }
 
-      await prisma.video.create({
+      // Always ensure Member.videoUrl is set — even if Video row already existed
+      await prisma.member.update({
+        where: { id: member.id },
         data: {
-          url: "/video/car.mp4",
-          memberId: member.id,
-          isApproved: true,
-          duration: 30,
+          videoUrl: "/video/car.mp4",
+          videoUploadedAt: new Date(),
         },
       });
     }),

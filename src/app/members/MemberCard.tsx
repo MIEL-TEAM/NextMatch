@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
@@ -11,7 +11,9 @@ import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
+import { AnimatePresence } from "framer-motion";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
+import FloatingReaction from "@/components/FloatingReaction";
 import { MemberCardProps } from "@/types/members";
 import Carousel from "@/components/MemberImageCarousel";
 
@@ -37,6 +39,8 @@ export default function MemberCard({
   const [, setCurrentIndex] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [videoError, setVideoError] = useState<boolean>(false);
+  const [reactionKey, setReactionKey] = useState<number | null>(null);
+  const reactionCounter = useRef(0);
 
   useEffect(() => {
     if (memberVideos.length > 0 && !activeVideo) {
@@ -73,6 +77,11 @@ export default function MemberCard({
           const newLikedState = !hasLiked;
           setHasLiked(newLikedState);
 
+          if (newLikedState) {
+            reactionCounter.current += 1;
+            setReactionKey(reactionCounter.current);
+          }
+
           if (onLike) {
             onLike(member.userId, newLikedState);
           }
@@ -88,7 +97,7 @@ export default function MemberCard({
         setLoading(false);
       }
     },
-    [member.userId, hasLiked, onLike, member.name, likeIds]
+    [member.userId, member.name, hasLiked, onLike, likeIds]
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -158,7 +167,6 @@ export default function MemberCard({
               hasLiked={hasLiked}
               aria-label={hasLiked ? "בטל לייק" : "הוסף לייק"}
             />
-
             {memberVideos.length > 0 && showVideo && (
               <button
                 onClick={toggleMute}
@@ -242,20 +250,33 @@ export default function MemberCard({
     ]
   );
 
+  const floatingReaction = (
+    <AnimatePresence>
+      {reactionKey !== null && (
+        <FloatingReaction
+          key={reactionKey}
+          name={member.name}
+          onDismiss={() => setReactionKey(null)}
+        />
+      )}
+    </AnimatePresence>
+  );
+
   if (memberPhotos.length <= 1) {
     const defaultImage =
       memberPhotos.length === 1
         ? memberPhotos[0].url
         : member.image || "/images/user.png";
     return (
-      <div className="w-full h-full" ref={visibilityRef}>
+      <div className="relative w-full h-full" ref={visibilityRef}>
         {renderCardContent(defaultImage, true)}
+        {floatingReaction}
       </div>
     );
   }
 
   return (
-    <div className="group" ref={visibilityRef}>
+    <div className="relative group" ref={visibilityRef}>
       <Carousel<{ url: string; id: string }>
         items={memberPhotos}
         onIndexChange={setCurrentIndex}
@@ -265,7 +286,7 @@ export default function MemberCard({
           renderCardContent(currentImage.url, isPriority)
         }
       </Carousel>
-
+      {floatingReaction}
     </div>
   );
 }

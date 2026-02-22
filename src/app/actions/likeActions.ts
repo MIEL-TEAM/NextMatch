@@ -18,7 +18,7 @@ import {
   dbGetTargetLikes,
   dbGetUserEmailName,
 } from "@/lib/db/likeActions";
-import { dbCreateInvitation } from "@/lib/db/invitationActions";
+import { dbCreateMatchAtomic } from "@/lib/db/matchActions";
 import {
   notifyNewLike,
   notifyMutualMatch,
@@ -27,40 +27,42 @@ import {
 export async function toggleLikeMember(
   targetUserId: string,
   isLiked: boolean,
-): Promise<{ success: boolean; error?: string; alreadyLiked?: boolean }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  alreadyLiked?: boolean;
+  feedback?: { city?: string; primaryInterest?: string };
+}> {
   try {
     const userId = await getAuthUserId();
+
+    let feedback: { city?: string; primaryInterest?: string } | undefined;
 
     if (isLiked) {
       await dbDeleteLike(userId, targetUserId);
     } else {
       const like = await dbCreateLike(userId, targetUserId);
+      feedback = {
+        city: like.targetMember?.city,
+        primaryInterest: like.targetMember?.interests[0]?.name,
+      };
 
-      // Track the like interaction for smart matching
       await trackUserInteraction(targetUserId, "like").catch((e) =>
         console.error("Failed to track like interaction:", e),
       );
 
-      // בדיקה אם זה לייק הדדי
       const mutualLike = await dbGetMutualLike(userId, targetUserId);
 
       if (mutualLike) {
-        // קבלת מגדר המשתמש הנוכחי ומגדר המשתמש המתאים
         const [currentUser, targetUser] = await Promise.all([
           dbGetMemberGender(userId),
           dbGetMemberGender(targetUserId),
         ]);
 
-        // קבלת שמות המשתמשים
         const targetMember = await dbGetMemberNameImage(targetUserId);
 
-        const [invitationForCurrentUser, invitationForTargetUser] =
-          await Promise.all([
-            dbCreateInvitation(userId, targetUserId, "chat"),
-            dbCreateInvitation(targetUserId, userId, "chat"),
-          ]);
+        const matchResult = await dbCreateMatchAtomic(userId, targetUserId);
 
-        // Create mutual match notifications
         await Promise.all([
           notifyMutualMatch(
             userId,
@@ -78,65 +80,71 @@ export async function toggleLikeMember(
           console.error("Failed to create mutual match notifications:", e),
         );
 
-        // Send real-time celebration events (best-effort delivery)
         await Promise.all([
-          // למשתמש הראשון - שם המשתמש השני
           pusherServer.trigger(`private-${userId}`, "mutual-match", {
             matchedUser: {
               name: targetMember?.name || "משתמש",
               image: targetMember?.image,
               userId: targetUserId,
             },
-            currentUserGender: currentUser?.gender || "female", // ברירת מחדל נקבה
+            currentUserGender: currentUser?.gender || "female",
             type: "mutual-like",
             timestamp: new Date().toISOString(),
           }),
-          // למשתמש השני - שם המשתמש הראשון
           pusherServer.trigger(`private-${targetUserId}`, "mutual-match", {
             matchedUser: {
               name: like.sourceMember.name,
               image: like.sourceMember.image,
               userId: userId,
             },
-            currentUserGender: targetUser?.gender || "female", // ברירת מחדל נקבה
+            currentUserGender: targetUser?.gender || "female",
             type: "mutual-like",
             timestamp: new Date().toISOString(),
           }),
         ]);
 
-        // Send real-time invitation events ONLY if invitations were created
-        // (Anti-spam: user might be in cooldown or have active invitation)
-        if (invitationForCurrentUser) {
-          pusherServer
-            .trigger(`private-${userId}`, "match:online", {
-              userId: targetUserId,
-              name: targetMember?.name || "משתמש",
-              image: targetMember?.image,
-              videoUrl: invitationForCurrentUser.sender.member?.videoUrl,
-              timestamp: new Date().toISOString(),
-            })
-            .catch((e) => console.error("Failed to send invitation event:", e));
+        if (!matchResult.alreadyExisted) {
+          const { match, revealForUser1, revealForUser2 } = matchResult;
+
+          const isCurrentUserUser1 = match.userId1 === userId;
+          const revealForCurrentUser = isCurrentUserUser1
+            ? revealForUser1
+            : revealForUser2;
+          const revealForTargetUser = isCurrentUserUser1
+            ? revealForUser2
+            : revealForUser1;
+
+          await Promise.all([
+            pusherServer.trigger(`private-${userId}`, "match:reveal", {
+              matchId: match.id,
+              revealId: revealForCurrentUser.id,
+              videoSnapshot: revealForCurrentUser.videoSnapshot,
+              otherUser: {
+                id: targetUserId,
+                name: targetMember?.name || "משתמש",
+                image: targetMember?.image || null,
+              },
+            }),
+            pusherServer.trigger(`private-${targetUserId}`, "match:reveal", {
+              matchId: match.id,
+              revealId: revealForTargetUser.id,
+              videoSnapshot: revealForTargetUser.videoSnapshot,
+              otherUser: {
+                id: userId,
+                name: like.sourceMember.name,
+                image: like.sourceMember.image,
+              },
+            }),
+          ]).catch((e) =>
+            console.error("[Match] Failed to send reveal events:", e),
+          );
         }
 
-        if (invitationForTargetUser) {
-          pusherServer
-            .trigger(`private-${targetUserId}`, "match:online", {
-              userId: userId,
-              name: like.sourceMember.name,
-              image: like.sourceMember.image,
-              videoUrl: invitationForTargetUser.sender.member?.videoUrl,
-              timestamp: new Date().toISOString(),
-            })
-            .catch((e) => console.error("Failed to send invitation event:", e));
-        }
-
-        // 📧 שלח אימיילים על התאמה הדדית
         const [currentUserData, targetUserData] = await Promise.all([
           dbGetUserEmailName(userId),
           dbGetUserEmailName(targetUserId),
         ]);
 
-        // שלח אימיילים לשני המשתמשים (לא ממתינים - רץ ברקע)
         if (currentUserData?.email && targetMember?.name) {
           sendNewMatchEmail(
             currentUserData.email,
@@ -159,14 +167,12 @@ export async function toggleLikeMember(
           );
         }
       } else {
-        // לייק רגיל
         await pusherServer.trigger(`private-${targetUserId}`, "like:new", {
           name: like.sourceMember.name,
           image: like.sourceMember.image,
           userId: like.sourceMember.userId,
         });
 
-        // Create like notification
         await notifyNewLike(
           targetUserId,
           userId,
@@ -176,11 +182,10 @@ export async function toggleLikeMember(
       }
     }
 
-    return { success: true };
+    return { success: true, feedback };
   } catch (error) {
     console.log("Server action error:", error);
 
-    // Handle unique constraint violation for duplicate likes
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorString = JSON.stringify(error);
 

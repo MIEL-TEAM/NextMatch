@@ -87,6 +87,10 @@ model User {
   sentInvitations     Invitation[] @relation("SenderInvitations")
   receivedInvitations Invitation[] @relation("RecipientInvitations")
 
+  // Match relations
+  matchesAsUser1 Match[] @relation("MatchUser1")
+  matchesAsUser2 Match[] @relation("MatchUser2")
+
   // Notification relations
   notifications          Notification[] @relation("UserNotifications")
   triggeredNotifications Notification[] @relation("ActorNotifications")
@@ -109,17 +113,17 @@ model Interest {
 }
 
 model Member {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  name               String
-  dateOfBirth        DateTime
-  gender             String
-  created            DateTime  @default(now())
-  updated            DateTime  @default(now())
-  lastActiveAt       DateTime?
-  description        String
-  city               String
-  country            String
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  name         String
+  dateOfBirth  DateTime
+  gender       String
+  created      DateTime  @default(now())
+  updated      DateTime  @default(now())
+  lastActiveAt DateTime?
+  description  String
+  city         String
+  country      String
 
   image              String?
   coverImage         String?
@@ -149,7 +153,6 @@ model Member {
 
   @@index([userId])
   @@index([latitude, longitude])
-
   @@index([gender])
   @@index([city])
   @@index([created(sort: Desc)])
@@ -157,7 +160,6 @@ model Member {
   @@index([gender, dateOfBirth])
   @@index([lastActiveAt(sort: Desc)])
 }
-
 
 model UserProfileAnalysis {
   userId    String   @id
@@ -180,10 +182,11 @@ model Photo {
 }
 
 model Like {
-  sourceUserId String
-  targetUserId String
-  sourceMember Member @relation("source", fields: [sourceUserId], references: [userId], onDelete: Cascade)
-  targetMember Member @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
+  sourceUserId      String
+  targetUserId      String
+  processedForMatch Boolean @default(false)
+  sourceMember      Member  @relation("source", fields: [sourceUserId], references: [userId], onDelete: Cascade)
+  targetMember      Member  @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
 
   @@id([sourceUserId, targetUserId])
   @@index([targetUserId])
@@ -243,15 +246,14 @@ model UserInteraction {
   timestamp DateTime @default(now())
   weight    Float    @default(1.0)
 
-  user      Member   @relation("userInteractions", fields: [userId], references: [userId], onDelete: Cascade)
-  target    Member   @relation("targetInteractions", fields: [targetId], references: [userId], onDelete: Cascade)
+  user   Member @relation("userInteractions", fields: [userId], references: [userId], onDelete: Cascade)
+  target Member @relation("targetInteractions", fields: [targetId], references: [userId], onDelete: Cascade)
 
   @@index([userId, timestamp(sort: Desc)])
   @@index([targetId])
   @@index([userId, action])
   @@index([userId, targetId])
 }
-
 
 model UserPreference {
   id             String   @id @default(cuid())
@@ -330,6 +332,24 @@ model UserSearchPreference {
 enum Role {
   ADMIN
   MEMBER
+}
+
+enum MatchStatus {
+  ACTIVE
+  DISSOLVED
+}
+
+enum DissolveReason {
+  UNMATCHED
+  BLOCKED
+  ACCOUNT_DELETED
+}
+
+enum RevealStatus {
+  PENDING
+  REVEALED
+  DISMISSED
+  EXPIRED
 }
 
 // Admin audit logging
@@ -448,6 +468,48 @@ model Invitation {
   @@index([recipientId, dismissedAt])
   @@index([recipientId, acceptedAt])
   @@map("invitations")
+}
+
+model Match {
+  id                 String          @id @default(cuid())
+  userId1            String
+  userId2            String
+  status             MatchStatus     @default(ACTIVE)
+  matchedAt          DateTime        @default(now())
+  dissolvedAt        DateTime?
+  dissolvedBy        String?
+  dissolvedReason    DissolveReason?
+  user1VideoSnapshot String?         @db.Text
+  user2VideoSnapshot String?         @db.Text
+  chatId             String?
+  createdAt          DateTime        @default(now())
+
+  reveals MatchReveal[]
+  user1   User          @relation("MatchUser1", fields: [userId1], references: [id], onDelete: Cascade)
+  user2   User          @relation("MatchUser2", fields: [userId2], references: [id], onDelete: Cascade)
+
+  @@unique([userId1, userId2])
+  @@index([userId1, status, matchedAt(sort: Desc)])
+  @@index([userId2, status, matchedAt(sort: Desc)])
+}
+
+model MatchReveal {
+  id            String       @id @default(cuid())
+  matchId       String
+  userId        String
+  videoSnapshot String?      @db.Text
+  status        RevealStatus @default(PENDING)
+  revealedAt    DateTime?
+  dismissedAt   DateTime?
+  expiredAt     DateTime?
+  lastShownAt   DateTime?
+  createdAt     DateTime     @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt])
 }
 
 model AIConversation {

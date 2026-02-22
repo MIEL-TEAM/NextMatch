@@ -49,18 +49,18 @@ export default function ProfileCompletionButton({
     <Popover placement="bottom-start" showArrow offset={10} shouldBlockScroll={false}>
       <PopoverTrigger>
         <Button
-          className="relative flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF4E00] to-[#E63946] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] min-w-fit h-auto"
+          className="relative overflow-visible flex items-center bg-gradient-to-r from-[#C0392B] via-[#E63946] to-[#C0392B] px-8 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] min-w-fit h-auto rounded-lg mt-1.5"
           aria-label={`Profile ${status.completionPercentage}% complete`}
         >
-          <span className="whitespace-nowrap">שפר פרופיל</span>
+          <span className="whitespace-nowrap text-base">שפר פרופיל</span>
           <motion.span
             key={status.completionPercentage}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="rounded-lg bg-[#FFC857] px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-[#732400] shadow-md whitespace-nowrap"
+            className="absolute -top-3 right-2  rounded-full bg-[#FFC857] px-2 py-0.5 text-[10px] sm:text-xs font-bold text-[#732400] shadow-md whitespace-nowrap pointer-events-none"
           >
-            {status.completionPercentage}%
+          הושלם {status.completionPercentage}% 
           </motion.span>
         </Button>
       </PopoverTrigger>

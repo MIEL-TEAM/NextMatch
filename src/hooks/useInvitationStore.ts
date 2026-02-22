@@ -58,7 +58,7 @@ const useInvitationStore = create<InvitationStore>((set, get) => ({
 
   dismiss: async () => {
     const { dismissTimer, currentInvitation } = get();
-    
+
     // Clear timer
     if (dismissTimer) {
       clearTimeout(dismissTimer);

@@ -25,6 +25,15 @@ export async function dbCreateLike(userId: string, targetUserId: string) {
           userId: true,
         },
       },
+      targetMember: {
+        select: {
+          city: true,
+          interests: {
+            select: { name: true },
+            take: 1,
+          },
+        },
+      },
     },
   });
 }

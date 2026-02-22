@@ -10,6 +10,8 @@ interface VideoPlayerProps {
   muted?: boolean;
   aspectRatio?: "square" | "video" | string;
   className?: string;
+  showControls?: boolean;
+  showMuteControl?: boolean;
   onError?: (error: any) => void;
 }
 
@@ -20,6 +22,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   muted = true,
   aspectRatio = "video",
   className = "",
+  showControls = true,
+  showMuteControl = false,
   onError,
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -73,28 +77,45 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onError={onError}
       />
 
-      <div className="absolute bottom-2 left-2 flex gap-2 z-10">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            togglePlay();
-          }}
-          className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
-          aria-label={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? <Pause size={15} /> : <Play size={15} />}
-        </button>
+      {/* Full controls — play + mute */}
+      {showControls && (
+        <div className="absolute bottom-2 left-2 flex gap-2 z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlay();
+            }}
+            className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMute();
+            }}
+            className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          </button>
+        </div>
+      )}
+
+      {/* Mute-only control — for card contexts */}
+      {!showControls && showMuteControl && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             toggleMute();
           }}
-          className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
+          className="absolute bottom-3 left-3 z-10 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors"
           aria-label={isMuted ? "Unmute" : "Mute"}
         >
           {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
         </button>
-      </div>
+      )}
     </div>
   );
 };
