@@ -97,7 +97,7 @@ const MembersLayout: React.FC<Props> = ({
       )}
 
       <motion.div
-        className="relative pt-8 sm:pt-12 pb-4 sm:pb-6 px-3 sm:px-4 md:px-8 text-center"
+        className="relative pt-1 sm:pt-4 pb-4 sm:pb-6 px-3 sm:px-4 md:px-8 text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}

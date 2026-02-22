@@ -100,7 +100,7 @@ export function StoriesCarousel({
   if (loading) {
     return (
       <div className="relative">
-        <div className="flex gap-2 md:gap-3 px-3 md:px-6 py-3 md:py-4 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 md:gap-3 px-3 md:px-6 py-3 md:py-[2.5rem] overflow-x-auto scrollbar-hide">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
@@ -148,7 +148,7 @@ export function StoriesCarousel({
       {/* Stories Container - Optimized for mobile */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x"
+        className="flex gap-2 md:gap-3 px-3 md:px-8 py-3 md:pt-[2.5rem] overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x"
         onScroll={checkScrollability}
         style={{
           scrollbarWidth: "none",
