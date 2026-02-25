@@ -9,36 +9,47 @@ const CARDCOM_ALLOWED_IPS = [
 ];
 
 export async function POST(req: Request) {
+  console.log("=== CARDCOM WEBHOOK START ===");
+
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get("secret");
   const expectedSecret = process.env.CARDCOM_WEBHOOK_SECRET;
 
+  console.log("Secret received:", secret);
+  console.log("Secret expected:", expectedSecret);
+
   if (!expectedSecret) {
-    console.error("[cardcom/webhook] CARDCOM_WEBHOOK_SECRET is not configured");
+    console.error("[cardcom/webhook] Missing CARDCOM_WEBHOOK_SECRET env");
     return new Response("Internal Server Error", { status: 500 });
   }
 
   if (!secret || secret !== expectedSecret) {
+    console.error("[cardcom/webhook] Secret mismatch");
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const contentType = req.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    return new Response("Bad Request", { status: 400 });
-  }
-
   if (process.env.CARDCOM_ENFORCE_IP === "true") {
-    const forwarded = req.headers.get("x-forwarded-for") ?? "";
-    const callerIp = forwarded.split(",")[0].trim();
-    if (!CARDCOM_ALLOWED_IPS.includes(callerIp)) {
+    const ip = req.headers.get("x-forwarded-for") ?? "";
+    if (!CARDCOM_ALLOWED_IPS.includes(ip)) {
+      console.error("[cardcom/webhook] Unauthorized IP:", ip);
       return new Response("Unauthorized", { status: 401 });
     }
   }
+  const contentType = req.headers.get("content-type") ?? "";
+  console.log("Content-Type:", contentType);
+
+  if (!contentType.includes("application/json")) {
+    console.error("[cardcom/webhook] Invalid content-type");
+    return new Response("Bad Request", { status: 400 });
+  }
 
   let body: unknown;
+
   try {
     body = await req.json();
-  } catch {
+    console.log("Parsed JSON body:", body);
+  } catch (err) {
+    console.error("[cardcom/webhook] JSON parse error:", err);
     return new Response("Bad Request", { status: 400 });
   }
 
@@ -48,6 +59,7 @@ export async function POST(req: Request) {
     !("ResponseCode" in body) ||
     !("ReturnValue" in body)
   ) {
+    console.error("[cardcom/webhook] Invalid body structure:", body);
     return new Response("Bad Request", { status: 400 });
   }
 
@@ -59,13 +71,17 @@ export async function POST(req: Request) {
       raw.TokenInfo === null ||
       !("Token" in (raw.TokenInfo as object)))
   ) {
+    console.error("[cardcom/webhook] Missing TokenInfo.Token");
     return new Response("Bad Request", { status: 400 });
   }
 
   try {
     const event = cardcomProvider.verifyWebhook(body);
+    console.log("Verified event:", event);
 
     if (event.type === "initial_payment") {
+      console.log("Activating subscription for user:", event.userId);
+
       await subscriptionService.activateSubscriptionFromWebhook({
         userId: event.userId,
         planId: event.planId,
@@ -73,16 +89,15 @@ export async function POST(req: Request) {
         providerToken: event.providerSubscriptionId,
         amount: event.amount,
       });
+
+      console.log("Subscription activated successfully");
     } else if (event.type === "payment_failed") {
-      console.warn("[cardcom/webhook] Payment failed:", {
-        userId: event.userId,
-        planId: event.planId,
-        amount: event.amount,
-      });
+      console.warn("[cardcom/webhook] Payment failed:", event);
     }
   } catch (err) {
     console.error("[cardcom/webhook] Error processing event:", err);
   }
 
+  console.log("=== CARDCOM WEBHOOK END (200) ===");
   return new Response("OK", { status: 200 });
 }
