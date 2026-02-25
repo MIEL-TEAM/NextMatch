@@ -53,6 +53,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Debug: confirm fresh DB values are reaching the quota engine
+    console.info("[AI route premium check]", {
+      isPremium: user.isPremium,
+      premiumUntil: user.premiumUntil,
+      now: new Date(),
+    });
+
     const quota = await checkAndIncrementAIQuota(userId, user);
     if (!quota.allowed) {
       return NextResponse.json(
