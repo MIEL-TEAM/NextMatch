@@ -54,10 +54,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Debug: confirm fresh DB values are reaching the quota engine
-    console.info("[AI route premium check]", {
+    console.log("[AI route premium check]", {
       isPremium: user.isPremium,
       premiumUntil: user.premiumUntil,
       now: new Date(),
+      comparison: user.premiumUntil && user.premiumUntil > new Date(),
     });
 
     const quota = await checkAndIncrementAIQuota(userId, user);
