@@ -7,6 +7,7 @@ import {
   getUserBehaviorInsights,
   analyzeMatchReason,
 } from "@/lib/ai-assistant-helpers";
+import { checkAndIncrementAIQuota } from "@/lib/aiQuota";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
         select: {
           name: true,
           isPremium: true,
+          premiumUntil: true,
           preferredGenders: true,
           preferredAgeMin: true,
           preferredAgeMax: true,
@@ -51,22 +53,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const dailyUsage = await prisma.aIUsageLog.count({
-      where: {
-        userId,
-        action: "chat",
-        createdAt: { gte: today },
-      },
-    });
-
-    const maxDailyQueries = user.isPremium ? 999 : 5;
-    if (dailyUsage >= maxDailyQueries) {
+    const quota = await checkAndIncrementAIQuota(userId, user);
+    if (!quota.allowed) {
       return NextResponse.json(
-        { error: "Daily limit reached" },
-        { status: 429 },
+        { error: "AI_QUOTA_REACHED", remaining: 0, limit: quota.limit },
+        { status: 429 }
       );
     }
 
@@ -252,6 +243,8 @@ export async function POST(req: NextRequest) {
       content: assistantMessage,
       metadata,
       tokensUsed,
+      remaining: quota.remaining,
+      limit: quota.limit,
     });
   } catch (error: any) {
     console.error("AI Chat Error:", error);

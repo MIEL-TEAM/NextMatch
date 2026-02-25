@@ -8,6 +8,7 @@ import { Camera, MapPin, Edit2 } from "lucide-react";
 import { MdVerified } from "react-icons/md";
 import { calculateAge } from "@/lib/util";
 import PresenceDot from "../PresenceDot";
+import PremiumMark from "@/components/PremiumMark";
 import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +17,8 @@ type ProfileCoverProps = {
         user?: {
             oauthVerified?: boolean;
             lastActiveAt?: Date | null;
+            isPremium?: boolean;
+            premiumUntil?: Date | null;
         } | null;
         coverImage?: string | null;
     };
@@ -102,9 +105,16 @@ export default function ProfileCover({
                         {member.name}
                         {member.dateOfBirth && (
                             <span className="text-white/90">
-                                , {calculateAge(member.dateOfBirth)}
+                                ,{calculateAge(member.dateOfBirth)}
                             </span>
                         )}
+                        <PremiumMark
+                            isActivePremium={
+                                Boolean(member.user?.isPremium) &&
+                                Boolean(member.user?.premiumUntil) &&
+                                new Date(member.user!.premiumUntil!) > new Date()
+                            }
+                        />
                     </h1>
                     {/* Verification Badge */}
                     {member.user?.oauthVerified && (

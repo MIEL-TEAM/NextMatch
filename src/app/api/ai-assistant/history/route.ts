@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/session";
+import { getAIQuotaStatus } from "@/lib/aiQuota";
 
 export async function GET() {
   try {
@@ -9,30 +10,18 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get active conversation
     const conversation = await prisma.aIConversation.findFirst({
       where: { userId, isActive: true },
       orderBy: { updatedAt: "desc" },
       include: {
         messages: {
           orderBy: { createdAt: "asc" },
-          take: 50, // Limit to last 50 messages
+          take: 50,
         },
       },
     });
 
-    // Get daily usage
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const dailyUsage = await prisma.aIUsageLog.count({
-      where: {
-        userId,
-        action: "chat",
-        createdAt: { gte: today },
-      },
-    });
-
+    const quotaStatus = await getAIQuotaStatus(userId);
     const messages = conversation?.messages || [];
 
     return NextResponse.json({
@@ -44,7 +33,10 @@ export async function GET() {
         metadata: msg.metadata,
         createdAt: msg.createdAt,
       })),
-      dailyUsage,
+      dailyUsage: quotaStatus.limit - quotaStatus.remaining,
+      remaining: quotaStatus.remaining,
+      limit: quotaStatus.limit,
+      tier: quotaStatus.tier,
     });
   } catch (error: any) {
     console.error("AI History Error:", error);

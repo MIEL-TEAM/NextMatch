@@ -74,6 +74,8 @@ export interface MemberCardProps {
     user?: {
       oauthVerified?: boolean;
       lastActiveAt?: Date | null;
+      isPremium?: boolean;
+      premiumUntil?: Date | null;
     };
   };
   likeIds: string[];

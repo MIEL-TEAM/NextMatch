@@ -16,6 +16,7 @@ import VerifiedRibbon from "@/components/VerifiedRibbon";
 import FloatingReaction from "@/components/FloatingReaction";
 import { MemberCardProps } from "@/types/members";
 import Carousel from "@/components/MemberImageCarousel";
+import PremiumMark from "@/components/PremiumMark";
 
 import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
 
@@ -52,6 +53,11 @@ export default function MemberCard({
     () => calculateAge(member.dateOfBirth),
     [member.dateOfBirth]
   );
+
+  const isActivePremium =
+    Boolean(member.user?.isPremium) &&
+    Boolean(member.user?.premiumUntil) &&
+    new Date(member.user!.premiumUntil!) > new Date();
 
 
   useEffect(() => {
@@ -220,6 +226,7 @@ export default function MemberCard({
           <div className="flex items-center gap-2 mb-1.5">
             <h3 className="font-bold text-[16px] text-gray-900 dark:text-white truncate">
               {member.name}, {age}
+              <PremiumMark isActivePremium={isActivePremium} />
             </h3>
             <PresenceDot member={member} />
           </div>
@@ -233,6 +240,7 @@ export default function MemberCard({
     ),
     [
       member,
+      isActivePremium,
       handleMouseEnter,
       handleMouseLeave,
       showVideo,

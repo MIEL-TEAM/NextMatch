@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiX, FiSend, FiRefreshCw, FiTrash2 } from "react-icons/fi";
 import { AIChatMessage } from "./AIChatMessage";
@@ -25,16 +25,19 @@ interface AIChatModalProps {
 
 export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [dailyUsage, setDailyUsage] = useState(0);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [limit, setLimit] = useState<number>(isPremium ? 30 : 5);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const maxDailyQueries = isPremium ? 999 : 5;
+  const isQuotaReached = remaining !== null && remaining <= 0;
 
   const loadConversationHistory = useCallback(async () => {
     try {
@@ -61,7 +64,8 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
       if (historyResponse.ok) {
         historyData = await historyResponse.json();
         setMessages(historyData.messages || []);
-        setDailyUsage(historyData.dailyUsage || 0);
+        if (historyData.limit !== undefined) setLimit(historyData.limit);
+        if (historyData.remaining !== undefined) setRemaining(historyData.remaining);
       }
 
       // Show proactive insight if available (skip on forbidden routes)
@@ -108,17 +112,7 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
   };
 
   const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading) return;
-
-    // Check rate limit
-    if (dailyUsage >= maxDailyQueries) {
-      alert(
-        isPremium
-          ? "הגעת למגבלת השאילתות היומית. נסה שוב מחר."
-          : "הגעת ל-5 שאילתות החינמיות. שדרג לפרימיום לשימוש בלתי מוגבל!"
-      );
-      return;
-    }
+    if (!content.trim() || isLoading || isQuotaReached) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -142,6 +136,16 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
         }),
       });
 
+      if (response.status === 429) {
+        const data = await response.json();
+        if (data.error === "AI_QUOTA_REACHED") {
+          setRemaining(0);
+          setShowUpgradeModal(true);
+          return;
+        }
+        throw new Error("Rate limited");
+      }
+
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
@@ -157,7 +161,8 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-      setDailyUsage((prev) => prev + 1);
+      if (data.remaining !== undefined) setRemaining(data.remaining);
+      if (data.limit !== undefined) setLimit(data.limit);
     } catch (error) {
       console.error("Failed to send message:", error);
       const errorMessage: Message = {
@@ -230,7 +235,9 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
                 <p className="text-xs text-white/80">
                   {isPremium
                     ? "♾️ שימוש ללא הגבלה"
-                    : `${dailyUsage}/${maxDailyQueries} שאילתות היום`}
+                    : remaining !== null
+                    ? `${limit - remaining}/${limit} שאילתות היום`
+                    : `0/${limit} שאילתות היום`}
                 </p>
               </div>
             </div>
@@ -294,6 +301,28 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
                 {/* Typing Indicator */}
                 {isLoading && <AITypingIndicator />}
 
+                {/* Stage 1: Soft Awareness (remaining === 2) */}
+                {!isPremium && remaining === 2 && !isLoading && (
+                  <div className="text-center text-xs text-gray-400 dark:text-gray-500 py-1">
+                    נשארו לך 2 הודעות חכמות להיום
+                  </div>
+                )}
+
+                {/* Stage 2: Last Message Warning (remaining === 1) */}
+                {!isPremium && remaining === 1 && !isLoading && (
+                  <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40">
+                    <span className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+                      זו ההודעה האחרונה שלך להיום
+                    </span>
+                    <button
+                      onClick={() => router.push("/premium")}
+                      className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium underline underline-offset-2 shrink-0"
+                    >
+                      ללא הגבלה עם Premium
+                    </button>
+                  </div>
+                )}
+
                 <div ref={messagesEndRef} />
               </>
             )}
@@ -312,11 +341,9 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
             className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0"
           >
             <div className="flex gap-2">
-            <button
+              <button
                 type="submit"
-                disabled={
-                  !inputValue.trim() || isLoading || dailyUsage >= maxDailyQueries
-                }
+                disabled={!inputValue.trim() || isLoading || isQuotaReached}
                 className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
                 <FiSend className="w-5 h-5" />
@@ -326,17 +353,11 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="שאל אותי כל דבר..."
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                disabled={isLoading || dailyUsage >= maxDailyQueries}
+                placeholder={isQuotaReached ? "הגעת למגבלה היומית" : "שאל אותי כל דבר..."}
+                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                disabled={isLoading || isQuotaReached}
               />
-          
             </div>
-            {!isPremium && dailyUsage >= maxDailyQueries && (
-              <p className="text-xs text-red-500 mt-2 text-center">
-                הגעת למגבלה היומית. שדרג לפרימיום לשימוש בלתי מוגבל!
-              </p>
-            )}
           </form>
         </motion.div>
       </div>
@@ -375,6 +396,47 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
             color: "danger",
             variant: "solid",
             onPress: confirmDelete,
+          },
+        ]}
+      />
+
+      {/* Stage 3: Upgrade Modal (quota reached) */}
+      <AppModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        header="רוצה להמשיך את השיחה בלי מגבלה?"
+        body={
+          <ul className="space-y-3 py-2">
+            {["AI ללא הגבלה", "לייקים ללא הגבלה", "עדיפות בפרופיל"].map(
+              (benefit) => (
+                <li
+                  key={benefit}
+                  className="flex items-center gap-3 text-gray-700 dark:text-gray-300"
+                >
+                  <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 text-xs font-bold">
+                    ✓
+                  </span>
+                  <span className="text-sm font-medium">{benefit}</span>
+                </li>
+              )
+            )}
+          </ul>
+        }
+        footerButtons={[
+          {
+            children: "אמשיך מחר",
+            color: "default",
+            variant: "bordered",
+            onPress: () => setShowUpgradeModal(false),
+          },
+          {
+            children: "שדרג ל-Premium",
+            color: "warning",
+            variant: "solid",
+            onPress: () => {
+              setShowUpgradeModal(false);
+              router.push("/premium");
+            },
           },
         ]}
       />

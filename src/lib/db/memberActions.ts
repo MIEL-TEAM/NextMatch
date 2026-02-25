@@ -142,6 +142,8 @@ export async function dbGetMemberByUserId(userId: string) {
           emailVerified: true,
           oauthVerified: true,
           lastActiveAt: true,
+          isPremium: true,
+          premiumUntil: true,
         },
       },
     },

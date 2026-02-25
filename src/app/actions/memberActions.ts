@@ -309,6 +309,8 @@ export async function getMembers({
         select: {
           oauthVerified: true,
           lastActiveAt: true,
+          isPremium: true,
+          premiumUntil: true,
         },
       },
     };

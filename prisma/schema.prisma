@@ -27,19 +27,19 @@ model Account {
 }
 
 model User {
-  id                   String    @id @default(cuid())
-  name                 String?
-  email                String?   @unique
-  emailVerified        DateTime?
-  passwordHash         String?
-  image                String?
-  profileComplete      Boolean   @default(false)
-  role                 Role      @default(MEMBER)
-  boostsAvailable      Int       @default(0)
-  isPremium            Boolean   @default(false)
-  premiumUntil         DateTime?
-  boostsUsed           Int       @default(0)
-  canceledAt           DateTime? @db.Timestamp(6)
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  passwordHash    String?
+  image           String?
+  profileComplete Boolean   @default(false)
+  role            Role      @default(MEMBER)
+  boostsAvailable Int       @default(0)
+  isPremium       Boolean   @default(false)
+  premiumUntil    DateTime?
+  boostsUsed      Int       @default(0)
+  canceledAt      DateTime? @db.Timestamp(6)
 
   // OAuth verification
   provider      String?
@@ -95,6 +95,9 @@ model User {
 
   // Billing relations
   subscriptions Subscription[]
+
+  // Quota
+  quota UserQuota?
 
   // Notification preferences
   notificationPreferences Json? @default("{\"newMessage\": {\"toast\": true, \"sound\": true, \"push\": true}, \"newLike\": {\"toast\": false, \"sound\": true, \"push\": true}, \"mutualMatch\": {\"toast\": true, \"sound\": true, \"push\": true}, \"profileView\": {\"toast\": false, \"sound\": false, \"push\": true}, \"storyView\": {\"toast\": false, \"sound\": false, \"push\": false}, \"matchOnline\": {\"toast\": true, \"sound\": true, \"push\": true}}")
@@ -246,9 +249,8 @@ model UserInteraction {
   duration  Int?
   timestamp DateTime @default(now())
   weight    Float    @default(1.0)
-
-  user   Member @relation("userInteractions", fields: [userId], references: [userId], onDelete: Cascade)
-  target Member @relation("targetInteractions", fields: [targetId], references: [userId], onDelete: Cascade)
+  user      Member   @relation("userInteractions", fields: [userId], references: [userId], onDelete: Cascade)
+  target    Member   @relation("targetInteractions", fields: [targetId], references: [userId], onDelete: Cascade)
 
   @@index([userId, timestamp(sort: Desc)])
   @@index([targetId])
@@ -283,9 +285,8 @@ model ProfileView {
   viewedId String
   viewedAt DateTime @default(now())
   seen     Boolean  @default(false)
-
-  viewer User @relation("ViewerProfileViews", fields: [viewerId], references: [id])
-  viewed User @relation("ViewedProfileViews", fields: [viewedId], references: [id])
+  viewer   User     @relation("ViewerProfileViews", fields: [viewerId], references: [id])
+  viewed   User     @relation("ViewedProfileViews", fields: [viewedId], references: [id])
 
   @@unique([viewerId, viewedId])
   @@index([viewedId])
@@ -304,8 +305,7 @@ model SmartMatchCache {
   matchData String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, updatedAt(sort: Desc)])
   @@map("smart_match_cache")
@@ -323,8 +323,7 @@ model UserSearchPreference {
   orderBy   String   @default("updated")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("user_search_preferences")
@@ -362,8 +361,7 @@ model AdminAuditLog {
   targetId   String
   details    String?  @db.Text
   timestamp  DateTime @default(now())
-
-  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  admin      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@index([adminId, timestamp])
   @@index([targetType, targetId])
@@ -402,11 +400,10 @@ model StoryView {
   storyId  String
   viewerId String
   viewedAt DateTime @default(now())
+  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer   User     @relation(fields: [viewerId], references: [id], onDelete: Cascade)
 
-  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  viewer User  @relation(fields: [viewerId], references: [id], onDelete: Cascade)
-
-  @@unique([storyId, viewerId]) // One view per user per story
+  @@unique([storyId, viewerId])
   @@index([viewerId])
 }
 
@@ -416,9 +413,8 @@ model StoryReaction {
   userId       String
   reactionType ReactionType @default(HEART)
   createdAt    DateTime     @default(now())
-
-  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story        Story        @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([storyId, userId])
 }
@@ -430,10 +426,9 @@ model StoryReply {
   recipientId String
   messageText String
   createdAt   DateTime @default(now())
-
-  story     Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  sender    User  @relation("StoryReplySender", fields: [senderId], references: [id], onDelete: Cascade)
-  recipient User  @relation("StoryReplyRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  story       Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  sender      User     @relation("StoryReplySender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("StoryReplyRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 }
 
 enum StoryPrivacy {
@@ -450,20 +445,18 @@ enum ReactionType {
 }
 
 model Invitation {
-  id          String @id @default(cuid())
+  id          String    @id @default(cuid())
   recipientId String
   senderId    String
-  type        String @default("chat")
-  status      String @default("pending")
-
+  type        String    @default("chat")
+  status      String    @default("pending")
   createdAt   DateTime  @default(now())
   seenAt      DateTime?
   dismissedAt DateTime?
   acceptedAt  DateTime?
   expiresAt   DateTime?
-
-  recipient User @relation("RecipientInvitations", fields: [recipientId], references: [id], onDelete: Cascade)
-  sender    User @relation("SenderInvitations", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User      @relation("RecipientInvitations", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender      User      @relation("SenderInvitations", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, status, createdAt(sort: Desc)])
   @@index([recipientId, dismissedAt])
@@ -484,10 +477,9 @@ model Match {
   user2VideoSnapshot String?         @db.Text
   chatId             String?
   createdAt          DateTime        @default(now())
-
-  reveals MatchReveal[]
-  user1   User          @relation("MatchUser1", fields: [userId1], references: [id], onDelete: Cascade)
-  user2   User          @relation("MatchUser2", fields: [userId2], references: [id], onDelete: Cascade)
+  reveals            MatchReveal[]
+  user1              User            @relation("MatchUser1", fields: [userId1], references: [id], onDelete: Cascade)
+  user2              User            @relation("MatchUser2", fields: [userId2], references: [id], onDelete: Cascade)
 
   @@unique([userId1, userId2])
   @@index([userId1, status, matchedAt(sort: Desc)])
@@ -505,8 +497,7 @@ model MatchReveal {
   expiredAt     DateTime?
   lastShownAt   DateTime?
   createdAt     DateTime     @default(now())
-
-  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  match         Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, userId])
   @@index([userId, createdAt(sort: Desc)])
@@ -514,31 +505,29 @@ model MatchReveal {
 }
 
 model AIConversation {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   userId    String
   title     String?
   context   Json?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages AIMessage[]
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AIMessage[]
 
   @@index([userId, isActive, updatedAt])
   @@map("ai_conversations")
 }
 
 model AIMessage {
-  id             String   @id @default(cuid())
+  id             String         @id @default(cuid())
   conversationId String
   role           String
-  content        String   @db.Text
+  content        String         @db.Text
   metadata       Json?
   tokensUsed     Int?
-  createdAt      DateTime @default(now())
-
-  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
   @@map("ai_messages")
@@ -551,8 +540,7 @@ model AIUsageLog {
   tokens    Int?
   cost      Float?
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@map("ai_usage_logs")
@@ -642,9 +630,19 @@ model Subscription {
   planId                 String
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  user                   User               @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([providerSubscriptionId])
+}
+
+model UserQuota {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiUsageToday Int      @default(0)
+  aiResetAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("user_quota")
 }
