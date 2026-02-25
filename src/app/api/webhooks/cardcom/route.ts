@@ -15,8 +15,7 @@ export async function POST(req: Request) {
   const secret = searchParams.get("secret");
   const expectedSecret = process.env.CARDCOM_WEBHOOK_SECRET;
 
-  console.log("Secret received:", secret);
-  console.log("Secret expected:", expectedSecret);
+  // Do NOT log secret values
 
   if (!expectedSecret) {
     console.error("[cardcom/webhook] Missing CARDCOM_WEBHOOK_SECRET env");
@@ -47,7 +46,13 @@ export async function POST(req: Request) {
 
   try {
     body = await req.json();
-    console.log("Parsed JSON body:", body);
+    const b = body as Record<string, unknown>;
+    console.info("[cardcom/webhook] payload shape", {
+      responseCode: b.ResponseCode,
+      hasReturnValue: Boolean(b.ReturnValue),
+      hasTokenInfo: Boolean(b.TokenInfo),
+      hasTranzactionInfo: Boolean(b.TranzactionInfo),
+    });
   } catch (err) {
     console.error("[cardcom/webhook] JSON parse error:", err);
     return new Response("Bad Request", { status: 400 });
@@ -65,24 +70,26 @@ export async function POST(req: Request) {
 
   const raw = body as Record<string, unknown>;
 
-  if (raw.ResponseCode === 0) {
+  if (Number(raw.ResponseCode) === 0) {
     if (
       typeof raw.TokenInfo !== "object" ||
       raw.TokenInfo === null ||
       !("Token" in (raw.TokenInfo as object))
     ) {
-      console.warn(
-        "[cardcom/webhook] No TokenInfo.Token present (sandbox or non-token transaction)"
-      );
+      console.warn("[cardcom/webhook] ResponseCode=0 but no TokenInfo.Token — sandbox or tokenless transaction");
     }
   }
   
   try {
     const event = cardcomProvider.verifyWebhook(body);
-    console.log("Verified event:", event);
 
     if (event.type === "initial_payment") {
-      console.log("Activating subscription for user:", event.userId);
+      console.info("[cardcom/webhook] initial_payment received", {
+        userId: event.userId,
+        planId: event.planId,
+        amount: event.amount,
+        hasToken: Boolean(event.providerSubscriptionId),
+      });
 
       await subscriptionService.activateSubscriptionFromWebhook({
         userId: event.userId,
@@ -92,12 +99,18 @@ export async function POST(req: Request) {
         amount: event.amount,
       });
 
-      console.log("Subscription activated successfully");
+      console.info("[cardcom/webhook] subscription activated", {
+        userId: event.userId,
+        planId: event.planId,
+      });
     } else if (event.type === "payment_failed") {
-      console.warn("[cardcom/webhook] Payment failed:", event);
+      console.warn("[cardcom/webhook] payment_failed", {
+        userId: event.userId || undefined,
+        planId: event.planId || undefined,
+      });
     }
   } catch (err) {
-    console.error("[cardcom/webhook] Error processing event:", err);
+    console.error("[cardcom/webhook] error processing event", { error: String(err) });
   }
 
   console.log("=== CARDCOM WEBHOOK END (200) ===");

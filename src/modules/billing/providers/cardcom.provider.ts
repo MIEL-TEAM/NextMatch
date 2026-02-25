@@ -119,8 +119,9 @@ export class CardcomProvider implements PaymentProvider {
 
   verifyWebhook(payload: unknown): NormalizedPaymentEvent {
     const p = payload as CardcomWebhookPayload;
+    const responseCode = Number(p.ResponseCode);
 
-    if (p.ResponseCode !== 0 || !p.TokenInfo?.Token) {
+    if (responseCode !== 0) {
       return {
         type: "payment_failed",
         providerSubscriptionId: "",
@@ -131,7 +132,7 @@ export class CardcomProvider implements PaymentProvider {
     }
 
     const [userId = "", planId = ""] = (p.ReturnValue ?? "").split("|");
-    const token = p.TokenInfo.Token;
+    const token = p.TokenInfo?.Token ?? "";
     const amount = p.TranzactionInfo?.Amount ?? 0;
 
     return {

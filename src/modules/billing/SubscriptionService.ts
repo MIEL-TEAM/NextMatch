@@ -31,18 +31,23 @@ export class SubscriptionService {
     const currentPeriodEnd =
       input.currentPeriodEnd ?? add(new Date(), { months: plan.months });
 
+    // Normalize empty strings → null so DB stores clean nulls, not ""
+    const providerToken = input.providerToken || null;
+
     return prisma.$transaction(async (tx) => {
-      if (input.providerToken) {
-        const alreadyActive = await tx.subscription.findFirst({
-          where: {
-            userId: input.userId,
-            providerToken: input.providerToken,
-            status: SubscriptionStatus.ACTIVE,
-          },
-          select: { id: true, userId: true, status: true, currentPeriodEnd: true },
-        });
-        if (alreadyActive) return alreadyActive;
-      }
+      // Idempotency: token-based dedup in production; time-window dedup for sandbox/tokenless
+      const alreadyActive = await tx.subscription.findFirst({
+        where: providerToken
+          ? { userId: input.userId, providerToken, status: SubscriptionStatus.ACTIVE }
+          : {
+              userId: input.userId,
+              planId: input.planId,
+              status: SubscriptionStatus.ACTIVE,
+              createdAt: { gt: new Date(Date.now() - 5 * 60 * 1000) },
+            },
+        select: { id: true, userId: true, status: true, currentPeriodEnd: true },
+      });
+      if (alreadyActive) return alreadyActive;
 
       const pending = await tx.subscription.findFirst({
         where: { userId: input.userId, status: SubscriptionStatus.PENDING },
@@ -53,9 +58,9 @@ export class SubscriptionService {
       const rowData = {
         status: SubscriptionStatus.ACTIVE,
         provider: input.provider,
-        providerSubscriptionId: input.providerSubscriptionId ?? null,
-        providerToken: input.providerToken ?? null,
-        providerCustomerId: input.providerCustomerId ?? null,
+        providerSubscriptionId: input.providerSubscriptionId || null,
+        providerToken,
+        providerCustomerId: input.providerCustomerId || null,
         currentPeriodEnd,
         planId: input.planId,
       };
