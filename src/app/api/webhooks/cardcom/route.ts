@@ -65,16 +65,18 @@ export async function POST(req: Request) {
 
   const raw = body as Record<string, unknown>;
 
-  if (
-    raw.ResponseCode === 0 &&
-    (typeof raw.TokenInfo !== "object" ||
+  if (raw.ResponseCode === 0) {
+    if (
+      typeof raw.TokenInfo !== "object" ||
       raw.TokenInfo === null ||
-      !("Token" in (raw.TokenInfo as object)))
-  ) {
-    console.error("[cardcom/webhook] Missing TokenInfo.Token");
-    return new Response("Bad Request", { status: 400 });
+      !("Token" in (raw.TokenInfo as object))
+    ) {
+      console.warn(
+        "[cardcom/webhook] No TokenInfo.Token present (sandbox or non-token transaction)"
+      );
+    }
   }
-
+  
   try {
     const event = cardcomProvider.verifyWebhook(body);
     console.log("Verified event:", event);
