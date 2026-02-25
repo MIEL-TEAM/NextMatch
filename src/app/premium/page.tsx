@@ -1,5 +1,7 @@
-import PremiumPageClient from "./PremiumPageClient";
 import { Metadata } from "next";
+import PremiumPageClient from "./PremiumPageClient";
+import { getPremiumState } from "@/app/actions/premiumActions";
+import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Miel - פרימיום",
@@ -21,6 +23,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PremiumPage() {
-  return <PremiumPageClient />;
+type PageProps = {
+  searchParams: Promise<{ activated?: string }>;
+};
+
+export default async function PremiumPage({ searchParams }: PageProps) {
+  const [state, params, session] = await Promise.all([
+    getPremiumState(),
+    searchParams,
+    getSession(),
+  ]);
+
+  const activated = params.activated === "1";
+  const firstName = session?.user?.name?.split(" ")[0] ?? "";
+
+  return <PremiumPageClient state={state} activated={activated} firstName={firstName} />;
 }

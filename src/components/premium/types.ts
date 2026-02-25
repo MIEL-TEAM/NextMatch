@@ -1,30 +1,31 @@
-export interface PremiumInfo {
-  premiumUntil: Date | null;
-  boostsAvailable: number;
-  activePlan: string;
-  canceledAt: Date | null;
+import type React from "react";
+
+export interface PlanOption {
+  planId: string;
+  months: number;
+  boosts: number;
+  displayPrice: string;
 }
+
+export interface SubscriptionSnapshot {
+  planId: string;
+  currentPeriodEnd: Date | null;
+  canceledAt: Date | null;
+  boostsAvailable: number;
+  premiumUntil: Date | null;
+  activatedAt: Date | null;
+}
+
+export type PremiumState =
+  | { status: "FREE"; availablePlans: PlanOption[] }
+  | { status: "PENDING"; subscription: SubscriptionSnapshot; availablePlans: PlanOption[] }
+  | { status: "ACTIVE"; subscription: SubscriptionSnapshot; availablePlans: PlanOption[] }
+  | { status: "PAST_DUE"; subscription: SubscriptionSnapshot; availablePlans: PlanOption[] }
+  | { status: "CANCELED"; subscription: SubscriptionSnapshot; availablePlans: PlanOption[] };
 
 export interface Feature {
   text: string | React.ReactNode;
   icon: React.ReactNode;
-}
-
-export interface PremiumStatusResponse {
-  id: string;
-  name: string | null;
-  email: string | null;
-  image: string | null;
-  isPremium: boolean;
-  premiumUntil: Date | null;
-  boostsAvailable: number;
-  canceledAt: Date | null;
-  stripeSubscriptionId: string | null;
-  activePlan: string;
-  member?: {
-    id: string;
-    boostedUntil: Date | null;
-  } | null;
 }
 
 export interface StatusMessage {

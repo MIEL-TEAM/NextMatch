@@ -1,454 +1,153 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import HeartLoading from "@/components/HeartLoading";
-import { PremiumStatusCard } from "@/components/premium/status/PremiumStatusCard";
-import { PremiumPlansGrid } from "@/components/premium/plans/PremiumPlansGrid";
-import { SuccessMessage } from "@/components/premium/shared/SuccessMessage";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { PremiumState, StatusMessage } from "@/components/premium/types";
+import { ProspectView } from "@/components/premium/ProspectView";
+import { PendingView } from "@/components/premium/PendingView";
+import { SubscriberView } from "@/components/premium/SubscriberView";
+import { ActivationView } from "@/components/premium/ActivationView";
 import { CancelSubscriptionModal } from "@/components/premium/modals/CancelSubscriptionModal";
-import { getAllFeatures } from "@/components/premium/features/createFeaturesList";
+import { SuccessMessage } from "@/components/premium/shared/SuccessMessage";
 import {
   activatePremium,
-  getPremiumStatus,
-  redirectToCancelSubscription,
-  processCancellationReturn,
+  cancelPremium,
   createReactivateSubscriptionSession,
-  checkStripeSubscriptionStatus,
-  updatePremiumStatusFromStripe,
 } from "@/app/actions/premiumActions";
-import {
-  PremiumInfo,
-  PremiumStatusResponse,
-  StatusMessage,
-} from "@/components/premium/types";
 
-export default function PremiumPageClient() {
-  const searchParams = useSearchParams();
+interface PremiumPageClientProps {
+  state: PremiumState;
+  activated: boolean;
+  firstName: string;
+}
+
+function isRecentlyActivated(activatedAt: Date | null): boolean {
+  if (!activatedAt) return false;
+  return Date.now() - new Date(activatedAt).getTime() < 30 * 60 * 1000;
+}
+
+export default function PremiumPageClient({ state, activated, firstName }: PremiumPageClientProps) {
   const router = useRouter();
-  const features = getAllFeatures();
-
-  // Loading states
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-
-  // UI states
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(
-    null
-  );
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+  const [showActivation, setShowActivation] = useState(activated);
 
-  // Premium states
-  const [isPremium, setIsPremium] = useState(false);
-  const [premiumInfo, setPremiumInfo] = useState<PremiumInfo | null>(null);
-
-  // Event states
-  const [justSubscribed, setJustSubscribed] = useState(false);
-  const [justCanceled, setJustCanceled] = useState(false);
-  const [justRenewed, setJustRenewed] = useState(false);
-
-  // Handle successful Stripe checkout
-  const handleStripeSuccess = useCallback(
-    (data: PremiumStatusResponse) => {
-      setJustSubscribed(true);
-      setStatusMessage({
-        message: "ההצטרפות לתכנית הפרימיום התקבלה בהצלחה!",
-        type: "success",
-      });
-
-      setIsPremium(true);
-      setPremiumInfo({
-        premiumUntil:
-          data.premiumUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        boostsAvailable: data.boostsAvailable || 10,
-        activePlan: searchParams.get("plan") || "popular",
-        canceledAt: null,
-      });
-    },
-    [searchParams]
-  );
-
-  // Check premium status and handle URL parameters
-  const checkPremiumStatus = useCallback(async () => {
+  const handleActivate = async (planId: string, months: number) => {
+    setLoadingPlan(planId);
+    const fd = new FormData();
+    fd.append("planId", planId);
+    fd.append("months", String(months));
     try {
-      // Get URL parameters
-      const success = searchParams.get("success") === "true";
-      const refreshStatus = searchParams.get("refreshStatus") === "true";
-      const sessionId = searchParams.get("session_id");
-      const canceledAction = searchParams.get("canceled_action") === "true";
-      const renewed = searchParams.get("renewed") === "true";
-      const strictRenewalCheck =
-        searchParams.get("strict_renewal_check") === "true";
-
-      let stripeStatusChecked = false;
-
-      if (canceledAction) {
-        try {
-          const cancellationResult = await processCancellationReturn();
-
-          setJustCanceled(cancellationResult.cancellationProcessed);
-          setStatusMessage({
-            message: cancellationResult.message,
-            type: cancellationResult.success ? "warning" : "error",
-          });
-
-          // Update premium info based on cancellation result
-          if (cancellationResult.success) {
-            setIsPremium(true);
-            setPremiumInfo((prevInfo) => ({
-              premiumUntil:
-                cancellationResult.premiumUntil ??
-                prevInfo?.premiumUntil ??
-                null,
-              boostsAvailable: prevInfo?.boostsAvailable ?? 0,
-              activePlan: prevInfo?.activePlan ?? "popular",
-              canceledAt: new Date(),
-            }));
-          }
-        } catch (cancelError) {
-          console.error("Failed to process cancellation return:", cancelError);
-          setStatusMessage({
-            message: "שגיאה בביטול המנוי",
-            type: "error",
-          });
-        }
+      const result = await activatePremium(fd);
+      if (result?.success) {
+        router.push("/premium?activated=1");
       }
+    } catch {
+      setStatusMessage({ message: "שגיאה בהפעלת המנוי, אנא נסה שוב", type: "error" });
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
-      // Handle renewal return from Stripe
-      if (renewed) {
-        const renewalStatus = await checkStripeSubscriptionStatus();
-        stripeStatusChecked = true; // Mark as checked to avoid redundant calls
-        if (renewalStatus?.isPremium) {
-          setJustRenewed(true);
-          setStatusMessage({
-            message: "המנוי חודש בהצלחה!",
-            type: "success",
-          });
-
-          setIsPremium(true);
-          setPremiumInfo((prevInfo) => ({
-            premiumUntil:
-              renewalStatus.premiumUntil ?? prevInfo?.premiumUntil ?? null,
-            boostsAvailable: prevInfo?.boostsAvailable ?? 0,
-            activePlan: prevInfo?.activePlan ?? "popular",
-            canceledAt: renewalStatus.canceledAt ?? null,
-          }));
-        }
-      }
-      if (strictRenewalCheck && !stripeStatusChecked) {
-        // Perform a careful check of the actual subscription status
-        const renewalStatus = await checkStripeSubscriptionStatus();
-        stripeStatusChecked = true; // Mark as checked to avoid redundant calls
-
-        // Only set renewed and show confetti if the subscription is truly active again
-        if (renewalStatus?.isPremium && !renewalStatus.canceledAt) {
-          setJustRenewed(true);
-          setStatusMessage({
-            message: "המנוי חודש בהצלחה!",
-            type: "success",
-          });
-
-          setIsPremium(true);
-          setPremiumInfo((prevInfo) => ({
-            premiumUntil:
-              renewalStatus.premiumUntil ?? prevInfo?.premiumUntil ?? null,
-            boostsAvailable: prevInfo?.boostsAvailable ?? 0,
-            activePlan: prevInfo?.activePlan ?? "popular",
-            canceledAt: null,
-          }));
-        } else {
-          // If no actual renewal occurred
-          setStatusMessage({
-            message: "לא בוצע חידוש למנוי",
-            type: "warning",
-          });
-          setJustRenewed(false);
-        }
-      }
-
-      // Handle successful payment
-      if (success && sessionId) {
-        await updatePremiumStatusFromStripe(sessionId);
-      }
-
-      // Refresh status if needed (skip if already checked to avoid redundant Stripe API call)
-      if (refreshStatus && !stripeStatusChecked) {
-        await checkStripeSubscriptionStatus();
-        stripeStatusChecked = true;
-      }
-
-      // Get current premium status (single fetch covers all cases)
-      const data = await getPremiumStatus();
-
-      // Assign default premium date if not exists
-      if (!data.premiumUntil && data.isPremium) {
-        const defaultDate = new Date();
-        defaultDate.setMonth(defaultDate.getMonth() + 3);
-        data.premiumUntil = defaultDate;
-      }
-
-      // Update UI based on status
-      if (success) {
-        handleStripeSuccess(data);
-      } else if (searchParams.get("canceled") === "true") {
-        setStatusMessage({
-          message: "תהליך התשלום בוטל",
-          type: "error",
-        });
-      } else {
-        // Normal status update
-        const now = new Date();
-        const premiumUntil = data.premiumUntil
-          ? new Date(data.premiumUntil)
-          : null;
-        const isPremiumActive =
-          data.isPremium || (premiumUntil && premiumUntil > now);
-
-        if (isPremiumActive) {
-          setIsPremium(true);
-          setPremiumInfo({
-            premiumUntil: data.premiumUntil,
-            boostsAvailable: data.boostsAvailable || 0,
-            activePlan: data.activePlan || "popular",
-            canceledAt: data.canceledAt,
-          });
-        } else {
-          setIsPremium(false);
-          setPremiumInfo(null);
-        }
-      }
-    } catch (error) {
-      console.log(error);
+  const handleCancel = async () => {
+    setIsActionLoading(true);
+    try {
+      await cancelPremium();
+      router.refresh();
+      setStatusMessage({ message: "המנוי בוטל בהצלחה", type: "success" });
+    } catch (err) {
       setStatusMessage({
-        message: "שגיאה בטעינת נתוני המנוי, אנא נסה שוב מאוחר יותר",
+        message: err instanceof Error ? err.message : "שגיאה בביטול המנוי",
         type: "error",
       });
     } finally {
-      setInitialLoading(false);
-    }
-  }, [searchParams, handleStripeSuccess]);
-
-  // Initial check for premium status
-  useEffect(() => {
-    checkPremiumStatus();
-  }, [checkPremiumStatus]);
-
-  // Clear URL parameters after handling them
-  useEffect(() => {
-    const hasParams = searchParams.toString().length > 0;
-    if (hasParams && !initialLoading) {
-      const timeout = setTimeout(() => {
-        router.replace("/premium", { scroll: false });
-      }, 1500);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [searchParams, initialLoading, router]);
-
-  // Activate a premium plan
-  const handleActivatePremium = useCallback(
-    async (planId: string, months: number = 1) => {
-      setLoadingPlan(planId);
-      try {
-        const formData = new FormData();
-        formData.append("planId", planId);
-        formData.append("months", months.toString());
-
-        const result = await activatePremium(formData);
-
-        if (result && result.success) {
-          setIsPremium(true);
-          setJustSubscribed(true);
-          setPremiumInfo({
-            premiumUntil: result.premiumUntil,
-            boostsAvailable: result.boostsAvailable,
-            activePlan: planId,
-            canceledAt: null,
-          });
-
-          setStatusMessage({
-            message: "ההצטרפות לתכנית הפרימיום התקבלה בהצלחה!",
-            type: "success",
-          });
-        }
-      } catch (error) {
-        console.error("שגיאה בהפעלת פרימיום:", error);
-        setStatusMessage({
-          message: "שגיאה בהפעלת המנוי, אנא נסה שוב",
-          type: "error",
-        });
-      } finally {
-        setLoadingPlan(null);
-      }
-    },
-    []
-  );
-
-  // Cancel subscription via Stripe portal
-  const handleCancelSubscription = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const redirectUrl = await redirectToCancelSubscription();
-      if (redirectUrl) {
-        window.location.href = redirectUrl;
-      }
-    } catch (error) {
-      console.error("שגיאה בביטול המנוי:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "שגיאה בביטול המנוי, אנא נסה שוב";
-
-      setStatusMessage({
-        message: errorMessage,
-        type: "error",
-      });
-    } finally {
-      setIsLoading(false);
+      setIsActionLoading(false);
       setShowCancelModal(false);
     }
-  }, []);
+  };
 
-  // Manage subscription via Stripe portal
-  const handleManageSubscription = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/create-billing-portal", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "נכשל ביצירת הפעלה לפורטל החיוב");
-      }
-
-      if (!data.url) {
-        throw new Error("לא הוחזרה כתובת URL מפורטל החיוב");
-      }
-
-      window.location.href = data.url;
-    } catch (error) {
-      console.error("שגיאה בגישה לפורטל החיוב:", error);
-      setStatusMessage({
-        message: "שגיאה בגישה לפורטל ניהול המנוי",
-        type: "error",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleRenewSubscription = useCallback(async () => {
-    setIsLoading(true);
+  const handleRenew = async () => {
+    setIsActionLoading(true);
     try {
       const { url } = await createReactivateSubscriptionSession();
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error("שגיאה בחידוש המנוי:", error);
-
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "שגיאה בחידוש המנוי, אנא נסה שוב";
-
+      if (url) window.location.href = url;
+    } catch (err) {
       setStatusMessage({
-        message: errorMessage,
+        message: err instanceof Error ? err.message : "שגיאה בחידוש המנוי",
         type: "error",
       });
     } finally {
-      setIsLoading(false);
+      setIsActionLoading(false);
     }
-  }, []);
+  };
 
-  if (initialLoading) {
-    return <HeartLoading message="טוען מידע premium..." />;
-  }
+  
 
-  const isCanceled = !!premiumInfo?.canceledAt;
+  const view = (() => {
+
+    console.log("STATUS:", state.status)
+    console.log("ACTIVATED PARAM:", activated)
+    console.log("NOW:", new Date())
+
+    switch (state.status) {
+      case "FREE":
+        return (
+          <ProspectView
+            plans={state.availablePlans}
+            onActivate={handleActivate}
+            loadingPlan={loadingPlan}
+          />
+        );
+      case "PENDING":
+        return <PendingView activated={activated} />;
+      case "ACTIVE":
+        if (showActivation && isRecentlyActivated(state.subscription.activatedAt)) {
+          return (
+            <ActivationView
+              firstName={firstName}
+              boosts={state.subscription.boostsAvailable}
+              onDone={() => setShowActivation(false)}
+            />
+          );
+        }
+        return (
+          <SubscriberView
+            state={state}
+            onActivate={handleActivate}
+            onCancelRequest={() => setShowCancelModal(true)}
+            onRenew={handleRenew}
+            loadingPlan={loadingPlan}
+            isActionLoading={isActionLoading}
+          />
+        );
+      case "CANCELED":
+      case "PAST_DUE":
+        return (
+          <SubscriberView
+            state={state}
+            onActivate={handleActivate}
+            onCancelRequest={() => setShowCancelModal(true)}
+            onRenew={handleRenew}
+            loadingPlan={loadingPlan}
+            isActionLoading={isActionLoading}
+          />
+        );
+    }
+  })();
 
   return (
-    <div className="py-12 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-6xl font-bold mb-4">
-          לפעמים, כל מה שצריך זה חיבור אחד נכון
-        </h1>
-        <p className="text-2xl text-gray-600 mx-auto">
-          Miel Premium נבנה כדי לעזור לזה לקרות בצורה מדויקת, רגישה ואמיתית.
-        </p>
-      </div>
-
+    <div className="min-h-screen bg-stone-50 py-12 px-4" dir="rtl">
       {statusMessage && (
-        <SuccessMessage
-          message={statusMessage.message}
-          type={statusMessage.type}
-        />
+        <SuccessMessage message={statusMessage.message} type={statusMessage.type} />
       )}
-
-      {isPremium && (
-        <div className="mb-12">
-          <PremiumStatusCard
-            premiumUntil={premiumInfo?.premiumUntil || null}
-            boostsAvailable={premiumInfo?.boostsAvailable || 0}
-            onCancelSubscription={() => setShowCancelModal(true)}
-            onManageSubscription={handleManageSubscription}
-            showConfetti={justSubscribed || justRenewed}
-            isManageLoading={isLoading}
-            canceledAt={premiumInfo?.canceledAt}
-            justCanceled={justCanceled}
-            onRenewSubscription={
-              isCanceled ? handleRenewSubscription : undefined
-            }
-          />
-        </div>
-      )}
-
-      <div className={isPremium ? "mt-12" : ""}>
-        {isPremium && (
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold">
-              {isCanceled
-                ? "חדש את המנוי או בחר תוכנית אחרת"
-                : "עדכן את תוכנית הפרימיום שלך"}
-            </h2>
-            <p className="text-gray-600">
-              {isCanceled
-                ? "המנוי שלך יפוג בקרוב - חדש אותו או בחר תוכנית אחרת"
-                : "בחר תוכנית אחרת או המשך עם התוכנית הנוכחית שלך"}
-            </p>
-          </div>
-        )}
-
-        <PremiumPlansGrid
-          onActivatePremium={handleActivatePremium}
-          loadingPlan={loadingPlan}
-          freeFeatures={features.free}
-          basicFeatures={features.basic}
-          popularFeatures={features.popular}
-          annualFeatures={features.annual}
-          activePlan={isPremium ? premiumInfo?.activePlan : null}
-          isCanceled={isCanceled}
-          canceledAt={premiumInfo?.canceledAt}
-          premiumUntil={premiumInfo?.premiumUntil}
-          onCancel={
-            isPremium && !isCanceled
-              ? () => setShowCancelModal(true)
-              : undefined
-          }
-        />
-      </div>
-
+      {view}
       <CancelSubscriptionModal
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
-        onConfirm={handleCancelSubscription}
-        isLoading={isLoading}
+        onConfirm={handleCancel}
+        isLoading={isActionLoading}
       />
     </div>
   );

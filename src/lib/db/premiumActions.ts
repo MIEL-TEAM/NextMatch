@@ -1,39 +1,9 @@
 import { prisma } from "@/lib/prisma";
-
-export async function dbGetUserForPremiumUpdate(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      isPremium: true,
-      premiumUntil: true,
-      boostsAvailable: true,
-    },
-  });
-}
-
-export async function dbUpdateUserPremiumStatus(
-  userId: string,
-  data: {
-    isPremium: boolean;
-    premiumUntil: Date;
-    boostsAvailable: { increment: number };
-    stripeCustomerId?: string;
-    stripeSubscriptionId?: string;
-    canceledAt?: null;
-  }
-) {
-  return prisma.user.update({
-    where: { id: userId },
-    data,
-  });
-}
+import { SubscriptionStatus } from "@prisma/client";
 
 export async function dbGetUserPremiumStatus(userId: string) {
   return prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
@@ -43,139 +13,13 @@ export async function dbGetUserPremiumStatus(userId: string) {
       premiumUntil: true,
       boostsAvailable: true,
       canceledAt: true,
-      stripeSubscriptionId: true,
     },
-  });
-}
-
-export async function dbUpdateUserPremiumStatusSimple(
-  userId: string,
-  data: { isPremium: boolean; canceledAt?: Date }
-) {
-  return prisma.user.update({
-    where: { id: userId },
-    data,
-  });
-}
-
-export async function dbGetUserForCancellation(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      stripeCustomerId: true,
-      stripeSubscriptionId: true,
-    },
-  });
-}
-
-export async function dbGetUserForSubscriptionReturn(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      stripeSubscriptionId: true,
-    },
-  });
-}
-
-export async function dbUpdateUserCancellation(
-  userId: string,
-  data: { canceledAt: Date; premiumUntil: Date }
-) {
-  return prisma.user.update({
-    where: { id: userId },
-    data,
-  });
-}
-
-export async function dbGetUserForDirectCancellation(userId: string) {
-  return prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    select: {
-      id: true,
-      email: true,
-      isPremium: true,
-      stripeCustomerId: true,
-      stripeSubscriptionId: true,
-      premiumUntil: true,
-    },
-  });
-}
-
-export async function dbUpdateUserDirectCancellation(
-  userId: string,
-  canceledAt: Date
-) {
-  return prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      canceledAt,
-    },
-    select: {
-      id: true,
-      email: true,
-      isPremium: true,
-      canceledAt: true,
-      premiumUntil: true,
-    },
-  });
-}
-
-export async function dbGetUserForBillingPortal(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      email: true,
-      stripeCustomerId: true,
-    },
-  });
-}
-
-export async function dbGetUserForReactivation(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      stripeCustomerId: true,
-      stripeSubscriptionId: true,
-      canceledAt: true,
-    },
-  });
-}
-
-export async function dbGetUserForSubscriptionCheck(userId: string) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      stripeSubscriptionId: true,
-      isPremium: true,
-      canceledAt: true,
-    },
-  });
-}
-
-export async function dbUpdateUserSubscriptionStatus(
-  userId: string,
-  data: {
-    isPremium?: boolean;
-    canceledAt?: Date | null;
-    premiumUntil?: Date | null;
-  }
-) {
-  return prisma.user.update({
-    where: { id: userId },
-    data,
   });
 }
 
 export async function dbGetUserForBoost(userId: string) {
   return prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
+    where: { id: userId },
     select: {
       id: true,
       isPremium: true,
@@ -190,26 +34,50 @@ export async function dbUpdateUserBoost(
   boostEndTime: Date
 ) {
   return prisma.user.update({
-    where: {
-      id: userId,
-    },
+    where: { id: userId },
     data: {
-      boostsAvailable: {
-        decrement: boostsToUse,
-      },
+      boostsAvailable: { decrement: boostsToUse },
       member: {
-        update: {
-          boostedUntil: boostEndTime,
-        },
+        update: { boostedUntil: boostEndTime },
       },
     },
     select: {
       boostsAvailable: true,
       member: {
-        select: {
-          boostedUntil: true,
-        },
+        select: { boostedUntil: true },
       },
+    },
+  });
+}
+
+export async function dbGetLatestSubscription(userId: string) {
+  return prisma.subscription.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    select: { planId: true, status: true },
+  });
+}
+
+export async function dbGetActiveSubscription(userId: string) {
+  return prisma.subscription.findFirst({
+    where: {
+      userId,
+      status: {
+        in: [
+          SubscriptionStatus.PENDING,
+          SubscriptionStatus.ACTIVE,
+          SubscriptionStatus.CANCELED,
+          SubscriptionStatus.PAST_DUE,
+        ],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      planId: true,
+      status: true,
+      currentPeriodEnd: true,
+      createdAt: true,
     },
   });
 }

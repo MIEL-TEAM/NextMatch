@@ -1,6 +1,6 @@
-// premium/modals/CancelSubscriptionModal.tsx
-import React from "react";
-import AppModal from "@/components/AppModal";
+"use client";
+
+import { SecondaryButton } from "@/components/premium/primitives";
 
 interface CancelSubscriptionModalProps {
   isOpen: boolean;
@@ -9,55 +9,47 @@ interface CancelSubscriptionModalProps {
   isLoading: boolean;
 }
 
-// CancelSubscriptionModal
 export function CancelSubscriptionModal({
   isOpen,
   onClose,
   onConfirm,
   isLoading,
 }: CancelSubscriptionModalProps) {
+  if (!isOpen) return null;
+
   return (
-    <AppModal
-      isOpen={isOpen}
-      onClose={onClose}
-      header="ביטול מנוי פרמיום"
-      body={
-        <div className="py-4 text-right">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-red-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-bold mb-2 text-right">האם אתה בטוח?</h3>
-          <p className="text-gray-600 mb-4 text-right">
-            ביטול המנוי יבטל את החיובים העתידיים, אך תמשיך ליהנות מיתרונות
-            הפרמיום עד סוף תקופת החיוב הנוכחית.
-          </p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      dir="rtl"
+    >
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="relative bg-white rounded-lg border border-stone-200 w-full max-w-sm p-6">
+        <h3 className="text-[18px] font-semibold text-stone-900 mb-2">
+          ביטול מנוי
+        </h3>
+        <p className="text-[14px] text-stone-600 mb-6">
+          ביטול המנוי יבטל את החיובים העתידיים. תמשיך ליהנות מהיתרונות עד סוף
+          תקופת החיוב הנוכחית.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 py-2.5 rounded-md bg-red-600 text-white text-sm font-medium
+              hover:bg-red-700 transition-colors duration-100
+              disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "מבטל..." : "בטל מנוי"}
+          </button>
+          <SecondaryButton onClick={onClose} className="flex-1">
+            שמור מנוי
+          </SecondaryButton>
         </div>
-      }
-      footerButtons={[
-        {
-          color: "danger",
-          onPress: onConfirm,
-          isLoading: isLoading,
-          children: "בטל מנוי",
-        },
-        {
-          color: "primary",
-          variant: "flat",
-          onPress: onClose,
-          children: "שמור את המנוי",
-        },
-      ]}
-    />
+      </div>
+    </div>
   );
 }
