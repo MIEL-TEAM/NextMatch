@@ -61,7 +61,10 @@ export async function checkAndIncrementAIQuota(
       select: { aiUsageToday: true, aiResetAt: true },
     });
 
-    if (quota.aiResetAt < todayMidnight) {
+    // Use <= to ensure reset triggers when aiResetAt equals today's midnight.
+    // nextMidnightIsrael() from the previous day equals todayMidnightIsrael()
+    // exactly — strict < would skip the reset on day boundaries.
+    if (quota.aiResetAt <= todayMidnight) {
       quota = await tx.userQuota.update({
         where: { userId },
         data: { aiUsageToday: 0, aiResetAt: nextMidnightIsrael() },

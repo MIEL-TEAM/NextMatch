@@ -24,6 +24,12 @@ export default {
     Facebook({
       clientId: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      // Prevents duplicate User rows when a Facebook account shares an email
+      // with an existing credentials/Google user. Without this flag, a Facebook
+      // login that matches an existing email would throw an OAuthAccountNotLinked
+      // error. With email=null (Facebook without email permission), the adapter
+      // still uses the Account row to ensure identity stability across logins.
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           scope: "public_profile",

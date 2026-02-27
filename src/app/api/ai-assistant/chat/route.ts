@@ -23,6 +23,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // TEMP DEBUG — remove after identity verified stable
+    // Confirms that userId (= token.sub) is consistent across logout/login.
+    // If this value changes between sessions for the same user, a ghost
+    // User row is being created (duplicate identity bug).
+    console.log("AUTH DEBUG", { userId });
+
     const { message, conversationHistory } = await req.json();
 
     if (!message || typeof message !== "string") {
