@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { BUILD_FINGERPRINT } from "@/lib/buildFingerprint";
 
 const AI_QUOTA_FREE = 5;
 const AI_QUOTA_PREMIUM = 30;
@@ -32,10 +33,21 @@ function nextMidnightIsrael(): Date {
 }
 
 function resolveTier(user: { isPremium: boolean; premiumUntil: Date | null }): "free" | "premium" {
-  if (user.isPremium && user.premiumUntil && user.premiumUntil > new Date()) {
-    return "premium";
-  }
-  return "free";
+  const now = new Date();
+  const resultTier = user.isPremium && user.premiumUntil && user.premiumUntil > now
+    ? "premium"
+    : "free";
+
+  // INVESTIGATION — TIER_RUNTIME
+  console.log("TIER_RUNTIME", {
+    build: BUILD_FINGERPRINT,
+    isPremium: user.isPremium,
+    premiumUntil: user.premiumUntil,
+    now,
+    resultTier,
+  });
+
+  return resultTier;
 }
 
 export interface AIQuotaResult {
@@ -72,15 +84,37 @@ export async function checkAndIncrementAIQuota(
       });
     }
 
+    // INVESTIGATION — QUOTA_WRITE_BEFORE
+    console.log("QUOTA_WRITE_BEFORE", {
+      build: BUILD_FINGERPRINT,
+      userId,
+      aiUsageToday: quota.aiUsageToday,
+      aiResetAt: quota.aiResetAt,
+      todayMidnight,
+      limit,
+      tier,
+      willBlock: quota.aiUsageToday >= limit,
+    });
+
     if (quota.aiUsageToday >= limit) {
       console.info("[ai/quota] blocked", { userId, usage: quota.aiUsageToday, limit, tier });
       return { allowed: false, remaining: 0, limit, tier };
     }
 
     const newUsage = quota.aiUsageToday + 1;
-    await tx.userQuota.update({
+    const updated = await tx.userQuota.update({
       where: { userId },
       data: { aiUsageToday: newUsage },
+      select: { aiUsageToday: true },
+    });
+
+    // INVESTIGATION — QUOTA_WRITE_AFTER
+    console.log("QUOTA_WRITE_AFTER", {
+      build: BUILD_FINGERPRINT,
+      userId,
+      newUsage: updated.aiUsageToday,
+      limit,
+      remaining: limit - updated.aiUsageToday,
     });
 
     console.info("[ai/quota] allowed", { userId, usage: newUsage, limit, tier });
@@ -107,7 +141,26 @@ export async function getAIQuotaStatus(userId: string): Promise<AIQuotaResult> {
     select: { aiUsageToday: true, aiResetAt: true },
   });
 
-  if (!quota || quota.aiResetAt < todayMidnight) {
+  // INVESTIGATION — QUOTA_READ
+  console.log("QUOTA_READ", {
+    build: BUILD_FINGERPRINT,
+    userId,
+    aiUsageToday: quota?.aiUsageToday ?? null,
+    aiResetAt: quota?.aiResetAt ?? null,
+    todayMidnight,
+    limit,
+    tier,
+    noQuotaRow: !quota,
+    resetCondition: quota
+      ? `${quota.aiResetAt.toISOString()} <= ${todayMidnight.toISOString()} → ${quota.aiResetAt <= todayMidnight}`
+      : "no row",
+  });
+
+  // Use <= (not <) to match checkAndIncrementAIQuota semantics.
+  // When aiResetAt equals todayMidnight exactly (the normal day-boundary case),
+  // strict < would report yesterday's exhausted count as if it were today's —
+  // locking the UI before the write path ever gets a chance to reset.
+  if (!quota || quota.aiResetAt <= todayMidnight) {
     return { allowed: true, remaining: limit, limit, tier };
   }
 

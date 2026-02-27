@@ -8,6 +8,7 @@ import {
   analyzeMatchReason,
 } from "@/lib/ai-assistant-helpers";
 import { checkAndIncrementAIQuota } from "@/lib/aiQuota";
+import { BUILD_FINGERPRINT } from "@/lib/buildFingerprint";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -23,11 +24,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // TEMP DEBUG — remove after identity verified stable
-    // Confirms that userId (= token.sub) is consistent across logout/login.
-    // If this value changes between sessions for the same user, a ghost
-    // User row is being created (duplicate identity bug).
-    console.log("AUTH DEBUG", { userId });
+    // INVESTIGATION — DEPLOYMENT_DEBUG
+    // Confirms build fingerprint, Vercel env, and userId are stable across requests.
+    // Remove after quota behavior is confirmed stable.
+    console.log("DEPLOYMENT_DEBUG", {
+      build: BUILD_FINGERPRINT,
+      vercelEnv: process.env.VERCEL_ENV,
+      vercelUrl: process.env.VERCEL_URL,
+      userId,
+    });
 
     const { message, conversationHistory } = await req.json();
 
