@@ -59,6 +59,18 @@ export default function MemberCard({
     Boolean(member.user?.premiumUntil) &&
     new Date(member.user!.premiumUntil!) > new Date();
 
+  // INVESTIGATION — BADGE_RUNTIME_DEBUG (client console)
+  // Confirms which DB values flow into the badge visibility decision.
+  // Remove after badge behavior is confirmed stable.
+  console.log("BADGE_RUNTIME_DEBUG", {
+    source: "MemberCard",
+    memberId: member.userId,
+    "member.user?.isPremium": member.user?.isPremium ?? null,
+    "member.user?.premiumUntil": member.user?.premiumUntil ?? null,
+    now: new Date(),
+    isActivePremium,
+  });
+
 
   useEffect(() => {
     setVideoError(false);

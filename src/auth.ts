@@ -142,6 +142,18 @@ export const {
         session.user.isPremium = token.isPremium as boolean;
         session.user.gender = token.gender as string | null | undefined;
       }
+
+      // INVESTIGATION — SESSION_RUNTIME_DEBUG (server log)
+      // Fires on every session read. If tokenPremium is false after a premium
+      // activation, the JWT was never refreshed (trigger=update was never called).
+      // Remove after badge behavior is confirmed stable.
+      console.log("SESSION_RUNTIME_DEBUG", {
+        userId: token.sub ?? null,
+        tokenPremium: token.isPremium ?? null,
+        sessionPremium: session.user?.isPremium ?? null,
+        tokenIat: token.iat,
+      });
+
       return session;
     },
   },

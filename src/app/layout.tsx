@@ -87,6 +87,16 @@ export default async function RootLayout({
   const isPremium = session?.user?.isPremium as boolean;
   const isAdmin = session?.user?.role === "ADMIN";
 
+  // INVESTIGATION — LAYOUT_RUNTIME_DEBUG (server log)
+  // Confirms what isPremium value is passed to TopNav and Providers from JWT.
+  // If this shows false after premium activation, the JWT cookie is stale.
+  // Remove after badge behavior is confirmed stable.
+  console.log("LAYOUT_RUNTIME_DEBUG", {
+    userId,
+    sessionPremium: session?.user?.isPremium ?? null,
+    isPremiumProp: isPremium,
+  });
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
