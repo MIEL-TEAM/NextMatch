@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Member } from "@prisma/client";
-import { Chip } from "@nextui-org/react";
 import { Camera, MapPin, Edit2 } from "lucide-react";
 import { MdVerified } from "react-icons/md";
 import { calculateAge } from "@/lib/util";
@@ -27,8 +26,6 @@ type ProfileCoverProps = {
     onCoverUploadSuccess: (result: CloudinaryUploadWidgetResults) => void;
 };
 
-/** Lightweight tooltip wrapper for the Premium icon. No external library needed.
- *  Desktop: shows on hover. Mobile: shows on tap, dismisses on outside touch. */
 function PremiumIconWithTooltip() {
     const [visible, setVisible] = useState(false);
     const wrapperRef = useRef<HTMLSpanElement>(null);
@@ -161,23 +158,19 @@ export default function ProfileCover({
                             </span>
                         )}
                     </h1>
-                    {/* Badges: Verified + Premium icon — inline, no wrap */}
+                    {/* Badges: Verified icon + Premium icon with tooltip */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                         {member.user?.oauthVerified && (
-                            <Chip
-                                size="lg"
-                                variant="flat"
-                                classNames={{
-                                    base: "bg-blue-50 border-blue-200 border",
-                                    content: "text-blue-600 font-semibold",
-                                }}
-                                startContent={<MdVerified className="text-blue-500 w-5 h-5" />}
-                            >
-                                מאומת
-                            </Chip>
+                            <MdVerified
+                                className="text-blue-400 flex-shrink-0"
+                                style={{ width: 20, height: 20 }}
+                                aria-label="חשבון מאומת"
+                            />
                         )}
                         {isActivePremium(member.user) && (
-                            <PremiumIconWithTooltip />
+                            <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
+                                <PremiumIconWithTooltip />
+                            </span>
                         )}
                     </div>
                 </div>

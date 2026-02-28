@@ -16,7 +16,8 @@ import VerifiedRibbon from "@/components/VerifiedRibbon";
 import FloatingReaction from "@/components/FloatingReaction";
 import { MemberCardProps } from "@/types/members";
 import Carousel from "@/components/MemberImageCarousel";
-import PremiumLabel from "@/components/PremiumLabel";
+import { isActivePremium } from "@/lib/premiumUtils";
+import { MdVerified } from "react-icons/md";
 
 import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
 
@@ -215,13 +216,27 @@ export default function MemberCard({
           <CardFooter className="pointer-events-none absolute bottom-0 left-0 right-0 z-40 px-2 pb-2" />
         </div>
 
-        {/* Title and description - Beautiful card footer */}
+        {/* Title and description */}
         <div className="px-3 py-3 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-1.5">
             <h3 className="font-bold text-[16px] text-gray-900 dark:text-white truncate">
               {member.name}, {age}
-              <PremiumLabel user={member.user} variant="inline" />
             </h3>
+            {/* Icon badges — 8px gap via gap-2 on the outer row, 6px between icons via gap-1.5 */}
+            <div className="flex items-baseline gap-1.5 flex-shrink-0">
+              {member.user?.oauthVerified && (
+                <MdVerified className="text-blue-500 flex-shrink-0" style={{ width: 18, height: 18 }} />
+              )}
+              {isActivePremium(member.user) && (
+                <Image
+                  src="/images/icons/p.png"
+                  alt="Miel+"
+                  width={18}
+                  height={18}
+                  className="flex-shrink-0"
+                />
+              )}
+            </div>
             <PresenceDot member={member} />
           </div>
           {member.description && (
