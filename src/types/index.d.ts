@@ -36,6 +36,7 @@ type MessageDto = {
   isStarred?: boolean;
   isArchived?: boolean;
   currentUserId?: string;
+  locked?: boolean;
 };
 
 type UserFilters = {

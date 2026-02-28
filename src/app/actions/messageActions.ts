@@ -170,9 +170,15 @@ export async function getMessageThread(recipientId: string) {
       }
     }
 
-    const messagesToReturn = messages.map((message) => ({
+    // Fetch fresh user for premium check — never trust JWT
+    const user = await dbGetUserForNav(userId);
+    const premium = isActivePremium(user);
+    const FREE_VIEW_LIMIT = 5;
+
+    const messagesToReturn = messages.map((message, index) => ({
       ...mapMessageToMessageDto(message),
       currentUserId: userId,
+      locked: !premium && index >= FREE_VIEW_LIMIT,
     }));
 
     return { messages: messagesToReturn, readCount };
