@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Member } from "@prisma/client";
 import { Chip } from "@nextui-org/react";
@@ -9,6 +9,7 @@ import { MdVerified } from "react-icons/md";
 import { calculateAge } from "@/lib/util";
 import PresenceDot from "../PresenceDot";
 import PremiumLabel from "@/components/PremiumLabel";
+import { isActivePremium } from "@/lib/premiumUtils";
 import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 
@@ -25,6 +26,57 @@ type ProfileCoverProps = {
     isOwnProfile: boolean;
     onCoverUploadSuccess: (result: CloudinaryUploadWidgetResults) => void;
 };
+
+/** Lightweight tooltip wrapper for the Premium icon. No external library needed.
+ *  Desktop: shows on hover. Mobile: shows on tap, dismisses on outside touch. */
+function PremiumIconWithTooltip() {
+    const [visible, setVisible] = useState(false);
+    const wrapperRef = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        if (!visible) return;
+        const dismiss = (e: MouseEvent | TouchEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                setVisible(false);
+            }
+        };
+        document.addEventListener("mousedown", dismiss);
+        document.addEventListener("touchstart", dismiss);
+        return () => {
+            document.removeEventListener("mousedown", dismiss);
+            document.removeEventListener("touchstart", dismiss);
+        };
+    }, [visible]);
+
+    return (
+        <span
+            ref={wrapperRef}
+            className="relative inline-flex items-center flex-shrink-0"
+            onMouseEnter={() => setVisible(true)}
+            onMouseLeave={() => setVisible(false)}
+            onClick={() => setVisible((v) => !v)}
+            aria-label="Miel+ Premium"
+        >
+            {/* Tooltip — always in DOM, opacity-only transition → no layout shift */}
+            <span
+                role="tooltip"
+                className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-md bg-neutral-900 text-white text-xs whitespace-nowrap max-w-[160px] text-center shadow-sm transition-opacity duration-150 z-50 ${visible ? "opacity-100" : "opacity-0"
+                    }`}
+            >
+                <span className="block font-semibold">חבר/ת Miel+</span>
+                <span className="block font-normal">חשבון פרימיום פעיל</span>
+            </span>
+
+            <Image
+                src="/images/icons/p.png"
+                alt="Miel+ Premium"
+                width={16}
+                height={16}
+                draggable={false}
+            />
+        </span>
+    );
+}
 
 export default function ProfileCover({
     member,
@@ -108,22 +160,26 @@ export default function ProfileCover({
                                 ,{calculateAge(member.dateOfBirth)}
                             </span>
                         )}
-                        <PremiumLabel user={member.user} variant="inline" />
                     </h1>
-                    {/* Verification Badge */}
-                    {member.user?.oauthVerified && (
-                        <Chip
-                            size="lg"
-                            variant="flat"
-                            classNames={{
-                                base: "bg-blue-50 border-blue-200 border",
-                                content: "text-blue-600 font-semibold",
-                            }}
-                            startContent={<MdVerified className="text-blue-500 w-5 h-5" />}
-                        >
-                            מאומת
-                        </Chip>
-                    )}
+                    {/* Badges: Verified + Premium icon — inline, no wrap */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {member.user?.oauthVerified && (
+                            <Chip
+                                size="lg"
+                                variant="flat"
+                                classNames={{
+                                    base: "bg-blue-50 border-blue-200 border",
+                                    content: "text-blue-600 font-semibold",
+                                }}
+                                startContent={<MdVerified className="text-blue-500 w-5 h-5" />}
+                            >
+                                מאומת
+                            </Chip>
+                        )}
+                        {isActivePremium(member.user) && (
+                            <PremiumIconWithTooltip />
+                        )}
+                    </div>
                 </div>
                 {/* Premium membership block — own profile only */}
                 {isOwnProfile && <PremiumLabel user={member.user} variant="profile" />}
