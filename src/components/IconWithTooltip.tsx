@@ -8,7 +8,7 @@ interface IconWithTooltipProps {
     description?: string;
     label?: string;
     placement?: "above" | "below";
-    align?: "center" | "left";
+    align?: "center" | "left" | "right";
 }
 
 export default function IconWithTooltip({
@@ -30,7 +30,9 @@ export default function IconWithTooltip({
     const alignClass =
         align === "left"
             ? "left-0"
-            : "left-1/2 -translate-x-1/2";
+            : align === "right"
+                ? "right-0"
+                : "left-1/2 -translate-x-1/2";
 
     useEffect(() => {
         if (!visible) return;

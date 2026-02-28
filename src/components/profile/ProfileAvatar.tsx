@@ -34,7 +34,7 @@ export default function ProfileAvatar({ member, isOwnProfile, isPremium }: Profi
                             title="חבר/ת Miel+"
                             description="חשבון פרימיום פעיל"
                             placement="above"
-                            align="left"
+                            align="right"
                         />
                     </span>
                 )}
