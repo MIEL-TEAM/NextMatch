@@ -7,6 +7,8 @@ interface IconWithTooltipProps {
     title: string;
     description?: string;
     label?: string;
+    placement?: "above" | "below";
+    align?: "center" | "left";
 }
 
 export default function IconWithTooltip({
@@ -14,9 +16,21 @@ export default function IconWithTooltip({
     title,
     description,
     label,
+    placement = "above",
+    align = "center",
 }: IconWithTooltipProps) {
     const [visible, setVisible] = useState(false);
     const wrapperRef = useRef<HTMLSpanElement>(null);
+
+    const positionClass =
+        placement === "below"
+            ? "top-full mt-2"
+            : "bottom-full mb-2";
+
+    const alignClass =
+        align === "left"
+            ? "left-0"
+            : "left-1/2 -translate-x-1/2";
 
     useEffect(() => {
         if (!visible) return;
@@ -45,9 +59,9 @@ export default function IconWithTooltip({
             {/* Tooltip — always in DOM, opacity-only so layout never shifts */}
             <span
                 role="tooltip"
-                className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                className={`pointer-events-none absolute ${positionClass} ${alignClass}
           px-2.5 py-1.5 rounded-md bg-neutral-900 text-white text-xs
-          whitespace-nowrap text-center shadow-sm
+          whitespace-nowrap text-center shadow-md
           transition-opacity duration-150 z-50
           ${visible ? "opacity-100" : "opacity-0"}`}
             >

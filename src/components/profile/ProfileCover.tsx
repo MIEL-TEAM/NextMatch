@@ -115,7 +115,7 @@ export default function ProfileCover({
                         {member.user?.oauthVerified && (
                             <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
                                 <IconWithTooltip
-                                    icon={<MdVerified className="text-blue-400" style={{ width: 20, height: 20 }} />}
+                                    icon={<MdVerified className="text-blue-400" size={20} />}
                                     title="חשבון מאומת"
                                     description="זהות המשתמש אומתה ואושרה על ידי Miel"
                                 />
@@ -128,8 +128,8 @@ export default function ProfileCover({
                                         <Image
                                             src="/images/icons/p.png"
                                             alt="Miel+"
-                                            width={16}
-                                            height={16}
+                                            width={20}
+                                            height={20}
                                             draggable={false}
                                         />
                                     }

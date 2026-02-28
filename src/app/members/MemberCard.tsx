@@ -12,11 +12,12 @@ import { toggleLikeMember } from "@/app/actions/likeActions";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 import { AnimatePresence } from "framer-motion";
-import VerifiedRibbon from "@/components/VerifiedRibbon";
-import FloatingReaction from "@/components/FloatingReaction";
+import { MdVerified } from "react-icons/md";
 import { MemberCardProps } from "@/types/members";
+import FloatingReaction from "@/components/FloatingReaction";
 import Carousel from "@/components/MemberImageCarousel";
 import { isActivePremium } from "@/lib/premiumUtils";
+import IconWithTooltip from "@/components/IconWithTooltip";
 
 import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
 
@@ -160,28 +161,32 @@ export default function MemberCard({
             />
           )}
 
-          <div className="absolute top-2 left-2 z-50 flex gap-1.5 items-center">
+          <div className="absolute top-2 left-2 z-50">
             <LikeButton
               loading={loading}
               toggleLike={toggleLike}
               hasLiked={hasLiked}
               aria-label={hasLiked ? "בטל לייק" : "הוסף לייק"}
             />
-            {memberVideos.length > 0 && showVideo && (
+          </div>
+
+          {/* Mute/Unmute — top right corner */}
+          {memberVideos.length > 0 && showVideo && (
+            <div className="absolute top-2 right-2 z-50">
               <button
                 onClick={toggleMute}
-                className="bg-black/70 hover:bg-black/90 rounded-full p-2 transition-all duration-200 flex items-center justify-center shadow-lg ring-2 ring-blue-400/60 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/80"
+                className="bg-black/70 hover:bg-black/90 rounded-full p-[6px] transition-all duration-200 flex items-center justify-center shadow-lg ring-2 ring-blue-400/60 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500/80"
                 aria-label={isMuted ? "בטל השתקה" : "השתק וידאו"}
                 type="button"
               >
                 {isMuted ? (
-                  <VolumeX className="w-5 h-5 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
+                  <VolumeX className="w-4 h-4 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
                 ) : (
-                  <Volume2 className="w-5 h-5 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
+                  <Volume2 className="w-4 h-4 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
                 )}
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Bottom-left media counters + location + verification */}
           <div className="absolute bottom-2 left-2 z-50 flex items-center gap-1.5">
@@ -209,15 +214,35 @@ export default function MemberCard({
                   </span>
                 </div>
               )}
-            {member.user?.oauthVerified && <VerifiedRibbon />}
+            {member.user?.oauthVerified && (
+              <IconWithTooltip
+                icon={
+                  <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full p-1 shadow-lg">
+                    <MdVerified className="w-4 h-4" />
+                  </div>
+                }
+                title="חשבון מאומת"
+                description="זהות המשתמש אומתה ואושרה על ידי Miel"
+                placement="above"
+                align="left"
+              />
+            )}
             {isActivePremium(member.user) && (
               <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
-                <Image
-                  src="/images/icons/p.png"
-                  alt="Miel+"
-                  width={16}
-                  height={16}
-                  draggable={false}
+                <IconWithTooltip
+                  icon={
+                    <Image
+                      src="/images/icons/p.png"
+                      alt="Miel+"
+                      width={16}
+                      height={16}
+                      draggable={false}
+                    />
+                  }
+                  title="חבר/ת Miel+"
+                  description="חשבון פרימיום פעיל"
+                  placement="above"
+                  align="left"
                 />
               </span>
             )}
