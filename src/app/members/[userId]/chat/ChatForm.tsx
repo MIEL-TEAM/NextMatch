@@ -3,13 +3,12 @@
 import { createMessgae } from "@/app/actions/messageActions";
 import { MessageSchema, messagesSchema } from "@/lib/schemas/messagesSchema";
 import { handleFormServerError } from "@/lib/util";
-import AppModal from "@/components/AppModal";
+import useUpgradeModal from "@/hooks/useUpgradeModal";
 import { zodResolver } from "@hookform/resolvers/zod";
-// Import specific components instead of the entire library
 import { Button } from "@nextui-org/button";
 import { Textarea } from "@nextui-org/input";
-import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 
@@ -17,8 +16,6 @@ import { HiPaperAirplane } from "react-icons/hi2";
 
 export default function ChatForm() {
   const params = useParams<{ userId: string }>();
-  const router = useRouter();
-  const [showLimitModal, setShowLimitModal] = useState(false);
   const {
     register,
     handleSubmit,
@@ -35,15 +32,14 @@ export default function ChatForm() {
   }, [setFocus]);
 
   const onSubmit = async (data: MessageSchema) => {
-    // Reset form immediately for better UX
     reset();
-    
+
     try {
       const result = await createMessgae(params.userId, data);
 
       if (result.status === "error") {
         if (result.error === "MESSAGE_LIMIT_REACHED") {
-          setShowLimitModal(true);
+          useUpgradeModal.getState().open();
         } else {
           handleFormServerError(result, setError);
           toast.error("Failed to send message");
@@ -59,33 +55,9 @@ export default function ChatForm() {
     }
   };
 
-  // Get the register props for the textarea
   const textAreaProps = register("text");
 
   return (
-    <>
-    <AppModal
-      isOpen={showLimitModal}
-      onClose={() => setShowLimitModal(false)}
-      header="הגעת למגבלת ההודעות"
-      body={
-        <p className="text-center text-gray-600 py-2" dir="rtl">
-          משתמשי Miel+ נהנים מהודעות ללא הגבלה
-        </p>
-      }
-      footerButtons={[
-        {
-          children: "שדרג עכשיו",
-          color: "secondary" as const,
-          onClick: () => router.push("/premium"),
-        },
-        {
-          children: "סגור",
-          variant: "flat" as const,
-          onClick: () => setShowLimitModal(false),
-        },
-      ]}
-    />
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
       <div className="flex items-center gap-2 w-full">
         <Textarea
@@ -131,6 +103,5 @@ export default function ChatForm() {
         )}
       </div>
     </form>
-    </>
   );
 }

@@ -216,20 +216,32 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             </div>
           </div>
         ) : (
-          <p
-            className={clsx("text-sm py-3 text-gray-900", {
-              "break-words whitespace-normal": isLongMessage,
-            })}
-            style={isLongMessage ? { wordBreak: "break-word" } : {}}
-          >
-            {isLocked ? (
-              <span className="blur-sm select-none pointer-events-none">
-                {message.text}
-              </span>
-            ) : (
-              message.text
+          <div className="flex flex-col h-full">
+            <div className="flex-1">
+              <p
+                className={clsx("text-sm py-3 text-gray-900", {
+                  "break-words whitespace-normal": isLongMessage,
+                })}
+                style={isLongMessage ? { wordBreak: "break-word" } : {}}
+              >
+                {isLocked ? (
+                  <span className="blur-sm select-none pointer-events-none">
+                    {message.text}
+                  </span>
+                ) : (
+                  message.text
+                )}
+              </p>
+            </div>
+            {showUpgradeCta && (
+              <button
+                onClick={() => useUpgradeModal.getState().open()}
+                className="mt-3 text-xs font-medium text-amber-500 hover:underline"
+              >
+                💬 ההודעה מחכה לך — שדרג ל-Miel+
+              </button>
             )}
-          </p>
+          </div>
         )}
       </div>
     </div>
@@ -314,14 +326,6 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
           })}
         >
           {renderMessageContent()}
-          {showUpgradeCta && (
-            <button
-              onClick={() => useUpgradeModal.getState().open()}
-              className="mt-2 text-xs font-medium text-amber-500 hover:underline"
-            >
-              שדרג ל-Miel+ כדי לפתוח את ההודעה
-            </button>
-          )}
         </div>
 
         {isCurrentUserSender && renderAvatar()}
