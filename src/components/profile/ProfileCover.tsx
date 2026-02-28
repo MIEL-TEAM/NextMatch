@@ -5,11 +5,9 @@ import Image from "next/image";
 import { Member } from "@prisma/client";
 import { Camera, MapPin, Edit2 } from "lucide-react";
 import { MdVerified } from "react-icons/md";
-import { FaFire } from "react-icons/fa";
 import { calculateAge } from "@/lib/util";
 import PresenceDot from "../PresenceDot";
 import PremiumLabel from "@/components/PremiumLabel";
-import { isActivePremium } from "@/lib/premiumUtils";
 import IconWithTooltip from "@/components/IconWithTooltip";
 import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
@@ -119,15 +117,6 @@ export default function ProfileCover({
                                     icon={<MdVerified className="text-blue-400" size={20} />}
                                     title="חשבון מאומת"
                                     description="זהות המשתמש אומתה ואושרה על ידי Miel"
-                                />
-                            </span>
-                        )}
-                        {isActivePremium(member.user) && (
-                            <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
-                                <IconWithTooltip
-                                    icon={<FaFire style={{ width: 18, height: 18, color: "#FFB547" }} />}
-                                    title="חבר/ת Miel+"
-                                    description="חשבון פרימיום פעיל"
                                 />
                             </span>
                         )}

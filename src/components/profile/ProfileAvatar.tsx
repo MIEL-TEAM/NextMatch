@@ -26,9 +26,9 @@ export default function ProfileAvatar({ member, isOwnProfile, isPremium }: Profi
                     alt={member.name}
                     radius="lg"
                 />
-                {/* Premium fire badge — top-right corner */}
+                {/* Premium fire badge — top-right corner, inside the image */}
                 {isPremium && (
-                    <span className="absolute -top-2 -right-2 bg-white p-[6px] rounded-full shadow-md flex items-center justify-center z-10">
+                    <span className="absolute top-2 right-2 bg-white p-[6px] rounded-full shadow-md flex items-center justify-center z-10">
                         <IconWithTooltip
                             icon={<FaFire style={{ width: 15, height: 15, color: "#FFB547" }} />}
                             title="חבר/ת Miel+"
