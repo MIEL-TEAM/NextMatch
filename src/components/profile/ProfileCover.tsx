@@ -8,7 +8,7 @@ import { Camera, MapPin, Edit2 } from "lucide-react";
 import { MdVerified } from "react-icons/md";
 import { calculateAge } from "@/lib/util";
 import PresenceDot from "../PresenceDot";
-import PremiumMark from "@/components/PremiumMark";
+import PremiumLabel from "@/components/PremiumLabel";
 import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 
@@ -108,13 +108,7 @@ export default function ProfileCover({
                                 ,{calculateAge(member.dateOfBirth)}
                             </span>
                         )}
-                        <PremiumMark
-                            isActivePremium={
-                                Boolean(member.user?.isPremium) &&
-                                Boolean(member.user?.premiumUntil) &&
-                                new Date(member.user!.premiumUntil!) > new Date()
-                            }
-                        />
+                        <PremiumLabel user={member.user} variant="inline" />
                     </h1>
                     {/* Verification Badge */}
                     {member.user?.oauthVerified && (
@@ -131,6 +125,8 @@ export default function ProfileCover({
                         </Chip>
                     )}
                 </div>
+                {/* Premium membership block — own profile only */}
+                {isOwnProfile && <PremiumLabel user={member.user} variant="profile" />}
                 {/* Location */}
                 <div className="flex items-center gap-2">
                     {!isOwnProfile && <PresenceDot member={member} size="md" />}

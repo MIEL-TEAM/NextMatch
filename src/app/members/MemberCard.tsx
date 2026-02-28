@@ -16,7 +16,7 @@ import VerifiedRibbon from "@/components/VerifiedRibbon";
 import FloatingReaction from "@/components/FloatingReaction";
 import { MemberCardProps } from "@/types/members";
 import Carousel from "@/components/MemberImageCarousel";
-import PremiumMark from "@/components/PremiumMark";
+import PremiumLabel from "@/components/PremiumLabel";
 
 import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
 
@@ -28,7 +28,6 @@ export default function MemberCard({
   onLike,
   isPriority = false,
 }: MemberCardProps) {
-  // Add visibility tracking for batched views
   const visibilityRef = useVisibilityTracking(member.userId);
 
   const [hasLiked, setHasLiked] = useState<boolean>(
@@ -53,23 +52,6 @@ export default function MemberCard({
     () => calculateAge(member.dateOfBirth),
     [member.dateOfBirth]
   );
-
-  const isActivePremium =
-    Boolean(member.user?.isPremium) &&
-    Boolean(member.user?.premiumUntil) &&
-    new Date(member.user!.premiumUntil!) > new Date();
-
-  // INVESTIGATION — BADGE_RUNTIME_DEBUG (client console)
-  // Confirms which DB values flow into the badge visibility decision.
-  // Remove after badge behavior is confirmed stable.
-  console.log("BADGE_RUNTIME_DEBUG", {
-    source: "MemberCard",
-    memberId: member.userId,
-    "member.user?.isPremium": member.user?.isPremium ?? null,
-    "member.user?.premiumUntil": member.user?.premiumUntil ?? null,
-    now: new Date(),
-    isActivePremium,
-  });
 
 
   useEffect(() => {
@@ -238,7 +220,7 @@ export default function MemberCard({
           <div className="flex items-center gap-2 mb-1.5">
             <h3 className="font-bold text-[16px] text-gray-900 dark:text-white truncate">
               {member.name}, {age}
-              <PremiumMark isActivePremium={isActivePremium} />
+              <PremiumLabel user={member.user} variant="inline" />
             </h3>
             <PresenceDot member={member} />
           </div>
@@ -252,7 +234,6 @@ export default function MemberCard({
     ),
     [
       member,
-      isActivePremium,
       handleMouseEnter,
       handleMouseLeave,
       showVideo,

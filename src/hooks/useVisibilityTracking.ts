@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 import { batcher } from "@/lib/interactionBatcher";
 
-// Configuration
-const VISIBILITY_THRESHOLD = 0.5; // 50% visible
-const VIEW_DURATION_MS = 800; // Must be visible for 800ms to count
+const VISIBILITY_THRESHOLD = 0.5;
+const VIEW_DURATION_MS = 800;
 
 export function useVisibilityTracking(targetUserId: string) {
     const elementRef = useRef<HTMLDivElement | null>(null);
@@ -16,18 +15,13 @@ export function useVisibilityTracking(targetUserId: string) {
             (entries) => {
                 const entry = entries[0];
                 if (entry.isIntersecting) {
-                    // Started viewing
                     if (!timerRef.current) {
                         timerRef.current = setTimeout(() => {
-                            // Still viewing after delay -> count as view
                             batcher.add(targetUserId);
                             timerRef.current = null;
-                            // Optional: disconnect observer if we only care about first view
-                            // observer.disconnect();
                         }, VIEW_DURATION_MS);
                     }
                 } else {
-                    // Stopped viewing
                     if (timerRef.current) {
                         clearTimeout(timerRef.current);
                         timerRef.current = null;

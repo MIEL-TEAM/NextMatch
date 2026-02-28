@@ -5,7 +5,7 @@ import ChatContainer from "./ChatContainer";
 import { getMemberByUserId } from "@/app/actions/memberActions";
 import { getRecentConversations } from "@/app/actions/conversationActions";
 import { redirect } from "next/navigation";
-import PremiumMark from "@/components/PremiumMark";
+import PremiumLabel from "@/components/PremiumLabel";
 
 type UserParamsProps = {
   params: Promise<{ userId: string }>;
@@ -26,15 +26,10 @@ export default async function ChatPage({ params }: UserParamsProps) {
 
   const recipient = await getMemberByUserId(recipientId);
 
-  const isActivePremium =
-    Boolean(recipient?.user?.isPremium) &&
-    Boolean(recipient?.user?.premiumUntil) &&
-    new Date(recipient!.user!.premiumUntil!) > new Date();
-
   const chatHeader = recipient ? (
-    <div className="text-2xl font-semibold text-secondary flex items-center">
+    <div className="text-2xl font-semibold text-secondary flex items-baseline">
       {recipient.name}
-      <PremiumMark isActivePremium={isActivePremium} />
+      <PremiumLabel user={recipient.user} variant="inline" />
     </div>
   ) : (
     "צ\u2019אט"

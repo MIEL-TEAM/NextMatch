@@ -65,9 +65,8 @@ export default function PremiumMark({ isActivePremium }: PremiumMarkProps) {
         createPortal(
           <div
             role="tooltip"
-            className={`pointer-events-none fixed z-[9999] w-max max-w-[240px] bg-stone-900 text-white text-center text-[12px] leading-snug rounded-md px-3 py-2 shadow-md transition-opacity duration-150 ${
-              visible ? "opacity-100" : "opacity-0"
-            }`}
+            className={`pointer-events-none fixed z-[9999] w-max max-w-[240px] bg-stone-900 text-white text-center text-[12px] leading-snug rounded-md px-3 py-2 shadow-md transition-opacity duration-150 ${visible ? "opacity-100" : "opacity-0"
+              }`}
             style={{
               top: pos.top,
               left: pos.left,
