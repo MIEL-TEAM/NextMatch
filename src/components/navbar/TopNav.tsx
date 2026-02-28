@@ -5,6 +5,7 @@ import {
 } from "@/app/actions/userActions";
 import { getUnreadMessageCount } from "@/app/actions/messageActions";
 import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
+import { isActivePremium } from "@/lib/premiumUtils";
 import TopNavClient from "./TopNavClient";
 
 export default async function TopNav() {
@@ -42,7 +43,7 @@ export default async function TopNav() {
       ? await getProfileCompletionStatus(userId)
       : null;
 
-  const isPremium = session?.user?.isPremium || false;
+  const isPremium = isActivePremium(userInfo);
 
   // Get user location for search functionality
   let userLocation = null;

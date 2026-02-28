@@ -287,9 +287,9 @@ export async function getProfileCompletionStatus(
           descriptionLength >= PROFILE_COMPLETION_TARGETS.bioLength
             ? "הטקסט שלך נראה מצוין."
             : `הוסף עוד ${Math.max(
-                0,
-                PROFILE_COMPLETION_TARGETS.bioLength - descriptionLength,
-              )} תווים כדי לספר על עצמך.`,
+              0,
+              PROFILE_COMPLETION_TARGETS.bioLength - descriptionLength,
+            )} תווים כדי לספר על עצמך.`,
         actionHref: "/members/edit",
         weight: PROFILE_COMPLETION_WEIGHTS.bio,
         progress: bioProgress,
@@ -353,9 +353,9 @@ export async function getProfileCompletionStatus(
           interestCount >= PROFILE_COMPLETION_TARGETS.interests
             ? "בחירת תחומי העניין מלאה."
             : `בחר לפחות ${Math.max(
-                0,
-                PROFILE_COMPLETION_TARGETS.interests - interestCount,
-              )} תחומי עניין נוספים כדי לעזור לנו להתאים לך אנשים.`,
+              0,
+              PROFILE_COMPLETION_TARGETS.interests - interestCount,
+            )} תחומי עניין נוספים כדי לעזור לנו להתאים לך אנשים.`,
         actionHref: "/interests",
         weight: PROFILE_COMPLETION_WEIGHTS.interests,
         progress: interestsProgress,

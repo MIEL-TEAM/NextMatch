@@ -48,7 +48,7 @@ export async function dbDeletePhoto(photoId: string, userId: string) {
 export async function dbGetUserForNav(userId: string) {
   return prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, image: true },
+    select: { name: true, image: true, isPremium: true, premiumUntil: true },
   });
 }
 
