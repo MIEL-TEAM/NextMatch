@@ -9,8 +9,9 @@ import { createChatId } from "@/lib/util";
 import useMessageStore from "@/hooks/useMessageStore";
 import MessageList from "./MessageList";
 import HeartLoading from "@/components/HeartLoading";
+import UpgradeModal from "@/components/premium/UpgradeModal";
 
-export default function ChatContainer({ currentUserId }: ChatContainerProps) {
+export default function ChatContainer({ currentUserId, isPremium }: ChatContainerProps) {
   const params = useParams<{ userId: string }>();
   const recipientUserId = params.userId;
   const chatId = createChatId(currentUserId, recipientUserId);
@@ -86,10 +87,14 @@ export default function ChatContainer({ currentUserId }: ChatContainerProps) {
   }
 
   return (
-    <MessageList
-      currentUserId={currentUserId}
-      initialMessages={{ messages, readCount: 0 }}
-      chatId={chatId}
-    />
+    <>
+      <MessageList
+        currentUserId={currentUserId}
+        initialMessages={{ messages, readCount: 0 }}
+        chatId={chatId}
+        isPremium={isPremium}
+      />
+      <UpgradeModal />
+    </>
   );
 }

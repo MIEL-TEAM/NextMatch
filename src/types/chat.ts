@@ -4,10 +4,12 @@ export type MessageListProps = {
   initialMessages: { messages: MessageDto[]; readCount: number };
   currentUserId: string;
   chatId: string;
+  isPremium: boolean;
 };
 
 export type ChatContainerProps = {
   currentUserId: string;
+  isPremium: boolean;
 };
 
 export type MessageBoxProps = {

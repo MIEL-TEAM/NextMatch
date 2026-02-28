@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "react-hot-toast";
+import useUpgradeModal from "@/hooks/useUpgradeModal";
 
 function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;
@@ -221,7 +222,13 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             })}
             style={isLongMessage ? { wordBreak: "break-word" } : {}}
           >
-            {message.text}
+            {isLocked ? (
+              <span className="blur-sm select-none pointer-events-none">
+                {message.text}
+              </span>
+            ) : (
+              message.text
+            )}
           </p>
         )}
       </div>
@@ -306,22 +313,14 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             "flex-shrink-0": isStoryReply,
           })}
         >
-          {isLocked ? (
-            <div>
-              <div className="blur-sm select-none pointer-events-none">
-                {renderMessageContent()}
-              </div>
-              {showUpgradeCta && (
-                <button
-                  onClick={() => router.push("/premium")}
-                  className="mt-2 text-xs font-medium text-amber-500 hover:underline"
-                >
-                  שדרג ל-Miel+ כדי להמשיך את השיחה
-                </button>
-              )}
-            </div>
-          ) : (
-            renderMessageContent()
+          {renderMessageContent()}
+          {showUpgradeCta && (
+            <button
+              onClick={() => useUpgradeModal.getState().open()}
+              className="mt-2 text-xs font-medium text-amber-500 hover:underline"
+            >
+              שדרג ל-Miel+ כדי לפתוח את ההודעה
+            </button>
           )}
         </div>
 

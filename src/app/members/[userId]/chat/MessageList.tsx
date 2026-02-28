@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { formatShortDateTime } from "@/lib/util";
 import { Channel } from "pusher-js";
@@ -13,10 +13,30 @@ const MessageBox = dynamic(() => import("./MessageBox"), {
   ssr: false,
 });
 
+function recomputeLocks(
+  messages: MessageDto[],
+  currentUserId: string,
+  isPremium: boolean,
+): MessageDto[] {
+  if (isPremium) {
+    return messages.map((m) => ({ ...m, locked: false }));
+  }
+
+  const received = messages.filter((m) => m.senderId !== currentUserId);
+
+  if (received.length < 5) {
+    return messages.map((m) => ({ ...m, locked: false }));
+  }
+
+  const lockedIds = new Set(received.slice(5).map((m) => m.id));
+  return messages.map((m) => ({ ...m, locked: lockedIds.has(m.id) }));
+}
+
 export default function MessageList({
   initialMessages,
   currentUserId,
   chatId,
+  isPremium,
 }: MessageListProps) {
   const channelRef = useRef<Channel | null>(null);
   const setReadCount = useRef(false);
@@ -30,6 +50,15 @@ export default function MessageList({
     (state) => state.removeMessageFromChat,
   );
   const setCachedMessages = useMessageStore((state) => state.setCachedMessages);
+
+
+  const { displayMessages, firstLockedId } = useMemo(() => {
+    const computed = recomputeLocks(messages, currentUserId, isPremium);
+    return {
+      displayMessages: computed,
+      firstLockedId: computed.find((m) => m.locked)?.id,
+    };
+  }, [messages, currentUserId, isPremium]);
 
   // Sync messages when initialMessages change
   useEffect(() => {
@@ -149,23 +178,20 @@ export default function MessageList({
 
   return (
     <div className="h-full">
-      {messages.length === 0 ? (
+      {displayMessages.length === 0 ? (
         <div className="flex items-center justify-center h-full text-gray-500">
           עדיין לא התחלתם שיחה ☺️
         </div>
       ) : (
         <div className="space-y-2">
-          {(() => {
-            const firstLockedId = messages.find((m) => m.locked)?.id;
-            return messages.map((message) => (
-              <MessageBox
-                key={message.id}
-                message={message}
-                currentUserId={currentUserId}
-                isFirstLocked={message.id === firstLockedId}
-              />
-            ));
-          })()}
+          {displayMessages.map((message) => (
+            <MessageBox
+              key={message.id}
+              message={message}
+              currentUserId={currentUserId}
+              isFirstLocked={message.id === firstLockedId}
+            />
+          ))}
         </div>
       )}
     </div>
