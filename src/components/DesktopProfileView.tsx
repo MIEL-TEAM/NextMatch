@@ -11,6 +11,7 @@ import ProfileAvatar from "./profile/ProfileAvatar";
 import ProfileDescription from "./profile/ProfileDescription";
 import ProfileActions from "./profile/ProfileActions";
 import ProfilePhotoGallery from "./profile/ProfilePhotoGallery";
+import { isActivePremium } from "@/lib/premiumUtils";
 
 type DesktopProfileViewProps = {
   member: Member & {
@@ -124,7 +125,7 @@ export default function DesktopProfileView({
       {/* Profile Info Card */}
       <div className="relative px-6 -mt-6">
         <div className="bg-white rounded-3xl p-6 border border-gray-100">
-          <ProfileAvatar member={member} isOwnProfile={isOwnProfile} />
+          <ProfileAvatar member={member} isOwnProfile={isOwnProfile} isPremium={isActivePremium((member as any).user)} />
 
           <ProfileDescription
             member={member}

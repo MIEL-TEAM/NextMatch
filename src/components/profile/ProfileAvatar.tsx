@@ -5,13 +5,16 @@ import { Avatar } from "@nextui-org/react";
 import { Camera } from "lucide-react";
 import { Member } from "@prisma/client";
 import { useRouter } from "next/navigation";
+import { FaFire } from "react-icons/fa";
+import IconWithTooltip from "@/components/IconWithTooltip";
 
 type ProfileAvatarProps = {
     member: Member;
     isOwnProfile: boolean;
+    isPremium?: boolean;
 };
 
-export default function ProfileAvatar({ member, isOwnProfile }: ProfileAvatarProps) {
+export default function ProfileAvatar({ member, isOwnProfile, isPremium }: ProfileAvatarProps) {
     const router = useRouter();
 
     return (
@@ -23,6 +26,18 @@ export default function ProfileAvatar({ member, isOwnProfile }: ProfileAvatarPro
                     alt={member.name}
                     radius="lg"
                 />
+                {/* Premium fire badge — top-right corner */}
+                {isPremium && (
+                    <span className="absolute -top-2 -right-2 bg-white p-[6px] rounded-full shadow-md flex items-center justify-center z-10">
+                        <IconWithTooltip
+                            icon={<FaFire style={{ width: 15, height: 15, color: "#FFB547" }} />}
+                            title="חבר/ת Miel+"
+                            description="חשבון פרימיום פעיל"
+                            placement="above"
+                            align="left"
+                        />
+                    </span>
+                )}
                 {isOwnProfile && (
                     <button
                         onClick={() => router.push(`/members/edit/photos`)}
