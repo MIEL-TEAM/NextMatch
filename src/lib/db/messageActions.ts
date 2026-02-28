@@ -224,3 +224,26 @@ export async function dbUpdateMessage(messageId: string, text: string) {
     select: messageSelect,
   });
 }
+
+export async function dbCreateMessageWithLimit(
+  text: string,
+  recipientId: string,
+  senderId: string,
+  limit: number,
+) {
+  return prisma.$transaction(
+    async (tx) => {
+      const count = await tx.message.count({
+        where: { senderId, recipientId },
+      });
+      if (count >= limit) {
+        throw new Error("MESSAGE_LIMIT_REACHED");
+      }
+      return tx.message.create({
+        data: { text, recipientId, senderId },
+        select: messageSelect,
+      });
+    },
+    { isolationLevel: "Serializable" },
+  );
+}

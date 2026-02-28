@@ -15,6 +15,7 @@ import {
 import {
   dbArchiveMessages,
   dbCreateMessage,
+  dbCreateMessageWithLimit,
   dbDeleteMessage,
   dbDeleteMessagesPermanently,
   dbGetArchivedMessages,
@@ -29,6 +30,8 @@ import {
   dbToggleMessageStar,
   dbUpdateMessage,
 } from "@/lib/db/messageActions";
+import { dbGetUserForNav } from "@/lib/db/userActions";
+import { isActivePremium } from "@/lib/premiumUtils";
 import { notifyNewMessage } from "@/lib/notifications/notificationService";
 
 export async function createMessgae(
@@ -44,7 +47,24 @@ export async function createMessgae(
 
     const { text } = validated.data;
 
-    const message = await dbCreateMessage(text, recipientUserId, userId);
+    // Fetch fresh user from DB — never trust JWT for premium status
+    const user = await dbGetUserForNav(userId);
+    const premium = isActivePremium(user);
+
+    let message: Awaited<ReturnType<typeof dbCreateMessage>>;
+
+    if (premium) {
+      message = await dbCreateMessage(text, recipientUserId, userId);
+    } else {
+      try {
+        message = await dbCreateMessageWithLimit(text, recipientUserId, userId, 5);
+      } catch (err) {
+        if (err instanceof Error && err.message === "MESSAGE_LIMIT_REACHED") {
+          return { status: "error", error: "MESSAGE_LIMIT_REACHED" };
+        }
+        throw err;
+      }
+    }
 
     await trackUserInteraction(recipientUserId, "message").catch((e) =>
       console.error("Failed to track message interaction:", e),
