@@ -13,6 +13,7 @@ export type ChatContainerProps = {
 export type MessageBoxProps = {
   message: MessageDto;
   currentUserId: string;
+  isFirstLocked?: boolean;
 };
 
 export type Conversation = {

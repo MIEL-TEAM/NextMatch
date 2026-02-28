@@ -173,12 +173,25 @@ export async function getMessageThread(recipientId: string) {
     // Fetch fresh user for premium check — never trust JWT
     const user = await dbGetUserForNav(userId);
     const premium = isActivePremium(user);
-    const FREE_VIEW_LIMIT = 5;
 
-    const messagesToReturn = messages.map((message, index) => ({
+    let lockFromTime: Date | null = null;
+    if (!premium) {
+      const receivedByTime = messages
+        .filter((m) => m.sender?.userId !== userId)
+        .sort((a, b) => a.created.getTime() - b.created.getTime());
+
+      if (receivedByTime.length >= 5) {
+        lockFromTime = receivedByTime[4].created;
+      }
+    }
+
+    const messagesToReturn = messages.map((message) => ({
       ...mapMessageToMessageDto(message),
       currentUserId: userId,
-      locked: !premium && index >= FREE_VIEW_LIMIT,
+      locked:
+        lockFromTime !== null &&
+        message.sender?.userId !== userId &&
+        message.created > lockFromTime,
     }));
 
     return { messages: messagesToReturn, readCount };

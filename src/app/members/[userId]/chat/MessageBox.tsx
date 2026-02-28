@@ -12,9 +12,10 @@ import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "react-hot-toast";
 
-function MessageBox({ message, currentUserId }: MessageBoxProps) {
+function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;
   const isLocked = message.locked === true;
+  const showUpgradeCta = isLocked && isFirstLocked === true;
   const messageEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
@@ -306,20 +307,18 @@ function MessageBox({ message, currentUserId }: MessageBoxProps) {
           })}
         >
           {isLocked ? (
-            <div className="relative">
-              <div className="blur-sm opacity-70 pointer-events-none select-none">
+            <div>
+              <div className="blur-sm select-none pointer-events-none">
                 {renderMessageContent()}
               </div>
-              <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
-                <div className="text-center px-4" dir="rtl">
-                  <p className="text-sm font-medium text-white">
-                    שדרג ל-Miel+
-                  </p>
-                  <p className="text-xs text-white/80">
-                    כדי להמשיך את השיחה
-                  </p>
-                </div>
-              </div>
+              {showUpgradeCta && (
+                <button
+                  onClick={() => router.push("/premium")}
+                  className="mt-2 text-xs font-medium text-amber-500 hover:underline"
+                >
+                  שדרג ל-Miel+ כדי להמשיך את השיחה
+                </button>
+              )}
             </div>
           ) : (
             renderMessageContent()

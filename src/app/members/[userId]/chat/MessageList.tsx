@@ -155,13 +155,17 @@ export default function MessageList({
         </div>
       ) : (
         <div className="space-y-2">
-          {messages.map((message) => (
-            <MessageBox
-              key={message.id}
-              message={message}
-              currentUserId={currentUserId}
-            />
-          ))}
+          {(() => {
+            const firstLockedId = messages.find((m) => m.locked)?.id;
+            return messages.map((message) => (
+              <MessageBox
+                key={message.id}
+                message={message}
+                currentUserId={currentUserId}
+                isFirstLocked={message.id === firstLockedId}
+              />
+            ));
+          })()}
         </div>
       )}
     </div>
