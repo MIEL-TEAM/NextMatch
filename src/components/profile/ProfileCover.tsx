@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Member } from "@prisma/client";
 import { Camera, MapPin, Edit2 } from "lucide-react";
 import { MdVerified } from "react-icons/md";
+import { FaFire } from "react-icons/fa";
 import { calculateAge } from "@/lib/util";
 import PresenceDot from "../PresenceDot";
 import PremiumLabel from "@/components/PremiumLabel";
@@ -124,15 +125,7 @@ export default function ProfileCover({
                         {isActivePremium(member.user) && (
                             <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
                                 <IconWithTooltip
-                                    icon={
-                                        <Image
-                                            src="/images/icons/p.png"
-                                            alt="Miel+"
-                                            width={20}
-                                            height={20}
-                                            draggable={false}
-                                        />
-                                    }
+                                    icon={<FaFire style={{ width: 18, height: 18, color: "#FFB547" }} />}
                                     title="חבר/ת Miel+"
                                     description="חשבון פרימיום פעיל"
                                 />

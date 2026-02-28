@@ -12,6 +12,7 @@ import { toggleLikeMember } from "@/app/actions/likeActions";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "react-toastify";
 import { AnimatePresence } from "framer-motion";
+import { FaFire } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { MemberCardProps } from "@/types/members";
 import FloatingReaction from "@/components/FloatingReaction";
@@ -230,15 +231,7 @@ export default function MemberCard({
             {isActivePremium(member.user) && (
               <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
                 <IconWithTooltip
-                  icon={
-                    <Image
-                      src="/images/icons/p.png"
-                      alt="Miel+"
-                      width={16}
-                      height={16}
-                      draggable={false}
-                    />
-                  }
+                  icon={<FaFire style={{ width: 15, height: 15, color: "#FFB547" }} />}
                   title="חבר/ת Miel+"
                   description="חשבון פרימיום פעיל"
                   placement="above"
