@@ -6,6 +6,7 @@ import { useNotificationChannel } from "@/hooks/useNotificationChannel";
 import { usePresenceChannel } from "@/hooks/usePresenceChannel";
 import { useCelebrationListener } from "@/hooks/useCelebrationListener";
 import { useRevealChannel } from "@/hooks/useRevealChannel";
+import { usePrivateChannel } from "@/realtime/usePrivateChannel";
 import { useInvitationLoader } from "@/hooks/useInvitationLoader";
 import useCelebrationStore from "@/hooks/useCelebrationStore";
 import { NextUIProvider } from "@nextui-org/react";
@@ -89,6 +90,7 @@ export default function Providers({
   usePresenceChannel(shouldEnableChannels ? userId : null, profileComplete);
   useNotificationChannel(shouldEnableChannels ? userId : null, profileComplete);
   useRevealChannel(shouldEnableChannels ? userId : null, profileComplete);
+  usePrivateChannel(userId);
 
   const { celebration, showCelebration, closeCelebration } = useCelebration();
   useCelebrationListener(
@@ -101,10 +103,8 @@ export default function Providers({
     setCelebrationOpen(celebration.isOpen);
   }, [celebration.isOpen, setCelebrationOpen]);
 
-  // Load pending invitations from backend on app startup
   useInvitationLoader();
 
-  // Interest notification: only eligible on /members routes
   const isOnMembersPage =
     pathname === "/members" || pathname.startsWith("/members/");
   const shouldShowInterestNotification =

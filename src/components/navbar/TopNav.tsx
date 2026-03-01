@@ -3,8 +3,8 @@ import {
   getProfileCompletionStatus,
   getUserInfoForNav,
 } from "@/app/actions/userActions";
-import { getUnreadMessageCount } from "@/app/actions/messageActions";
 import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
+import { getUnreadMessageCount } from "@/app/actions/messageActions";
 import { isActivePremium } from "@/lib/premiumUtils";
 import TopNavClient from "./TopNavClient";
 
@@ -13,15 +13,6 @@ export default async function TopNav() {
   const userInfo = session?.user ? await getUserInfoForNav() : null;
   const userId = session?.user?.id || null;
   const isAdmin = session?.user?.role === "ADMIN";
-
-  let initialUnreadCount = 0;
-  if (userId && !isAdmin) {
-    try {
-      initialUnreadCount = await getUnreadMessageCount();
-    } catch (error) {
-      console.warn("Failed to load initial unread count:", error);
-    }
-  }
 
   const memberLinks = [
     { href: "/members", label: "אנשים" },
@@ -45,6 +36,9 @@ export default async function TopNav() {
 
   const isPremium = isActivePremium(userInfo);
 
+  const initialUnreadCount =
+    userId && !isAdmin ? await getUnreadMessageCount() : 0;
+
   // Get user location for search functionality
   let userLocation = null;
   if (userId && !isAdmin) {
@@ -62,10 +56,10 @@ export default async function TopNav() {
       userInfo={userInfo}
       userId={userId}
       links={links}
-      initialUnreadCount={initialUnreadCount}
       profileCompletion={profileCompletion}
       isAdmin={isAdmin}
       isPremium={isPremium}
+      initialUnreadCount={initialUnreadCount}
       userLocation={userLocation}
     />
   );

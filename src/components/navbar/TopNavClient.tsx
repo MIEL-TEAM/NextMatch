@@ -4,14 +4,14 @@ import { Navbar, NavbarContent, Button } from "@nextui-org/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 import NavLink from "./NavLink";
 import UserMenu from "./UserMenu";
 import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
-import ChatButton from "./ChatButton";
-import UnreadCountSync from "../UnreadCountSync";
 import SearchButton from "../search/SearchButton";
+import useConversationStore from "@/store/conversationStore";
 import type { TopNavClientProps } from "@/types/navigation";
 
 export default function TopNavClient({
@@ -19,11 +19,16 @@ export default function TopNavClient({
   userInfo,
   userId,
   links,
-  initialUnreadCount,
   profileCompletion,
   isAdmin,
   isPremium,
+  initialUnreadCount,
 }: TopNavClientProps) {
+  useEffect(() => {
+    const store = useConversationStore.getState();
+    if (userId) store.setCurrentUser(userId);
+    if (initialUnreadCount > 0) store.setInitialUnread(initialUnreadCount);
+  }, [userId, initialUnreadCount]);
 
   const pathname = usePathname();
 
@@ -89,7 +94,6 @@ export default function TopNavClient({
 
   return (
     <>
-      {!isAdmin && <UnreadCountSync initialUnreadCount={initialUnreadCount} />}
       <Navbar
         maxWidth="full"
         className="bg-gradient-to-r h-[80px] from-[#F6D365]/90 via-[#FFB547]/90 to-[#E37B27]/90 
@@ -128,7 +132,6 @@ export default function TopNavClient({
                       className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20"
                     />
                     <ProfileViewsButton />
-                    <ChatButton initialUnreadCount={initialUnreadCount} />
                   </>
                 )}
               </div>
@@ -187,9 +190,6 @@ export default function TopNavClient({
                 key={item.href}
                 href={item.href}
                 label={item.label}
-                initialUnreadCount={
-                  item.href === "/messages" ? initialUnreadCount : undefined
-                }
               />
             ))}
         </NavbarContent>

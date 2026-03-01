@@ -1,19 +1,14 @@
 "use client";
 
-import useMessageStore from "@/hooks/useMessageStore";
+import useConversationStore from "@/store/conversationStore";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import type { NavLinkProps } from "@/types/navigation";
 
-export default function NavLink({
-  href,
-  label,
-  initialUnreadCount,
-}: NavLinkProps) {
+export default function NavLink({ href, label }: NavLinkProps) {
   const pathName = usePathname();
-  const storeUnreadCount = useMessageStore((state) => state.unreadCount);
-  const unreadCount = storeUnreadCount || initialUnreadCount || 0;
+  const unreadCount = useConversationStore((s) => s.globalUnreadCount);
 
   const isActive = pathName === href;
 
@@ -22,8 +17,8 @@ export default function NavLink({
       <Link
         href={href}
         className={`
-    transition-all duration-200 
-    text-lg font-semibold 
+    transition-all duration-200
+    text-lg font-semibold
 
     ${isActive ? "text-[#8B5A2B]" : "text-white hover:text-white/70"}
   `}

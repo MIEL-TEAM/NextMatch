@@ -14,14 +14,14 @@ import {
   Input,
   Divider,
 } from "@nextui-org/react";
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import MessageTableCell from "./MessageTableCell";
 import { useMessages } from "@/hooks/useMessages";
 import { Search, MessageSquare } from "lucide-react";
 import InlineEmptyState from "@/components/EmptyState";
-import { useMessagesQuery } from "@/hooks/useMessagesQuery";
 import { useSearchParams } from "next/navigation";
 import { TableProps } from "@/types/messageStore";
+import useConversationStore from "@/store/conversationStore";
 
 export default function MessageTable({
   initialMessages,
@@ -31,8 +31,22 @@ export default function MessageTable({
 }: TableProps) {
   const searchParams = useSearchParams();
   const container = searchParams.get("container") || "inbox";
+  const isInbox = container === "inbox";
 
-  useMessagesQuery(container);
+  // ─── Conversation store (inbox source of truth) ───────────────────────────
+
+  const conversations = useConversationStore((s) => s.conversations);
+  const orderedIds = useConversationStore((s) => s.orderedIds);
+  const bootstrapInbox = useConversationStore((s) => s.bootstrapInbox);
+  const isBootstrapped = useConversationStore((s) => s.isBootstrapped);
+
+  useEffect(() => {
+    if (isInbox && !isBootstrapped) {
+      bootstrapInbox(initialMessages);
+    }
+  }, [isInbox, isBootstrapped, bootstrapInbox, initialMessages]);
+
+  // ─── Legacy hook (outbox / starred / archived + all mutations) ────────────
 
   const {
     columns,
@@ -54,6 +68,34 @@ export default function MessageTable({
     isViewStarred,
   } = useMessages(initialMessages, nextCursor, isArchived, isStarred);
 
+  // ─── Inbox items from conversationStore ───────────────────────────────────
+
+  const inboxItems = useMemo<MessageDto[]>(() => {
+    if (!isInbox) return [];
+
+    const items = orderedIds
+      .map((id) => conversations[id]?.latestMessage)
+      .filter((m): m is MessageDto => m != null);
+
+    if (!searchQuery.trim()) return items;
+
+    const q = searchQuery.toLowerCase();
+    return items.filter((item) => {
+      const contactName =
+        item.currentUserId === item.senderId
+          ? item.recipientName
+          : item.senderName;
+      return (
+        (contactName?.toLowerCase().includes(q) ?? false) ||
+        (item.text?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [orderedIds, conversations, isInbox, searchQuery]);
+
+  const displayItems = isInbox ? inboxItems : messages;
+
+  // ─── Image helper ─────────────────────────────────────────────────────────
+
   const getImageSrc = (item: MessageDto): string | undefined => {
     if (item.senderId === item.recipientId) {
       return item.senderImage || undefined;
@@ -67,8 +109,7 @@ export default function MessageTable({
       }
     }
 
-    const imageSrc = isOutbox ? item.recipientImage : item.senderImage;
-    return imageSrc || undefined;
+    return (isOutbox ? item.recipientImage : item.senderImage) || undefined;
   };
 
   return (
@@ -128,7 +169,7 @@ export default function MessageTable({
             </TableHeader>
 
             <TableBody
-              items={messages}
+              items={displayItems}
               emptyContent={
                 <InlineEmptyState
                   message={
@@ -163,8 +204,9 @@ export default function MessageTable({
                     ) {
                       return (
                         <TableCell
-                          className={`${!item.dateRead && !isOutbox ? "font-semibold" : ""
-                            }`}
+                          className={`${
+                            !item.dateRead && !isOutbox ? "font-semibold" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <Avatar
@@ -200,8 +242,9 @@ export default function MessageTable({
                     }
                     return (
                       <TableCell
-                        className={`${!item.dateRead && !isOutbox ? "font-semibold" : ""
-                          }`}
+                        className={`${
+                          !item.dateRead && !isOutbox ? "font-semibold" : ""
+                        }`}
                       >
                         <MessageTableCell
                           item={item}

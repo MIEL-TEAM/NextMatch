@@ -10,7 +10,6 @@ export type NavLinkItem = {
 export type NavLinkProps = {
   href: string;
   label: string;
-  initialUnreadCount?: number;
 };
 
 export type UserInfoForNav = {
@@ -23,10 +22,10 @@ export type TopNavClientProps = {
   userInfo: UserInfoForNav | null;
   userId: string | null;
   links: NavLinkItem[];
-  initialUnreadCount: number;
   profileCompletion: ProfileCompletionStatus | null;
   isAdmin: boolean;
   isPremium: boolean;
+  initialUnreadCount: number;
   userLocation?: { latitude: number; longitude: number } | null;
 };
 
@@ -41,9 +40,6 @@ export type UserMenuProps = {
   profileCompletion?: ProfileCompletionStatus | null;
 };
 
-export type ChatButtonProps = {
-  initialUnreadCount: number;
-};
 
 export type MemberSidebarProps = {
   member: Member;

@@ -37,6 +37,3 @@ export type NewMessageToastProps = {
   message: MessageDto;
 };
 
-export type ChatButtonProps = {
-  initialUnreadCount: number;
-};

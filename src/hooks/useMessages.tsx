@@ -10,6 +10,8 @@ import { MessageDto } from "@/types";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useCallback, Key, useEffect, useRef } from "react";
 import useMessageStore from "./useMessageStore";
+import useConversationStore from "@/store/conversationStore";
+import { createChatId } from "@/lib/util";
 
 export const useMessages = (
   initialMessages: MessageDto[],
@@ -112,10 +114,16 @@ export const useMessages = (
       }
 
       setMessages(result.messages);
+
+      // Extend the inbox store with the next page of conversations
+      if (!isViewStarred && !isViewArchived && !isOutbox) {
+        useConversationStore.getState().appendInbox(result.messages);
+      }
+
       cursorRef.current = result.nextCursor;
       setLoadingMore(false);
     }
-  }, [container, setMessages, isViewStarred, isViewArchived]);
+  }, [container, setMessages, isViewStarred, isViewArchived, isOutbox]);
 
   const columns = [
     {
@@ -142,6 +150,13 @@ export const useMessages = (
       await deleteMessage(message.id, isOutbox);
       removeMessage(message.id);
       if (!message.dateRead && !isOutbox) updateUnreadCount(-1);
+
+      // Remove from conversation store (inbox only)
+      if (!isOutbox && message.currentUserId && message.senderId) {
+        const convId = createChatId(message.currentUserId, message.senderId);
+        useConversationStore.getState().removeConversation(convId);
+      }
+
       setIsDeleting({ id: "", loading: false });
     },
     [isOutbox, removeMessage, updateUnreadCount]
@@ -230,6 +245,12 @@ export const useMessages = (
                 return chatPartnerId !== partnerId;
               })
             );
+
+            // Remove from conversation store (inbox archive-out only)
+            if (!isOutbox && message.currentUserId) {
+              const convId = createChatId(message.currentUserId, partnerId);
+              useConversationStore.getState().removeConversation(convId);
+            }
           } else {
             toggleArchiveMessage(message.id);
           }
@@ -255,16 +276,29 @@ export const useMessages = (
   );
 
   const handleRowSelect = (key: Key) => {
-    const message = chats.find((message) => message.id === key);
+    const keyStr = String(key);
+
+    // First try legacy chats (initial data, outbox, starred, archived)
+    let message = chats.find((m) => m.id === keyStr);
+
+    
+    if (!message) {
+      const storeConversations =
+        useConversationStore.getState().conversations;
+      for (const slice of Object.values(storeConversations)) {
+        if (slice.latestMessage?.id === keyStr) {
+          message = slice.latestMessage;
+          break;
+        }
+      }
+    }
 
     if (!message) return;
 
     const partnerId = isOutbox ? message.recipientId : message.senderId;
-
     if (!partnerId) return;
 
-    const url = `/members/${partnerId}/chat`;
-    router.push(url);
+    router.push(`/members/${partnerId}/chat`);
   };
 
   return {

@@ -1,6 +1,6 @@
 "use client";
 
-import useMessageStore from "@/hooks/useMessageStore";
+import useConversationStore from "@/store/conversationStore";
 import { Card, Chip } from "@nextui-org/react";
 import clsx from "clsx";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,7 @@ import { MdOutlineOutbox } from "react-icons/md";
 import { BsStarFill, BsArchive } from "react-icons/bs";
 
 export default function MessageSideBar() {
-  const unreadCount = useMessageStore((state) => state.unreadCount);
+  const unreadCount = useConversationStore((s) => s.globalUnreadCount);
 
   const router = useRouter();
   const pathname = usePathname();
