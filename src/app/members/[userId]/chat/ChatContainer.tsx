@@ -10,6 +10,8 @@ import useMessageStore from "@/hooks/useMessageStore";
 import MessageList from "./MessageList";
 import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
+import useUpgradeModal from "@/hooks/useUpgradeModal";
+import { Lock } from "lucide-react";
 
 export default function ChatContainer({ currentUserId, isPremium }: ChatContainerProps) {
   const params = useParams<{ userId: string }>();
@@ -82,19 +84,41 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
     isCacheValid,
   ]);
 
+  const receivedCount = messages.filter(
+    (m) => m.senderId !== currentUserId,
+  ).length;
+  const showUpgradeCta = !isPremium && receivedCount >= 5;
+
   if (isLoading) {
     return <HeartLoading message="טוען הודעות..." />;
   }
 
   return (
-    <>
-      <MessageList
-        currentUserId={currentUserId}
-        initialMessages={{ messages, readCount: 0 }}
-        chatId={chatId}
-        isPremium={isPremium}
-      />
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <MessageList
+          currentUserId={currentUserId}
+          initialMessages={{ messages, readCount: 0 }}
+          chatId={chatId}
+          isPremium={isPremium}
+        />
+      </div>
+
+      {showUpgradeCta && (
+        <div className="flex-shrink-0 pt-3 pb-1">
+          <button
+            onClick={() => useUpgradeModal.getState().open()}
+            className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
+          >
+            <Lock size={11} className="text-amber-500 flex-shrink-0" />
+            <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              ההודעה מחכה לך — שדרג ל-Miel+
+            </span>
+          </button>
+        </div>
+      )}
+
       <UpgradeModal />
-    </>
+    </div>
   );
 }

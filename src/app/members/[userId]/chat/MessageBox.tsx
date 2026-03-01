@@ -8,15 +8,13 @@ import Image from "next/image";
 import clsx from "clsx";
 import React, { useEffect, useRef, memo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Edit2, Trash2, Check, X, Lock } from "lucide-react";
+import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "react-hot-toast";
-import useUpgradeModal from "@/hooks/useUpgradeModal";
 
-function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) {
+function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;
   const isLocked = message.locked === true;
-  const showUpgradeCta = isLocked && isFirstLocked === true;
   const messageEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
@@ -238,19 +236,6 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
         )}
       </div>
 
-      {showUpgradeCta && (
-        <div className="mt-3">
-          <button
-            onClick={() => useUpgradeModal.getState().open()}
-            className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
-          >
-            <Lock size={11} className="text-amber-500 flex-shrink-0" />
-            <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
-              ההודעה מחכה לך — שדרג ל-Miel+
-            </span>
-          </button>
-        </div>
-      )}
     </div>
   );
 
