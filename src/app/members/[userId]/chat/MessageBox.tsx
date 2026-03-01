@@ -145,9 +145,9 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
   });
 
   const renderMessageContent = () => (
-    <div className={isLocked ? "h-full" : ""}>
+    <div>
       <div
-        className={clsx(messageContentClasses, { "h-full": isLocked })}
+        className={messageContentClasses}
         style={isLongMessage && !isStoryReply ? { maxWidth: "450px" } : {}}
       >
         {!isStoryReply && renderMessageHeader()}
@@ -216,16 +216,21 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             </div>
           </div>
         ) : isLocked ? (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 text-sm py-3 text-gray-900">
+          <div className="flex flex-col justify-between min-h-[80px]">
+            <p
+              className={clsx("text-sm py-3 text-gray-900", {
+                "break-words whitespace-normal": isLongMessage,
+              })}
+              style={isLongMessage ? { wordBreak: "break-word" } : {}}
+            >
               <span className="blur-sm select-none pointer-events-none">
                 {message.text}
               </span>
-            </div>
+            </p>
             {showUpgradeCta && (
               <button
                 onClick={() => useUpgradeModal.getState().open()}
-                className="mt-3 text-xs font-medium text-amber-500 hover:underline"
+                className="text-xs font-medium text-amber-500 hover:underline pb-1"
               >
                 💬 ההודעה מחכה לך — שדרג ל-Miel+
               </button>
