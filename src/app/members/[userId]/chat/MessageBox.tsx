@@ -8,7 +8,7 @@ import Image from "next/image";
 import clsx from "clsx";
 import React, { useEffect, useRef, memo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
+import { MoreHorizontal, Edit2, Trash2, Check, X, Lock } from "lucide-react";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "react-hot-toast";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
@@ -216,7 +216,7 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             </div>
           </div>
         ) : isLocked ? (
-          <div className="flex flex-col justify-between min-h-[80px]">
+          <div className="flex flex-col min-h-[80px]">
             <p
               className={clsx("text-sm py-3 text-gray-900", {
                 "break-words whitespace-normal": isLongMessage,
@@ -230,9 +230,12 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             {showUpgradeCta && (
               <button
                 onClick={() => useUpgradeModal.getState().open()}
-                className="text-xs font-medium text-amber-500 hover:underline pb-1"
+                className="mt-auto flex items-center gap-1.5 border-t border-gray-200 pt-2 pb-1 bg-amber-50/40 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
               >
-                💬 ההודעה מחכה לך — שדרג ל-Miel+
+                <Lock size={11} className="text-amber-500 flex-shrink-0" />
+                <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                  ההודעה מחכה לך — שדרג ל-Miel+
+                </span>
               </button>
             )}
           </div>
