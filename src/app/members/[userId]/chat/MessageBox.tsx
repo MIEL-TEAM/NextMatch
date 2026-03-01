@@ -145,7 +145,7 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
   });
 
   const renderMessageContent = () => (
-    <div>
+    <div className="flex flex-col">
       <div
         className={messageContentClasses}
         style={isLongMessage && !isStoryReply ? { maxWidth: "450px" } : {}}
@@ -216,29 +216,16 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
             </div>
           </div>
         ) : isLocked ? (
-          <div className="flex flex-col min-h-[80px]">
-            <p
-              className={clsx("text-sm py-3 text-gray-900", {
-                "break-words whitespace-normal": isLongMessage,
-              })}
-              style={isLongMessage ? { wordBreak: "break-word" } : {}}
-            >
-              <span className="blur-sm select-none pointer-events-none">
-                {message.text}
-              </span>
-            </p>
-            {showUpgradeCta && (
-              <button
-                onClick={() => useUpgradeModal.getState().open()}
-                className="mt-auto flex items-center gap-1.5 border-t border-gray-200 pt-2 pb-1 bg-amber-50/40 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
-              >
-                <Lock size={11} className="text-amber-500 flex-shrink-0" />
-                <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                  ההודעה מחכה לך — שדרג ל-Miel+
-                </span>
-              </button>
-            )}
-          </div>
+          <p
+            className={clsx("text-sm py-3 text-gray-900", {
+              "break-words whitespace-normal": isLongMessage,
+            })}
+            style={isLongMessage ? { wordBreak: "break-word" } : {}}
+          >
+            <span className="blur-sm select-none pointer-events-none">
+              {message.text}
+            </span>
+          </p>
         ) : (
           <p
             className={clsx("text-sm py-3 text-gray-900", {
@@ -250,6 +237,20 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
           </p>
         )}
       </div>
+
+      {showUpgradeCta && (
+        <div className="mt-3">
+          <button
+            onClick={() => useUpgradeModal.getState().open()}
+            className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
+          >
+            <Lock size={11} className="text-amber-500 flex-shrink-0" />
+            <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              ההודעה מחכה לך — שדרג ל-Miel+
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 
