@@ -145,9 +145,9 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
   });
 
   const renderMessageContent = () => (
-    <div>
+    <div className={isLocked ? "h-full" : ""}>
       <div
-        className={messageContentClasses}
+        className={clsx(messageContentClasses, { "h-full": isLocked })}
         style={isLongMessage && !isStoryReply ? { maxWidth: "450px" } : {}}
       >
         {!isStoryReply && renderMessageHeader()}
@@ -215,23 +215,12 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
               </div>
             </div>
           </div>
-        ) : (
-          <div className="flex flex-col h-full">
-            <div className="flex-1">
-              <p
-                className={clsx("text-sm py-3 text-gray-900", {
-                  "break-words whitespace-normal": isLongMessage,
-                })}
-                style={isLongMessage ? { wordBreak: "break-word" } : {}}
-              >
-                {isLocked ? (
-                  <span className="blur-sm select-none pointer-events-none">
-                    {message.text}
-                  </span>
-                ) : (
-                  message.text
-                )}
-              </p>
+        ) : isLocked ? (
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 text-sm py-3 text-gray-900">
+              <span className="blur-sm select-none pointer-events-none">
+                {message.text}
+              </span>
             </div>
             {showUpgradeCta && (
               <button
@@ -242,6 +231,15 @@ function MessageBox({ message, currentUserId, isFirstLocked }: MessageBoxProps) 
               </button>
             )}
           </div>
+        ) : (
+          <p
+            className={clsx("text-sm py-3 text-gray-900", {
+              "break-words whitespace-normal": isLongMessage,
+            })}
+            style={isLongMessage ? { wordBreak: "break-word" } : {}}
+          >
+            {message.text}
+          </p>
         )}
       </div>
     </div>
