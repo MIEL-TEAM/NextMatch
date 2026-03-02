@@ -37,6 +37,7 @@ export default function MessageList({
   currentUserId,
   chatId,
   isPremium,
+  onLockedChange,
 }: MessageListProps) {
   const channelRef = useRef<Channel | null>(null);
   const setReadCount = useRef(false);
@@ -59,6 +60,10 @@ export default function MessageList({
       firstLockedId: computed.find((m) => m.locked)?.id,
     };
   }, [messages, currentUserId, isPremium]);
+
+  useEffect(() => {
+    onLockedChange?.(firstLockedId !== undefined);
+  }, [firstLockedId, onLockedChange]);
 
   // Sync messages when initialMessages change
   useEffect(() => {

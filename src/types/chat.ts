@@ -5,6 +5,7 @@ export type MessageListProps = {
   currentUserId: string;
   chatId: string;
   isPremium: boolean;
+  onLockedChange?: (hasLocked: boolean) => void;
 };
 
 export type ChatContainerProps = {

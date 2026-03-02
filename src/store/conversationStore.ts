@@ -134,49 +134,48 @@ const useConversationStore = create<ConversationStoreState>()(
           }
 
           case "READ_RECEIPT": {
-            const existing = conversations[event.conversationId];
-            if (!existing) {
+            // Check who read first — if it's not me, nothing changes for my badge.
+            const iReadThis = event.actorId === currentUserId;
+
+            if (!iReadThis) {
               set({ processedEventIds: newProcessedIds });
               break;
             }
 
-            // actorId = the user who read the messages.
-            // If it's me reading: decrement globalUnreadCount using the
-            // server's authoritative messageIds.length — this correctly handles
-            // both pre-existing unread (unreadCount=0 in slice) and real-time.
-            // If it's my partner reading my messages: don't touch unread counts.
-            const iReadThis = event.actorId === currentUserId;
+            // I read the messages. Use server's authoritative messageIds.length
+            // as the count to subtract — this covers pre-existing unread that
+            // the client slice never tracked (unreadCount starts at 0).
+            // Also handles navigation directly to chat without visiting /messages
+            // (existing may be null — still need to decrement the global count).
+            const payload = event.payload as {
+              readBy: string;
+              messageIds: string[];
+            };
+            const existing = conversations[event.conversationId];
+            const countToSubtract = Math.max(
+              existing?.unreadCount ?? 0,
+              payload.messageIds.length,
+            );
 
-            if (iReadThis) {
-              const payload = event.payload as {
-                readBy: string;
-                messageIds: string[];
-              };
-              // Use whichever is larger: server count covers pre-existing unread,
-              // existing.unreadCount covers edge case where events > DB count.
-              const countToSubtract = Math.max(
-                existing.unreadCount,
-                payload.messageIds.length,
-              );
-              set({
-                conversations: {
+            const newConversations = existing
+              ? {
                   ...conversations,
                   [event.conversationId]: {
                     ...existing,
                     unreadCount: 0,
                     updatedAt: event.timestamp,
                   },
-                },
-                globalUnreadCount: Math.max(
-                  0,
-                  globalUnreadCount - countToSubtract,
-                ),
-                processedEventIds: newProcessedIds,
-              });
-            } else {
-              // Partner read our messages — no unread changes for us
-              set({ processedEventIds: newProcessedIds });
-            }
+                }
+              : conversations;
+
+            set({
+              conversations: newConversations,
+              globalUnreadCount: Math.max(
+                0,
+                globalUnreadCount - countToSubtract,
+              ),
+              processedEventIds: newProcessedIds,
+            });
             break;
           }
 

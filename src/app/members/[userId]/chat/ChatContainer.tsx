@@ -84,10 +84,13 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
     isCacheValid,
   ]);
 
-  const receivedCount = messages.filter(
-    (m) => m.senderId !== currentUserId,
-  ).length;
-  const showUpgradeCta = !isPremium && receivedCount >= 5;
+  // Initialise from server-fetched messages so there's no flash on first render.
+  // Updated reactively via onLockedChange when real-time messages arrive.
+  const [hasLockedMessages, setHasLockedMessages] = useState(
+    !isPremium &&
+      messages.filter((m) => m.senderId !== currentUserId).length >= 5,
+  );
+  const showUpgradeCta = !isPremium && hasLockedMessages;
 
   if (isLoading) {
     return <HeartLoading message="טוען הודעות..." />;
@@ -101,6 +104,7 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
           initialMessages={{ messages, readCount: 0 }}
           chatId={chatId}
           isPremium={isPremium}
+          onLockedChange={setHasLockedMessages}
         />
       </div>
 
