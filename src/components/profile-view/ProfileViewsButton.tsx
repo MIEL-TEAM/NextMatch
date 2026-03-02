@@ -25,7 +25,7 @@ export default function ProfileViewsButton() {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <ProfileViewsBell userId={userId} />
+      <ProfileViewsBell />
     </motion.div>
   );
 }

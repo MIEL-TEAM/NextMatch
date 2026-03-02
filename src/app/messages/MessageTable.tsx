@@ -17,17 +17,22 @@ import {
 import React, { useEffect, useMemo } from "react";
 import MessageTableCell from "./MessageTableCell";
 import { useMessages } from "@/hooks/useMessages";
-import { Search, MessageSquare } from "lucide-react";
+import { Search, MessageSquare, Lock } from "lucide-react";
 import InlineEmptyState from "@/components/EmptyState";
 import { useSearchParams } from "next/navigation";
 import { TableProps } from "@/types/messageStore";
 import useConversationStore from "@/store/conversationStore";
+import { recomputeLocks } from "@/lib/messageLocks";
+import { createChatId } from "@/lib/util";
+import useUpgradeModal from "@/hooks/useUpgradeModal";
+import UpgradeModal from "@/components/premium/UpgradeModal";
 
 export default function MessageTable({
   initialMessages,
   nextCursor,
   isArchived,
   isStarred,
+  isPremium,
 }: TableProps) {
   const searchParams = useSearchParams();
   const container = searchParams.get("container") || "inbox";
@@ -39,6 +44,7 @@ export default function MessageTable({
   const orderedIds = useConversationStore((s) => s.orderedIds);
   const bootstrapInbox = useConversationStore((s) => s.bootstrapInbox);
   const isBootstrapped = useConversationStore((s) => s.isBootstrapped);
+  const threads = useConversationStore((s) => s.threads);
 
   useEffect(() => {
     if (isInbox && !isBootstrapped) {
@@ -94,6 +100,36 @@ export default function MessageTable({
 
   const displayItems = isInbox ? inboxItems : messages;
 
+  // ─── Lock state — derived from threads already in store ───────────────────
+
+  const lockedMessageIds = useMemo<Set<string>>(() => {
+    if (isPremium) return new Set();
+
+    const result = new Set<string>();
+
+    for (const item of displayItems) {
+      const partnerId =
+        item.currentUserId === item.senderId
+          ? item.recipientId
+          : item.senderId;
+
+      if (!item.currentUserId || !partnerId) continue;
+
+      const chatId = createChatId(item.currentUserId, partnerId);
+      const thread = threads[chatId];
+      if (!thread) continue;
+
+      const computed = recomputeLocks(thread, item.currentUserId, isPremium);
+      for (const m of computed) {
+        if (m.locked) result.add(m.id);
+      }
+    }
+
+    return result;
+  }, [threads, displayItems, isPremium]);
+
+  const showUpgradeCta = !isPremium && lockedMessageIds.size > 0;
+
   // ─── Image helper ─────────────────────────────────────────────────────────
 
   const getImageSrc = (item: MessageDto): string | undefined => {
@@ -147,6 +183,20 @@ export default function MessageTable({
           </div>
         </div>
 
+        {showUpgradeCta && (
+          <div className="mb-3">
+            <button
+              onClick={() => useUpgradeModal.getState().open()}
+              className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
+            >
+              <Lock size={11} className="text-amber-500 flex-shrink-0" />
+              <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                ההודעה מחכה לך — שדרג ל-Miel+
+              </span>
+            </button>
+          </div>
+        )}
+
         <Divider className="my-2" />
 
         <div className="overflow-x-auto mt-2">
@@ -198,6 +248,7 @@ export default function MessageTable({
                   className="cursor-pointer hover:bg-gray-50"
                 >
                   {(columnKey) => {
+                    const isLocked = lockedMessageIds.has(item.id);
                     if (
                       columnKey === "senderName" ||
                       columnKey === "recipientName"
@@ -235,6 +286,7 @@ export default function MessageTable({
                                 isArchiving.loading &&
                                 isArchiving.id === item.id
                               }
+                              isLocked={isLocked}
                             />
                           </div>
                         </TableCell>
@@ -262,6 +314,7 @@ export default function MessageTable({
                           isArchiving={
                             isArchiving.loading && isArchiving.id === item.id
                           }
+                          isLocked={isLocked}
                         />
                       </TableCell>
                     );
@@ -284,6 +337,8 @@ export default function MessageTable({
           </Button>
         </div>
       </Card>
+
+      <UpgradeModal />
     </div>
   );
 }

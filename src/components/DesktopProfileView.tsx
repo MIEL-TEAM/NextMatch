@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Member, Photo } from "@prisma/client";
 import { CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { updateCoverImage } from "@/app/actions/userActions";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import ProfileCover from "./profile/ProfileCover";
 import ProfileAvatar from "./profile/ProfileAvatar";

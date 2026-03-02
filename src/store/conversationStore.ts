@@ -14,7 +14,44 @@ interface ConversationSlice {
   updatedAt: string;
 }
 
+// ─── Message collection (outbox / starred / archived) ────────────────────────
+
+export interface MessageCollection {
+  messages: MessageDto[];
+  nextCursor: string | undefined;
+  isBootstrapped: boolean;
+}
+
+const emptyCollection = (): MessageCollection => ({
+  messages: [],
+  nextCursor: undefined,
+  isBootstrapped: false,
+});
+
+// ─── Internal merge helper ────────────────────────────────────────────────────
+
+function mergeCollection(
+  existing: MessageDto[],
+  incoming: MessageDto[],
+): MessageDto[] {
+  const map = new Map<string, MessageDto>(existing.map((m) => [m.id, m]));
+  for (const m of incoming) {
+    map.set(m.id, m);
+  }
+  const parseTime = (value?: string) => {
+    if (!value) return 0;
+    const time = new Date(value).getTime();
+    return isNaN(time) ? 0 : time;
+  };
+
+  return Array.from(map.values()).sort(
+    (a, b) => parseTime(b.created) - parseTime(a.created),
+  );
+}
+
 // ─── Store shape ─────────────────────────────────────────────────────────────
+
+type CollectionKey = "outbox" | "starred" | "archived";
 
 interface ConversationStoreState {
   conversations: Record<string, ConversationSlice>;
@@ -27,6 +64,13 @@ interface ConversationStoreState {
   activeConversationId: string | null;
   remainingQuota: number | null;
   isQuotaReached: boolean;
+
+  // ── Message collections ───────────────────────────────────────────────────
+  outbox: MessageCollection;
+  starred: MessageCollection;
+  archived: MessageCollection;
+
+  // ── Existing actions ──────────────────────────────────────────────────────
   setCurrentUser: (userId: string) => void;
   setInitialUnread: (count: number) => void;
   setActiveConversation: (id: string | null) => void;
@@ -35,10 +79,22 @@ interface ConversationStoreState {
   bootstrapInbox: (messages: MessageDto[]) => void;
   appendInbox: (messages: MessageDto[]) => void;
   removeConversation: (conversationId: string) => void;
-  // Stores fetched thread messages and clears unread for that conversation.
   setThread: (conversationId: string, messages: MessageDto[]) => void;
-  // Stores updated thread messages without touching unread (for real-time mutations).
   patchThread: (conversationId: string, messages: MessageDto[]) => void;
+
+  // ── Collection bootstrap / append / reset ─────────────────────────────────
+  bootstrapOutbox: (messages: MessageDto[], nextCursor?: string) => void;
+  appendOutbox: (messages: MessageDto[], nextCursor?: string) => void;
+  bootstrapStarred: (messages: MessageDto[], nextCursor?: string) => void;
+  appendStarred: (messages: MessageDto[], nextCursor?: string) => void;
+  bootstrapArchived: (messages: MessageDto[], nextCursor?: string) => void;
+  appendArchived: (messages: MessageDto[], nextCursor?: string) => void;
+  resetCollection: (collection: CollectionKey) => void;
+
+  // ── Collection mutations ──────────────────────────────────────────────────
+  removeMessageFromCollection: (collection: CollectionKey, id: string) => void;
+  toggleStarInCollection: (collection: CollectionKey, id: string) => void;
+  toggleArchiveInCollection: (collection: CollectionKey, id: string) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -56,6 +112,10 @@ const useConversationStore = create<ConversationStoreState>()(
       activeConversationId: null,
       remainingQuota: null,
       isQuotaReached: false,
+
+      outbox: emptyCollection(),
+      starred: emptyCollection(),
+      archived: emptyCollection(),
 
       // ─── Identify the logged-in user ──────────────────────────────────────
 
@@ -96,6 +156,7 @@ const useConversationStore = create<ConversationStoreState>()(
         switch (event.type) {
           case "MESSAGE_CREATED": {
             const payload = event.payload as { message: MessageDto };
+
             const message = payload.message;
 
             const isFromSelf = currentUserId !== null && event.actorId === currentUserId;
@@ -107,7 +168,6 @@ const useConversationStore = create<ConversationStoreState>()(
               ...orderedIds.filter((id) => id !== event.conversationId),
             ];
 
-            // Don't count as unread if the user is currently viewing this conversation.
             const prevUnread = existing?.unreadCount ?? 0;
             const shouldCountUnread = !isFromSelf && !isActiveConversation;
             const newUnread = shouldCountUnread ? prevUnread + 1 : prevUnread;
@@ -161,7 +221,6 @@ const useConversationStore = create<ConversationStoreState>()(
           }
 
           case "READ_RECEIPT": {
-            // Check who read first — if it's not me, nothing changes for my badge.
             const iReadThis = event.actorId === currentUserId;
 
             if (!iReadThis) {
@@ -169,11 +228,6 @@ const useConversationStore = create<ConversationStoreState>()(
               break;
             }
 
-            // I read the messages. Use server's authoritative messageIds.length
-            // as the count to subtract — this covers pre-existing unread that
-            // the client slice never tracked (unreadCount starts at 0).
-            // Also handles navigation directly to chat without visiting /messages
-            // (existing may be null — still need to decrement the global count).
             const payload = event.payload as {
               readBy: string;
               messageIds: string[];
@@ -186,13 +240,13 @@ const useConversationStore = create<ConversationStoreState>()(
 
             const newConversations = existing
               ? {
-                  ...conversations,
-                  [event.conversationId]: {
-                    ...existing,
-                    unreadCount: 0,
-                    updatedAt: event.timestamp,
-                  },
-                }
+                ...conversations,
+                [event.conversationId]: {
+                  ...existing,
+                  unreadCount: 0,
+                  updatedAt: event.timestamp,
+                },
+              }
               : conversations;
 
             set({
@@ -219,11 +273,6 @@ const useConversationStore = create<ConversationStoreState>()(
       },
 
       // ─── Bootstrap from inbox ─────────────────────────────────────────────
-      //
-      // Builds the ordered conversation list from server-rendered inbox data.
-      // Does NOT set globalUnreadCount — that comes from DB via setInitialUnread.
-      // Does NOT approximate per-conversation unread — unread starts at 0 for
-      // all slices and is only incremented by real-time events.
 
       bootstrapInbox: (messages: MessageDto[]) => {
         const { isBootstrapped } = get();
@@ -324,13 +373,9 @@ const useConversationStore = create<ConversationStoreState>()(
       },
 
       // ─── Store a fetched thread ───────────────────────────────────────────
-      //
-      // Called when entering a chat thread. Stores the full message list and
-      // clears unread for that conversation. READ_RECEIPT arrives shortly after
-      // and sees unreadCount=0 — a no-op.
 
       setThread: (conversationId: string, messages: MessageDto[]) => {
-        const { conversations, globalUnreadCount, threads } = get();
+        const { conversations, globalUnreadCount, threads, orderedIds } = get();
         const existing = conversations[conversationId];
         const prevUnread = existing?.unreadCount ?? 0;
         const newThreads = { ...threads, [conversationId]: messages };
@@ -342,8 +387,13 @@ const useConversationStore = create<ConversationStoreState>()(
 
         const latestMessage = messages[messages.length - 1];
 
+        const newOrderedIds = orderedIds.includes(conversationId)
+          ? orderedIds
+          : [conversationId, ...orderedIds];
+
         set({
           threads: newThreads,
+          orderedIds: newOrderedIds,
           conversations: {
             ...conversations,
             [conversationId]: {
@@ -357,12 +407,125 @@ const useConversationStore = create<ConversationStoreState>()(
       },
 
       // ─── Patch a thread in-place ──────────────────────────────────────────
-      //
-      // Called by real-time Pusher handlers to keep the stored thread current
-      // without touching unread counts (those are managed by event handlers).
 
       patchThread: (conversationId: string, messages: MessageDto[]) => {
         set({ threads: { ...get().threads, [conversationId]: messages } });
+      },
+
+      // ─── Collection: bootstrap ────────────────────────────────────────────
+
+      bootstrapOutbox: (messages, nextCursor) => {
+        if (get().outbox.isBootstrapped) return;
+        set({
+          outbox: {
+            messages: mergeCollection([], messages),
+            nextCursor,
+            isBootstrapped: true,
+          },
+        });
+      },
+
+      bootstrapStarred: (messages, nextCursor) => {
+        if (get().starred.isBootstrapped) return;
+        set({
+          starred: {
+            messages: mergeCollection([], messages),
+            nextCursor,
+            isBootstrapped: true,
+          },
+        });
+      },
+
+      bootstrapArchived: (messages, nextCursor) => {
+        if (get().archived.isBootstrapped) return;
+        set({
+          archived: {
+            messages: mergeCollection([], messages),
+            nextCursor,
+            isBootstrapped: true,
+          },
+        });
+      },
+
+      // ─── Collection: append (load-more) ──────────────────────────────────
+
+      appendOutbox: (messages, nextCursor) => {
+        const prev = get().outbox;
+        set({
+          outbox: {
+            messages: mergeCollection(prev.messages, messages),
+            nextCursor,
+            isBootstrapped: true,
+          },
+        });
+      },
+
+      appendStarred: (messages, nextCursor) => {
+        const prev = get().starred;
+        set({
+          starred: {
+            messages: mergeCollection(prev.messages, messages),
+            nextCursor,
+            isBootstrapped: true,
+          },
+        });
+      },
+
+      appendArchived: (messages, nextCursor) => {
+        const prev = get().archived;
+        set({
+          archived: {
+            messages: mergeCollection(prev.messages, messages),
+            nextCursor,
+            isBootstrapped: true,
+          },
+        });
+      },
+
+      // ─── Collection: reset (on unmount) ──────────────────────────────────
+
+      resetCollection: (collection) => {
+        set({ [collection]: emptyCollection() });
+      },
+
+      // ─── Collection: remove one message ──────────────────────────────────
+
+      removeMessageFromCollection: (collection, id) => {
+        const prev = get()[collection];
+        set({
+          [collection]: {
+            ...prev,
+            messages: prev.messages.filter((m) => m.id !== id),
+          },
+        });
+      },
+
+      // ─── Collection: toggle star flag ─────────────────────────────────────
+
+      toggleStarInCollection: (collection, id) => {
+        const prev = get()[collection];
+        set({
+          [collection]: {
+            ...prev,
+            messages: prev.messages.map((m) =>
+              m.id === id ? { ...m, isStarred: !m.isStarred } : m,
+            ),
+          },
+        });
+      },
+
+      // ─── Collection: toggle archive flag ──────────────────────────────────
+
+      toggleArchiveInCollection: (collection, id) => {
+        const prev = get()[collection];
+        set({
+          [collection]: {
+            ...prev,
+            messages: prev.messages.map((m) =>
+              m.id === id ? { ...m, isArchived: !m.isArchived } : m,
+            ),
+          },
+        });
       },
     }),
     { name: "conversationStore" },

@@ -90,7 +90,7 @@ export async function createStory(
       revalidatePath("/members");
 
       try {
-        const { pusherServer } = await import("@/lib/pusher");
+        const { pusherServer } = await import("@/lib/pusher-server");
         await pusherServer.trigger(
           `private-${session.user.id}`,
           "story:created",
@@ -205,7 +205,7 @@ export async function getUserStories(userId: string): Promise<StoryWithUser[]> {
         );
 
         try {
-          const { pusherServer } = await import("@/lib/pusher");
+          const { pusherServer } = await import("@/lib/pusher-server");
           await pusherServer.trigger(
             `private-${session.user.id}`,
             "story:viewed",

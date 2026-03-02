@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Avatar,
   Dropdown,
@@ -17,92 +17,42 @@ import { Bell, Trash2, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
-  getUserNotifications,
-  getUnseenNotificationCount,
   markNotificationAsRead,
   markAllNotificationsAsSeen,
   markAllNotificationsAsRead,
   deleteNotification,
 } from "@/lib/db/notificationActions";
-import { useNewNotificationListener } from "@/hooks/useNotificationChannel";
+import useNotificationStore from "@/store/notificationStore";
+import type { NotificationDto } from "@/types/notifications";
 
-type Notification = {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  icon: string | null;
-  isRead: boolean;
-  isSeen: boolean;
-  linkUrl: string | null;
-  createdAt: Date;
-  actor?: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  } | null;
-};
+export default function ProfileViewsBell() {
+  const unseenCount = useNotificationStore((s) => s.unseenCount);
+  const notifications = useNotificationStore((s) => s.notifications);
 
-export default function ProfileViewsBell({ userId }: { userId: string }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unseenCount, setUnseenCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [loadingNotificationId, setLoadingNotificationId] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [loadingNotificationId, setLoadingNotificationId] = useState<
+    string | null
+  >(null);
   const router = useRouter();
 
-  // Fetch notifications
-  const fetchNotifications = useCallback(async () => {
-    const result = await getUserNotifications(20, 0);
-    if (result.success && result.notifications) {
-      setNotifications(result.notifications as any);
-    }
-  }, []);
-
-  // Fetch unseen count
-  const fetchUnseenCount = useCallback(async () => {
-    const result = await getUnseenNotificationCount();
-    if (result.success) {
-      setUnseenCount(result.count);
-    }
-  }, []);
-
-  // Initial load
-  useEffect(() => {
-    fetchNotifications();
-    fetchUnseenCount();
-  }, [fetchNotifications, fetchUnseenCount]);
-
-  // Listen for new notifications via Pusher
-  const handleNewNotification = useCallback((notification: any) => {
-    setNotifications((prev) => [notification, ...prev].slice(0, 20));
-    setUnseenCount((prev) => prev + 1);
-    audioRef.current?.play().catch(() => {});
-  }, []);
-
-  useNewNotificationListener(userId, handleNewNotification);
-
-  // Mark all as seen when dropdown opens
   useEffect(() => {
     if (dropdownOpen && unseenCount > 0) {
       markAllNotificationsAsSeen().then(() => {
-        setUnseenCount(0);
-        fetchNotifications();
+        useNotificationStore.getState().markAllSeen();
       });
     }
-  }, [dropdownOpen, unseenCount, fetchNotifications]);
+  }, [dropdownOpen, unseenCount]);
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: NotificationDto) => {
     setLoadingNotificationId(notification.id);
     setDropdownOpen(false);
 
-    // Mark as read
     if (!notification.isRead) {
       await markNotificationAsRead(notification.id);
+      useNotificationStore.getState().markRead(notification.id);
     }
 
-    // Navigate to link
     if (notification.linkUrl) {
       router.push(notification.linkUrl);
     }
@@ -113,20 +63,21 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
   const handleMarkAllAsRead = async () => {
     setLoading(true);
     await markAllNotificationsAsRead();
-    await fetchNotifications();
+    const store = useNotificationStore.getState();
+    store.notifications.forEach((n) => store.markRead(n.id));
     setLoading(false);
   };
 
   const handleDeleteNotification = async (
     notificationId: string,
-    event: React.MouseEvent
+    event: React.MouseEvent,
   ) => {
     event.stopPropagation();
     await deleteNotification(notificationId);
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    useNotificationStore.getState().remove(notificationId);
   };
 
-  const getNotificationIcon = (notification: Notification) => {
+  const getNotificationIcon = (notification: NotificationDto) => {
     if (notification.icon) return notification.icon;
 
     const icons: Record<string, string> = {
@@ -148,8 +99,6 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
 
   return (
     <>
-      <audio ref={audioRef} src="/sounds/notification.mp3" preload="auto" />
-
       <Dropdown
         placement="bottom-end"
         isOpen={dropdownOpen}
@@ -157,7 +106,7 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
       >
         <DropdownTrigger>
           <button
-            className="relative flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-white/20 sm:hover:bg-white/30 backdrop-blur-md shadow-md border border-white/20 sm:transition-all sm:duration-200 sm:hover:scale-105 sm:active:scale-95"
+            className="relative flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20 sm:transition-all sm:duration-200 sm:hover:scale-105 sm:active:scale-95"
             aria-label={`Notifications${unseenCount > 0 ? ` (${unseenCount} new)` : ""}`}
           >
             <Bell className="w-5 h-5 sm:w-4.5 sm:h-4.5 text-white/90" strokeWidth={2} />
@@ -248,7 +197,7 @@ export default function ProfileViewsBell({ userId }: { userId: string }) {
                     className={`data-[hover=true]:bg-pink-50/50 ${
                       !notification.isRead ? "bg-pink-50/30" : ""
                     }`}
-                    onClick={() => handleNotificationClick(notification)}
+                    onPress={() => handleNotificationClick(notification)}
                   >
                     <div className="flex gap-3 items-start py-2 relative">
                       {/* Icon/Avatar */}

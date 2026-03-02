@@ -9,88 +9,73 @@ import { Member } from "@prisma/client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import RecentConversations from "@/components/RecentConversations";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { getRecentConversations } from "@/app/actions/conversationActions";
-import { subscribeToPusher, unsubscribeFromPusher } from "@/lib/pusher-client";
-import { Channel } from "pusher-js";
-import { useSession } from "next-auth/react";
+import { useMemo } from "react";
+import useConversationStore from "@/store/conversationStore";
+import usePresenceStore from "@/hooks/usePresenceStore";
 import { Conversation } from "@/types/chat";
-import useMessageStore from "@/hooks/useMessageStore";
+import { createChatId } from "@/lib/util";
+import { useSession } from "next-auth/react";
 
 type MemberSidebarProps = {
   member: Member;
   navLinks: { name: string; href: string }[];
 };
 
+const SIDEBAR_LIMIT = 5;
+
 export default function MemberSidebar({
   navLinks,
-}: MemberSidebarProps) {      
+}: MemberSidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const channelRef = useRef<Channel | null>(null);
-  const setUnreadCount = useMessageStore((state) => state.setUnreadCount);
-  
-  const activeUserId = pathname.includes('/chat') 
-    ? pathname.split('/')[2] 
+
+  const orderedIds = useConversationStore((s) => s.orderedIds);
+  const conversations = useConversationStore((s) => s.conversations);
+  const currentUserId = useConversationStore((s) => s.currentUserId);
+  const members = usePresenceStore((s) => s.members);
+
+  const activeUserId = pathname.includes("/chat")
+    ? pathname.split("/")[2]
     : null;
 
-  const updateGlobalCount = useCallback((convs: Conversation[]) => {
-    const totalUnread = convs.reduce((sum, conv) => sum + conv.unreadCount, 0);
-    setUnreadCount(totalUnread);
-  }, [setUnreadCount]);
+  // Derive Conversation[] from the store — no API call needed.
+  // conversationStore is kept current by usePrivateChannel (conversation:event).
+  const recentConversations = useMemo((): Conversation[] => {
+    const uid = currentUserId ?? session?.user?.id;
+    if (!uid) return [];
 
-  const fetchConversations = useCallback(async () => {
-    const result = await getRecentConversations(5);
-    if (result.success) {
-      let convs = result.conversations as Conversation[];
-      
-      if (activeUserId) {
-        convs = convs.map((conv) =>
-          conv.userId === activeUserId ? { ...conv, unreadCount: 0 } : conv
-        );
-      }
-      
-      setConversations(convs);
-      updateGlobalCount(convs);
-    }
-    setLoading(false);
-  }, [activeUserId, updateGlobalCount]);
+    return orderedIds
+      .slice(0, SIDEBAR_LIMIT)
+      .reduce<Conversation[]>((acc, convId) => {
+        const slice = conversations[convId];
+        if (!slice?.latestMessage) return acc;
 
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+        const msg = slice.latestMessage;
+        const isOutgoing = msg.senderId === uid;
+        const partnerId = isOutgoing ? msg.recipientId : msg.senderId;
 
-  useEffect(() => {
-    if (!session?.user?.id) return;
+        if (!partnerId) return acc;
 
-    const privateChannel = subscribeToPusher(`private-${session.user.id}`);
-    channelRef.current = privateChannel;
+        // Suppress unread badge if the user is currently viewing this chat
+        const isActive =
+          activeUserId === partnerId ||
+          convId === createChatId(uid, partnerId);
 
-    const handleNewMessage = () => {
-      fetchConversations();
-    };
+        acc.push({
+          userId: partnerId,
+          name: isOutgoing
+            ? (msg.recipientName ?? partnerId)
+            : (msg.senderName ?? partnerId),
+          image: isOutgoing ? (msg.recipientImage ?? null) : (msg.senderImage ?? null),
+          lastMessage: msg.text ?? "",
+          lastMessageDate: new Date(msg.created),
+          unreadCount: isActive ? 0 : slice.unreadCount,
+          isOnline: members.includes(partnerId),
+        });
 
-    const handleMessagesRead = (data: { readBy?: string }) => {
-      if (data?.readBy && data.readBy === activeUserId) {
-        return;
-      }
-      fetchConversations();
-    };
-
-    privateChannel.bind("message:new", handleNewMessage);
-    privateChannel.bind("messages:read", handleMessagesRead);
-
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.unbind("message:new", handleNewMessage);
-        channelRef.current.unbind("messages:read", handleMessagesRead);
-        unsubscribeFromPusher(`private-${session.user.id}`);
-        channelRef.current = null;
-      }
-    };
-  }, [session?.user?.id, fetchConversations, activeUserId]);
+        return acc;
+      }, []);
+  }, [orderedIds, conversations, currentUserId, session?.user?.id, activeUserId, members]);
 
   return (
     <Card className="
@@ -103,19 +88,13 @@ export default function MemberSidebar({
       <CardBody className="w-full overflow-y-auto flex-1">
         {/* Recent Conversations Section */}
         <div className="px-4 pt-4">
-          {loading ? (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
-              <p className="text-white/70 text-sm">טוען...</p>
-            </div>
-          ) : (
-            <RecentConversations 
-              conversations={conversations} 
-              activeUserId={activeUserId}
-            />
-          )}
+          <RecentConversations
+            conversations={recentConversations}
+            activeUserId={activeUserId}
+          />
         </div>
       </CardBody>
-      
+
       <CardFooter className="w-full pb-4 px-4 flex flex-col gap-3">
         {/* Divider */}
         <div className="w-full border-t-2 border-white/20 mb-1"></div>
@@ -126,11 +105,10 @@ export default function MemberSidebar({
             <Link
               href={link.href}
               key={link.name}
-              className={`block rounded-xl py-2.5 px-4 transition-all duration-200 ${
-                pathname === link.href
-                  ? "bg-white/25 text-white font-bold shadow-md"
-                  : "text-white hover:bg-white/15"
-              }`}
+              className={`block rounded-xl py-2.5 px-4 transition-all duration-200 ${pathname === link.href
+                ? "bg-white/25 text-white font-bold shadow-md"
+                : "text-white hover:bg-white/15"
+                }`}
             >
               {link.name}
             </Link>

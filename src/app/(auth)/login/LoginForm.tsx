@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input } from "@nextui-org/react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import SocialLogin from "./SocialLogin";
@@ -34,12 +34,7 @@ export default function LoginForm() {
       router.push("/members");
       router.refresh();
     } else {
-      toast.error(result.error as string, {
-        style: {
-          color: "white",
-          textAlign: "center",
-        },
-      });
+      toast.error(result.error as string);
     }
   }
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { getAuthUserId } from "@/lib/session";
-import { pusherServer } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher-server";
 import { trackUserInteraction } from "./smartMatchActions";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { sendNewMatchEmail } from "@/lib/mail";

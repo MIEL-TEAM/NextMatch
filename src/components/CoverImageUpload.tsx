@@ -14,7 +14,7 @@ import {
   CloudinaryUploadWidgetResults,
 } from "next-cloudinary";
 import { updateCoverImage, removeCoverImage } from "@/app/actions/userActions";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { Camera, Trash2 } from "lucide-react";
 import Image from "next/image";

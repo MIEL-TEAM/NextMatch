@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { pusherClient } from "@/lib/pusher";
+import { pusherClient } from "@/lib/pusher-client";
 import useConversationStore from "@/store/conversationStore";
 import type { ConversationEvent } from "@/domain/conversation/eventEmitter";
 

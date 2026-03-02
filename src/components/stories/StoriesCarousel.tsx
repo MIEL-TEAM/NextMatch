@@ -5,7 +5,7 @@ import { StoryRing } from "./StoryRing";
 import { CreateStoryButton } from "./CreateStoryButton";
 import { getStoryUsers } from "@/app/actions/storyActions";
 import { useServerSession } from "@/contexts/SessionContext";
-import { getPusherClient } from "@/lib/pusher-client";
+import { subscribeToPusher } from "@/lib/pusher-client";
 import { StoryUser, StoriesCarouselProps } from "@/types/stories";
 
 import {
@@ -34,8 +34,7 @@ export function StoriesCarousel({
     const userId = currentUserId || session?.user?.id;
     if (!userId) return;
 
-    const pusherClient = getPusherClient();
-    const channel = pusherClient.subscribe(`private-${userId}`);
+    const channel = subscribeToPusher(`private-${userId}`);
 
     const handleStoryViewed = () => {
       fetchStoryUsers();
@@ -172,18 +171,18 @@ export function StoriesCarousel({
 
         {otherUsers.length > 0
           ? otherUsers.map((user) => (
-              <div key={user.id} className="flex-shrink-0 snap-start">
-                <StoryRing
-                  user={user}
-                  onClick={() => onStoryClick(user.id, storyUsers)}
-                />
-              </div>
-            ))
+            <div key={user.id} className="flex-shrink-0 snap-start">
+              <StoryRing
+                user={user}
+                onClick={() => onStoryClick(user.id, storyUsers)}
+              />
+            </div>
+          ))
           : !currentUser && (
-              <div className="flex items-center justify-center text-gray-500 text-sm px-4">
-                אין כאן סיפורים עדיין. זה הזמן לשתף משהו משלך!
-              </div>
-            )}
+            <div className="flex items-center justify-center text-gray-500 text-sm px-4">
+              אין כאן סיפורים עדיין. זה הזמן לשתף משהו משלך!
+            </div>
+          )}
       </div>
     </div>
   );

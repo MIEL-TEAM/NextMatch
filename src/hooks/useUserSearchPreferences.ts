@@ -8,7 +8,7 @@ import {
   resetUserSearchPreferences,
   UserSearchPreferenceData,
 } from "@/app/actions/userSearchPreferenceActions";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 interface UseUserSearchPreferencesOptions {
   userId: string;

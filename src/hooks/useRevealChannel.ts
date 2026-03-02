@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import { pusherClient } from "@/lib/pusher";
+import { pusherClient } from "@/lib/pusher-client";
 import useRevealStore, { PendingReveal } from "./useRevealStore";
 
 // ---------------------------------------------------------------------------

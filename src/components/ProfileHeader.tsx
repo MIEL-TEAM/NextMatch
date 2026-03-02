@@ -6,7 +6,7 @@ import { MessageCircleIcon, MapPinIcon, ShareIcon } from "lucide-react";
 import { MdVerified } from "react-icons/md";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { Member } from "@prisma/client";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import LikeButton from "./LikeButton";
 import { useRouter } from "next/navigation";
 import PresenceDot from "./PresenceDot";

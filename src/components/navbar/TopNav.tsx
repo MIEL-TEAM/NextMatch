@@ -5,6 +5,10 @@ import {
 } from "@/app/actions/userActions";
 import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
 import { getUnreadMessageCount } from "@/app/actions/messageActions";
+import {
+  getUnseenNotificationCount,
+  getUserNotifications,
+} from "@/lib/db/notificationActions";
 import { isActivePremium } from "@/lib/premiumUtils";
 import TopNavClient from "./TopNavClient";
 
@@ -39,6 +43,14 @@ export default async function TopNav() {
   const initialUnreadCount =
     userId && !isAdmin ? await getUnreadMessageCount() : 0;
 
+  const unseenResult =
+    userId && !isAdmin ? await getUnseenNotificationCount() : null;
+  const initialUnseenNotificationCount = unseenResult?.count ?? 0;
+
+  const notifResult =
+    userId && !isAdmin ? await getUserNotifications(20, 0) : null;
+  const initialNotifications = (notifResult?.notifications ?? []) as any;
+
   // Get user location for search functionality
   let userLocation = null;
   if (userId && !isAdmin) {
@@ -60,6 +72,8 @@ export default async function TopNav() {
       isAdmin={isAdmin}
       isPremium={isPremium}
       initialUnreadCount={initialUnreadCount}
+      initialUnseenNotificationCount={initialUnseenNotificationCount}
+      initialNotifications={initialNotifications}
       userLocation={userLocation}
     />
   );

@@ -6,7 +6,7 @@ import { Member, Photo } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import MemberCard from "../members/MemberCard";
 import { getMemberPhotos } from "../actions/memberActions";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import HeartLoading from "@/components/HeartLoading";
 import { useLikedMembersQuery } from "@/hooks/useLikedMembersQuery";

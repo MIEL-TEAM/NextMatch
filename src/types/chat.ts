@@ -34,7 +34,3 @@ export type RecentConversationsProps = {
   activeUserId?: string | null;
 };
 
-export type NewMessageToastProps = {
-  message: MessageDto;
-};
-

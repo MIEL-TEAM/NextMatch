@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { pusherClient } from "@/lib/pusher-client";
 import { CelebrationType } from "@/components/CelebrationModal";
-import { newLikeToast } from "@/components/NotificationToast";
 import useInvitationStore, { type Invitation } from "./useInvitationStore";
 import { useRouter } from "next/navigation";
 
@@ -59,13 +58,6 @@ export function useCelebrationListener(
         console.error("Error playing celebration sound:", error);
       }
     });
-
-    channel.bind(
-      "like:new",
-      (data: { name: string; image: string | null; userId: string }) => {
-        newLikeToast(data.name, data.image, data.userId);
-      }
-    );
 
     channel.bind("smart-match", (data: SmartMatchData) => {
       showCelebration("smart-match", {
@@ -149,7 +141,6 @@ export function useCelebrationListener(
 
     return () => {
       channel.unbind("mutual-match");
-      channel.unbind("like:new");
       channel.unbind("smart-match");
       channel.unbind("first-message");
       channel.unbind("profile-boost");
@@ -163,24 +154,24 @@ export function useCelebrationListener(
 
 export const celebrationTriggers = {
   smartMatch: async (userId: string, matchData: SmartMatchData) => {
-    const { pusherServer } = await import("@/lib/pusher");
+    const { pusherServer } = await import("@/lib/pusher-server");
     await pusherServer.trigger(`private-${userId}`, "smart-match", matchData);
   },
 
   firstMessage: async (userId: string, userName: string) => {
-    const { pusherServer } = await import("@/lib/pusher");
+    const { pusherServer } = await import("@/lib/pusher-server");
     await pusherServer.trigger(`private-${userId}`, "first-message", {
       userName,
     });
   },
 
   profileBoost: async (userId: string) => {
-    const { pusherServer } = await import("@/lib/pusher");
+    const { pusherServer } = await import("@/lib/pusher-server");
     await pusherServer.trigger(`private-${userId}`, "profile-boost", {});
   },
 
   achievement: async (userId: string, title: string, description: string) => {
-    const { pusherServer } = await import("@/lib/pusher");
+    const { pusherServer } = await import("@/lib/pusher-server");
     await pusherServer.trigger(`private-${userId}`, "achievement", {
       title,
       description,

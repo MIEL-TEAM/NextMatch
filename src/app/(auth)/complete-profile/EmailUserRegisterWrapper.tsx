@@ -18,7 +18,7 @@ import PreferencesForm from "../register/PreferencesForm";
 import PhotoUploadForm from "../register/PhotoUploadForm";
 import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
 import { completeEmailRegistrationProfile } from "@/app/actions/completeProfileActions";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 const stepSchemas = [
   registerSchema,

@@ -5,7 +5,7 @@ import ImageButtonUpload from "@/components/ImageButtonUpload";
 import { CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function MemberPhotoUpload() {
   const router = useRouter();

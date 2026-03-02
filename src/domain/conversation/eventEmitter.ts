@@ -1,4 +1,4 @@
-import { pusherServer } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher-server";
 
 // ─── Unified event contract ───────────────────────────────────────────────────
 
@@ -6,12 +6,12 @@ export interface ConversationEvent {
   version: 1;
   eventId: string;
   type:
-    | "MESSAGE_CREATED"
-    | "MESSAGE_UPDATED"
-    | "MESSAGE_DELETED"
-    | "READ_RECEIPT"
-    | "CONVERSATION_ARCHIVED"
-    | "MESSAGE_STARRED";
+  | "MESSAGE_CREATED"
+  | "MESSAGE_UPDATED"
+  | "MESSAGE_DELETED"
+  | "READ_RECEIPT"
+  | "CONVERSATION_ARCHIVED"
+  | "MESSAGE_STARRED";
   conversationId: string;
   actorId: string;
   timestamp: string;

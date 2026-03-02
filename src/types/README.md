@@ -18,8 +18,8 @@ This directory contains all TypeScript types and interfaces organized by domain/
   - Conversation, RecentConversationsProps
   - NewMessageToastProps, ChatButtonProps
 
-- **`messageStore.ts`** - Zustand message store types
-  - ChatCache, MessageState
+- **`messageStore.ts`** - Message table component types
+  - MessageTableCellProps, TableProps
 
 #### Member Profiles
 - **`profile.ts`** - Profile and member-related types

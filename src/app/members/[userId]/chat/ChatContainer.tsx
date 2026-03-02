@@ -12,12 +12,8 @@ import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
 import { Lock } from "lucide-react";
+import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
 
-const FREE_MESSAGE_LIMIT = 5;
-
-// Stable empty array — useSyncExternalStore requires getSnapshot to return the
-// same reference for unchanged data. `?? []` would create a new array on every
-// call when threads[chatId] is undefined, causing error #310.
 const EMPTY_THREAD: MessageDto[] = [];
 
 export default function ChatContainer({ currentUserId, isPremium }: ChatContainerProps) {

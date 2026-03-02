@@ -16,6 +16,7 @@ export default function MessageTableCell({
   isDeleting,
   isStarring,
   isArchiving,
+  isLocked,
 }: MessageTableCellProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isArchiveDisabled, setIsArchiveDisabled] = useState(false);
@@ -106,7 +107,13 @@ export default function MessageTableCell({
         );
 
       case "text":
-        return <span className="text-gray-600">{truncateText(item.text)}</span>;
+        return isLocked ? (
+          <span className="blur-sm select-none pointer-events-none text-gray-600">
+            {truncateText(item.text)}
+          </span>
+        ) : (
+          <span className="text-gray-600">{truncateText(item.text)}</span>
+        );
 
       case "created":
         return (

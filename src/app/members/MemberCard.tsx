@@ -10,7 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { AnimatePresence } from "framer-motion";
 import { FaFire } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";

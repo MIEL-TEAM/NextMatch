@@ -5,7 +5,7 @@ import {
   createNotification,
   getOrCreateGroupedNotification,
 } from "@/lib/db/notificationActions";
-import { pusherServer } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher-server";
 import { CreateNotificationParams } from "@/types/notifications";
 
 // Helper to get today's date key for grouping

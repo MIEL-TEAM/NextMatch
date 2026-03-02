@@ -12,7 +12,7 @@ import { RiProfileLine } from "react-icons/ri";
 import ProfileForm from "../register/ProfileForm";
 import { Button, Input } from "@nextui-org/react";
 import { completeEmailRegistrationProfile } from "@/app/actions/completeProfileActions";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 
 type EmailUserProfileFormProps = {

@@ -42,14 +42,6 @@ export type StarButtonProps = {
   loading: boolean;
 };
 
-// Toast Components
-export type NotificationToastProps = {
-  image?: string | null;
-  href: string;
-  title: string;
-  subtitle?: string;
-};
-
 // Result Components
 export type ResultMessageProps = {
   result: ActionResult<string> | null;

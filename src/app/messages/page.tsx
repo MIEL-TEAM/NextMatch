@@ -7,6 +7,9 @@ import {
 } from "../actions/messageActions";
 import MessageTable from "./MessageTable";
 import { Metadata } from "next";
+import { getAuthUserId } from "@/lib/session";
+import { dbGetUserForNav } from "@/lib/db/userActions";
+import { isActivePremium } from "@/lib/premiumUtils";
 
 export const metadata: Metadata = {
   title: "הודעות | Miel",
@@ -43,6 +46,10 @@ export default async function MessagesPage({
 }: MessagesPageProps) {
   const params = await searchParams;
 
+  const userId = await getAuthUserId();
+  const dbUser = await dbGetUserForNav(userId);
+  const isPremium = isActivePremium(dbUser);
+
   let messages = [];
   let nextCursor = undefined;
 
@@ -73,6 +80,7 @@ export default async function MessagesPage({
             nextCursor={nextCursor}
             isArchived={params.container === "archived"}
             isStarred={params.container === "starred"}
+            isPremium={isPremium}
           />
         </div>
       </div>

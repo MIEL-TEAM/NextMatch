@@ -1,6 +1,7 @@
 import { Member } from "@prisma/client";
 import { Session } from "next-auth";
 import type { ProfileCompletionStatus } from "@/types/userAction";
+import type { NotificationDto } from "@/types/notifications";
 
 export type NavLinkItem = {
   href: string;
@@ -26,6 +27,8 @@ export type TopNavClientProps = {
   isAdmin: boolean;
   isPremium: boolean;
   initialUnreadCount: number;
+  initialUnseenNotificationCount: number;
+  initialNotifications: NotificationDto[];
   userLocation?: { latitude: number; longitude: number } | null;
 };
 

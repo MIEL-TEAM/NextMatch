@@ -9,7 +9,7 @@ import clsx from "clsx";
 import { useRole } from "@/hooks/useRole";
 import { ImCheckmark, ImCross } from "react-icons/im";
 import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { approvePhoto, rejectPhoto } from "@/app/actions/adminActions";
 import AppModal from "./AppModal";
 

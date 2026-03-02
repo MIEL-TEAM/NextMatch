@@ -10,7 +10,7 @@ import React, { useEffect, useRef, memo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: MessageBoxProps) {
   const isCurrentUserSender = message.senderId === currentUserId;

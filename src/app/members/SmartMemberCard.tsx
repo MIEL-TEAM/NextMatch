@@ -13,7 +13,7 @@ import {
 
 import { useInteractionTracking } from "@/hooks/useInteractionTracking";
 import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
@@ -130,23 +130,15 @@ export default function SmartMemberCard({
         await trackInteractions.like();
         setHasLiked(!hasLiked);
 
-        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים", {
-          position: "bottom-right",
-        });
+        toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים");
       } else if (result.alreadyLiked) {
-        toast.error(`כבר עשית לייק (ID: ${member.userId})`, {
-          position: "bottom-right",
-        });
+        toast.error(`כבר עשית לייק (ID: ${member.userId})`);
       } else {
-        toast.error("שגיאת מערכת: הפעולה נכשלה", {
-          position: "bottom-right",
-        });
+        toast.error("שגיאת מערכת: הפעולה נכשלה");
       }
     } catch (error) {
       console.error("Like toggle error:", error);
-      toast.error("שגיאת מערכת: הפעולה נכשלה", {
-        position: "bottom-right",
-      });
+      toast.error("שגיאת מערכת: הפעולה נכשלה");
     } finally {
       setLoading(false);
     }

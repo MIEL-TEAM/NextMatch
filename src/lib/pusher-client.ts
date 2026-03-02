@@ -25,7 +25,8 @@ export function getPusherClient(): PusherClient {
 }
 
 export function subscribeToPusher(channelName: string) {
-  return getPusherClient().subscribe(channelName);
+  const client = getPusherClient();
+  return client.channel(channelName) ?? client.subscribe(channelName);
 }
 
 export function unsubscribeFromPusher(channelName: string) {

@@ -1,37 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { formatShortDateTime } from "@/lib/util";
 import { Channel } from "pusher-js";
-import useMessageStore from "@/hooks/useMessageStore";
 import useConversationStore from "@/store/conversationStore";
 import { subscribeToPusher, unsubscribeFromPusher } from "@/lib/pusher-client";
 import { MessageDto } from "@/types";
 import { MessageListProps } from "@/types/chat";
+import { recomputeLocks } from "@/lib/messageLocks";
 
 const MessageBox = dynamic(() => import("./MessageBox"), {
   ssr: false,
 });
-
-function recomputeLocks(
-  messages: MessageDto[],
-  currentUserId: string,
-  isPremium: boolean,
-): MessageDto[] {
-  if (isPremium) {
-    return messages.map((m) => ({ ...m, locked: false }));
-  }
-
-  const received = messages.filter((m) => m.senderId !== currentUserId);
-
-  if (received.length < 5) {
-    return messages.map((m) => ({ ...m, locked: false }));
-  }
-
-  const lockedIds = new Set(received.slice(5).map((m) => m.id));
-  return messages.map((m) => ({ ...m, locked: lockedIds.has(m.id) }));
-}
 
 export default function MessageList({
   initialMessages,
@@ -41,24 +21,9 @@ export default function MessageList({
   onLockedChange,
 }: MessageListProps) {
   const channelRef = useRef<Channel | null>(null);
-  const setReadCount = useRef(false);
-  const [messages, setMessages] = useState(initialMessages.messages);
 
-  // Kept current on every render so Pusher callbacks never close over stale
-  // messages — avoids side-effects inside state updater functions.
-  const messagesRef = useRef(messages);
-  messagesRef.current = messages;
-
-  const updateUnreadCount = useMessageStore((state) => state.updateUnreadCount);
-  const addMessageToChat = useMessageStore((state) => state.addMessageToChat);
-  const updateMessageInChat = useMessageStore(
-    (state) => state.updateMessageInChat,
-  );
-  const removeMessageFromChat = useMessageStore(
-    (state) => state.removeMessageFromChat,
-  );
-  const setCachedMessages = useMessageStore((state) => state.setCachedMessages);
-
+  const storeMessages = useConversationStore((s) => s.threads[chatId]);
+  const messages = storeMessages ?? initialMessages.messages;
 
   const { displayMessages, firstLockedId } = useMemo(() => {
     const computed = recomputeLocks(messages, currentUserId, isPremium);
@@ -72,81 +37,66 @@ export default function MessageList({
     onLockedChange?.(firstLockedId !== undefined);
   }, [firstLockedId, onLockedChange]);
 
-  // Sync messages when initialMessages change
   useEffect(() => {
-    setMessages(initialMessages.messages);
-  }, [initialMessages.messages]);
-
-  useEffect(() => {
-    if (!setReadCount.current) {
-      updateUnreadCount(-initialMessages.readCount);
-      setReadCount.current = true;
-    }
-  }, [initialMessages.readCount, updateUnreadCount]);
+    useConversationStore.getState().setThread(chatId, initialMessages.messages);
+  }, [initialMessages.messages, chatId]);
 
   const handleNewMessage = useCallback(
     (message: MessageDto) => {
       if (!message.created) message.created = new Date().toISOString();
       if (!message.dateRead) message.dateRead = null;
 
-      const prev = messagesRef.current;
+      const store = useConversationStore.getState();
+      const prev = store.threads[chatId] ?? [];
+
       if (prev.some((msg) => msg.id === message.id)) return;
 
       const newMessages = [...prev, message];
-      setMessages(newMessages);
-      addMessageToChat(chatId, message);
-      setCachedMessages(chatId, newMessages);
-      useConversationStore.getState().patchThread(chatId, newMessages);
+      store.patchThread(chatId, newMessages);
     },
-    [chatId, addMessageToChat, setCachedMessages],
+    [chatId],
   );
 
   const handleReadMessages = useCallback(
     (messageIds: string[]) => {
-      const updatedMessages = messagesRef.current.map((message) =>
+      const store = useConversationStore.getState();
+      const prev = store.threads[chatId] ?? [];
+
+      const updatedMessages = prev.map((message) =>
         messageIds.includes(message.id)
-          ? { ...message, dateRead: formatShortDateTime(new Date()) }
+          ? { ...message, dateRead: new Date().toISOString() }
           : message,
       );
 
-      setMessages(updatedMessages);
-      messageIds.forEach((msgId) => {
-        updateMessageInChat(chatId, msgId, {
-          dateRead: formatShortDateTime(new Date()),
-        });
-      });
-      setCachedMessages(chatId, updatedMessages);
-      useConversationStore.getState().patchThread(chatId, updatedMessages);
+      store.patchThread(chatId, updatedMessages);
     },
-    [chatId, updateMessageInChat, setCachedMessages],
+    [chatId],
   );
 
   const handleEditMessage = useCallback(
     (updatedMessage: MessageDto) => {
-      const updatedMessages = messagesRef.current.map((message) =>
+      const store = useConversationStore.getState();
+      const prev = store.threads[chatId] ?? [];
+
+      const updatedMessages = prev.map((message) =>
         message.id === updatedMessage.id ? updatedMessage : message,
       );
 
-      setMessages(updatedMessages);
-      updateMessageInChat(chatId, updatedMessage.id, updatedMessage);
-      setCachedMessages(chatId, updatedMessages);
-      useConversationStore.getState().patchThread(chatId, updatedMessages);
+      store.patchThread(chatId, updatedMessages);
     },
-    [chatId, updateMessageInChat, setCachedMessages],
+    [chatId],
   );
 
   const handleDeleteMessage = useCallback(
     (messageId: string) => {
-      const updatedMessages = messagesRef.current.filter(
-        (message) => message.id !== messageId,
-      );
+      const store = useConversationStore.getState();
+      const prev = store.threads[chatId] ?? [];
 
-      setMessages(updatedMessages);
-      removeMessageFromChat(chatId, messageId);
-      setCachedMessages(chatId, updatedMessages);
-      useConversationStore.getState().patchThread(chatId, updatedMessages);
+      const updatedMessages = prev.filter((message) => message.id !== messageId);
+
+      store.patchThread(chatId, updatedMessages);
     },
-    [chatId, removeMessageFromChat, setCachedMessages],
+    [chatId],
   );
 
   useEffect(() => {

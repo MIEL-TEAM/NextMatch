@@ -11,7 +11,7 @@ import { Textarea } from "@nextui-org/input";
 import { useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 import { HiPaperAirplane } from "react-icons/hi2";
 

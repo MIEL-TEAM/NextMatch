@@ -12,6 +12,7 @@ import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
 import SearchButton from "../search/SearchButton";
 import useConversationStore from "@/store/conversationStore";
+import useNotificationStore from "@/store/notificationStore";
 import type { TopNavClientProps } from "@/types/navigation";
 
 export default function TopNavClient({
@@ -23,12 +24,18 @@ export default function TopNavClient({
   isAdmin,
   isPremium,
   initialUnreadCount,
+  initialUnseenNotificationCount,
+  initialNotifications,
 }: TopNavClientProps) {
   useEffect(() => {
-    const store = useConversationStore.getState();
-    if (userId) store.setCurrentUser(userId);
-    if (initialUnreadCount > 0) store.setInitialUnread(initialUnreadCount);
-  }, [userId, initialUnreadCount]);
+    const convStore = useConversationStore.getState();
+    if (userId) convStore.setCurrentUser(userId);
+    if (initialUnreadCount > 0) convStore.setInitialUnread(initialUnreadCount);
+
+    useNotificationStore
+      .getState()
+      .setInitialState(initialNotifications, initialUnseenNotificationCount);
+  }, [userId, initialUnreadCount, initialNotifications, initialUnseenNotificationCount]);
 
   const pathname = usePathname();
 

@@ -6,7 +6,7 @@ import { FiX, FiSend } from "react-icons/fi";
 import { StoryProgressBar } from "./StoryProgressBar";
 import { StoryViewerProps } from "@/types/stories";
 import { sendStoryMessage } from "@/app/actions/storyActions";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

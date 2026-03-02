@@ -9,7 +9,7 @@ import ProfileForm from "../register/ProfileForm";
 import { Button } from "@nextui-org/react";
 import { completeOAuthProfile } from "@/app/actions/completeProfileActions";
 import { signIn } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function OAuthUserProfileForm() {
   const methods = useForm<ProfileSchema>({

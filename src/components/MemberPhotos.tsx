@@ -11,7 +11,7 @@ import { useState } from "react";
 import DeleteButton from "./DeleteButton";
 import MemberImage from "./MemberImage";
 import StarButton from "./StarButton";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { MemberPhotosProps } from "@/types/members";
 
 export default function MemberPhotos({
