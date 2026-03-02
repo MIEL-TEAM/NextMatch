@@ -8,7 +8,6 @@ import { createChatId } from "@/lib/util";
 
 // ─── Per-conversation slice ───────────────────────────────────────────────────
 
-
 interface ConversationSlice {
   latestMessage: MessageDto | null;
   unreadCount: number;
@@ -19,18 +18,27 @@ interface ConversationSlice {
 
 interface ConversationStoreState {
   conversations: Record<string, ConversationSlice>;
+  threads: Record<string, MessageDto[]>;
   orderedIds: string[];
   globalUnreadCount: number;
   processedEventIds: Set<string>;
   isBootstrapped: boolean;
   currentUserId: string | null;
+  activeConversationId: string | null;
+  remainingQuota: number | null;
+  isQuotaReached: boolean;
   setCurrentUser: (userId: string) => void;
   setInitialUnread: (count: number) => void;
+  setActiveConversation: (id: string | null) => void;
+  setQuota: (remaining: number) => void;
   handleConversationEvent: (event: ConversationEvent) => void;
   bootstrapInbox: (messages: MessageDto[]) => void;
   appendInbox: (messages: MessageDto[]) => void;
   removeConversation: (conversationId: string) => void;
-  loadThread: (conversationId: string, messages: MessageDto[]) => void;
+  // Stores fetched thread messages and clears unread for that conversation.
+  setThread: (conversationId: string, messages: MessageDto[]) => void;
+  // Stores updated thread messages without touching unread (for real-time mutations).
+  patchThread: (conversationId: string, messages: MessageDto[]) => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -39,11 +47,15 @@ const useConversationStore = create<ConversationStoreState>()(
   devtools(
     (set, get) => ({
       conversations: {},
+      threads: {},
       orderedIds: [],
       globalUnreadCount: 0,
       processedEventIds: new Set<string>(),
       isBootstrapped: false,
       currentUserId: null,
+      activeConversationId: null,
+      remainingQuota: null,
+      isQuotaReached: false,
 
       // ─── Identify the logged-in user ──────────────────────────────────────
 
@@ -57,10 +69,22 @@ const useConversationStore = create<ConversationStoreState>()(
         set({ globalUnreadCount: count });
       },
 
+      // ─── Track which conversation is open ────────────────────────────────
+
+      setActiveConversation: (id: string | null) => {
+        set({ activeConversationId: id, remainingQuota: null, isQuotaReached: false });
+      },
+
+      // ─── Track sent message quota ─────────────────────────────────────────
+
+      setQuota: (remaining: number) => {
+        set({ remainingQuota: remaining, isQuotaReached: remaining === 0 });
+      },
+
       // ─── Handle unified event ─────────────────────────────────────────────
 
       handleConversationEvent: (event: ConversationEvent) => {
-        const { processedEventIds, conversations, orderedIds, globalUnreadCount, currentUserId } = get();
+        const { processedEventIds, conversations, orderedIds, globalUnreadCount, currentUserId, activeConversationId } = get();
 
         if (processedEventIds.has(event.eventId)) {
           return;
@@ -73,8 +97,9 @@ const useConversationStore = create<ConversationStoreState>()(
           case "MESSAGE_CREATED": {
             const payload = event.payload as { message: MessageDto };
             const message = payload.message;
-        
+
             const isFromSelf = currentUserId !== null && event.actorId === currentUserId;
+            const isActiveConversation = event.conversationId === activeConversationId;
             const existing = conversations[event.conversationId];
 
             const newOrderedIds = [
@@ -82,8 +107,10 @@ const useConversationStore = create<ConversationStoreState>()(
               ...orderedIds.filter((id) => id !== event.conversationId),
             ];
 
+            // Don't count as unread if the user is currently viewing this conversation.
             const prevUnread = existing?.unreadCount ?? 0;
-            const newUnread = isFromSelf ? prevUnread : prevUnread + 1;
+            const shouldCountUnread = !isFromSelf && !isActiveConversation;
+            const newUnread = shouldCountUnread ? prevUnread + 1 : prevUnread;
 
             set({
               conversations: {
@@ -95,9 +122,9 @@ const useConversationStore = create<ConversationStoreState>()(
                 },
               },
               orderedIds: newOrderedIds,
-              globalUnreadCount: isFromSelf
-                ? globalUnreadCount
-                : globalUnreadCount + 1,
+              globalUnreadCount: shouldCountUnread
+                ? globalUnreadCount + 1
+                : globalUnreadCount,
               processedEventIds: newProcessedIds,
             });
             break;
@@ -296,21 +323,27 @@ const useConversationStore = create<ConversationStoreState>()(
         });
       },
 
-      // ─── Seed a thread ────────────────────────────────────────────────────
+      // ─── Store a fetched thread ───────────────────────────────────────────
       //
-      // Called when entering a chat thread. Marks the conversation as read
-      // and removes its event-tracked unread from globalUnreadCount.
-      // READ_RECEIPT will arrive shortly after and see unreadCount=0 — a no-op.
+      // Called when entering a chat thread. Stores the full message list and
+      // clears unread for that conversation. READ_RECEIPT arrives shortly after
+      // and sees unreadCount=0 — a no-op.
 
-      loadThread: (conversationId: string, messages: MessageDto[]) => {
-        if (messages.length === 0) return;
-
-        const { conversations, globalUnreadCount } = get();
+      setThread: (conversationId: string, messages: MessageDto[]) => {
+        const { conversations, globalUnreadCount, threads } = get();
         const existing = conversations[conversationId];
         const prevUnread = existing?.unreadCount ?? 0;
+        const newThreads = { ...threads, [conversationId]: messages };
+
+        if (messages.length === 0) {
+          set({ threads: newThreads });
+          return;
+        }
+
         const latestMessage = messages[messages.length - 1];
 
         set({
+          threads: newThreads,
           conversations: {
             ...conversations,
             [conversationId]: {
@@ -321,6 +354,15 @@ const useConversationStore = create<ConversationStoreState>()(
           },
           globalUnreadCount: Math.max(0, globalUnreadCount - prevUnread),
         });
+      },
+
+      // ─── Patch a thread in-place ──────────────────────────────────────────
+      //
+      // Called by real-time Pusher handlers to keep the stored thread current
+      // without touching unread counts (those are managed by event handlers).
+
+      patchThread: (conversationId: string, messages: MessageDto[]) => {
+        set({ threads: { ...get().threads, [conversationId]: messages } });
       },
     }),
     { name: "conversationStore" },

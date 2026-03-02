@@ -10,7 +10,7 @@ import { ConversationService } from "@/domain/conversation/ConversationService";
 export async function createMessgae(
   recipientUserId: string,
   data: MessageSchema,
-): Promise<ActionResult<MessageDto>> {
+): Promise<ActionResult<{ message: MessageDto; remainingQuota: number | null }>> {
   try {
     const userId = await getAuthUserId();
 
@@ -18,13 +18,13 @@ export async function createMessgae(
     if (!validated.success)
       return { status: "error", error: validated.error.errors };
 
-    const messageDto = await ConversationService.createMessage(
+    const { message, remainingQuota } = await ConversationService.createMessage(
       userId,
       recipientUserId,
       validated.data.text,
     );
 
-    return { status: "success", data: messageDto };
+    return { status: "success", data: { message, remainingQuota } };
   } catch (error) {
     if (error instanceof Error && error.message === "MESSAGE_LIMIT_REACHED") {
       return { status: "error", error: "MESSAGE_LIMIT_REACHED" };

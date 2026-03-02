@@ -4,6 +4,7 @@ import { createMessgae } from "@/app/actions/messageActions";
 import { MessageSchema, messagesSchema } from "@/lib/schemas/messagesSchema";
 import { handleFormServerError } from "@/lib/util";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
+import useConversationStore from "@/store/conversationStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@nextui-org/button";
 import { Textarea } from "@nextui-org/input";
@@ -37,7 +38,11 @@ export default function ChatForm() {
     try {
       const result = await createMessgae(params.userId, data);
 
-      if (result.status === "error") {
+      if (result.status === "success") {
+        if (result.data.remainingQuota !== null) {
+          useConversationStore.getState().setQuota(result.data.remainingQuota);
+        }
+      } else {
         if (result.error === "MESSAGE_LIMIT_REACHED") {
           useUpgradeModal.getState().open();
         } else {

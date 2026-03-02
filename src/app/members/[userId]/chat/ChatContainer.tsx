@@ -1,17 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { MessageDto } from "@/types";
 import { ChatContainerProps } from "@/types/chat";
 import { getMessageThread } from "@/app/actions/messageActions";
 import { createChatId } from "@/lib/util";
-import useMessageStore from "@/hooks/useMessageStore";
+import useConversationStore from "@/store/conversationStore";
 import MessageList from "./MessageList";
 import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
 import { Lock } from "lucide-react";
+
+const FREE_MESSAGE_LIMIT = 5;
+
+// Stable empty array — useSyncExternalStore requires getSnapshot to return the
+// same reference for unchanged data. `?? []` would create a new array on every
+// call when threads[chatId] is undefined, causing error #310.
+const EMPTY_THREAD: MessageDto[] = [];
 
 export default function ChatContainer({ currentUserId, isPremium }: ChatContainerProps) {
   const params = useParams<{ userId: string }>();
@@ -19,78 +26,51 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
   const chatId = createChatId(currentUserId, recipientUserId);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<MessageDto[]>([]);
-  const hasMarkedAsRead = useRef(false);
 
-  const getCachedMessages = useMessageStore((state) => state.getCachedMessages);
-  const setCachedMessages = useMessageStore((state) => state.setCachedMessages);
-  const isCacheValid = useMessageStore((state) => state.isCacheValid);
+  const setActiveConversation = useConversationStore((s) => s.setActiveConversation);
+  const setQuota = useConversationStore((s) => s.setQuota);
+  const setThread = useConversationStore((s) => s.setThread);
+  const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
+  const messages = useConversationStore((s) => s.threads[chatId] ?? EMPTY_THREAD);
 
+  // Register / clear active conversation on mount/unmount and chat change.
   useEffect(() => {
-    // Reset when chat changes
-    hasMarkedAsRead.current = false;
-    
-    const loadMessages = async () => {
-      // Check cache first
-      const cachedMessages = getCachedMessages(chatId);
-
-      if (cachedMessages && isCacheValid(chatId)) {
-        // Use cached messages immediately
-        setMessages(cachedMessages);
-        setIsLoading(false);
-        
-        // Still check for unread messages
-        const unreadInCache = cachedMessages.filter(
-          (msg) => !msg.dateRead && msg.recipientId === currentUserId
-        ).length;
-        
-        if (unreadInCache > 0 && !hasMarkedAsRead.current) {
-          // Refetch to mark as read (only once)
-          hasMarkedAsRead.current = true;
-          try {
-            const result = await getMessageThread(recipientUserId);
-            setCachedMessages(chatId, result.messages);
-            setMessages(result.messages);
-          } catch (error) {
-            console.error("Error marking messages as read:", error);
-          }
-        }
-        return;
-      }
-
-      // Cache miss or stale - fetch from server
-      setIsLoading(true);
-      try {
-        const result = await getMessageThread(recipientUserId);
-        hasMarkedAsRead.current = true;
-
-        // Cache the messages
-        setCachedMessages(chatId, result.messages);
-        setMessages(result.messages);
-      } catch (error) {
-        console.error("Error loading messages:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    setActiveConversation(chatId);
+    return () => {
+      setActiveConversation(null);
     };
+  }, [chatId, setActiveConversation]);
 
-    loadMessages();
-  }, [
-    chatId,
-    recipientUserId,
-    currentUserId,
-    getCachedMessages,
-    setCachedMessages,
-    isCacheValid,
-  ]);
+  // Fetch the thread on every chatId change. Shows a spinner only when there
+  // is no cached thread yet; otherwise updates silently in the background.
+  useEffect(() => {
+    let cancelled = false;
 
-  // Initialise from server-fetched messages so there's no flash on first render.
-  // Updated reactively via onLockedChange when real-time messages arrive.
-  const [hasLockedMessages, setHasLockedMessages] = useState(
-    !isPremium &&
-      messages.filter((m) => m.senderId !== currentUserId).length >= 5,
-  );
-  const showUpgradeCta = !isPremium && hasLockedMessages;
+    const hasCached = !!useConversationStore.getState().threads[chatId];
+    if (!hasCached) setIsLoading(true);
+
+    getMessageThread(recipientUserId)
+      .then((result) => {
+        if (cancelled) return;
+        setThread(chatId, result.messages);
+
+        if (!isPremium) {
+          const sentCount = result.messages.filter((m) => m.senderId === currentUserId).length;
+          setQuota(Math.max(0, FREE_MESSAGE_LIMIT - sentCount));
+        }
+      })
+      .catch((err) => console.error("Error loading messages:", err))
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chatId, recipientUserId, currentUserId, isPremium, setThread, setQuota]);
+
+  const [hasLockedMessages, setHasLockedMessages] = useState(false);
+  const showUpgradeCta = !isPremium && (hasLockedMessages || isQuotaReached);
 
   if (isLoading) {
     return <HeartLoading message="טוען הודעות..." />;

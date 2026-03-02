@@ -139,16 +139,19 @@ export class ConversationService {
     userId: string,
     recipientUserId: string,
     text: string,
-  ): Promise<MessageDto> {
+  ): Promise<{ message: MessageDto; remainingQuota: number | null }> {
     const user = await dbGetUserForNav(userId);
     const premium = isActivePremium(user);
 
     let message: Awaited<ReturnType<typeof dbCreateMessage>>;
+    let remainingQuota: number | null = null;
 
     if (premium) {
       message = await dbCreateMessage(text, recipientUserId, userId);
     } else {
-      message = await dbCreateMessageWithLimit(text, recipientUserId, userId, 5);
+      const result = await dbCreateMessageWithLimit(text, recipientUserId, userId, 5);
+      message = result.message;
+      remainingQuota = result.remainingQuota;
     }
 
     await trackUserInteraction(recipientUserId, "message").catch((e) =>
@@ -209,7 +212,7 @@ export class ConversationService {
       );
     }
 
-    return messageDto;
+    return { message: messageDto, remainingQuota };
   }
 
   // ─── Edit ────────────────────────────────────────────────────────────────

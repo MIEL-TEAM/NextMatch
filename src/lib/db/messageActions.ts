@@ -239,10 +239,11 @@ export async function dbCreateMessageWithLimit(
       if (count >= limit) {
         throw new Error("MESSAGE_LIMIT_REACHED");
       }
-      return tx.message.create({
+      const message = await tx.message.create({
         data: { text, recipientId, senderId },
         select: messageSelect,
       });
+      return { message, remainingQuota: limit - (count + 1) };
     },
     { isolationLevel: "Serializable" },
   );
