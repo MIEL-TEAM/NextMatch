@@ -23,17 +23,20 @@ export default async function ChatPage({ params }: UserParamsProps) {
     const result = await getRecentConversations(1);
 
     if (result.success && result.conversations.length > 0) {
-      const mostRecentConversation = result.conversations[0];
-      redirect(`/members/${mostRecentConversation.userId}/chat`);
+      redirect(`/members/${result.conversations[0].userId}/chat`);
+    } else {
+      redirect("/members");
     }
   }
 
   const recipient = await getMemberByUserId(recipientId);
 
   const chatHeader = recipient ? (
-    <div className="text-2xl font-semibold text-secondary flex items-baseline">
-      {recipient.name}
-      <PremiumLabel user={recipient.user} variant="inline" />
+    <div className="flex items-center gap-3">
+      <div className="text-xl font-semibold text-secondary flex items-center gap-1 truncate">
+        שיחה עם {recipient.name}
+        <PremiumLabel user={recipient.user} variant="inline" />
+      </div>
     </div>
   ) : (
     "צ\u2019אט"
@@ -42,8 +45,16 @@ export default async function ChatPage({ params }: UserParamsProps) {
   return (
     <CardInnerWrapper
       header={chatHeader}
-      body={<ChatContainer currentUserId={userId} isPremium={isPremium} />}
-      footer={<ChatForm />}
+      body={
+        <ChatContainer
+          currentUserId={userId}
+          isPremium={isPremium}
+          recipientName={recipient?.name}
+          recipientImage={recipient?.image}
+          recipientUserId={recipientId}
+        />
+      }
+      footer={<ChatForm currentUserId={userId} />}
     />
   );
 }

@@ -13,7 +13,7 @@ import {
 } from "@nextui-org/react";
 import { formatDistanceToNow } from "date-fns";
 import { he } from "date-fns/locale";
-import { Bell, Trash2, CheckCheck } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -109,7 +109,7 @@ export default function ProfileViewsBell() {
             className="relative flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20 sm:transition-all sm:duration-200 sm:hover:scale-105 sm:active:scale-95"
             aria-label={`Notifications${unseenCount > 0 ? ` (${unseenCount} new)` : ""}`}
           >
-            <Bell className="w-5 h-5 sm:w-4.5 sm:h-4.5 text-white/90" strokeWidth={2} />
+            <Icon name="bell" className="size-5 bg-white/90" />
             <AnimatePresence mode="wait">
               {unseenCount > 0 && (
                 <motion.div
@@ -146,7 +146,7 @@ export default function ProfileViewsBell() {
             >
               <div className="flex items-center justify-between px-2 py-1">
                 <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-pink-500" />
+                  <Icon name="bell" className="size-4 bg-pink-500" />
                   <span className="text-sm font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
                     התראות
                   </span>
@@ -159,7 +159,7 @@ export default function ProfileViewsBell() {
                     isLoading={loading}
                     className="h-7 text-xs"
                   >
-                    <CheckCheck className="w-3.5 h-3.5" />
+                    <Icon name="check-double" className="size-3.5 bg-gray-700" />
                     סמן הכל
                   </Button>
                 )}
@@ -178,7 +178,7 @@ export default function ProfileViewsBell() {
               >
                 <div className="flex flex-col items-center justify-center py-8 gap-2">
                   <div className="p-3 bg-pink-50 rounded-full">
-                    <Bell className="w-6 h-6 text-pink-300" />
+                    <Icon name="bell" className="size-6 bg-pink-300" />
                   </div>
                   <p className="text-gray-500 text-center text-sm font-medium">
                     אין התראות חדשות
@@ -251,7 +251,7 @@ export default function ProfileViewsBell() {
                         className="flex-shrink-0 p-1 hover:bg-red-50 rounded-full transition-colors"
                         aria-label="Delete notification"
                       >
-                        <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+                        <Icon name="trash" className="size-3.5 bg-gray-400 hover:bg-red-500" />
                       </button>
                     </div>
                   </DropdownItem>

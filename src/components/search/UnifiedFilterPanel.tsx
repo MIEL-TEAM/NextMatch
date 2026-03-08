@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button, Select, SelectItem, Slider, Switch } from "@nextui-org/react";
-import { FaMale, FaFemale } from "react-icons/fa";
+import Icon, { IconNames } from "@/lib/table/Icon";
 import { UserSearchPreference } from "@prisma/client";
 
 interface UnifiedFilterPanelProps {
@@ -52,9 +52,9 @@ export default function UnifiedFilterPanel({
     { label: "משתמשים חדשים ביותר", value: "newest" },
   ];
 
-  const gendersList = [
-    { value: "male", icon: FaMale },
-    { value: "female", icon: FaFemale },
+  const gendersList: { value: string; icon: IconNames }[] = [
+    { value: "male", icon: "person" },
+    { value: "female", icon: "person-dress" },
   ];
 
   const handleGenderToggle = (value: string) => {
@@ -82,7 +82,7 @@ export default function UnifiedFilterPanel({
         <div className="flex flex-col items-center gap-2">
           <span className="text-sm font-medium text-gray-700">מגדר</span>
           <div className="flex gap-2">
-            {gendersList.map(({ icon: Icon, value }) => (
+            {gendersList.map(({ icon, value }) => (
               <Button
                 key={value}
                 size="sm"
@@ -94,7 +94,11 @@ export default function UnifiedFilterPanel({
                 className="transition-colors"
                 aria-label={`בחר מגדר ${value}`}
               >
-                <Icon size={18} />
+                <Icon
+                  name={icon}
+                  type="sol"
+                  className={`w-5 h-5 ${preferences.gender.includes(value) ? "bg-white" : "bg-gray-900"}`}
+                />
               </Button>
             ))}
           </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { Member } from "@prisma/client";
-import { GoDotFill } from "react-icons/go";
 import { usePresence } from "@/hooks/usePresence";
 
 type PresenceProps = {
@@ -38,9 +37,9 @@ export default function PresenceDot({
   return (
     <div className={`inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full ${sizeConfig.padding} shadow-md ${className}`}>
       {/* Green online dot */}
-      <GoDotFill
-        size={sizeConfig.dot}
-        className="fill-green-500 animate-pulse"
+      <div
+        className="rounded-full bg-green-500 animate-pulse shrink-0"
+        style={{ width: sizeConfig.dot, height: sizeConfig.dot }}
       />
       
       {showLabel && (

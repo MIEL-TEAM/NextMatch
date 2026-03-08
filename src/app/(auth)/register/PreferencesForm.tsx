@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUserFriends, FaVenus, FaMars } from "react-icons/fa";
+import Icon, { IconNames } from "@/lib/table/Icon";
 import { Slider } from "@nextui-org/react";
 
 export default function PreferencesForm() {
@@ -40,16 +40,16 @@ export default function PreferencesForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const genderOptions = [
+  const genderOptions: { id: string; label: string; iconName: IconNames }[] = [
     {
       id: "female",
       label: "נשים",
-      icon: FaVenus,
+      iconName: "person-dress",
     },
     {
       id: "male",
       label: "גברים",
-      icon: FaMars,
+      iconName: "person",
     },
   ];
 
@@ -110,7 +110,6 @@ export default function PreferencesForm() {
               <div className="grid grid-cols-2 gap-4">
                 {genderOptions.map((option) => {
                   const isSelected = selectedGenders.includes(option.id);
-                  const IconComponent = option.icon;
 
                   return (
                     <motion.button
@@ -150,14 +149,8 @@ export default function PreferencesForm() {
                       )}
 
                       <div className="flex flex-col items-center space-y-3">
-                        <div
-                          className={`rounded-full p-4 transition-colors ${
-                            isSelected
-                              ? "bg-orange-50 text-[#E37B27]"
-                              : "bg-gray-50 text-gray-600"
-                          }`}
-                        >
-                          <IconComponent size={28} />
+                        <div className="rounded-full p-4 transition-colors bg-gray-50">
+                          <Icon name={option.iconName} type="sol" className={`size-7 ${isSelected ? "bg-[#E37B27]" : "bg-gray-600"}`} />
                         </div>
                         <span
                           className={`text-base font-medium ${
@@ -227,7 +220,7 @@ export default function PreferencesForm() {
                         : "bg-gray-50 text-gray-600"
                     }`}
                   >
-                    <FaUserFriends size={28} />
+                    <Icon name="users" type="sol" className={`size-7 ${selectedGenders.length === 2 ? "bg-[#E37B27]" : "bg-gray-600"}`} />
                   </div>
                   <div className="text-right">
                     <span

@@ -4,8 +4,7 @@ import { verifyEmail } from "@/app/actions/authActions";
 import CardWrapper from "@/components/CardWrapper";
 import ResultMessage from "@/components/ResultMessage";
 import { Spinner } from "@nextui-org/react";
-import { MdOutlineMailOutline } from "react-icons/md";
-import { FaCheckCircle } from "react-icons/fa";
+import Icon from "@/lib/table/Icon";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ActionResult } from "@/types";
@@ -82,7 +81,7 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 px-6 sm:px-12">
         <CardWrapper
           headerText="האימייל אומת בהצלחה! 🎉"
-          headerIcon={FaCheckCircle}
+          headerIcon={<Icon name="circle-check" type="sol" className="size-[30px] bg-success" />}
           subHeaderText={subHeaderText}
           action={() => router.push(redirectPath)}
           actionLabel={actionLabel}
@@ -96,7 +95,7 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-red-50 to-pink-50 px-6 sm:px-12">
         <CardWrapper
           headerText="שגיאה באימות האימייל"
-          headerIcon={MdOutlineMailOutline}
+          headerIcon={<Icon name="envelope" type="sol" className="size-[30px] bg-danger" />}
           subHeaderText="משהו השתבש... נסה שוב או פנה לתמיכה"
           footer={<ResultMessage result={result} />}
         />
@@ -108,7 +107,7 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
     <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 px-6 sm:px-12">
       <CardWrapper
         headerText="מאמתים את כתובת האימייל שלך... 😉"
-        headerIcon={MdOutlineMailOutline}
+        headerIcon={<Icon name="envelope" type="sol" className="size-[30px] bg-warning" />}
         body={
           <div className="flex flex-col items-center space-y-4">
             <p className="text-center text-base sm:text-lg text-gray-600">

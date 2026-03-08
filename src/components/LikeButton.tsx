@@ -1,8 +1,7 @@
 "use client";
 
-import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
+import Icon from "@/lib/table/Icon";
 import React from "react";
-import { PiSpinnerGap } from "react-icons/pi";
 
 type LikeButtonProps = {
   loading: boolean;
@@ -30,17 +29,11 @@ export default function LikeButton({
           onTouchStart={(e) => e.stopPropagation()}
           className="relative hover:opacity-80 translate cursor-pointer"
         >
-          <AiOutlineHeart
-            size={28}
-            className="fill-white absolute -top-[2px] -right-[2px]"
-          />
-          <AiFillHeart
-            size={24}
-            className={hasLiked ? "fill-rose-500" : "fill-neutral-500/70"}
-          />
+          <Icon name="heart" type="lit" className="size-7 bg-white absolute -top-[2px] -right-[2px]" />
+          <Icon name="heart" type="sol" className={`size-6 ${hasLiked ? "bg-rose-500" : "bg-neutral-500/70"}`} />
         </div>
       ) : (
-        <PiSpinnerGap size={32} className="fill-white animate-spin" />
+        <Icon name="spinner" className="size-8 bg-white animate-spin" />
       )}
     </>
   );

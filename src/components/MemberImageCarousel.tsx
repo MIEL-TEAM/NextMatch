@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSwipeable } from "react-swipeable";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { CarouselProps } from "@/types/members";
 
 export default function Carousel<T>({
@@ -59,7 +59,7 @@ export default function Carousel<T>({
             aria-label="Previous"
             type="button"
           >
-            <ChevronLeft className="text-white w-4 h-4" />
+            <Icon name="chevron-left" className="size-4 bg-white" />
           </button>
 
           <button
@@ -75,7 +75,7 @@ export default function Carousel<T>({
             aria-label="Next"
             type="button"
           >
-            <ChevronRight className="text-white w-4 h-4" />
+            <Icon name="chevron-right" className="size-4 bg-white" />
           </button>
         </>
       )}

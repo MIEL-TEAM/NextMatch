@@ -8,7 +8,7 @@ import {
 } from "@/app/actions/messageActions";
 import { MessageDto } from "@/types";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useCallback, Key, useEffect, useRef } from "react";
+import { useState, useCallback, Key, useEffect, useMemo } from "react";
 import useConversationStore from "@/store/conversationStore";
 import { createChatId } from "@/lib/util";
 
@@ -18,7 +18,6 @@ export const useMessages = (
   isArchived?: boolean,
   isStarred?: boolean
 ) => {
-  const cursorRef = useRef(nextCursor);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -45,10 +44,6 @@ export const useMessages = (
   const bootstrapOutbox = useConversationStore((s) => s.bootstrapOutbox);
   const bootstrapStarred = useConversationStore((s) => s.bootstrapStarred);
   const bootstrapArchived = useConversationStore((s) => s.bootstrapArchived);
-  const appendOutbox = useConversationStore((s) => s.appendOutbox);
-  const appendStarred = useConversationStore((s) => s.appendStarred);
-  const appendArchived = useConversationStore((s) => s.appendArchived);
-  const resetCollection = useConversationStore((s) => s.resetCollection);
 
   const removeMessageFromCollection = useConversationStore(
     (s) => s.removeMessageFromCollection,
@@ -68,6 +63,12 @@ export const useMessages = (
       ? archived.messages
       : outbox.messages;
 
+  // ── hasMore — derived from store cursor (single source of truth) ──────────────
+
+  const inboxNextCursor = useConversationStore((s) => s.inboxNextCursor);
+  const collectionNextCursor = useConversationStore((s) => s[collectionKey].nextCursor);
+  const hasMore = isInbox ? !!inboxNextCursor : !!collectionNextCursor;
+
   // ── UI / derived state (local only) ────────────────────────────────────────
 
   const [isDeleting, setIsDeleting] = useState({ id: "", loading: false });
@@ -75,16 +76,20 @@ export const useMessages = (
   const [isArchiving, setIsArchiving] = useState({ id: "", loading: false });
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const [chats, setChats] = useState<MessageDto[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredChats, setFilteredChats] = useState<MessageDto[]>([]);
 
-  // ── Bootstrap on mount / reset on unmount ───────────────────────────────────
+  // ── Bootstrap on mount ──────────────────────────────────────────────────────
 
   useEffect(() => {
-    cursorRef.current = nextCursor;
-
     if (isInbox) return;
+
+    const isAlreadyBootstrapped = isViewStarred
+      ? useConversationStore.getState().starred.isBootstrapped
+      : isViewArchived
+        ? useConversationStore.getState().archived.isBootstrapped
+        : useConversationStore.getState().outbox.isBootstrapped;
+
+    if (isAlreadyBootstrapped) return;
 
     if (isViewStarred) {
       bootstrapStarred(initialMessages, nextCursor);
@@ -93,26 +98,20 @@ export const useMessages = (
     } else {
       bootstrapOutbox(initialMessages, nextCursor);
     }
-
-    return () => {
-      resetCollection(collectionKey);
-    };
   }, [
     initialMessages,
     nextCursor,
     isInbox,
     isViewStarred,
     isViewArchived,
-    collectionKey,
     bootstrapStarred,
     bootstrapArchived,
     bootstrapOutbox,
-    resetCollection,
   ]);
 
-  // ── Derive grouped chats from the active collection ─────────────────────────
+  // ── Derive grouped + filtered chats in a single memo (no cascading renders) ─
 
-  useEffect(() => {
+  const filteredChats = useMemo<MessageDto[]>(() => {
     const chatMap = new Map<string, MessageDto>();
 
     if (!isViewArchived && !isViewStarred) {
@@ -122,7 +121,6 @@ export const useMessages = (
           : message.senderId ?? "unknown-sender";
 
         const existingChat = chatMap.get(chatPartnerId);
-
         if (
           !existingChat ||
           new Date(message.created) > new Date(existingChat.created)
@@ -137,66 +135,63 @@ export const useMessages = (
     }
 
     const sortedChats = Array.from(chatMap.values()).sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime(),
     );
 
-    setChats(sortedChats);
-  }, [selectedMessages, isOutbox, isViewArchived, isViewStarred]);
+    if (!searchQuery.trim()) return sortedChats;
 
-  // ── Search filter ───────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredChats(chats);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = chats.filter((chat) => {
-        const contactName = isOutbox ? chat.recipientName : chat.senderName;
-        const messageText = chat.text;
-
-        return (
-          (contactName && contactName.toLowerCase().includes(query)) ||
-          (messageText && messageText.toLowerCase().includes(query))
-        );
-      });
-      setFilteredChats(filtered);
-    }
-  }, [searchQuery, chats, isOutbox]);
+    const query = searchQuery.toLowerCase();
+    return sortedChats.filter((chat) => {
+      const contactName = isOutbox ? chat.recipientName : chat.senderName;
+      return (
+        (contactName && contactName.toLowerCase().includes(query)) ||
+        (chat.text && chat.text.toLowerCase().includes(query))
+      );
+    });
+  }, [selectedMessages, isOutbox, isViewArchived, isViewStarred, searchQuery]);
 
   // ── Load more ───────────────────────────────────────────────────────────────
 
   const loadMore = useCallback(async () => {
-    if (!cursorRef.current) return;
+    const store = useConversationStore.getState();
+
+    // Resolve the correct cursor for the active tab from the store
+    const cursor = isViewStarred
+      ? store.starred.nextCursor
+      : isViewArchived
+        ? store.archived.nextCursor
+        : isOutbox
+          ? store.outbox.nextCursor
+          : store.inboxNextCursor;
+
+    if (!cursor) return;
     setLoadingMore(true);
 
-    if (isViewStarred) {
-      const result = await getStarredMessages(cursorRef.current);
-      appendStarred(result.messages, result.nextCursor);
-      cursorRef.current = result.nextCursor;
-    } else if (isViewArchived) {
-      const result = await getArchivedMessages(cursorRef.current);
-      appendArchived(result.messages, result.nextCursor);
-      cursorRef.current = result.nextCursor;
-    } else if (isOutbox) {
-      const result = await getMessageByContainer(container, cursorRef.current);
-      appendOutbox(result.messages, result.nextCursor);
-      cursorRef.current = result.nextCursor;
-    } else {
-      // inbox — MessageTable renders from conversationStore; only extend it here
-      const result = await getMessageByContainer(container, cursorRef.current);
-      useConversationStore.getState().appendInbox(result.messages);
-      cursorRef.current = result.nextCursor;
-    }
+    console.time("loadMore_total");
 
-    setLoadingMore(false);
+    try {
+      if (isViewStarred) {
+        const result = await getStarredMessages(cursor);
+        store.appendStarred(result.messages, result.nextCursor);
+      } else if (isViewArchived) {
+        const result = await getArchivedMessages(cursor);
+        store.appendArchived(result.messages, result.nextCursor);
+      } else if (isOutbox) {
+        const result = await getMessageByContainer(container, cursor);
+        store.appendOutbox(result.messages, result.nextCursor);
+      } else {
+        const result = await getMessageByContainer(container, cursor);
+        store.appendInbox(result.messages, result.nextCursor);
+      }
+    } finally {
+      setLoadingMore(false);
+      console.timeEnd("loadMore_total");
+    }
   }, [
     container,
     isViewStarred,
     isViewArchived,
     isOutbox,
-    appendStarred,
-    appendArchived,
-    appendOutbox,
   ]);
 
   // ── Columns ─────────────────────────────────────────────────────────────────
@@ -276,17 +271,7 @@ export const useMessages = (
         await toggleMessageArchive(message.id);
 
         if (isViewArchived) {
-          try {
-            const result = await getArchivedMessages();
-            if (result && result.messages) {
-              resetCollection("archived");
-              bootstrapArchived(result.messages, result.nextCursor);
-              cursorRef.current = result.nextCursor;
-            }
-          } catch (err) {
-            console.log(err);
-            removeMessageFromCollection("archived", message.id);
-          }
+          removeMessageFromCollection("archived", message.id);
         } else {
           if (!message.isArchived) {
             const messagesToRemove = selectedMessages.filter((m) => {
@@ -318,8 +303,6 @@ export const useMessages = (
       isOutbox,
       selectedMessages,
       collectionKey,
-      resetCollection,
-      bootstrapArchived,
       removeMessageFromCollection,
       toggleArchiveInCollection,
     ],
@@ -327,9 +310,9 @@ export const useMessages = (
 
   // ── handleRowSelect ─────────────────────────────────────────────────────────
 
-  const handleRowSelect = (key: Key) => {
+  const handleRowSelect = useCallback((key: Key) => {
     const keyStr = String(key);
-    let message = chats.find((m) => m.id === keyStr);
+    let message = filteredChats.find((m) => m.id === keyStr);
 
     if (!message) {
       const storeConversations =
@@ -348,7 +331,7 @@ export const useMessages = (
     if (!partnerId) return;
 
     router.push(`/members/${partnerId}/chat`);
-  };
+  }, [filteredChats, isOutbox, router]);
 
   return {
     isOutbox,
@@ -365,7 +348,7 @@ export const useMessages = (
     messages: filteredChats,
     loadMore,
     loadingMore,
-    hasMore: !!cursorRef.current,
+    hasMore,
     searchQuery,
     setSearchQuery,
   };

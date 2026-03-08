@@ -4,7 +4,7 @@ export type MessageTableCellProps = {
   item: MessageDto;
   columnKey: string;
   isOutbox: boolean;
-  deleteMessage: (message: MessageDto) => void;
+  onDeleteRequest: (item: MessageDto) => void;
   starMessage: (message: MessageDto) => void;
   archiveMessage: (message: MessageDto) => void;
   isDeleting: boolean;

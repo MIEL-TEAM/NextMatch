@@ -3,8 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import Image from "next/image";
-import { BsFacebook, BsInstagram, BsTiktok } from "react-icons/bs";
-import { FaCcVisa, FaCcMastercard, FaCcAmex } from "react-icons/fa";
+import Icon from "@/lib/table/Icon";
 import { Button } from "@nextui-org/react";
 
 const MielFooter = () => {
@@ -166,27 +165,27 @@ const MielFooter = () => {
             href="https://www.instagram.com/miel.dating?igsh=a2xybDhqbHd3a3h5&utm_source=qr"
             className="text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <BsInstagram size={20} />
+            <Icon name="instagram" className="size-5 bg-gray-700 hover:bg-gray-900 transition-colors" />
           </Link>
           <Link
             href="https://www.facebook.com/miel.dating"
             className="text-gray-700 hover:text-gray-900 transition-colors"
           >
-                  <BsFacebook size={20} />
+                  <Icon name="square-facebook" className="size-5 bg-gray-700 hover:bg-gray-900 transition-colors" />
           </Link>
           <Link
             href="https://www.tiktok.com/@miel.dating"
             className="text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <BsTiktok size={20} />
+            <Icon name="tiktok" className="size-5 bg-gray-700 hover:bg-gray-900 transition-colors" />
           </Link>
         </div>
 
         {/* Payment Methods */}
         <div className="flex flex-wrap gap-4 mb-8 items-center">
-          <FaCcVisa size={40} className="text-gray-800" />
-          <FaCcMastercard size={40} className="text-gray-800" />
-          <FaCcAmex size={40} className="text-gray-800" />
+          <Icon name="cc-visa" className="size-10 bg-gray-800" />
+          <Icon name="cc-mastercard" className="size-10 bg-gray-800" />
+          <Icon name="cc-amex" className="size-10 bg-gray-800" />
           <span className="text-gray-800 font-medium text-lg px-3 py-1 border border-gray-300 rounded">
             ישראכרט
           </span>

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -155,7 +156,9 @@ export default async function RootLayout({
                   isPremium={isPremium}
                   isAdmin={isAdmin}
                 >
-                  <TopNav />
+                  <Suspense fallback={<div className="h-16" />}>
+                    <TopNav />
+                  </Suspense>
                   <MielLayout>{children}</MielLayout>
                 </Providers>
               </SearchPreferencesProvider>

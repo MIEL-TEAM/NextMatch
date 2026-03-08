@@ -1,6 +1,6 @@
 import { Spinner } from "@nextui-org/react";
 import React from "react";
-import { AiFillStar, AiOutlineStar } from "react-icons/ai";
+import Icon from "@/lib/table/Icon";
 
 type StarButtonProps = {
   selected: boolean;
@@ -13,18 +13,8 @@ export default function StarButton({ selected, loading }: StarButtonProps) {
   }
 
   return selected ? (
-    <AiFillStar
-      size={24}
-      className="text-yellow-500"
-      role="img"
-      aria-label="תמונה ראשית"
-    />
+    <Icon name="star-sharp" type="sol" className="size-6 bg-yellow-500" role="img" aria-label="תמונה ראשית" />
   ) : (
-    <AiOutlineStar
-      size={24}
-      className="text-white"
-      role="img"
-      aria-label="הפוך לתמונה ראשית"
-    />
+    <Icon name="star-sharp" type="lit" className="size-6 bg-white" role="img" aria-label="הפוך לתמונה ראשית" />
   );
 }

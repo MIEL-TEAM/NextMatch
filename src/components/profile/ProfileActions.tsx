@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MessageCircle, Heart, Share2 } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { useRouter } from "next/navigation";
 
 type ProfileActionsProps = {
@@ -30,7 +30,7 @@ export default function ProfileActions({
                 onClick={() => router.push(`/members/${userId}/chat`)}
                 className="w-10 h-10 rounded-full bg-gradient-to-r from-[#F6D365] to-[#E37B27] hover:from-[#FFB547] hover:to-[#E37B27] flex items-center justify-center shadow-sm transition-all"
             >
-                <MessageCircle size={16} className="text-white" />
+                <Icon name="comment" className="size-4 bg-white" />
             </button>
 
             {/* Like Button */}
@@ -42,10 +42,7 @@ export default function ProfileActions({
                         : "bg-white border-2 border-red-200 hover:bg-red-50"
                     }`}
             >
-                <Heart
-                    size={16}
-                    className={hasLiked ? "text-white fill-white" : "text-red-400"}
-                />
+                <Icon name="heart" type={hasLiked ? "sol" : "reg"} className={hasLiked ? "size-4 bg-white" : "size-4 bg-red-400"} />
             </button>
 
             {/* Share Button */}
@@ -54,7 +51,7 @@ export default function ProfileActions({
                 disabled={isSharing}
                 className="w-10 h-10 rounded-full bg-blue-100 border-2 border-blue-200 hover:bg-blue-200 flex items-center justify-center shadow-sm transition-all"
             >
-                <Share2 size={16} className="text-blue-600" />
+                <Icon name="share" className="size-4 bg-blue-600" />
             </button>
         </div>
     );

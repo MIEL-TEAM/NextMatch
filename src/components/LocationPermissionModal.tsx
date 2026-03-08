@@ -9,7 +9,7 @@ import {
   ModalFooter,
   Button,
 } from "@nextui-org/react";
-import { MapPin, Navigation } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import {
   getCurrentLocation,
   LocationPermissionResult,
@@ -105,7 +105,7 @@ export default function LocationPermissionModal({
             <ModalHeader className="flex flex-col gap-1 text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-white" />
+                  <Icon name="map-location-dot" className="size-8 bg-white" />
                 </div>
               </div>
               <h2 className="text-xl font-bold text-white">אפשר גישה למיקום</h2>
@@ -118,13 +118,13 @@ export default function LocationPermissionModal({
 
               <div className="space-y-3 text-right" dir="rtl">
                 <div className="flex items-center gap-3">
-                  <Navigation className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <Icon name="location-arrow" className="size-5 bg-amber-500 flex-shrink-0" />
                   <span className="text-sm text-gray-300">
                     הצגת משתמשים לפי קרבה גיאוגרפית
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <Icon name="map-location-dot" className="size-5 bg-amber-500 flex-shrink-0" />
                   <span className="text-sm text-gray-300">
                     סינון לפי מרחק מותאם אישית
                   </span>

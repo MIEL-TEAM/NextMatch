@@ -21,7 +21,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 h-[80vh] p-4">
       <div className="col-span-1 md:col-span-3">
-        <MemberSidebar member={member} navLinks={navLinks} />
+        <MemberSidebar member={member} navLinks={navLinks} authUserId={userId} />
       </div>
       <div className="col-span-1 md:col-span-9">
         <Card className="w-full mt-10 h-[80vh] p-4">{children}</Card>

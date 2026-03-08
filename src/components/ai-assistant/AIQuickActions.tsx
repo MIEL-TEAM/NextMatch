@@ -1,48 +1,42 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  FiSearch,
-  FiMessageCircle,
-  FiBarChart,
-  FiHeart,
-  FiZap,
-} from "react-icons/fi";
+import Icon, { IconNames } from "@/lib/table/Icon";
 
 interface AIQuickActionsProps {
   onAction: (prompt: string) => void;
   compact?: boolean;
 }
 
-const quickActions = [
+const quickActions: { icon: IconNames; label: string; prompt: string; color: string }[] = [
   {
-    icon: FiSearch,
+    icon: "magnifying-glass",
     label: "מצא התאמות",
     prompt:
       "מצא לי את ההתאמות הכי טובות עבורי בהתבסס על כל ההעדפות והפעילות שלי",
     color: "from-pink-500 to-rose-500",
   },
   {
-    icon: FiMessageCircle,
+    icon: "comment-dots",
     label: "פתיח לשיחה",
     prompt: "תן לי 3 פתיחי שיחה מקוריים ואישיים שבטוח יעבדו",
     color: "from-blue-500 to-cyan-500",
   },
   {
-    icon: FiBarChart,
+    icon: "chart-bar",
     label: "הצלחות שלי",
     prompt:
       "הצג לי ניתוח מלא של הפעילות וההתקדמות שלי - לייקים, הודעות, סיכויים",
     color: "from-purple-500 to-indigo-500",
   },
   {
-    icon: FiZap,
+    icon: "bolt",
     label: "שפר פרופיל",
     prompt: "תן לי המלצות קונקרטיות איך לשפר את הפרופיל שלי למקסימום התאמות",
     color: "from-amber-500 to-orange-500",
   },
   {
-    icon: FiHeart,
+    icon: "heart",
     label: "טיפים מקצועיים",
     prompt: "תן לי טיפים מקצועיים איך להצליח בדייטים ולמצוא את האחת/האחד",
     color: "from-red-500 to-pink-500",
@@ -67,7 +61,7 @@ export function AIQuickActions({
             onClick={() => onAction(action.prompt)}
             className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap transition-colors"
           >
-            <action.icon className="w-3.5 h-3.5" />
+            <Icon name={action.icon} className="size-3.5 bg-gray-700 dark:bg-gray-300" />
             {action.label}
           </motion.button>
         ))}
@@ -93,7 +87,7 @@ export function AIQuickActions({
 
           {/* Content */}
           <div className="relative flex flex-col items-center gap-2 text-center">
-            <action.icon className="w-6 h-6" />
+            <Icon name={action.icon} className="size-6 bg-white" />
             <span className="text-xs font-medium">{action.label}</span>
           </div>
         </motion.button>

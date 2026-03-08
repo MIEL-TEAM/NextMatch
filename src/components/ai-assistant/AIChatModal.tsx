@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FiX, FiSend, FiRefreshCw, FiTrash2 } from "react-icons/fi";
+import Icon from "@/lib/table/Icon";
 import { AIChatMessage } from "./AIChatMessage";
 import { AIQuickActions } from "./AIQuickActions";
 import { AITypingIndicator } from "./AITypingIndicator";
@@ -248,14 +248,14 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                   title="מחק שיחה"
                 >
-                  <FiTrash2 className="w-5 h-5" />
+                  <Icon name="trash" className="size-5 bg-white" />
                 </button>
               )}
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
-                <FiX className="w-6 h-6" />
+                <Icon name="xmark" className="size-6 bg-white" />
               </button>
             </div>
           </div>
@@ -264,7 +264,7 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
           <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-800 min-h-0">
             {isLoadingHistory ? (
               <div className="flex items-center justify-center h-full">
-                <FiRefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
+                <Icon name="arrows-rotate" className="size-8 bg-orange-500 animate-spin" />
               </div>
             ) : (
               <>
@@ -346,7 +346,7 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
                 disabled={!inputValue.trim() || isLoading || isQuotaReached}
                 className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
-                <FiSend className="w-5 h-5" />
+                <Icon name="paper-plane-top" className="size-5 bg-white" />
               </button>
               <input
                 ref={inputRef}
@@ -370,7 +370,7 @@ export function AIChatModal({ userId, isPremium, onClose }: AIChatModalProps) {
         body={
           <div className="space-y-4 text-center py-4">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto">
-              <FiTrash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+              <Icon name="trash" className="size-8 bg-red-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">

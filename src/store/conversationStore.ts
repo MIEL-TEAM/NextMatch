@@ -57,6 +57,7 @@ interface ConversationStoreState {
   conversations: Record<string, ConversationSlice>;
   threads: Record<string, MessageDto[]>;
   orderedIds: string[];
+  inboxNextCursor: string | undefined;
   globalUnreadCount: number;
   processedEventIds: Set<string>;
   isBootstrapped: boolean;
@@ -76,8 +77,8 @@ interface ConversationStoreState {
   setActiveConversation: (id: string | null) => void;
   setQuota: (remaining: number) => void;
   handleConversationEvent: (event: ConversationEvent) => void;
-  bootstrapInbox: (messages: MessageDto[]) => void;
-  appendInbox: (messages: MessageDto[]) => void;
+  bootstrapInbox: (messages: MessageDto[], nextCursor?: string) => void;
+  appendInbox: (messages: MessageDto[], nextCursor?: string) => void;
   removeConversation: (conversationId: string) => void;
   setThread: (conversationId: string, messages: MessageDto[]) => void;
   patchThread: (conversationId: string, messages: MessageDto[]) => void;
@@ -95,6 +96,12 @@ interface ConversationStoreState {
   removeMessageFromCollection: (collection: CollectionKey, id: string) => void;
   toggleStarInCollection: (collection: CollectionKey, id: string) => void;
   toggleArchiveInCollection: (collection: CollectionKey, id: string) => void;
+
+  // ── Inbox conversation patch ──────────────────────────────────────────────
+  updateConversationMessage: (conversationId: string, updates: Partial<MessageDto>) => void;
+
+  // ── Full store reset (call on logout / user change) ───────────────────────
+  resetStore: () => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -105,6 +112,7 @@ const useConversationStore = create<ConversationStoreState>()(
       conversations: {},
       threads: {},
       orderedIds: [],
+      inboxNextCursor: undefined,
       globalUnreadCount: 0,
       processedEventIds: new Set<string>(),
       isBootstrapped: false,
@@ -163,10 +171,10 @@ const useConversationStore = create<ConversationStoreState>()(
             const isActiveConversation = event.conversationId === activeConversationId;
             const existing = conversations[event.conversationId];
 
-            const newOrderedIds = [
-              event.conversationId,
-              ...orderedIds.filter((id) => id !== event.conversationId),
-            ];
+            const alreadyFirst = orderedIds[0] === event.conversationId;
+            const newOrderedIds = alreadyFirst
+              ? orderedIds
+              : [event.conversationId, ...orderedIds.filter((id) => id !== event.conversationId)];
 
             const prevUnread = existing?.unreadCount ?? 0;
             const shouldCountUnread = !isFromSelf && !isActiveConversation;
@@ -274,7 +282,7 @@ const useConversationStore = create<ConversationStoreState>()(
 
       // ─── Bootstrap from inbox ─────────────────────────────────────────────
 
-      bootstrapInbox: (messages: MessageDto[]) => {
+      bootstrapInbox: (messages: MessageDto[], nextCursor?: string) => {
         const { isBootstrapped } = get();
         if (isBootstrapped) return;
 
@@ -308,15 +316,15 @@ const useConversationStore = create<ConversationStoreState>()(
             new Date(slices[a].updatedAt).getTime(),
         );
 
-        set({ conversations: slices, orderedIds, isBootstrapped: true });
+        set({ conversations: slices, orderedIds, inboxNextCursor: nextCursor, isBootstrapped: true });
       },
 
       // ─── Append from load-more ────────────────────────────────────────────
 
-      appendInbox: (messages: MessageDto[]) => {
+      appendInbox: (messages: MessageDto[], nextCursor?: string) => {
         const { conversations, orderedIds } = get();
 
-        const newSlices: Record<string, ConversationSlice> = {};
+        const updatedSlices: Record<string, ConversationSlice> = {};
         const newIds: string[] = [];
 
         messages.forEach((msg) => {
@@ -327,28 +335,38 @@ const useConversationStore = create<ConversationStoreState>()(
           if (!currentUserId || !partnerId) return;
 
           const conversationId = createChatId(currentUserId, partnerId);
+          const existing = conversations[conversationId] ?? updatedSlices[conversationId];
 
-          if (!conversations[conversationId] && !newSlices[conversationId]) {
-            newSlices[conversationId] = {
+          if (!existing) {
+            updatedSlices[conversationId] = {
               latestMessage: msg,
               unreadCount: 0,
               updatedAt: msg.created,
             };
             newIds.push(conversationId);
+          } else {
+            const incomingTime = new Date(msg.created).getTime();
+            const existingTime = new Date(existing.updatedAt).getTime();
+            if (incomingTime > existingTime) {
+              updatedSlices[conversationId] = {
+                ...existing,
+                latestMessage: msg,
+                updatedAt: msg.created,
+              };
+            }
           }
         });
 
-        if (newIds.length === 0) return;
-
         newIds.sort(
           (a, b) =>
-            new Date(newSlices[b].updatedAt).getTime() -
-            new Date(newSlices[a].updatedAt).getTime(),
+            new Date(updatedSlices[b].updatedAt).getTime() -
+            new Date(updatedSlices[a].updatedAt).getTime(),
         );
 
         set({
-          conversations: { ...conversations, ...newSlices },
-          orderedIds: [...orderedIds, ...newIds],
+          conversations: { ...conversations, ...updatedSlices },
+          orderedIds: newIds.length > 0 ? [...orderedIds, ...newIds] : orderedIds,
+          inboxNextCursor: nextCursor,
         });
       },
 
@@ -524,6 +542,44 @@ const useConversationStore = create<ConversationStoreState>()(
             messages: prev.messages.map((m) =>
               m.id === id ? { ...m, isArchived: !m.isArchived } : m,
             ),
+          },
+        });
+      },
+
+      // ─── Full store reset ─────────────────────────────────────────────────
+
+      resetStore: () => {
+        set({
+          conversations: {},
+          threads: {},
+          orderedIds: [],
+          inboxNextCursor: undefined,
+          globalUnreadCount: 0,
+          processedEventIds: new Set<string>(),
+          isBootstrapped: false,
+          currentUserId: null,
+          activeConversationId: null,
+          remainingQuota: null,
+          isQuotaReached: false,
+          outbox: emptyCollection(),
+          starred: emptyCollection(),
+          archived: emptyCollection(),
+        });
+      },
+
+      // ─── Inbox conversation: patch latestMessage fields ───────────────────
+
+      updateConversationMessage: (conversationId, updates) => {
+        const { conversations } = get();
+        const existing = conversations[conversationId];
+        if (!existing?.latestMessage) return;
+        set({
+          conversations: {
+            ...conversations,
+            [conversationId]: {
+              ...existing,
+              latestMessage: { ...existing.latestMessage, ...updates },
+            },
           },
         });
       },

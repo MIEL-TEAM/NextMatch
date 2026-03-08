@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "@nextui-org/react";
-import { Heart, MessageCircle, Sparkles, Star, Users, Zap } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import Confetti from "react-confetti";
 import { useRouter } from "next/navigation";
 
@@ -63,7 +63,7 @@ const getCelebrationConfig = (
 ): CelebrationConfig => {
   const configs: Record<CelebrationType, CelebrationConfig> = {
     "mutual-like": {
-      icon: <Heart className="w-16 h-16" />,
+      icon: <Icon name="heart" className="size-16 bg-white" />,
       title: data?.customTitle || `🎉 מזל טוב! התאמה הדדית!`,
       subtitle:
         data?.customSubtitle ||
@@ -86,7 +86,7 @@ const getCelebrationConfig = (
               router?.push(`/messages`);
             }
           },
-          icon: <MessageCircle className="w-4 h-4" />,
+          icon: <Icon name="comment" className="size-4 bg-white" />,
         },
         secondary: {
           text: "👀 צפה בפרופיל",
@@ -101,7 +101,7 @@ const getCelebrationConfig = (
     },
 
     "smart-match": {
-      icon: <Sparkles className="w-16 h-16" />,
+      icon: <Icon name="sparkles" className="size-16 bg-white" />,
       title: data?.customTitle || `🧠 התאמה חכמה מצאה!`,
       subtitle:
         data?.customSubtitle ||
@@ -117,13 +117,13 @@ const getCelebrationConfig = (
         primary: {
           text: "💫 צפה בהתאמה",
           action: () => router?.push("/smart-matches"),
-          icon: <Sparkles className="w-4 h-4" />,
+          icon: <Icon name="sparkles" className="size-4 bg-white" />,
         },
       },
     },
 
     "first-message": {
-      icon: <MessageCircle className="w-16 h-16" />,
+      icon: <Icon name="comment" className="size-16 bg-white" />,
       title: data?.customTitle || `📩 הודעה ראשונה נשלחה!`,
       subtitle:
         data?.customSubtitle ||
@@ -138,7 +138,7 @@ const getCelebrationConfig = (
     },
 
     "profile-boost": {
-      icon: <Star className="w-16 h-16" />,
+      icon: <Icon name="star-sharp" className="size-16 bg-white" />,
       title: data?.customTitle || `⭐ הפרופיל שלך מושלם!`,
       subtitle: data?.customSubtitle || `יותר אנשים יראו אותך עכשיו! 🌟`,
       emoji: "🌟",
@@ -151,7 +151,7 @@ const getCelebrationConfig = (
     },
 
     "new-connection": {
-      icon: <Users className="w-16 h-16" />,
+      icon: <Icon name="users" className="size-16 bg-white" />,
       title: data?.customTitle || `🤝 חיבור חדש נוצר!`,
       subtitle:
         data?.customSubtitle ||
@@ -166,7 +166,7 @@ const getCelebrationConfig = (
     },
 
     achievement: {
-      icon: <Zap className="w-16 h-16" />,
+      icon: <Icon name="bolt" className="size-16 bg-white" />,
       title: data?.customTitle || `🏆 הישג חדש!`,
       subtitle: data?.customSubtitle || `כל הכבוד! השגת משהו מיוחד! 🎊`,
       emoji: "🏆",

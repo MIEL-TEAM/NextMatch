@@ -37,9 +37,8 @@ export default function SocialLogin({
         {vertical && (
           <>
             <span className="absolute right-4">
-              <FcGoogle size={24} />
+              <FcGoogle size={24} /> התחברות עם Google
             </span>
-            <span>התחברות עם Google</span>
           </>
         )}
       </Button>

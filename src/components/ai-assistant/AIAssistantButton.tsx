@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiMessageCircle } from "react-icons/fi";
+import Icon from "@/lib/table/Icon";
 import { AIChatModal } from "./AIChatModal";
 
 interface AIAssistantButtonProps {
@@ -148,7 +148,7 @@ export function AIAssistantButton({
                 }}
                 className="relative z-10"
               >
-                <FiMessageCircle className="w-7 h-7" />
+                <Icon name="comment" className="size-7 bg-white" />
               </motion.div>
 
               {/* Sparkle effect on hover */}

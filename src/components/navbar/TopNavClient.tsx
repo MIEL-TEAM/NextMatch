@@ -14,6 +14,7 @@ import SearchButton from "../search/SearchButton";
 import useConversationStore from "@/store/conversationStore";
 import useNotificationStore from "@/store/notificationStore";
 import type { TopNavClientProps } from "@/types/navigation";
+import { useSession } from "next-auth/react";
 
 export default function TopNavClient({
   session,
@@ -38,12 +39,17 @@ export default function TopNavClient({
   }, [userId, initialUnreadCount, initialNotifications, initialUnseenNotificationCount]);
 
   const pathname = usePathname();
+  const { status: sessionStatus } = useSession();
 
   const isAuthPage =
     pathname.includes("/login") ||
     pathname.includes("/register") ||
     pathname.includes("/forgot-password") ||
     pathname.includes("/reset-password") ||
+    pathname.includes("/verify-email");
+
+  const isLightAuthPage =
+    pathname.includes("/register/success") ||
     pathname.includes("/verify-email");
 
   const isHomePage = pathname === "/" || pathname === "/home";
@@ -76,7 +82,7 @@ export default function TopNavClient({
       <div className="p-4 relative z-50">
         <div className="flex justify-end">
           <div className="flex items-center gap-2">
-            <span className="text-3xl font-medium text-white/90 tracking-tight">
+            <span className={`text-3xl font-medium tracking-tight ${isLightAuthPage ? "text-transparent bg-gradient-to-r from-[#F6D365] via-[#FFB547] to-[#E37B27] bg-clip-text" : "text-white/90"}`}>
               Miel
             </span>
 
@@ -165,7 +171,7 @@ export default function TopNavClient({
                 </div>
               )}
             </>
-          ) : (
+          ) : sessionStatus === "unauthenticated" ? (
             <div className="hidden sm:flex gap-3">
               <Button
                 as={Link}
@@ -178,13 +184,13 @@ export default function TopNavClient({
               <Button
                 as={Link}
                 href="/register"
-                className="bg-gradient-to-r from-[#FFB547] to-[#E37B27] 
+                className="bg-gradient-to-r from-[#FFB547] to-[#E37B27]
                 text-white rounded-full shadow-md hover:shadow-xl transition-all"
               >
                 הרשמה
               </Button>
             </div>
-          )}
+          ) : null}
         </NavbarContent>
 
         <NavbarContent

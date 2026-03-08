@@ -4,12 +4,12 @@ import CardWrapper from "@/components/CardWrapper";
 import { profileSchema, ProfileSchema } from "@/lib/schemas/registerSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
-import { RiProfileLine } from "react-icons/ri";
 import ProfileForm from "../register/ProfileForm";
 import { Button } from "@nextui-org/react";
 import { completeOAuthProfile } from "@/app/actions/completeProfileActions";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
+import Icon from "@/lib/table/Icon";
 
 export default function OAuthUserProfileForm() {
   const methods = useForm<ProfileSchema>({
@@ -43,7 +43,7 @@ export default function OAuthUserProfileForm() {
     <CardWrapper
       headerText="קצת עליך"
       subHeaderText="נא השלם את הפרופיל שלך כדי להמשיך באפליקציה"
-      headerIcon={RiProfileLine}
+      headerIcon={<Icon name="user" type="sol" className="size-[30px] bg-primary" />}
       body={
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>

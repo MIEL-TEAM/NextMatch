@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { FiX, FiSend } from "react-icons/fi";
+import Icon from "@/lib/table/Icon";
 import { StoryProgressBar } from "./StoryProgressBar";
 import { StoryViewerProps } from "@/types/stories";
 import { sendStoryMessage } from "@/app/actions/storyActions";
@@ -163,15 +163,7 @@ export function StoryViewer({
             className="hidden md:flex w-12 h-12 bg-white bg-opacity-15 hover:bg-opacity-25 rounded-full items-center justify-center text-white transition-all duration-200 hover:scale-110 backdrop-blur-sm z-20"
             aria-label="Previous story"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M9 18L15 12L9 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="chevron-right" className="bg-white size-5" />
           </button>
 
           {/* Main Story Container - Full screen on mobile, fixed size on desktop */}
@@ -222,7 +214,7 @@ export function StoryViewer({
                   onClick={onClose}
                   className="text-white"
                 >
-                  <FiX size={28} />
+                  <Icon name="xmark" className="bg-white size-7" />
                 </button>
               </div>
             </div>
@@ -289,7 +281,7 @@ export function StoryViewer({
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <FiSend size={24} className="text-white" />
+                    <Icon name="paper-plane-top" className="bg-white size-6" flip />
                   )}
                 </button>
               </div>
@@ -305,15 +297,7 @@ export function StoryViewer({
             className="hidden md:flex w-12 h-12 bg-white bg-opacity-15 hover:bg-opacity-25 rounded-full items-center justify-center text-white transition-all duration-200 hover:scale-110 backdrop-blur-sm z-20"
             aria-label="Next story"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M15 18L9 12L15 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="chevron-left" className="bg-white size-5" />
           </button>
         </div>
       </div>

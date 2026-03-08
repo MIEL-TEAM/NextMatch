@@ -5,6 +5,8 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
+
   experimental: {
     optimizePackageImports: ["lodash", "@/components/*"],
     largePageDataBytes: 128 * 1024,
@@ -113,7 +115,9 @@ const nextConfig: NextConfig = {
       "platform-lookaside.fbsbx.com",
     ],
   },
+
   webpack: (config) => {
+    // keep your chunk splitting optimization
     config.optimization.splitChunks = {
       chunks: "all",
       maxInitialRequests: 5,
@@ -123,9 +127,10 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+
   productionBrowserSourceMaps: false,
   assetPrefix: undefined,
   poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

@@ -7,8 +7,10 @@ import { useRevealChannel } from "@/hooks/useRevealChannel";
 import { usePrivateChannel } from "@/realtime/usePrivateChannel";
 import { useInvitationLoader } from "@/hooks/useInvitationLoader";
 import useCelebrationStore from "@/hooks/useCelebrationStore";
+import useConversationStore from "@/store/conversationStore";
+import useNotificationStore from "@/store/notificationStore";
 import { NextUIProvider } from "@nextui-org/react";
-import React, { useEffect, type ReactNode } from "react";
+import React, { useEffect, useRef, type ReactNode } from "react";
 import InterestNotification from "@/hooks/useInterestNotification";
 import CelebrationModal, {
   useCelebration,
@@ -33,6 +35,19 @@ export default function Providers({
   isAdmin = false,
 }: ProvidersProps) {
   const pathname = usePathname();
+
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevUserIdRef.current;
+    prevUserIdRef.current = userId;
+
+    if (prev === undefined) return;
+
+    if (prev !== userId) {
+      useConversationStore.getState().resetStore();
+      useNotificationStore.getState().resetStore();
+    }
+  }, [userId]);
 
   const isForbiddenRoute =
     pathname === "/premium" ||

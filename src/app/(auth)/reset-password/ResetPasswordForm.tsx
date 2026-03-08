@@ -13,8 +13,7 @@ import { Button, Input } from "@nextui-org/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { GiPadlock } from "react-icons/gi";
-import { Eye, EyeOff } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 export default function ResetPasswordForm() {
   const router = useRouter();
@@ -76,7 +75,7 @@ export default function ResetPasswordForm() {
 
   return (
     <CardWrapper
-      headerIcon={GiPadlock}
+      headerIcon={<Icon name="binary-lock" className="size-[30px] bg-secondary" />}
       headerText="איפוס סיסמה"
       subHeaderText="הכנס/י סיסמה חדשה בבקשה"
       body={
@@ -133,9 +132,9 @@ export default function ResetPasswordForm() {
                       className="focus:outline-none flex items-center justify-center"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <Icon name="eye-slash" className="size-4 bg-gray-400" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Icon name="eye" className="size-4 bg-gray-400" />
                       )}
                     </button>
                   </div>
@@ -159,9 +158,9 @@ export default function ResetPasswordForm() {
                       className="focus:outline-none flex items-center justify-center"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <Icon name="eye-slash" className="size-4 bg-gray-400" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Icon name="eye" className="size-4 bg-gray-400" />
                       )}
                     </button>
                   </div>

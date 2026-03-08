@@ -11,7 +11,9 @@ import {
 } from "@nextui-org/react";
 import Link from "next/link";
 import React, { useState } from "react";
-import { FiMessageCircle } from "react-icons/fi";
+import useConversationStore from "@/store/conversationStore";
+import useNotificationStore from "@/store/notificationStore";
+import Icon from "@/lib/table/Icon";
 import { AIChatModal } from "@/components/ai-assistant/AIChatModal";
 import type { UserMenuProps } from "@/types/navigation";
 
@@ -99,7 +101,7 @@ export default function UserMenu({
               <DropdownItem
                 key="ai-assistant"
                 startContent={
-                  <FiMessageCircle className="text-lg text-orange-500" />
+                  <Icon name="comment" className="size-[18px] bg-orange-500" />
                 }
                 onPress={() => setIsAIModalOpen(true)}
                 className="text-orange-600"
@@ -140,7 +142,11 @@ export default function UserMenu({
           <DropdownItem
             key="sign-out"
             color="danger"
-            onPress={async () => signOutUser()}
+            onPress={async () => {
+              useConversationStore.getState().resetStore();
+              useNotificationStore.getState().resetStore();
+              await signOutUser();
+            }}
           >
             התנתק
           </DropdownItem>

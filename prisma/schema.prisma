@@ -216,6 +216,8 @@ model Message {
   @@index([recipientId, dateRead])
   @@index([senderId, created(sort: Desc)])
   @@index([recipientId, senderId])
+  @@index([recipientId, senderId, created(sort: Desc)])
+  @@index([senderId, recipientId, created(sort: Desc)])
 }
 
 model Token {

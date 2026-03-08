@@ -8,11 +8,11 @@ import {
 } from "@/lib/schemas/completeProfileSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
-import { RiProfileLine } from "react-icons/ri";
 import ProfileForm from "../register/ProfileForm";
 import { Button, Input } from "@nextui-org/react";
 import { completeEmailRegistrationProfile } from "@/app/actions/completeProfileActions";
 import { toast } from "sonner";
+import Icon from "@/lib/table/Icon";
 
 
 type EmailUserProfileFormProps = {
@@ -66,7 +66,7 @@ export default function EmailUserProfileForm({
     <CardWrapper
       headerText="קצת עליך"
       subHeaderText="נא השלם את הפרופיל שלך כדי להמשיך באפליקציה"
-      headerIcon={RiProfileLine}
+      headerIcon={<Icon name="user" type="sol" className="size-[30px] bg-primary" />}
       body={
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>

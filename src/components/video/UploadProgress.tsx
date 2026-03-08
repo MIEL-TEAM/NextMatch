@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { Progress, Button } from "@nextui-org/react";
-import { X } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 interface UploadProgressProps {
   progress: number;
@@ -48,7 +48,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
           aria-label="ביטול העלאה"
           className="focus:ring-2 focus:ring-blue-500"
         >
-          <X size={16} />
+          <Icon name="xmark" className="size-4 bg-gray-600" />
         </Button>
       </div>
       <Progress

@@ -10,7 +10,7 @@ import {
   Progress,
 } from "@nextui-org/react";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import type { ProfileCompletionStatus } from "@/types/userAction";
 import { motion } from "framer-motion";
 
@@ -37,7 +37,7 @@ export default function ProfileCompletionButton({
         animate={{ opacity: 1, scale: 1 }}
         className="flex items-center gap-2 rounded-full bg-white/20 px-3 sm:px-4 py-1.5 text-white shadow-md backdrop-blur-md border border-white/20"
       >
-        <CheckCircle2 className="h-4 w-4 text-emerald-300" strokeWidth={2.5} />
+        <Icon name="circle-check" className="size-4 bg-emerald-300" />
         <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">הפרופיל שלך מושלם</span>
       </motion.div>
     );
@@ -89,7 +89,7 @@ export default function ProfileCompletionButton({
             <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-amber-800">
               <div className="flex items-center justify-end gap-2 text-sm font-semibold">
                 <span>השלב הבא המומלץ</span>
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <Icon name="triangle-exclamation" className="size-4 bg-amber-500" />
               </div>
               <div className="text-sm font-semibold text-amber-900">
                 {recommended.label}

@@ -7,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@nextui-org/react";
-import { BiSolidError } from "react-icons/bi";
+import Icon from "@/lib/table/Icon";
 
 export default function Error({
   error,
@@ -21,7 +21,7 @@ export default function Error({
       <Card className="w-2/5 mx-auto">
         <CardHeader className="flex flex-col items-center justify-center">
           <div className="flex flex-row gap-2 items-center text-secondary">
-            <BiSolidError size={30} />
+            <Icon name="triangle-exclamation" type="sol" className="size-7 bg-secondary" />
             <h1 className="text-3xl font-semibold">Error</h1>
           </div>
         </CardHeader>

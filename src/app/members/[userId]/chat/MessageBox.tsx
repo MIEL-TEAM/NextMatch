@@ -8,11 +8,12 @@ import Image from "next/image";
 import clsx from "clsx";
 import React, { useEffect, useRef, memo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Edit2, Trash2, Check, X } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "sonner";
 
 function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: MessageBoxProps) {
+  const isOptimistic = message.id.startsWith("optimistic-");
   const isCurrentUserSender = message.senderId === currentUserId;
   const isLocked = message.locked === true;
   const messageEndRef = useRef<HTMLDivElement>(null);
@@ -119,19 +120,24 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
     setIsEditing(false);
   };
 
-  const renderAvatar = () => (
-    <div
-      className="self-end cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-90 relative group flex-shrink-0"
-      onClick={() => router.push(`/members/${message.senderId}`)}
-      role="button"
-      aria-label={`View ${message.senderName}'s profile`}
-    >
-      <PresenceAvatar
-        src={transformImageUrl(message.senderImage) || "/images/user.png"}
-        userId={message.senderId}
-      />
-    </div>
-  );
+  const renderAvatar = () => {
+    if (isOptimistic) {
+      return <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 self-end" />;
+    }
+    return (
+      <div
+        className="self-end cursor-pointer transition-all duration-300 hover:scale-105 hover:opacity-90 relative group flex-shrink-0"
+        onClick={() => router.push(`/members/${message.senderId}`)}
+        role="button"
+        aria-label={`View ${message.senderName}'s profile`}
+      >
+        <PresenceAvatar
+          src={transformImageUrl(message.senderImage) || "/images/user.png"}
+          userId={message.senderId}
+        />
+      </div>
+    );
+  };
 
   const messageContentClasses = clsx("flex flex-col", {
     "px-2 py-1": !isStoryReply,
@@ -166,7 +172,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
                 disabled={isSaving || editedText.trim() === ""}
                 className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <Check size={14} />
+                <Icon name="check" className="size-3.5 bg-white" />
                 שמור
               </button>
               <button
@@ -174,7 +180,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
                 disabled={isSaving}
                 className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors"
               >
-                <X size={14} />
+                <Icon name="xmark" className="size-3.5 bg-gray-700" />
                 ביטול
               </button>
             </div>
@@ -252,7 +258,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
             className="p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
             aria-label="Message options"
           >
-            <MoreHorizontal size={16} className="text-gray-600" />
+            <Icon name="ellipsis" className="size-4 bg-gray-600" />
           </button>
 
           {showMenu && (
@@ -262,7 +268,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
                   onClick={handleEdit}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >
-                  <Edit2 size={14} />
+                  <Icon name="pen-to-square" className="size-3.5 bg-gray-700" />
                   ערוך
                 </button>
               )}
@@ -271,7 +277,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
                 disabled={isDeleting}
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
               >
-                <Trash2 size={14} />
+                <Icon name="trash" className="size-3.5 bg-red-600" />
                 {isDeleting ? "מוחק..." : "מחק"}
               </button>
             </div>

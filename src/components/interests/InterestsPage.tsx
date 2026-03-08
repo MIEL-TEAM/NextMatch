@@ -10,7 +10,7 @@ import {
   interestCategories,
 } from "@/lib/constants/interests";
 import InterestItem from "./InterestItem";
-import { SearchIcon, Heart } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { useCopy } from "@/lib/copy";
 
 type EditInterestsClientProps = {
@@ -85,7 +85,7 @@ export default function EditInterestsClient({
         {/* Emotional Header */}
         <div className="text-center space-y-3">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Heart className="w-8 h-8 text-[#E37B27] fill-[#E37B27]" />
+            <Icon name="heart" type="sol" className="size-8 bg-[#E37B27]" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
             {t("interests.header")}
@@ -119,7 +119,7 @@ export default function EditInterestsClient({
             placeholder="חפש תחומי עניין..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            startContent={<SearchIcon size={18} className="text-gray-400" />}
+            startContent={<Icon name="magnifying-glass" className="size-[18px] bg-gray-400" />}
             classNames={{
               input: "text-right",
               inputWrapper:

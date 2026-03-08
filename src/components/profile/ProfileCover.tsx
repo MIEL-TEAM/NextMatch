@@ -3,19 +3,19 @@
 import React from "react";
 import Image from "next/image";
 import { Member } from "@prisma/client";
-import { Camera, MapPin, Edit2 } from "lucide-react";
-import { MdVerified } from "react-icons/md";
 import { calculateAge } from "@/lib/util";
 import PresenceDot from "../PresenceDot";
 import PremiumLabel from "@/components/PremiumLabel";
 import IconWithTooltip from "@/components/IconWithTooltip";
 import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
+import Icon from "@/lib/table/Icon";
 
 type ProfileCoverProps = {
     member: Member & {
         user?: {
             oauthVerified?: boolean;
+            emailVerified?: Date | null;
             lastActiveAt?: Date | null;
             isPremium?: boolean;
             premiumUntil?: Date | null;
@@ -94,7 +94,7 @@ export default function ProfileCover({
                     uploadPreset="nm-demo"
                     className="absolute top-6 right-6 bg-white/90 hover:bg-white text-[#E37B27] rounded-full p-3 transition-all shadow-lg"
                 >
-                    <Camera size={22} />
+                    <Icon name="camera" className="size-[22px] bg-[#E37B27]" />
                 </CldUploadButton>
             )}
 
@@ -111,10 +111,10 @@ export default function ProfileCover({
                     </h1>
                     {/* Badges: Verified icon + Premium icon with tooltip */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {member.user?.oauthVerified && (
+                        {(member.user?.oauthVerified || member.user?.emailVerified) && (
                             <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
                                 <IconWithTooltip
-                                    icon={<MdVerified className="text-blue-400" size={20} />}
+                                    icon={<Icon name="badge-check" className="bg-blue-400 size-5" />}
                                     title="חשבון מאומת"
                                     description="זהות המשתמש אומתה ואושרה על ידי Miel"
                                 />
@@ -127,7 +127,7 @@ export default function ProfileCover({
                 {/* Location */}
                 <div className="flex items-center gap-2">
                     {!isOwnProfile && <PresenceDot member={member} size="md" />}
-                    <MapPin size={20} className="text-white drop-shadow-lg" />
+                    <Icon name="map-location-dot" className="size-5 bg-white drop-shadow-lg" />
                     <span className="text-lg font-medium text-white drop-shadow-lg">
                         {member.city}, {member.country}
                     </span>
@@ -138,7 +138,7 @@ export default function ProfileCover({
                             className="w-7 h-7 rounded-full border-2 p-1 border-white text-white hover:bg-white/20 font-semibold flex items-center justify-center transition-all"
                             aria-label="Edit profile"
                         >
-                            <Edit2 size={16} className="text-white" />
+                            <Icon name="pen-to-square" className="size-4 bg-white" />
                         </button>
                     )}
                 </div>

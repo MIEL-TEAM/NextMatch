@@ -9,14 +9,16 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import SocialLogin from "./SocialLogin";
-import { Eye, EyeOff } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import Image from "next/image";
 import { useDisableScrollOnlyIfNotNeeded } from "@/hooks/useDisableScroll";
 
 export default function LoginForm() {
   useDisableScrollOnlyIfNotNeeded();
   const router = useRouter();
+  const { update } = useSession();
 
   const [showPassword, setShowPassword] = useState(false);
   const {
@@ -31,6 +33,7 @@ export default function LoginForm() {
   async function onSubmit(data: LoginSchema) {
     const result = await signInUser(data);
     if (result.status === "success") {
+      await update();
       router.push("/members");
       router.refresh();
     } else {
@@ -87,9 +90,9 @@ export default function LoginForm() {
                     className="focus:outline-none"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400" />
+                      <Icon name="eye-slash" className="size-5 bg-gray-400" />
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400" />
+                      <Icon name="eye" className="size-5 bg-gray-400" />
                     )}
                   </button>
                 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 interface VideoPlayerProps {
   url: string;
@@ -88,7 +88,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
             aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+            {isPlaying ? <Icon name="pause" className="size-[15px] bg-white" /> : <Icon name="play" className="size-[15px] bg-white" />}
           </button>
           <button
             onClick={(e) => {
@@ -98,7 +98,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             className="bg-black/50 text-white p-2 rounded hover:bg-black/70 transition-colors"
             aria-label={isMuted ? "Unmute" : "Mute"}
           >
-            {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+            {isMuted ? <Icon name="volume-xmark" className="size-[15px] bg-white" /> : <Icon name="volume-high" className="size-[15px] bg-white" />}
           </button>
         </div>
       )}
@@ -113,7 +113,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           className="absolute bottom-3 left-3 z-10 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors"
           aria-label={isMuted ? "Unmute" : "Mute"}
         >
-          {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          {isMuted ? <Icon name="volume-xmark" className="size-[15px] bg-white" /> : <Icon name="volume-high" className="size-[15px] bg-white" />}
         </button>
       )}
     </div>

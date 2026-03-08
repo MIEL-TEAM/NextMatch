@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@nextui-org/react";
-import { VideoIcon, RefreshCw, Trash2 } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import AppModal from "@/components/AppModal";
 import VideoPlayer from "@/components/video/VideoPlayer";
 
@@ -41,7 +41,7 @@ export default function VideoManagerActions({
         onPress={() => setVideoModalOpen(true)}
         variant="solid"
         className="bg-amber-500 text-white rounded-full mb-3"
-        startContent={<VideoIcon size={16} />}
+        startContent={<Icon name="video" className="size-4 bg-white" />}
       >
         הצג את הסרטון שלי
       </Button>
@@ -57,7 +57,7 @@ export default function VideoManagerActions({
           size="sm"
           variant="light"
           onPress={onReplace}
-          startContent={<RefreshCw size={16} />}
+          startContent={<Icon name="arrows-rotate" className="size-4 bg-amber-600" />}
           className="text-amber-600 hover:text-amber-700"
         >
           החלף סרטון
@@ -67,7 +67,7 @@ export default function VideoManagerActions({
           variant="light"
           color="danger"
           onPress={() => setDeleteModalOpen(true)}
-          startContent={<Trash2 size={16} />}
+          startContent={<Icon name="trash" className="size-4 bg-danger" />}
         >
           מחק
         </Button>

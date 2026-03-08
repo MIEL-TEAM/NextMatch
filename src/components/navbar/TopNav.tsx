@@ -14,7 +14,6 @@ import TopNavClient from "./TopNavClient";
 
 export default async function TopNav() {
   const session = await getSession();
-  const userInfo = session?.user ? await getUserInfoForNav() : null;
   const userId = session?.user?.id || null;
   const isAdmin = session?.user?.role === "ADMIN";
 
@@ -33,34 +32,26 @@ export default async function TopNav() {
 
   const links = isAdmin ? adminLinks : memberLinks;
 
-  const profileCompletion =
-    userId && session?.user && !isAdmin
-      ? await getProfileCompletionStatus(userId)
-      : null;
+  // Run all independent DB calls in parallel instead of sequentially.
+  const [userInfo, profileCompletion, initialUnreadCount, unseenResult, notifResult, locationStatus] =
+    await Promise.all([
+      session?.user ? getUserInfoForNav() : Promise.resolve(null),
+      userId && session?.user && !isAdmin ? getProfileCompletionStatus(userId) : Promise.resolve(null),
+      userId && !isAdmin ? getUnreadMessageCount() : Promise.resolve(0),
+      userId && !isAdmin ? getUnseenNotificationCount() : Promise.resolve(null),
+      userId && !isAdmin ? getUserNotifications(20, 0) : Promise.resolve(null),
+      userId && !isAdmin
+        ? getCurrentUserLocationStatus().catch((error) => {
+            console.warn("Failed to load user location:", error);
+            return { coordinates: null };
+          })
+        : Promise.resolve({ coordinates: null }),
+    ]);
 
   const isPremium = isActivePremium(userInfo);
-
-  const initialUnreadCount =
-    userId && !isAdmin ? await getUnreadMessageCount() : 0;
-
-  const unseenResult =
-    userId && !isAdmin ? await getUnseenNotificationCount() : null;
   const initialUnseenNotificationCount = unseenResult?.count ?? 0;
-
-  const notifResult =
-    userId && !isAdmin ? await getUserNotifications(20, 0) : null;
   const initialNotifications = (notifResult?.notifications ?? []) as any;
-
-  // Get user location for search functionality
-  let userLocation = null;
-  if (userId && !isAdmin) {
-    try {
-      const locationStatus = await getCurrentUserLocationStatus();
-      userLocation = locationStatus.coordinates;
-    } catch (error) {
-      console.warn("Failed to load user location:", error);
-    }
-  }
+  const userLocation = locationStatus?.coordinates ?? null;
 
   return (
     <TopNavClient

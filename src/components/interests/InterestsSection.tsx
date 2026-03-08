@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, Chip } from "@nextui-org/react";
 import { interestCategories } from "@/lib/constants/interests";
-import { MdInterests } from "react-icons/md";
+import Icon from "@/lib/table/Icon";
 
 export type Interest = {
   id: string;
@@ -69,7 +69,7 @@ export default function InterestsSection({
     <Card className="p-4 shadow-sm">
       <h2 className="text-xl font-semibold text-secondary mb-4 border-b pb-2 flex items-center gap-2">
         תחומי עניין
-        <MdInterests className="text-orange-500" />
+        <Icon name="sparkle" className="size-5 bg-orange-500" />
       </h2>
 
       <div className="space-y-4">

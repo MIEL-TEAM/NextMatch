@@ -1,6 +1,6 @@
 import { ActionResult } from "@/types";
 import clsx from "clsx";
-import { FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import Icon from "@/lib/table/Icon";
 
 type ResultMessageProps = {
   result: ActionResult<string> | null;
@@ -20,9 +20,9 @@ export default function ResultMessage({ result }: ResultMessageProps) {
       )}
     >
       {result.status === "success" ? (
-        <FaCheckCircle size={20} />
+        <Icon name="circle-check" className="size-5 bg-success-800" />
       ) : (
-        <FaExclamationTriangle size={20} />
+        <Icon name="triangle-exclamation" className="size-5 bg-danger-800" />
       )}
 
       <p>

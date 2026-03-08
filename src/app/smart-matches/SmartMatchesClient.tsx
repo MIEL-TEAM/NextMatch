@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Member } from "@prisma/client";
-import { Heart, Zap, TrendingUp } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { useRouter } from "next/navigation";
 import SmartMemberCard from "../members/SmartMemberCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -182,7 +182,7 @@ export default function SmartMatchesClient() {
                   </>
                 ) : (
                   <>
-                    <Zap className="w-3 h-3" />
+                    <Icon name="bolt" className="size-3 bg-white" />
                     <span>רענון AI</span>
                   </>
                 )}
@@ -197,7 +197,7 @@ export default function SmartMatchesClient() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <TrendingUp className="w-3 h-3" />
+                <Icon name="chart-line-up" className={`size-3 ${showStats ? "bg-orange-700" : "bg-gray-700"}`} />
                 סטטיסטיקות
               </motion.button>
 
@@ -387,7 +387,7 @@ export default function SmartMatchesClient() {
               className="text-center p-12 max-w-lg mx-auto"
             >
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Heart className="h-8 w-8 text-gray-400" />
+                <Icon name="heart" className="size-8 bg-gray-400" />
               </div>
 
               <h3 className="text-xl font-bold mb-2 text-gray-900">

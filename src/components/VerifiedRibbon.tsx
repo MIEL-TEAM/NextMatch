@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MdVerified } from "react-icons/md";
+import Icon from "@/lib/table/Icon";
 
 interface VerifiedRibbonProps {
   className?: string;
@@ -14,7 +14,7 @@ export default function VerifiedRibbon({
     <div
       className={`flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full p-1 shadow-lg ${className}`}
     >
-      <MdVerified className="w-4 h-4" />
+      <Icon name="badge-check" className="size-4 bg-white" />
     </div>
   );
 }

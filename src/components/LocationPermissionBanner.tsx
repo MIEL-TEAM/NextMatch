@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@nextui-org/react";
-import { MapPin, X } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getCurrentLocation,
@@ -88,7 +88,7 @@ export default function LocationPermissionBanner({
 
             <div className="flex items-center gap-4 w-full sm:w-auto z-10">
               <div className="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-5 h-5 text-amber-500" />
+                <Icon name="map-location-dot" className="size-5 bg-amber-500" />
               </div>
               <div className="flex flex-col">
                 <h3
@@ -135,7 +135,7 @@ export default function LocationPermissionBanner({
               onClick={onClose}
               className="absolute top-2 left-2 text-gray-500 hover:text-gray-300 sm:hidden"
             >
-              <X size={16} />
+              <Icon name="xmark" className="size-4 bg-gray-500" />
             </button>
           </div>
         </motion.div>

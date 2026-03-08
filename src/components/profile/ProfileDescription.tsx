@@ -4,7 +4,12 @@ import React from "react";
 import { Member } from "@prisma/client";
 
 type ProfileDescriptionProps = {
-    member: Member & { description?: string };
+    member: Member & {
+        description?: string;
+        headline?: string | null;
+        occupation?: string | null;
+        profession?: string | null;
+    };
     isOwnProfile: boolean;
     isExpanded: boolean;
     setIsExpanded: (expanded: boolean) => void;
@@ -16,8 +21,28 @@ export default function ProfileDescription({
     isExpanded,
     setIsExpanded,
 }: ProfileDescriptionProps) {
+    const headlineParts = [
+        member.headline,
+        member.occupation,
+        member.profession,
+    ].filter(Boolean);
+
     return (
         <div className="w-full overflow-hidden">
+            {/* Preview mode label — own profile only */}
+            {isOwnProfile && (
+                <p className="text-xs text-gray-400 mb-2" dir="rtl">
+                    👁 ככה אחרים רואים אותך
+                </p>
+            )}
+
+            {/* Identity headline */}
+            {headlineParts.length > 0 && (
+                <p className="text-sm text-gray-600 mt-1 mb-2" dir="rtl">
+                    {headlineParts.join(" • ")}
+                </p>
+            )}
+
             {/* Header - Only show for own profile */}
             {isOwnProfile && (
                 <div className="mb-4 pb-3 border-b-2 border-divider">

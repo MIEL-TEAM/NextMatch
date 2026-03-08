@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { useRouter } from "next/navigation";
 
 type GalleryPhoto = {
@@ -106,11 +106,7 @@ export default function ProfilePhotoGallery({
                             className="absolute left-2 top-1/2 -translate-y-1/2 z-20 transition-all hover:scale-110"
                             aria-label="Previous photo"
                         >
-                            <ChevronLeft
-                                size={40}
-                                className="text-gray-600 drop-shadow-lg"
-                                strokeWidth={2.5}
-                            />
+                            <Icon name="chevron-left" className="size-10 bg-gray-600 drop-shadow-lg" />
                         </button>
                     )}
 
@@ -149,11 +145,7 @@ export default function ProfilePhotoGallery({
                             className="absolute right-2 top-1/2 -translate-y-1/2 z-20 transition-all hover:scale-110"
                             aria-label="Next photo"
                         >
-                            <ChevronRight
-                                size={40}
-                                className="text-gray-600 drop-shadow-lg"
-                                strokeWidth={2.5}
-                            />
+                            <Icon name="chevron-right" className="size-10 bg-gray-600 drop-shadow-lg" />
                         </button>
                     )}
                 </div>

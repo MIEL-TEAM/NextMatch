@@ -15,7 +15,7 @@ import { useInteractionTracking } from "@/hooks/useInteractionTracking";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import VerifiedRibbon from "@/components/VerifiedRibbon";
 import Carousel from "@/components/MemberImageCarousel";
 import { SmartMemberCardProps } from "@/types/smart-matches";
@@ -243,7 +243,7 @@ export default function SmartMemberCard({
                 {member.name}, {new Date().getFullYear() - new Date(member.dateOfBirth).getFullYear()}
               </h3>
               <span className="text-[10px] text-gray-500 dark:text-zinc-500 font-medium flex items-center gap-1">
-                <MapPin className="w-2.5 h-2.5" />
+                <Icon name="map-location-dot" className="size-2.5 bg-gray-500" />
                 {member.city}
               </span>
             </div>

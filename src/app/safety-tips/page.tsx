@@ -1,14 +1,5 @@
 import PageContainer from "@/components/PageContainer";
-import {
-  Shield,
-  MapPin,
-  Phone,
-  Camera,
-  UserCheck,
-  Clock,
-  MessageSquare,
-  AlertTriangle,
-} from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -31,49 +22,49 @@ export const metadata: Metadata = {
 export default function SafetyTipsPage() {
   const safetyTips = [
     {
-      icon: <Shield className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="shield-halved" className="size-8 bg-amber-500" />,
       title: "שמור על פרטיותך",
       content:
         "הימנע משיתוף מידע אישי רגיש כמו כתובת מלאה, מקום עבודה מדויק, פרטי חשבון בנק או מספר תעודת זהות לפני שאתה מכיר היטב את האדם השני.",
     },
     {
-      icon: <MapPin className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="map-location-dot" className="size-8 bg-amber-500" />,
       title: "היפגשו במקום ציבורי",
       content:
         "תמיד קבע את הפגישה הראשונה במקום ציבורי והומה אדם כמו בית קפה, מסעדה או פארק פופולרי. הימנע ממקומות מבודדים או פרטיים בפגישות הראשונות.",
     },
     {
-      icon: <Phone className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="phone" className="size-8 bg-amber-500" />,
       title: "עדכן חבר או בן משפחה",
       content:
         "לפני הפגישה, ספר לחבר או בן משפחה לאן אתה הולך ועם מי. שקול לשתף את המיקום שלך עם אדם קרוב במהלך הדייט הראשון.",
     },
     {
-      icon: <Camera className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="camera" className="size-8 bg-amber-500" />,
       title: "וודא את הזהות",
       content:
         "אם יש לך ספקות לגבי זהותו של האדם שאתה עומד לפגוש, אל תהסס לבקש שיחת וידאו לפני הפגישה. הדבר עשוי לעזור לוודא שהאדם אכן מי שהוא מציג את עצמו.",
     },
     {
-      icon: <UserCheck className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="user-check" className="size-8 bg-amber-500" />,
       title: "האמן באינסטינקטים שלך",
       content:
         "אם משהו נראה חשוד או גורם לך להרגיש לא בנוח, הקשב לתחושת הבטן שלך. אל תהסס לסיים את הפגישה או לעזוב אם אתה מרגיש לא בטוח או לא בנוח.",
     },
     {
-      icon: <Clock className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="alarm-clock" className="size-8 bg-amber-500" />,
       title: "הגבל את זמן הפגישה הראשונה",
       content:
         "תכנן מראש פגישה קצרה לפגישה הראשונה, כמו כוס קפה או ארוחה קלה. זה מקל על היציאה אם הדברים לא מתנהלים כמצופה ומשאיר טעם של 'רוצה עוד' אם הפגישה מוצלחת.",
     },
     {
-      icon: <MessageSquare className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="message" className="size-8 bg-amber-500" />,
       title: "נהל תקשורת בתוך האפליקציה",
       content:
         "המשך לתקשר בתוך האפליקציה לפני שאתה עובר לפלטפורמות אחרות. מיאל מנטרת הודעות עבור התנהגות חשודה כדי לשמור על בטיחות המשתמשים.",
     },
     {
-      icon: <AlertTriangle className="w-8 h-8 text-amber-500" />,
+      icon: <Icon name="triangle-exclamation" className="size-8 bg-amber-500" />,
       title: "דווח על התנהגות חשודה",
       content:
         "אם אתה נתקל במשתמש שמתנהג בצורה לא הולמת, מטרידה או חשודה, דווח עליו מיד באמצעות פונקציית הדיווח באפליקציה. זה עוזר לנו לשמור על קהילה בטוחה עבור כולם.",

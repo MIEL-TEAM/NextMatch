@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { IoClose } from "react-icons/io5";
+import Icon from "@/lib/table/Icon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import VideoPlayer from "@/components/video/VideoPlayer";
@@ -118,7 +118,7 @@ export default function InvitationCard({
           "
           aria-label="סגור"
         >
-          <IoClose size={18} />
+          <Icon name="xmark" className="size-[18px] bg-white" />
         </button>
 
         {/* 🌑 Bottom Gradient */}

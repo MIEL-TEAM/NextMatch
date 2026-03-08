@@ -5,7 +5,7 @@ import VideoPlayer from "@/components/video/VideoPlayer";
 import VideoUploader from "@/components/video/VideoUpload";
 import CardInnerWrapper from "@/components/CardInnerWrapper";
 import AppModal from "@/components/AppModal";
-import { PlayCircle } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 interface Video {
   id: string;
@@ -120,7 +120,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                     </div>
 
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300 z-10">
-                      <PlayCircle className="text-white w-12 h-12 opacity-80 group-hover:opacity-100 transition-all duration-300" />
+                      <Icon name="circle-play" className="size-12 bg-white opacity-80 group-hover:opacity-100 transition-all duration-300" />
                     </div>
                   </div>
                 </div>

@@ -16,7 +16,7 @@ import {
 import { updateCoverImage, removeCoverImage } from "@/app/actions/userActions";
 import { toast } from "sonner";
 
-import { Camera, Trash2 } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import Image from "next/image";
 
 type CoverImageUploadProps = {
@@ -105,7 +105,7 @@ export default function CoverImageUpload({
                 variant="flat"
                 onPress={handleRemoveCover}
                 isLoading={loading}
-                startContent={!loading && <Trash2 size={18} />}
+                startContent={!loading && <Icon name="trash" className="size-[18px] bg-danger" />}
               >
                 הסר תמונה
               </Button>
@@ -150,7 +150,7 @@ export default function CoverImageUpload({
                 color="primary"
                 className="w-full"
                 isLoading={loading}
-                startContent={!loading && <Camera size={18} />}
+                startContent={!loading && <Icon name="camera" className="size-[18px] bg-white" />}
               >
                 {currentCoverImage ? "שנה תמונה" : "העלה תמונה"}
               </Button>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 const messageSelect = {
   id: true,
@@ -66,25 +67,61 @@ export async function dbGetMessagesByContainer(
   cursor?: string,
   limit = 10,
 ) {
-  const conditions = {
-    [container === "outbox" ? "senderId" : "recipientId"]: userId,
-    ...(container === "outbox"
-      ? { senderDeleted: false }
-      : { recipientDeleted: false }),
-    isArchived: false,
-  };
+  console.time("dbGetMessagesByContainer");
+  const isOutbox = container === "outbox";
 
-  return prisma.message.findMany({
-    where: {
-      ...conditions,
-      ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
-    },
-    orderBy: {
-      created: "desc",
-    },
+  // Cursor is applied on the OUTER (conversation-level) query, not inside the
+  // DISTINCT ON subquery. This guarantees each page returns new conversation
+  // partners rather than older messages from partners already shown on page 1.
+  const cursorFilter = cursor
+    ? Prisma.sql`WHERE created < ${new Date(cursor)}`
+    : Prisma.empty;
+
+  const rows = isOutbox
+    ? await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM (
+          SELECT DISTINCT ON ("recipientId") id, created
+          FROM "Message"
+          WHERE "senderId" = ${userId}
+            AND "senderDeleted" = false
+            AND "isArchived" = false
+          ORDER BY "recipientId", created DESC
+        ) sub
+        ${cursorFilter}
+        ORDER BY created DESC
+        LIMIT ${limit + 1}
+      `
+    : await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM (
+          SELECT DISTINCT ON ("senderId") id, created
+          FROM "Message"
+          WHERE "recipientId" = ${userId}
+            AND "recipientDeleted" = false
+            AND "isArchived" = false
+          ORDER BY "senderId", created DESC
+        ) sub
+        ${cursorFilter}
+        ORDER BY created DESC
+        LIMIT ${limit + 1}
+      `;
+
+  if (rows.length === 0) {
+    console.timeEnd("dbGetMessagesByContainer");
+    return [];
+  }
+
+  const ids = rows.map((r) => r.id);
+
+  // Simple PK lookup — extremely fast regardless of table size.
+  const messages = await prisma.message.findMany({
+    where: { id: { in: ids } },
+    orderBy: { created: "desc" },
     select: messageSelect,
-    take: limit + 1,
   });
+
+  const sorted = messages.sort((a, b) => b.created.getTime() - a.created.getTime());
+  console.timeEnd("dbGetMessagesByContainer");
+  return sorted;
 }
 
 export async function dbDeleteMessage(
@@ -175,7 +212,7 @@ export async function dbGetMessageForDto(messageId: string) {
   });
 }
 
-export async function dbGetStarredMessages(userId: string, cursor?: string) {
+export async function dbGetStarredMessages(userId: string) {
   return prisma.message.findMany({
     where: {
       isStarred: true,
@@ -183,7 +220,6 @@ export async function dbGetStarredMessages(userId: string, cursor?: string) {
         { recipientId: userId, recipientDeleted: false },
         { senderId: userId, senderDeleted: false },
       ],
-      ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
     },
     orderBy: {
       created: "desc",
@@ -196,7 +232,7 @@ export async function dbGetStarredMessages(userId: string, cursor?: string) {
   });
 }
 
-export async function dbGetArchivedMessages(userId: string, cursor?: string) {
+export async function dbGetArchivedMessages(userId: string) {
   return prisma.message.findMany({
     where: {
       isArchived: true,
@@ -204,7 +240,6 @@ export async function dbGetArchivedMessages(userId: string, cursor?: string) {
         { recipientId: userId, recipientDeleted: false },
         { senderId: userId, senderDeleted: false },
       ],
-      ...(cursor ? { created: { lt: new Date(cursor) } } : {}),
     },
     orderBy: {
       created: "desc",

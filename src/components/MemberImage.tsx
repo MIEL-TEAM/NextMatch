@@ -7,7 +7,7 @@ import Image from "next/image";
 import React from "react";
 import clsx from "clsx";
 import { useRole } from "@/hooks/useRole";
-import { ImCheckmark, ImCross } from "react-icons/im";
+import Icon from "@/lib/table/Icon";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { approvePhoto, rejectPhoto } from "@/app/actions/adminActions";
@@ -45,20 +45,7 @@ export default function MemberImage({
         </div>
         <div className="absolute bottom-0 w-full bg-gradient-to-t from-red-600/90 to-transparent p-4 rounded-b-2xl">
           <div className="flex flex-col items-center text-white">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 mb-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-              />
-            </svg>
+            <Icon name="ban" className="size-8 bg-white mb-1" />
             <span className="font-semibold text-center">התוכן אינו מורשה</span>
           </div>
         </div>
@@ -121,20 +108,7 @@ export default function MemberImage({
       {!photo?.isApproved && role !== "ADMIN" && (
         <div className="absolute bottom-0 w-full bg-gradient-to-t from-red-600/80 to-transparent p-4 rounded-b-2xl">
           <div className="flex flex-col items-center text-white">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 mb-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+            <Icon name="triangle-exclamation" type="sol" className="size-8 bg-white mb-1" />
             <span className="font-semibold text-center">
               תמונה זו ממתינה לאישור מנהל
             </span>
@@ -150,7 +124,7 @@ export default function MemberImage({
             variant="bordered"
             fullWidth
           >
-            <ImCheckmark size={20} />
+            <Icon name="check" className="size-5 bg-green-600" />
           </Button>
 
           <Button
@@ -159,7 +133,7 @@ export default function MemberImage({
             variant="bordered"
             fullWidth
           >
-            <ImCross size={20} />
+            <Icon name="xmark" className="size-5 bg-red-600" />
           </Button>
         </div>
       )}

@@ -7,7 +7,7 @@ import SpotlightMember from "./SpotlightMember";
 import AnimatedBackground from "./AnimatedBackground";
 import MembersGrid from "./MembersGrid";
 import InlineEmptyState from "@/components/EmptyState";
-import { ImageOff } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { Props } from "@/types/members";
 
 const MembersLayout: React.FC<Props> = ({
@@ -154,7 +154,7 @@ const MembersLayout: React.FC<Props> = ({
                 ? "נסה שוב מאוחר יותר או בחר סינון אחר"
                 : "נסה שוב מאוחר יותר או שנה את הגדרות הסינון"
             }
-            icon={<ImageOff size={48} />}
+            icon={<Icon name="image-slash" className="size-12 bg-amber-500" />}
           />
         </div>
       )}

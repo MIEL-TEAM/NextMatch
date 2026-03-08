@@ -6,6 +6,7 @@
     "dev": "next dev",
     "ngrok": "ngrok http 3001",
     "build": "prisma generate && prisma migrate deploy && next build",
+    "build:profile": "prisma generate && prisma migrate deploy && next build --profile",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -47,6 +48,7 @@
     "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^11.11.17",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.475.0",
     "micro": "^10.0.1",
     "next": "15.5.7",
@@ -64,6 +66,7 @@
     "react-swipeable": "^7.0.2",
     "resend": "^4.1.2",
     "sonner": "^2.0.3",
+    "tailwind-merge": "^3.5.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.3"
   },

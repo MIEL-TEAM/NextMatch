@@ -11,6 +11,7 @@ import WhisperMessage from "./WhisperMessage";
 import WhisperLike from "./WhisperLike";
 import WhisperProfileView from "./WhisperProfileView";
 import WhisperAchievement from "./WhisperAchievement";
+import WhisperMatch from "./WhisperMatch";
 
 // ─── Animation constants ───────────────────────────────────────────────────────
 
@@ -94,6 +95,10 @@ function renderWhisper(
       return (
         <WhisperAchievement notification={notification} onDismiss={dismiss} />
       );
+
+    case "MUTUAL_MATCH":
+    case "MATCH_ONLINE":
+      return <WhisperMatch notification={notification} onDismiss={dismiss} />;
 
     default:
       return null;

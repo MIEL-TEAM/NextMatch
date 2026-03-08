@@ -8,10 +8,7 @@ import { useServerSession } from "@/contexts/SessionContext";
 import { subscribeToPusher } from "@/lib/pusher-client";
 import { StoryUser, StoriesCarouselProps } from "@/types/stories";
 
-import {
-  MdOutlineKeyboardArrowLeft,
-  MdOutlineKeyboardArrowRight,
-} from "react-icons/md";
+import Icon from "@/lib/table/Icon";
 
 export function StoriesCarousel({
   onStoryClick,
@@ -124,7 +121,7 @@ export function StoriesCarousel({
           style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }}
           aria-label="Scroll left"
         >
-          <MdOutlineKeyboardArrowLeft size={40} />
+          <Icon name="chevron-left" className="size-10 bg-gray-600" />
         </button>
       )}
 
@@ -136,7 +133,7 @@ export function StoriesCarousel({
           style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }}
           aria-label="Scroll right"
         >
-          <MdOutlineKeyboardArrowRight size={40} />
+          <Icon name="chevron-right" className="size-10 bg-gray-600" />
         </button>
       )}
 

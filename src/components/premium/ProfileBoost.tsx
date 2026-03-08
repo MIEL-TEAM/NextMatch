@@ -7,7 +7,7 @@ import {
   CardFooter,
   Progress,
 } from "@nextui-org/react";
-import { FiZap } from "react-icons/fi";
+import Icon from "@/lib/table/Icon";
 
 interface ProfileBoostProps {
   isPremium: boolean;
@@ -38,7 +38,7 @@ export function ProfileBoost({
       <CardBody>
         <div className="flex items-center gap-4">
           <div className="p-3 bg-amber-100 rounded-full">
-            <FiZap className="text-amber-500 text-xl" />
+            <Icon name="bolt" className="size-5 bg-amber-500" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">קדם את הפרופיל שלך</h3>
@@ -75,7 +75,7 @@ export function ProfileBoost({
             isLoading={isLoading}
             onPress={handleBoost}
             className="w-full"
-            startContent={<FiZap />}
+            startContent={<Icon name="bolt" className="size-4 bg-white" />}
           >
             הפעל בוסט
           </Button>

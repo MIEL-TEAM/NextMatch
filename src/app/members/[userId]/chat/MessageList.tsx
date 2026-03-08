@@ -21,6 +21,8 @@ export default function MessageList({
   onLockedChange,
 }: MessageListProps) {
   const channelRef = useRef<Channel | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const isInitialScroll = useRef(true);
 
   const storeMessages = useConversationStore((s) => s.threads[chatId]);
   const messages = storeMessages ?? initialMessages.messages;
@@ -37,9 +39,16 @@ export default function MessageList({
     onLockedChange?.(firstLockedId !== undefined);
   }, [firstLockedId, onLockedChange]);
 
+  // Auto-scroll: instant on initial load, smooth on new messages
   useEffect(() => {
-    useConversationStore.getState().setThread(chatId, initialMessages.messages);
-  }, [initialMessages.messages, chatId]);
+    if (!bottomRef.current || displayMessages.length === 0) return;
+    if (isInitialScroll.current) {
+      bottomRef.current.scrollIntoView();
+      isInitialScroll.current = false;
+    } else {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [displayMessages.length]);
 
   const handleNewMessage = useCallback(
     (message: MessageDto) => {
@@ -50,9 +59,15 @@ export default function MessageList({
       const prev = store.threads[chatId] ?? [];
 
       if (prev.some((msg) => msg.id === message.id)) return;
-
-      const newMessages = [...prev, message];
-      store.patchThread(chatId, newMessages);
+      
+      const optimisticIdx = prev.findIndex((m) => m.id.startsWith("optimistic-"));
+      if (optimisticIdx !== -1) {
+        const next = [...prev];
+        next[optimisticIdx] = message;
+        store.patchThread(chatId, next);
+      } else {
+        store.patchThread(chatId, [...prev, message]);
+      }
     },
     [chatId],
   );
@@ -133,7 +148,7 @@ export default function MessageList({
           עדיין לא התחלתם שיחה ☺️
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" role="list" aria-label="הודעות בשיחה">
           {displayMessages.map((message) => (
             <MessageBox
               key={message.id}
@@ -142,6 +157,7 @@ export default function MessageList({
               isFirstLocked={message.id === firstLockedId}
             />
           ))}
+          <div ref={bottomRef} />
         </div>
       )}
     </div>

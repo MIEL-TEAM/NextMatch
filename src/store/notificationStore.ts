@@ -21,6 +21,7 @@ interface NotificationState {
   markAllSeen: () => void;
   markRead: (id: string) => void;
   remove: (id: string) => void;
+  resetStore: () => void;
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -118,6 +119,20 @@ const useNotificationStore = create<NotificationState>()(
           },
           false,
           "markRead",
+        );
+      },
+
+      // ── resetStore ───────────────────────────────────────────────────────────
+      resetStore: () => {
+        set(
+          {
+            notifications: [],
+            unseenCount: 0,
+            processedIds: new Set(),
+            isBootstrapped: false,
+          },
+          false,
+          "resetStore",
         );
       },
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Mail, Phone, MessageSquare } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -63,7 +63,7 @@ export default function ContactForm() {
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <Mail className="text-amber-500 shrink-0" />
+              <Icon name="envelope" className="size-[18.5px] bg-amber-500 shrink-0" />
               <div>
                 <h3 className="font-medium text-amber-800">אימייל</h3>
                 <p className="text-gray-700">contact@miel.com</p>
@@ -71,7 +71,7 @@ export default function ContactForm() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Phone className="text-amber-500 shrink-0" />
+              <Icon name="phone" className="size-[18.5px] bg-amber-500 shrink-0" />
               <div>
                 <h3 className="font-medium text-amber-800">טלפון</h3>
                 <p className="text-gray-700">03-1234567</p>
@@ -79,7 +79,7 @@ export default function ContactForm() {
             </div>
 
             <div className="flex items-center gap-3">
-              <MessageSquare className="text-amber-500 shrink-0" />
+              <Icon name="message" className="size-[18.5px] bg-amber-500 shrink-0" />
               <div>
                 <h3 className="font-medium text-amber-800">
                   צ&apos;אט באפליקציה
@@ -202,7 +202,7 @@ export default function ContactForm() {
                 "שולח..."
               ) : (
                 <>
-                  שלח הודעה <Send className="mr-2 h-4 w-4" />
+                  שלח הודעה <Icon name="paper-plane-top" className="mr-2 size-4 bg-white" />
                 </>
               )}
             </button>

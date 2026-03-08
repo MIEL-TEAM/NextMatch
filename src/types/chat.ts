@@ -11,6 +11,9 @@ export type MessageListProps = {
 export type ChatContainerProps = {
   currentUserId: string;
   isPremium: boolean;
+  recipientName?: string | null;
+  recipientImage?: string | null;
+  recipientUserId?: string;
 };
 
 export type MessageBoxProps = {

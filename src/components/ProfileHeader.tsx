@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { Button, Chip } from "@nextui-org/react";
-import { MessageCircleIcon, MapPinIcon, ShareIcon } from "lucide-react";
-import { MdVerified } from "react-icons/md";
+import Icon from "@/lib/table/Icon";
 import { toggleLikeMember } from "@/app/actions/likeActions";
 import { Member } from "@prisma/client";
 import { toast } from "sonner";
@@ -92,7 +91,7 @@ export default function ProfileHeader({
         <div className="flex items-center gap-2" dir="rtl">
           <h1 className="text-3xl font-bold">{member.name || "משתמש"}</h1>
           {member.user?.oauthVerified && (
-            <MdVerified className="text-blue-500 inline w-7 h-7" />
+            <Icon name="badge-check" className="size-7 bg-blue-500 inline" />
           )}
         </div>
 
@@ -112,7 +111,7 @@ export default function ProfileHeader({
                   base: "bg-blue-50 border-blue-200 border",
                   content: "text-blue-600 font-semibold",
                 }}
-                startContent={<MdVerified className="text-blue-500 w-4 h-4" />}
+                startContent={<Icon name="badge-check" className="size-4 bg-blue-500" />}
               >
                 מאומת
               </Chip>
@@ -133,7 +132,7 @@ export default function ProfileHeader({
         )}
 
         <div className="flex gap-2 items-center text-default-500">
-          <MapPinIcon size={16} />
+          <Icon name="map-location-dot" className="size-4 bg-default-500" />
           <span>
             {member.city} {member.country}
           </span>
@@ -142,7 +141,7 @@ export default function ProfileHeader({
           <Button
             color="warning"
             variant="solid"
-            startContent={<MessageCircleIcon size={18} />}
+            startContent={<Icon name="comment" className="size-[18px] bg-white" />}
             className="w-full"
             onPress={() => router.push(`/members/${userId}/chat`)}
           >
@@ -165,7 +164,7 @@ export default function ProfileHeader({
             onPress={handleShare}
             isLoading={isSharing}
           >
-            <ShareIcon size={18} />
+            <Icon name="share" className="size-[18px] bg-gray-600" />
           </Button>
         </div>
       </div>

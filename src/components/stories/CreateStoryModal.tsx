@@ -2,11 +2,10 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { FiX, FiUpload, FiType } from "react-icons/fi";
 import { Button } from "@nextui-org/react";
 import { toast } from "sonner";
 import { createStory } from "@/app/actions/storyActions";
-import { ArrowUp, ArrowDown, ArrowLeftRight } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { CreateStoryModalProps } from "@/types/stories";
 
 export function CreateStoryModal({
@@ -158,7 +157,7 @@ export function CreateStoryModal({
             onClick={handleClose}
             className="text-gray-500 active:text-gray-700 md:hover:text-gray-700 p-1"
           >
-            <FiX size={20} />
+            <Icon name="xmark" className="size-5 bg-gray-500" />
           </button>
         </div>
 
@@ -168,7 +167,7 @@ export function CreateStoryModal({
               onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 text-center cursor-pointer active:border-orange-400 md:hover:border-orange-400 transition-colors touch-manipulation"
             >
-              <FiUpload size={40} className="mx-auto text-gray-400 mb-3 md:mb-4 md:w-12 md:h-12" />
+              <Icon name="upload" className="size-10 bg-gray-400 mx-auto mb-3 md:mb-4 md:size-12" />
               <p className="text-gray-600 text-sm md:text-base">לחץ כדי להעלות תמונה</p>
               <p className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2">גודל מקסימלי: 5MB</p>
             </div>
@@ -202,7 +201,7 @@ export function CreateStoryModal({
                 }}
                 className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1.5 active:bg-opacity-70 md:hover:bg-opacity-70 z-10 touch-manipulation"
               >
-                <FiX size={14} />
+                <Icon name="xmark" className="size-3.5 bg-white" />
               </button>
 
               {textOverlay && (
@@ -241,7 +240,7 @@ export function CreateStoryModal({
                     }`}
                   >
                     למעלה
-                    <ArrowUp className="w-3 h-3 md:w-4 md:h-4" />
+                    <Icon name="arrow-up" className={`size-3 md:size-4 ${imagePosition === "top" ? "bg-white" : "bg-gray-700"}`} />
                   </button>
 
                   <button
@@ -254,7 +253,7 @@ export function CreateStoryModal({
                     }`}
                   >
                     מרכז
-                    <ArrowLeftRight className="w-3 h-3 md:w-4 md:h-4" />
+                    <Icon name="arrows-left-right" className={`size-3 md:size-4 ${imagePosition === "center" ? "bg-white" : "bg-gray-700"}`} />
                   </button>
 
                   <button
@@ -267,7 +266,7 @@ export function CreateStoryModal({
                     }`}
                   >
                     למטה
-                    <ArrowDown className="w-3 h-3 md:w-4 md:h-4" />
+                    <Icon name="arrow-down" className={`size-3 md:size-4 ${imagePosition === "bottom" ? "bg-white" : "bg-gray-700"}`} />
                   </button>
                 </div>
                 <p className="text-[10px] md:text-xs text-gray-500 text-right">
@@ -277,7 +276,7 @@ export function CreateStoryModal({
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-xs md:text-sm font-medium text-gray-700">
-                  <FiType size={14} className="md:w-4 md:h-4" />
+                  <Icon name="text" className="size-3.5 md:size-4 bg-gray-700" />
                   הוספת טקסט (לא חובה)
                 </label>
                 <textarea

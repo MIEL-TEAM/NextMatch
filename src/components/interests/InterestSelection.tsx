@@ -8,7 +8,7 @@ import {
   interestCategories,
 } from "@/lib/constants/interests";
 import AppModal from "@/components/AppModal";
-import { SearchIcon } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import InterestItem from "./InterestItem";
 import { useFormContext } from "react-hook-form";
 
@@ -84,7 +84,7 @@ export default function InterestSelection({
           placeholder="חפש תחומי עניין..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          startContent={<SearchIcon size={18} />}
+          startContent={<Icon name="magnifying-glass" className="size-[18px] bg-gray-500" />}
           className="mb-4"
           size="sm"
         />

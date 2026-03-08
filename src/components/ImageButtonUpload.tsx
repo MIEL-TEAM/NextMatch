@@ -4,7 +4,7 @@ import {
   CloudinaryUploadWidgetOptions,
   CloudinaryUploadWidgetResults,
 } from "next-cloudinary";
-import { HiPhoto } from "react-icons/hi2";
+import Icon from "@/lib/table/Icon";
 
 type ImageButtonProps = {
   onUploadImage: (result: CloudinaryUploadWidgetResults) => void;
@@ -129,7 +129,7 @@ export default function ImageButtonUpload({ onUploadImage }: ImageButtonProps) {
       uploadPreset="nm-demo"
       className={`flex items-center gap-2 border-2 border-secondary text-secondary rounded-lg py-2 px-4 hover:bg-secondary/10`}
     >
-      <HiPhoto size={24} />
+      <Icon name="camera" className="size-6 bg-secondary" />
       העלה תמונה חדשה
     </CldUploadButton>
   );

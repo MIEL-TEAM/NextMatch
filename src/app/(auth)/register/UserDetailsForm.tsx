@@ -1,7 +1,7 @@
 import { Input } from "@nextui-org/react";
 import { useFormContext } from "react-hook-form";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 export default function UserDetailsForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -59,9 +59,9 @@ export default function UserDetailsForm() {
             className="focus:outline-none"
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400" />
+              <Icon name="eye-slash" className="size-5 bg-gray-400" />
             ) : (
-              <Eye className="h-5 w-5 text-gray-400" />
+              <Icon name="eye" className="size-5 bg-gray-400" />
             )}
           </button>
         }

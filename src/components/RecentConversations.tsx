@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar } from "@nextui-org/react";
-import { MessageCircle } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { he } from "date-fns/locale";
@@ -14,7 +14,7 @@ export default function RecentConversations({
   if (conversations.length === 0) {
     return (
       <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
-        <MessageCircle className="w-8 h-8 text-white/50 mx-auto mb-2" />
+        <Icon name="comment" className="size-8 bg-white/50 mx-auto mb-2" />
         <p className="text-white text-sm">אין שיחות אחרונות</p>
       </div>
     );
@@ -22,14 +22,17 @@ export default function RecentConversations({
 
   return (
     <div className="space-y-2">
-      <h3 className="text-white text-right font-bold text-lg mb-3 px-2">שיחות אחרונות</h3>
+      <h3 className="text-white text-right font-bold text-lg mb-3 px-2">השיחות שלך</h3>
+      <ul role="list" className="space-y-2" aria-label="רשימת שיחות">
       {conversations.map((conversation) => {
         const isActive = activeUserId === conversation.userId;
         return (
+          <li key={conversation.userId} role="listitem">
           <Link
-            key={conversation.userId}
             href={`/members/${conversation.userId}/chat`}
             className="block"
+            aria-label={`שיחה עם ${conversation.name}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} הודעות שלא נקראו` : ""}`}
+            aria-current={isActive ? "page" : undefined}
           >
             <div className={`backdrop-blur-sm rounded-xl p-3 transition-all duration-200 group ${
               isActive 
@@ -80,8 +83,10 @@ export default function RecentConversations({
             </div>
           </div>
         </Link>
+          </li>
         );
       })}
+      </ul>
     </div>
   );
 }

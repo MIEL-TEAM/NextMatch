@@ -69,7 +69,7 @@ export default async function MessagesPage({
 
   return (
     <div className="w-full max-w-screen-2xl mx-auto mb-6">
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 py-4 px-2 sm:px-4 md:px-6">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 py-14 px-4 sm:px-4 md:px-6">
         <div className="w-full md:col-span-3 lg:col-span-3 xl:col-span-2 md:sticky md:top-20 md:self-start">
           <MessageSideBar />
         </div>

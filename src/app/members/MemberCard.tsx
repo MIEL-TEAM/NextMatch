@@ -9,11 +9,9 @@ import { Card, CardFooter } from "@nextui-org/react";
 import Link from "next/link";
 import Image from "next/image";
 import { toggleLikeMember } from "@/app/actions/likeActions";
-import { VolumeX, Volume2, Camera, Video, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence } from "framer-motion";
-import { FaFire } from "react-icons/fa";
-import { MdVerified } from "react-icons/md";
+import Icon from "@/lib/table/Icon";
 import { MemberCardProps } from "@/types/members";
 import FloatingReaction from "@/components/FloatingReaction";
 import Carousel from "@/components/MemberImageCarousel";
@@ -181,9 +179,9 @@ export default function MemberCard({
                 type="button"
               >
                 {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
+                  <Icon name="volume-xmark" className="size-4 bg-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
                 ) : (
-                  <Volume2 className="w-4 h-4 text-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
+                  <Icon name="volume-high" className="size-4 bg-white drop-shadow-[0_0_4px_rgba(59,130,246,0.7)]" />
                 )}
               </button>
             </div>
@@ -192,7 +190,7 @@ export default function MemberCard({
           {/* Bottom-left media counters + location + verification */}
           <div className="absolute bottom-2 left-2 z-50 flex items-center gap-1.5">
             <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
-              <Camera className="w-3.5 h-3.5" />
+              <Icon name="camera" className="size-3.5 bg-white" />
               <span className="text-[11px] leading-none font-medium">
                 {Math.max(memberPhotos.length, member.image ? 1 : 0)}
               </span>
@@ -200,7 +198,7 @@ export default function MemberCard({
 
             {memberVideos.length > 0 && (
               <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
-                <Video className="w-3.5 h-3.5" />
+                <Icon name="video" className="size-3.5 bg-white" />
                 <span className="text-[11px] leading-none font-medium">
                   {memberVideos.length}
                 </span>
@@ -209,7 +207,7 @@ export default function MemberCard({
             {typeof member.distance === "number" &&
               Number.isFinite(member.distance) && (
                 <div className="flex items-center gap-1 bg-black/55 text-white rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">
-                  <MapPin className="w-3.5 h-3.5" />
+                  <Icon name="map-location-dot" className="size-3.5 bg-white" />
                   <span className="text-[11px] leading-none font-medium">
                     {formatDistance(member.distance)}
                   </span>
@@ -219,7 +217,7 @@ export default function MemberCard({
               <IconWithTooltip
                 icon={
                   <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full p-1 shadow-lg">
-                    <MdVerified className="w-4 h-4" />
+                    <Icon name="badge-check" className="size-4 bg-white" />
                   </div>
                 }
                 title="חשבון מאומת"
@@ -231,7 +229,7 @@ export default function MemberCard({
             {isActivePremium(member.user) && (
               <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
                 <IconWithTooltip
-                  icon={<FaFire style={{ width: 15, height: 15, color: "#FFB547" }} />}
+                  icon={<Icon name="fire" className="size-[15px] bg-[#FFB547]" />}
                   title="חבר/ת Miel+"
                   description="חשבון פרימיום פעיל"
                   placement="above"

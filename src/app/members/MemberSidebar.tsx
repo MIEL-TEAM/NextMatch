@@ -14,35 +14,31 @@ import useConversationStore from "@/store/conversationStore";
 import usePresenceStore from "@/hooks/usePresenceStore";
 import { Conversation } from "@/types/chat";
 import { createChatId } from "@/lib/util";
-import { useSession } from "next-auth/react";
 
 type MemberSidebarProps = {
   member: Member;
   navLinks: { name: string; href: string }[];
+  authUserId: string;
 };
 
 const SIDEBAR_LIMIT = 5;
 
 export default function MemberSidebar({
   navLinks,
+  authUserId,
 }: MemberSidebarProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
 
   const orderedIds = useConversationStore((s) => s.orderedIds);
   const conversations = useConversationStore((s) => s.conversations);
-  const currentUserId = useConversationStore((s) => s.currentUserId);
   const members = usePresenceStore((s) => s.members);
 
   const activeUserId = pathname.includes("/chat")
     ? pathname.split("/")[2]
     : null;
 
-  // Derive Conversation[] from the store — no API call needed.
-  // conversationStore is kept current by usePrivateChannel (conversation:event).
   const recentConversations = useMemo((): Conversation[] => {
-    const uid = currentUserId ?? session?.user?.id;
-    if (!uid) return [];
+    if (!authUserId) return [];
 
     return orderedIds
       .slice(0, SIDEBAR_LIMIT)
@@ -51,15 +47,14 @@ export default function MemberSidebar({
         if (!slice?.latestMessage) return acc;
 
         const msg = slice.latestMessage;
-        const isOutgoing = msg.senderId === uid;
+        const isOutgoing = msg.senderId === authUserId;
         const partnerId = isOutgoing ? msg.recipientId : msg.senderId;
 
         if (!partnerId) return acc;
 
-        // Suppress unread badge if the user is currently viewing this chat
         const isActive =
           activeUserId === partnerId ||
-          convId === createChatId(uid, partnerId);
+          convId === createChatId(authUserId, partnerId);
 
         acc.push({
           userId: partnerId,
@@ -75,7 +70,7 @@ export default function MemberSidebar({
 
         return acc;
       }, []);
-  }, [orderedIds, conversations, currentUserId, session?.user?.id, activeUserId, members]);
+  }, [orderedIds, conversations, authUserId, activeUserId, members]);
 
   return (
     <Card className="

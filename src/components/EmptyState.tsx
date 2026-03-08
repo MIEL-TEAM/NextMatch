@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Card } from "@nextui-org/react";
-import { Clock } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 
 interface InlineEmptyStateProps {
   message?: string;
@@ -14,7 +14,7 @@ interface InlineEmptyStateProps {
 const InlineEmptyState: React.FC<InlineEmptyStateProps> = ({
   message,
   subMessage,
-  icon = <Clock size={48} className="text-amber-500" />,
+  icon = <Icon name="alarm-clock" className="size-12 bg-amber-500" />,
 }) => {
   return (
     <motion.div

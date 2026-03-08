@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { FiBarChart, FiEye, FiStar, FiX } from "react-icons/fi";
+import Icon from "@/lib/table/Icon";
 import { getStoryAnalytics } from "@/app/actions/storyActions";
 import { toast } from "sonner";
 import { StoryAnalyticsData, StoryAnalyticsProps } from "@/types/stories";
@@ -74,7 +74,7 @@ export function StoryAnalytics({
         className="w-8 h-8 bg-black bg-opacity-40 hover:bg-opacity-60 rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110 backdrop-blur-sm"
         title="צפה בנתוני הסטורי"
       >
-        <FiBarChart size={16} />
+        <Icon name="chart-bar" className="size-4 bg-white" />
       </button>
 
       {isOpen && (
@@ -82,14 +82,14 @@ export function StoryAnalytics({
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
-                <FiBarChart className="text-blue-600" />
+                <Icon name="chart-bar" className="size-4 bg-blue-600" />
                 <h3 className="font-semibold text-gray-900">נתוני הסטורי</h3>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <FiX size={20} />
+                <Icon name="xmark" className="size-5 bg-gray-800" />
               </button>
             </div>
 
@@ -101,7 +101,7 @@ export function StoryAnalytics({
               ) : requiresPremium ? (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiStar className="text-white" size={24} />
+                    <Icon name="star" type="sol" className="size-6 bg-white" />
                   </div>
                   <h4 className="font-bold text-lg mb-2">פיצ&apos;ר פרימיום</h4>
                   <p className="text-gray-600 mb-6">
@@ -112,7 +112,7 @@ export function StoryAnalytics({
                     className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-full font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 transform hover:scale-105"
                     onClick={() => setIsOpen(false)}
                   >
-                    <FiStar size={18} />
+                    <Icon name="star" type="sol" className="size-[18px] bg-white" />
                     שדרג לפרימיום
                   </Link>
                 </div>
@@ -120,7 +120,7 @@ export function StoryAnalytics({
                 <div>
                   <div className="bg-blue-50 rounded-xl p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <FiEye className="text-blue-600" />
+                      <Icon name="eye" className="size-4 bg-blue-600" />
                       <span className="font-semibold text-blue-900">
                         סך הצפיות
                       </span>
@@ -162,7 +162,7 @@ export function StoryAnalytics({
                     </div>
                   ) : (
                     <div className="text-center py-6 text-gray-500">
-                      <FiEye size={32} className="mx-auto mb-2 opacity-50" />
+                      <Icon name="eye" className="size-8 bg-gray-500 mx-auto mb-2 opacity-50" />
                       <p>אף אחד לא צפה בסטורי עדיין</p>
                     </div>
                   )}

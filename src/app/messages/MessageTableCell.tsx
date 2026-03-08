@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { Button, Tooltip } from "@nextui-org/react";
-import { Trash, Star, Archive } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { timeAgo } from "@/lib/util";
-import AppModal from "@/components/AppModal";
 import { MessageTableCellProps } from "@/types/messageStore";
 
 
@@ -10,7 +8,7 @@ export default function MessageTableCell({
   item,
   columnKey,
   isOutbox,
-  deleteMessage,
+  onDeleteRequest,
   starMessage,
   archiveMessage,
   isDeleting,
@@ -18,7 +16,6 @@ export default function MessageTableCell({
   isArchiving,
   isLocked,
 }: MessageTableCellProps) {
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isArchiveDisabled, setIsArchiveDisabled] = useState(false);
 
   const truncateText = (text: string, maxLength: number = 40) => {
@@ -27,50 +24,19 @@ export default function MessageTableCell({
     return `${text.substring(0, maxLength)}...`;
   };
 
-  const handleDeleteClick = (event: any) => {
-    if (event && event.preventDefault) {
-      event.preventDefault();
-    }
-
-    if (event && event.stopPropagation) {
-      event.stopPropagation();
-    }
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleButtonClick = (event: React.MouseEvent, callback: () => void) => {
-    if (event && event.preventDefault) {
-      event.preventDefault();
-    }
-
-    if (event && event.stopPropagation) {
-      event.stopPropagation();
-    }
+  const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>, callback: () => void) => {
+    event.preventDefault();
+    event.stopPropagation();
     callback();
   };
 
-  const handleArchiveClick = (e: any) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
-
-    if (e && e.stopPropagation) {
-      e.stopPropagation();
-    }
-
+  const handleArchiveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (isArchiving || isArchiveDisabled) return;
-
     setIsArchiveDisabled(true);
     archiveMessage(item);
-
-    setTimeout(() => {
-      setIsArchiveDisabled(false);
-    }, 3000);
-  };
-
-  const confirmDelete = () => {
-    deleteMessage(item);
-    setIsDeleteModalOpen(false);
+    setTimeout(() => setIsArchiveDisabled(false), 3000);
   };
 
   const renderContent = () => {
@@ -97,11 +63,7 @@ export default function MessageTableCell({
           <span className="flex items-center gap-1">
             {displayName}
             {item.isStarred && (
-              <Star
-                size={14}
-                className="text-amber-500 inline"
-                fill="currentColor"
-              />
+              <Icon name="star-sharp" type="sol" className="size-3.5 bg-amber-500 inline" />
             )}
           </span>
         );
@@ -125,80 +87,42 @@ export default function MessageTableCell({
       case "actions":
         return (
           <div className="flex items-center gap-1">
-            <Tooltip content="סמן בכוכב">
-              <Button
-                isIconOnly
-                size="sm"
-                variant={item.isStarred ? "solid" : "light"}
-                color={item.isStarred ? "warning" : "default"}
-                isLoading={isStarring}
-                onPress={(e) =>
-                  handleButtonClick(e as any, () => starMessage(item))
-                }
-                className="min-w-8 h-8"
-              >
-                <Star size={16} />
-              </Button>
-            </Tooltip>
-
-            <Tooltip
-              content={item.isArchived ? "הוצא מהארכיון" : "העבר לארכיון"}
+            <button
+              type="button"
+              aria-label="סמן בכוכב"
+              title="סמן בכוכב"
+              disabled={isStarring}
+              onClick={(e) => handleButtonClick(e, () => starMessage(item))}
+              className={`min-w-8 h-8 inline-flex items-center justify-center rounded-md disabled:opacity-50 ${item.isStarred ? "bg-amber-100 text-amber-500" : "text-gray-400 hover:bg-gray-100"}`}
             >
-              <Button
-                isIconOnly
-                size="sm"
-                variant={item.isArchived ? "solid" : "light"}
-                color={item.isArchived ? "primary" : "default"}
-                isLoading={isArchiving}
-                isDisabled={isArchiveDisabled}
-                onPress={handleArchiveClick}
-                className="min-w-8 h-8"
-              >
-                <Archive size={16} />
-              </Button>
-            </Tooltip>
+              <Icon name="star-sharp" type={item.isStarred ? "sol" : "lit"} className={item.isStarred ? "size-4 bg-amber-500" : "size-4 bg-gray-400"} />
+            </button>
 
-            <Tooltip content="מחק שיחה">
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                color="danger"
-                isLoading={isDeleting}
-                onPress={handleDeleteClick}
-                className="min-w-8 h-8"
-              >
-                <Trash size={16} />
-              </Button>
-            </Tooltip>
+            <button
+              type="button"
+              aria-label={item.isArchived ? "הוצא מהארכיון" : "העבר לארכיון"}
+              title={item.isArchived ? "הוצא מהארכיון" : "העבר לארכיון"}
+              disabled={isArchiving || isArchiveDisabled}
+              onClick={handleArchiveClick}
+              className={`min-w-8 h-8 inline-flex items-center justify-center rounded-md disabled:opacity-50 ${item.isArchived ? "bg-primary/10 text-primary" : "text-gray-400 hover:bg-gray-100"}`}
+            >
+              <Icon name="box-archive" className={item.isArchived ? "size-4 bg-primary" : "size-4 bg-gray-400"} />
+            </button>
 
-            <AppModal
-              isOpen={isDeleteModalOpen}
-              onClose={() => setIsDeleteModalOpen(false)}
-              header="מחיקת שיחה"
-              body={
-                <p>
-                  האם את/ה בטוח/ה שברצונך למחוק את השיחה עם
-                  <strong>
-                    {` ${isOutbox ? item.recipientName : item.senderName}? `}
-                  </strong>
-                </p>
-              }
-              footerButtons={[
-                {
-                  color: "default",
-                  onPress: confirmDelete,
-                  children: "מחק",
-                  isLoading: isDeleting,
-                },
-                {
-                  color: "default",
-                  variant: "light",
-                  onPress: () => setIsDeleteModalOpen(false),
-                  children: "ביטול",
-                },
-              ]}
-            />
+            <button
+              type="button"
+              aria-label="מחק שיחה"
+              title="מחק שיחה"
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDeleteRequest(item);
+              }}
+              className="min-w-8 h-8 inline-flex items-center justify-center rounded-md disabled:opacity-50 text-red-400 hover:bg-red-50"
+            >
+              <Icon name="trash" className="size-4 bg-red-400" />
+            </button>
           </div>
         );
 

@@ -67,9 +67,7 @@ export class ConversationService {
         messageIds: readMessagesIds,
       });
 
-      for (const messageId of readMessagesIds) {
-        await cancelReminderEmail(messageId);
-      }
+      await Promise.all(readMessagesIds.map((id) => cancelReminderEmail(id)));
 
       if (readMessagesIds.length > 0) {
         await emitConversationEvent(
@@ -140,6 +138,10 @@ export class ConversationService {
     recipientUserId: string,
     text: string,
   ): Promise<{ message: MessageDto; remainingQuota: number | null }> {
+    if (userId === recipientUserId) {
+      throw new Error("Cannot send a message to yourself");
+    }
+
     const user = await dbGetUserForNav(userId);
     const premium = isActivePremium(user);
 
@@ -417,7 +419,11 @@ export class ConversationService {
     cursor?: string,
     limit = 10,
   ): Promise<{ messages: MessageDto[]; nextCursor?: string }> {
-    const starredMessages = await dbGetStarredMessages(userId, cursor);
+    // Fetch all starred messages and group by partner first, then paginate.
+    // Cursor is applied at conversation level (one row per partner) so that
+    // each page returns new partners rather than older messages from partners
+    // already shown on a previous page.
+    const starredMessages = await dbGetStarredMessages(userId);
 
     const conversationMap = new Map<string, (typeof starredMessages)[0]>();
 
@@ -429,19 +435,24 @@ export class ConversationService {
 
       if (!partnerId) return;
 
-      const key = partnerId.toString();
-      const existing = conversationMap.get(key);
-
-      if (!existing || new Date(message.created) > new Date(existing.created)) {
-        conversationMap.set(key, message);
+      const existing = conversationMap.get(partnerId);
+      if (!existing || message.created > existing.created) {
+        conversationMap.set(partnerId, message);
       }
     });
 
-    const groupedMessages = Array.from(conversationMap.values()).sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime(),
+    // One entry per partner, sorted newest first.
+    const conversations = Array.from(conversationMap.values()).sort(
+      (a, b) => b.created.getTime() - a.created.getTime(),
     );
 
-    const paginated = groupedMessages.slice(0, limit + 1);
+    // Apply cursor at conversation level — skip partners whose latest starred
+    // message is at or after the cursor timestamp.
+    const afterCursor = cursor
+      ? conversations.filter((m) => m.created < new Date(cursor))
+      : conversations;
+
+    const paginated = afterCursor.slice(0, limit + 1);
 
     let nextCursor: string | undefined;
     if (paginated.length > limit) {
@@ -466,7 +477,8 @@ export class ConversationService {
     cursor?: string,
     limit = 10,
   ): Promise<{ messages: MessageDto[]; nextCursor?: string }> {
-    const archivedMessages = await dbGetArchivedMessages(userId, cursor);
+    // Same conversation-level cursor strategy as getStarredMessages.
+    const archivedMessages = await dbGetArchivedMessages(userId);
 
     const conversationMap = new Map<string, (typeof archivedMessages)[0]>();
 
@@ -478,19 +490,21 @@ export class ConversationService {
 
       if (!partnerId) return;
 
-      const key = partnerId.toString();
-      const existing = conversationMap.get(key);
-
-      if (!existing || new Date(message.created) > new Date(existing.created)) {
-        conversationMap.set(key, message);
+      const existing = conversationMap.get(partnerId);
+      if (!existing || message.created > existing.created) {
+        conversationMap.set(partnerId, message);
       }
     });
 
-    const groupedMessages = Array.from(conversationMap.values()).sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime(),
+    const conversations = Array.from(conversationMap.values()).sort(
+      (a, b) => b.created.getTime() - a.created.getTime(),
     );
 
-    const paginated = groupedMessages.slice(0, limit + 1);
+    const afterCursor = cursor
+      ? conversations.filter((m) => m.created < new Date(cursor))
+      : conversations;
+
+    const paginated = afterCursor.slice(0, limit + 1);
 
     let nextCursor: string | undefined;
     if (paginated.length > limit) {

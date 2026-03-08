@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Spinner } from "@nextui-org/react";
-import { HiLocationMarker } from "react-icons/hi";
+import Icon from "@/lib/table/Icon";
 
 interface Props {
   value: string;
@@ -104,7 +104,7 @@ export default function GooglePlacesAutocomplete({ value, onChange, onEnterPress
       
       <div className="relative flex items-center">
         <div className="absolute right-3 pointer-events-none z-10">
-          <HiLocationMarker className="text-gray-400 text-xl" />
+          <Icon name="location-dot" className="size-5 bg-gray-400" />
         </div>
         
         <input

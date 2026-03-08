@@ -5,9 +5,7 @@ import { Card, Chip } from "@nextui-org/react";
 import clsx from "clsx";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
-import { GoInbox } from "react-icons/go";
-import { MdOutlineOutbox } from "react-icons/md";
-import { BsStarFill, BsArchive } from "react-icons/bs";
+import Icon, { IconNames } from "@/lib/table/Icon";
 
 export default function MessageSideBar() {
   const unreadCount = useConversationStore((s) => s.globalUnreadCount);
@@ -18,26 +16,11 @@ export default function MessageSideBar() {
   const [selected, setSelected] = useState<string>(
     searchParams.get("container") || "inbox"
   );
-  const items = [
-    { key: "inbox", label: "הודעות שקיבלתי", icon: GoInbox, chip: true },
-    {
-      key: "outbox",
-      label: "הודעות ששלחתי",
-      icon: MdOutlineOutbox,
-      chip: false,
-    },
-    {
-      key: "starred",
-      label: "הודעות מסומנות",
-      icon: BsStarFill,
-      chip: false,
-    },
-    {
-      key: "archived",
-      label: "ארכיון",
-      icon: BsArchive,
-      chip: false,
-    },
+  const items: { key: string; label: string; iconName: IconNames; chip: boolean }[] = [
+    { key: "inbox", label: "הודעות שקיבלתי", iconName: "inbox", chip: true },
+    { key: "outbox", label: "הודעות ששלחתי", iconName: "inbox-out", chip: false },
+    { key: "starred", label: "הודעות מסומנות", iconName: "star-sharp", chip: false },
+    { key: "archived", label: "ארכיון", iconName: "box-archive", chip: false },
   ];
 
   const handleSelect = (key: string) => {
@@ -50,7 +33,7 @@ export default function MessageSideBar() {
   return (
     <Card className="shadow-md p-2">
       <div className="flex flex-row md:flex-col cursor-pointer w-full">
-        {items.map(({ key, icon: Icon, label, chip }) => (
+        {items.map(({ key, iconName, label, chip }) => (
           <div
             key={key}
             className={clsx(
@@ -63,7 +46,7 @@ export default function MessageSideBar() {
             )}
             onClick={() => handleSelect(key)}
           >
-            <Icon size={20} className="md:size-[25px]" />
+            <Icon name={iconName} className={clsx("size-5 md:size-[25px]", selected === key ? "bg-secondary" : "bg-gray-700")} />
             <div className="hidden md:flex justify-between flex-row items-center w-full">
               <span>{label}</span>
               {chip && (

@@ -6,6 +6,7 @@ import useConversationStore from "@/store/conversationStore";
 import useCelebrationStore from "@/hooks/useCelebrationStore";
 import useInvitationStore from "@/hooks/useInvitationStore";
 import { createChatId } from "@/lib/util";
+import { markNotificationAsSeen } from "@/lib/db/notificationActions";
 import type { NotificationDto } from "@/types/notifications";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -22,6 +23,7 @@ const SUPPORTED_TYPES = new Set([
   "PROFILE_VIEW",
   "ACHIEVEMENT",
   "MATCH_ONLINE",
+  "MUTUAL_MATCH",
 ]);
 
 // ─── Priority ─────────────────────────────────────────────────────────────────
@@ -98,6 +100,9 @@ export function useNotificationController(): NotificationControllerResult {
         ? createChatId(uid, notification.actorId)
         : null;
 
+    // Mark as seen in DB fire-and-forget so it won't re-pop on next page load
+    markNotificationAsSeen(notification.id).catch(() => {});
+
     setVisible(notification);
     setBatchCount(1);
     lastShownRef.current = Date.now();
@@ -164,6 +169,9 @@ export function useNotificationController(): NotificationControllerResult {
   
   useEffect(() => {
     if (!latest) return;
+
+    // ── Already seen (bootstrapped from DB) — don't re-pop ────────────
+    if (latest.isSeen) return;
 
     // ── Modal suppression ──────────────────────────────────────────────
     if (celebrationModalOpen || invitationVisible) return;

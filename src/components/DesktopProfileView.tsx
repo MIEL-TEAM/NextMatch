@@ -127,6 +127,14 @@ export default function DesktopProfileView({
         <div className="bg-white rounded-3xl p-6 border border-gray-100">
           <ProfileAvatar member={member} isOwnProfile={isOwnProfile} isPremium={isActivePremium((member as any).user)} />
 
+          {/* Photo Gallery — shown before description, dating-app style */}
+          {galleryPhotos.length > 0 && (
+            <ProfilePhotoGallery
+              photos={galleryPhotos}
+              isOwnProfile={isOwnProfile}
+            />
+          )}
+
           <ProfileDescription
             member={member}
             isOwnProfile={isOwnProfile}
@@ -146,14 +154,6 @@ export default function DesktopProfileView({
           )}
         </div>
       </div>
-
-      {/* Photo Gallery Section */}
-      {galleryPhotos.length > 0 && (
-        <ProfilePhotoGallery
-          photos={galleryPhotos}
-          isOwnProfile={isOwnProfile}
-        />
-      )}
     </div>
   );
 }

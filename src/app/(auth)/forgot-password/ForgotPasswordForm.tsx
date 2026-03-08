@@ -7,7 +7,7 @@ import { ActionResult } from "@/types";
 import { Button, Input } from "@nextui-org/react";
 import { useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
-import { GiPadlock } from "react-icons/gi";
+import Icon from "@/lib/table/Icon";
 
 export default function ForgotPasswordForm() {
   const [result, setResult] = useState<ActionResult<string> | null>(null);
@@ -25,7 +25,7 @@ export default function ForgotPasswordForm() {
 
   return (
     <CardWrapper
-      headerIcon={GiPadlock}
+      headerIcon={<Icon name="binary-lock" className="size-[30px] bg-secondary" />}
       headerText="שכחתי סיסמה"
       subHeaderText="אל דאגה, תוכל לאפס את הסיסמה שלך בקלות! הכנס/י כתובת אימייל בבקשה"
       body={

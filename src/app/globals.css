@@ -183,6 +183,59 @@ textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Table system (.tbl / .tblHead used by src/lib/table) */
+.tbl {
+  @apply overflow-x-auto;
+}
+.tbl table {
+  @apply w-full text-sm;
+  border-collapse: collapse;
+}
+.tblHead {
+  @apply bg-gray-50 sticky top-0 z-10;
+}
+.tblHead th {
+  @apply px-4 py-3 text-sm font-semibold text-gray-500 text-start whitespace-nowrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+.tbl tbody tr {
+  @apply border-b border-gray-100;
+}
+.tbl tbody tr:last-child {
+  border-bottom: none;
+}
+.tbl tbody tr:hover {
+  background-color: rgba(254, 243, 199, 0.5);
+}
+.tbl td {
+  @apply px-4 py-3 text-gray-700 align-middle;
+  position: relative;
+  isolation: isolate;
+}
+/* DEBUG: kill every transition/animation inside the table to isolate repaint storm */
+.tbl tbody td::before {
+  display: none;
+}
+.tbl *,
+.tbl *::before,
+.tbl *::after {
+  transition: none !important;
+  animation: none !important;
+}
+/* NextUI Avatar internally applies these Tailwind classes to its <img>:
+     transition-opacity duration-500 opacity-0 data-[loaded=true]:opacity-100
+   This creates a 500ms opacity fade-in for every avatar image load.
+   When the table repaints on row hover the compositor must re-evaluate
+   all in-progress opacity transitions, adding work on every pointer event.
+   Override forces the image to be visible instantly with no transition. */
+.tbl img {
+  opacity: 1 !important;
+  transition: none !important;
+}
+.tbl input[type='checkbox'] {
+  @apply size-4;
+}
+
 /* Custom Scrollbar Styles */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;

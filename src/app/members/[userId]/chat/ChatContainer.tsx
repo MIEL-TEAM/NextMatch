@@ -5,20 +5,28 @@ import { useParams } from "next/navigation";
 import { MessageDto } from "@/types";
 import { ChatContainerProps } from "@/types/chat";
 import { getMessageThread } from "@/app/actions/messageActions";
-import { createChatId } from "@/lib/util";
+import { createChatId, transformImageUrl } from "@/lib/util";
 import useConversationStore from "@/store/conversationStore";
+import usePresenceStore from "@/hooks/usePresenceStore";
 import MessageList from "./MessageList";
 import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
-import { Lock } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
+import LightAvatar from "@/components/ui/LightAvatar";
 
 const EMPTY_THREAD: MessageDto[] = [];
 
-export default function ChatContainer({ currentUserId, isPremium }: ChatContainerProps) {
+export default function ChatContainer({
+  currentUserId,
+  isPremium,
+  recipientName,
+  recipientImage,
+  recipientUserId: recipientUserIdProp,
+}: ChatContainerProps) {
   const params = useParams<{ userId: string }>();
-  const recipientUserId = params.userId;
+  const recipientUserId = recipientUserIdProp ?? params.userId;
   const chatId = createChatId(currentUserId, recipientUserId);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +37,6 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
   const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
   const messages = useConversationStore((s) => s.threads[chatId] ?? EMPTY_THREAD);
 
-  // Register / clear active conversation on mount/unmount and chat change.
   useEffect(() => {
     setActiveConversation(chatId);
     return () => {
@@ -37,8 +44,6 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
     };
   }, [chatId, setActiveConversation]);
 
-  // Fetch the thread on every chatId change. Shows a spinner only when there
-  // is no cached thread yet; otherwise updates silently in the background.
   useEffect(() => {
     let cancelled = false;
 
@@ -65,6 +70,8 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
     };
   }, [chatId, recipientUserId, currentUserId, isPremium, setThread, setQuota]);
 
+  const isOnline = usePresenceStore((s) => s.members.includes(recipientUserId));
+
   const [hasLockedMessages, setHasLockedMessages] = useState(false);
   const showUpgradeCta = !isPremium && (hasLockedMessages || isQuotaReached);
 
@@ -74,6 +81,30 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
 
   return (
     <div className="flex flex-col h-full">
+      {/* Partner identity band — avatar + name + online status */}
+      {recipientName && (
+        <div
+          className="flex-shrink-0 flex items-center gap-3 px-4 py-2 border-b border-gray-100 bg-gray-50/60"
+          aria-label={`שיחה עם ${recipientName}`}
+        >
+          <div className="relative">
+            <LightAvatar
+              src={transformImageUrl(recipientImage) || "/images/user.png"}
+              name={recipientName}
+            />
+            {isOnline && (
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+            )}
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-semibold text-gray-800">{recipientName}</span>
+            <span className={`text-xs ${isOnline ? "text-green-600" : "text-gray-400"}`}>
+              {isOnline ? "מחובר/ת עכשיו" : "לא מחובר/ת"}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto min-h-0">
         <MessageList
           currentUserId={currentUserId}
@@ -90,7 +121,7 @@ export default function ChatContainer({ currentUserId, isPremium }: ChatContaine
             onClick={() => useUpgradeModal.getState().open()}
             className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
           >
-            <Lock size={11} className="text-amber-500 flex-shrink-0" />
+            <Icon name="binary-lock" className="size-[11px] bg-amber-500 flex-shrink-0" />
             <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
               ההודעה מחכה לך — שדרג ל-Miel+
             </span>

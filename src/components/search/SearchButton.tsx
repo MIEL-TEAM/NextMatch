@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { IoIosSearch } from "react-icons/io";
+import Icon from "@/lib/table/Icon";
 
 import SearchModal from "./SearchModal";
 
@@ -36,7 +36,7 @@ export default function SearchButton({
         `}
         aria-label="חיפוש"
       >
-        <IoIosSearch className="text-2xl text-white" />
+        <Icon name="magnifying-glass" className="size-5 bg-white" />
       </motion.button>
 
       <SearchModal

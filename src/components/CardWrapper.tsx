@@ -6,12 +6,11 @@ import {
   Button,
 } from "@nextui-org/react";
 import { ReactNode } from "react";
-import { IconType } from "react-icons/lib";
 
 type CardWrapperProps = {
   children?: ReactNode;
   body?: ReactNode;
-  headerIcon: IconType;
+  headerIcon: ReactNode;
   headerText: string;
   subHeaderText?: string;
   action?: () => void;
@@ -22,7 +21,7 @@ type CardWrapperProps = {
 export default function CardWrapper({
   children,
   body,
-  headerIcon: Icon,
+  headerIcon,
   headerText,
   subHeaderText,
   action,
@@ -38,7 +37,7 @@ export default function CardWrapper({
               <h1 className="text-2xl sm:text-3xl font-semibold">
                 {headerText}
               </h1>
-              <Icon size={30} />
+              {headerIcon}
             </div>
             {subHeaderText && (
               <p className="text-neutral-500 text-sm sm:text-base text-center">

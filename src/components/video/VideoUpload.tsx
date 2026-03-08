@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { Button } from "@nextui-org/react";
-import { Upload, VideoIcon } from "lucide-react";
+import Icon from "@/lib/table/Icon";
 import UploadProgress from "./UploadProgress";
 
 interface VideoUploaderProps {
@@ -127,12 +127,12 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
     <div className="border-2 border-dashed p-6 rounded-lg text-center">
       <div className="flex flex-col items-center gap-2">
         <div className="bg-blue-100 p-4 rounded-full">
-          <VideoIcon className="h-8 w-8 text-blue-500" />
+          <Icon name="video" className="size-8 bg-blue-500" />
         </div>
         <p className="text-sm">גרור ושחרר סרטון או לחץ לבחור קובץ</p>
         <Button
           onPress={() => fileInputRef.current?.click()}
-          startContent={<Upload size={16} />}
+          startContent={<Icon name="upload" className="size-4 bg-white" />}
           className="bg-blue-500 text-white hover:bg-blue-600"
         >
           בחר סרטון

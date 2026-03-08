@@ -1,6 +1,6 @@
 "use client";
 
-import { FiMessageCircle } from "react-icons/fi";
+import Icon from "@/lib/table/Icon";
 import { StoryReactionsProps } from "@/types/stories";
 
 export function StoryReactions({ onReaction, onReply }: StoryReactionsProps) {
@@ -29,7 +29,7 @@ export function StoryReactions({ onReaction, onReply }: StoryReactionsProps) {
         onClick={onReply}
         className="flex items-center gap-2 bg-white bg-opacity-20 text-white px-4 py-2 rounded-full hover:bg-opacity-30 transition-colors"
       >
-        <FiMessageCircle size={16} />
+        <Icon name="comment-dots" className="size-4 bg-white" />
         <span className="text-sm">Reply</span>
       </button>
     </div>
