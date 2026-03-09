@@ -13,11 +13,11 @@ interface InboxMessageRowProps {
   conversationId: string;
   authUserId: string | null;
   isPremium: boolean;
-  hasReachedQuota: boolean;
+  lockedPartnerIds: string[];
   onDeleteRequest: (item: MessageDto) => void;
 }
 
-function InboxMessageRow({ conversationId, authUserId, isPremium, hasReachedQuota, onDeleteRequest }: InboxMessageRowProps) {
+function InboxMessageRow({ conversationId, authUserId, isPremium, lockedPartnerIds, onDeleteRequest }: InboxMessageRowProps) {
   const router = useRouter();
   const conversation = useConversationStore((s) => s.conversations[conversationId]);
   const updateConversationMessage = useConversationStore((s) => s.updateConversationMessage);
@@ -36,7 +36,9 @@ function InboxMessageRow({ conversationId, authUserId, isPremium, hasReachedQuot
   const raw = item.text ?? "";
   const text = raw.length > 40 ? raw.substring(0, 40) + "..." : raw;
   const isUnread = !item.dateRead;
-  const shouldBlurPreview = !isPremium && hasReachedQuota && !isSender;
+  const partnerId = isSender ? item.recipientId : item.senderId;
+  const isConversationLocked = !!partnerId && lockedPartnerIds.includes(partnerId);
+  const shouldBlurPreview = !isPremium && isConversationLocked && !isSender;
 
   const handleRowClick = () => {
     const partnerId = isSender ? item.recipientId : item.senderId;

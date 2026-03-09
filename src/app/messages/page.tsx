@@ -10,7 +10,7 @@ import { Metadata } from "next";
 import { getAuthUserId } from "@/lib/session";
 import { dbGetUserForNav } from "@/lib/db/userActions";
 import { isActivePremium } from "@/lib/premiumUtils";
-import { dbGetHasReachedSendQuota } from "@/lib/db/messageActions";
+import { dbGetHasReachedSendQuota, dbGetReceivedCountsByPartner } from "@/lib/db/messageActions";
 import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
 
 export const metadata: Metadata = {
@@ -51,9 +51,16 @@ export default async function MessagesPage({
   const userId = await getAuthUserId();
   const dbUser = await dbGetUserForNav(userId);
   const isPremium = isActivePremium(dbUser);
-  const hasReachedQuota = isPremium
-    ? false
-    : await dbGetHasReachedSendQuota(userId, FREE_MESSAGE_LIMIT);
+  const [hasReachedQuota, receivedCounts] = isPremium
+    ? [false, {}]
+    : await Promise.all([
+        dbGetHasReachedSendQuota(userId, FREE_MESSAGE_LIMIT),
+        dbGetReceivedCountsByPartner(userId),
+      ]);
+
+  const lockedPartnerIds = Object.entries(receivedCounts)
+    .filter(([, count]) => count >= FREE_MESSAGE_LIMIT)
+    .map(([partnerId]) => partnerId);
 
   let messages = [];
   let nextCursor = undefined;
@@ -87,6 +94,7 @@ export default async function MessagesPage({
             isStarred={params.container === "starred"}
             isPremium={isPremium}
             hasReachedQuota={hasReachedQuota}
+            lockedPartnerIds={lockedPartnerIds}
           />
         </div>
       </div>

@@ -31,6 +31,7 @@ export default function MessageTable({
   isStarred,
   isPremium,
   hasReachedQuota,
+  lockedPartnerIds,
 }: TableProps) {
   console.count("MessageTable render");
   console.time("MessageTable render time");
@@ -312,7 +313,7 @@ export default function MessageTable({
                       conversationId={id}
                       authUserId={authUserId}
                       isPremium={isPremium}
-                      hasReachedQuota={hasReachedQuota}
+                      lockedPartnerIds={lockedPartnerIds}
                       onDeleteRequest={handleDeleteRequest}
                     />
                   ))}

@@ -260,6 +260,22 @@ export async function dbUpdateMessage(messageId: string, text: string) {
   });
 }
 
+
+export async function dbGetReceivedCountsByPartner(
+  userId: string,
+): Promise<Record<string, number>> {
+  const groups = await prisma.message.groupBy({
+    by: ["senderId"],
+    where: { recipientId: userId, senderId: { not: null } },
+    _count: { _all: true },
+  });
+  const result: Record<string, number> = {};
+  for (const g of groups) {
+    if (g.senderId) result[g.senderId] = g._count._all;
+  }
+  return result;
+}
+
 export async function dbGetHasReachedSendQuota(
   userId: string,
   limit: number,

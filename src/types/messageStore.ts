@@ -20,4 +20,5 @@ export type TableProps = {
   isStarred?: boolean;
   isPremium: boolean;
   hasReachedQuota: boolean;
+  lockedPartnerIds: string[];
 };
