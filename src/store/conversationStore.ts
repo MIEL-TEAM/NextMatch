@@ -140,7 +140,11 @@ const useConversationStore = create<ConversationStoreState>()(
       // ─── Track which conversation is open ────────────────────────────────
 
       setActiveConversation: (id: string | null) => {
-        set({ activeConversationId: id, remainingQuota: null, isQuotaReached: false });
+        if (id === null) {
+          set({ activeConversationId: null });
+        } else {
+          set({ activeConversationId: id, remainingQuota: null, isQuotaReached: false });
+        }
       },
 
       // ─── Track sent message quota ─────────────────────────────────────────

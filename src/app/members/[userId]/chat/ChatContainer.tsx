@@ -9,6 +9,7 @@ import { createChatId, transformImageUrl } from "@/lib/util";
 import useConversationStore from "@/store/conversationStore";
 import usePresenceStore from "@/hooks/usePresenceStore";
 import MessageList from "./MessageList";
+import QuotaWarning from "./QuotaWarning";
 import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
@@ -35,6 +36,7 @@ export default function ChatContainer({
   const setQuota = useConversationStore((s) => s.setQuota);
   const setThread = useConversationStore((s) => s.setThread);
   const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
+  const remainingQuota = useConversationStore((s) => s.remainingQuota);
   const messages = useConversationStore((s) => s.threads[chatId] ?? EMPTY_THREAD);
 
   useEffect(() => {
@@ -72,8 +74,7 @@ export default function ChatContainer({
 
   const isOnline = usePresenceStore((s) => s.members.includes(recipientUserId));
 
-  const [hasLockedMessages, setHasLockedMessages] = useState(false);
-  const showUpgradeCta = !isPremium && (hasLockedMessages || isQuotaReached);
+  const showUpgradeCta = !isPremium && isQuotaReached;
 
   if (isLoading) {
     return <HeartLoading message="טוען הודעות..." />;
@@ -111,9 +112,10 @@ export default function ChatContainer({
           initialMessages={{ messages, readCount: 0 }}
           chatId={chatId}
           isPremium={isPremium}
-          onLockedChange={setHasLockedMessages}
         />
       </div>
+
+      <QuotaWarning remainingQuota={remainingQuota} isPremium={isPremium} />
 
       {showUpgradeCta && (
         <div className="flex-shrink-0 pt-3 pb-1">

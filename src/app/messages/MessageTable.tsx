@@ -20,9 +20,9 @@ import { TableProps } from "@/types/messageStore";
 import useConversationStore from "@/store/conversationStore";
 import { useShallow } from "zustand/react/shallow";
 import { timeAgo } from "@/lib/util";
+import Table, { ConfigT } from "@/lib/table";
 import useUpgradeModal from "@/hooks/useUpgradeModal";
 import UpgradeModal from "@/components/premium/UpgradeModal";
-import Table, { ConfigT } from "@/lib/table";
 
 export default function MessageTable({
   initialMessages,
@@ -82,6 +82,9 @@ export default function MessageTable({
   const bootstrapInbox = useConversationStore((s) => s.bootstrapInbox);
   const isBootstrapped = useConversationStore((s) => s.isBootstrapped);
   const authUserId = useConversationStore((s) => s.currentUserId);
+  const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
+
+  const showUpgradeCard = !isPremium && isQuotaReached;
 
   useEffect(() => {
     if (isInbox && !isBootstrapped) {
@@ -96,8 +99,6 @@ export default function MessageTable({
   // ─── Lock state ───────────────────────────────────────────────────────────
 
   const lockedMessageIds = useMemo<Set<string>>(() => new Set<string>(), []);
-
-  const showUpgradeCta = !isPremium;
 
   // ─── Delete confirmation modal ────────────────────────────────────────────
 
@@ -260,17 +261,16 @@ export default function MessageTable({
           </div>
         </div>
 
-        {/* Premium upgrade CTA */}
-        {showUpgradeCta && (
-          <div className="mb-3">
+        {showUpgradeCard && (
+          <div className="rounded-xl border p-4 bg-gradient-to-r from-pink-50 to-purple-50 text-center mb-4">
+            <p className="text-base font-semibold text-gray-800"> <Icon name="message" className="size-5 bg-amber-500 flex-shrink-0" /> נגמרו לך ההודעות</p>
+            <p className="text-sm text-gray-500 mt-1">כדי להמשיך לדבר עם אנשים</p>
+            <p className="text-sm text-gray-500">שדרג ל-Miel+</p>
             <button
               onClick={() => useUpgradeModal.getState().open()}
-              className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
+              className="mt-3 px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm"
             >
-              <Icon name="binary-lock" className="size-[11px] bg-amber-500 flex-shrink-0" />
-              <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                ההודעה מחכה לך — שדרג ל-Miel+
-              </span>
+              שדרג עכשיו
             </button>
           </div>
         )}
@@ -341,8 +341,6 @@ export default function MessageTable({
         </div>
       </Card>
 
-      <UpgradeModal />
-
       <AppModal
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
@@ -370,6 +368,8 @@ export default function MessageTable({
           },
         ]}
       />
+
+      <UpgradeModal />
     </div>
   );
 }
