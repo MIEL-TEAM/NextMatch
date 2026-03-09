@@ -11,7 +11,7 @@ import { getAuthUserId } from "@/lib/session";
 import { dbGetUserForNav } from "@/lib/db/userActions";
 import { isActivePremium } from "@/lib/premiumUtils";
 import { dbGetHasReachedSendQuota, dbGetReceivedCountsByPartner } from "@/lib/db/messageActions";
-import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
+import { FREE_MESSAGE_LIMIT } from "@/domain/conversation/lockUtils";
 
 export const metadata: Metadata = {
   title: "הודעות | Miel",
@@ -59,7 +59,7 @@ export default async function MessagesPage({
       ]);
 
   const lockedPartnerIds = Object.entries(receivedCounts)
-    .filter(([, count]) => count >= FREE_MESSAGE_LIMIT)
+    .filter(([, count]) => count > FREE_MESSAGE_LIMIT)
     .map(([partnerId]) => partnerId);
 
   let messages = [];

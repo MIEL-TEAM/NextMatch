@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Channel } from "pusher-js";
 import useConversationStore from "@/store/conversationStore";
 import { subscribeToPusher, unsubscribeFromPusher } from "@/lib/pusher-client";
 import { MessageDto } from "@/types";
 import { MessageListProps } from "@/types/chat";
-import { recomputeLocks } from "@/lib/messageLocks";
 
 const MessageBox = dynamic(() => import("./MessageBox"), {
   ssr: false,
@@ -17,23 +16,18 @@ export default function MessageList({
   initialMessages,
   currentUserId,
   chatId,
-  isPremium,
   onLockedChange,
 }: MessageListProps) {
   const channelRef = useRef<Channel | null>(null);
+  const privateChannelRef = useRef<Channel | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialScroll = useRef(true);
 
   const storeMessages = useConversationStore((s) => s.threads[chatId]);
   const messages = storeMessages ?? initialMessages.messages;
 
-  const { displayMessages, firstLockedId } = useMemo(() => {
-    const computed = recomputeLocks(messages, currentUserId, isPremium);
-    return {
-      displayMessages: computed,
-      firstLockedId: computed.find((m) => m.locked)?.id,
-    };
-  }, [messages, currentUserId, isPremium]);
+  const displayMessages = messages;
+  const firstLockedId = messages.find((m) => m.locked)?.id;
 
   useEffect(() => {
     onLockedChange?.(firstLockedId !== undefined);
@@ -52,14 +46,22 @@ export default function MessageList({
 
   const handleNewMessage = useCallback(
     (message: MessageDto) => {
+      if (message.locked === undefined) return;
+
       if (!message.created) message.created = new Date().toISOString();
       if (!message.dateRead) message.dateRead = null;
 
       const store = useConversationStore.getState();
       const prev = store.threads[chatId] ?? [];
 
-      if (prev.some((msg) => msg.id === message.id)) return;
-      
+      const existingIdx = prev.findIndex((msg) => msg.id === message.id);
+      if (existingIdx !== -1) {
+        const next = [...prev];
+        next[existingIdx] = message;
+        store.patchThread(chatId, next);
+        return;
+      }
+
       const optimisticIdx = prev.findIndex((m) => m.id.startsWith("optimistic-"));
       if (optimisticIdx !== -1) {
         const next = [...prev];
@@ -140,6 +142,18 @@ export default function MessageList({
     handleEditMessage,
     handleDeleteMessage,
   ]);
+
+  useEffect(() => {
+    privateChannelRef.current = subscribeToPusher(`private-${currentUserId}`);
+    privateChannelRef.current.bind("message:new", handleNewMessage);
+
+    return () => {
+      if (privateChannelRef.current) {
+        privateChannelRef.current.unbind("message:new", handleNewMessage);
+        privateChannelRef.current = null;
+      }
+    };
+  }, [currentUserId, handleNewMessage]);
 
   return (
     <div className="h-full">

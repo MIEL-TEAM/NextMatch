@@ -4,7 +4,6 @@ export type MessageListProps = {
   initialMessages: { messages: MessageDto[]; readCount: number };
   currentUserId: string;
   chatId: string;
-  isPremium: boolean;
   onLockedChange?: (hasLocked: boolean) => void;
 };
 

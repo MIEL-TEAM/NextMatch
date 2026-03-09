@@ -261,6 +261,15 @@ export async function dbUpdateMessage(messageId: string, text: string) {
 }
 
 
+export async function dbGetReceivedCountFromSender(
+  recipientId: string,
+  senderId: string,
+): Promise<number> {
+  return prisma.message.count({
+    where: { recipientId, senderId },
+  });
+}
+
 export async function dbGetReceivedCountsByPartner(
   userId: string,
 ): Promise<Record<string, number>> {

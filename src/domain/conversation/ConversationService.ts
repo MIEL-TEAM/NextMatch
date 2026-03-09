@@ -21,6 +21,7 @@ import {
   dbGetMessagesByContainer,
   dbGetMessagesToDelete,
   dbGetMessageThread,
+  dbGetReceivedCountFromSender,
   dbGetStarredMessages,
   dbGetUnreadMessageCount,
   dbMarkMessagesAsRead,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/db/messageActions";
 import { randomUUID } from "crypto";
 import { MessageDto } from "@/types";
-import { applyLocks } from "./lockUtils";
+import { applyLocks, FREE_MESSAGE_LIMIT } from "./lockUtils";
 import { emitConversationEvent, emitEvent } from "./eventEmitter";
 
 export class ConversationService {
@@ -160,18 +161,25 @@ export class ConversationService {
       console.error("Failed to track message interaction:", e),
     );
 
-    const messageDto = {
+    const senderDto = {
       ...mapMessageToMessageDto(message),
       currentUserId: userId,
     };
 
-    await emitEvent(
-      createChatId(userId, recipientUserId),
-      "message:new",
-      messageDto,
-    );
-    await emitEvent(`private-${recipientUserId}`, "message:new", messageDto);
-    await emitEvent(`private-${userId}`, "message:new", messageDto);
+    const recipientUser = await dbGetUserForNav(recipientUserId);
+    const recipientPremium = isActivePremium(recipientUser);
+    const recipientReceivedCount = await dbGetReceivedCountFromSender(recipientUserId, userId);
+    const newMessageLocked = !recipientPremium && recipientReceivedCount > FREE_MESSAGE_LIMIT;
+
+    const recipientDto = {
+      ...mapMessageToMessageDto(message),
+      currentUserId: recipientUserId,
+      locked: newMessageLocked,
+    };
+
+    await emitEvent(createChatId(userId, recipientUserId), "message:new", senderDto);
+    await emitEvent(`private-${recipientUserId}`, "message:new", recipientDto);
+    await emitEvent(`private-${userId}`, "message:new", senderDto);
 
     await emitConversationEvent(
       {
@@ -181,7 +189,7 @@ export class ConversationService {
         conversationId: createChatId(userId, recipientUserId),
         actorId: userId,
         timestamp: new Date().toISOString(),
-        payload: { message: messageDto },
+        payload: { message: senderDto },
       },
       [userId, recipientUserId],
     );
@@ -189,8 +197,8 @@ export class ConversationService {
     await notifyNewMessage(
       recipientUserId,
       userId,
-      messageDto.senderName || "משתמש",
-      messageDto.senderImage || null,
+      senderDto.senderName || "משתמש",
+      senderDto.senderImage || null,
       message.id,
       text,
     ).catch((e) => console.error("Failed to create notification:", e));
@@ -214,7 +222,7 @@ export class ConversationService {
       );
     }
 
-    return { message: messageDto, remainingQuota };
+    return { message: senderDto, remainingQuota };
   }
 
   // ─── Edit ────────────────────────────────────────────────────────────────

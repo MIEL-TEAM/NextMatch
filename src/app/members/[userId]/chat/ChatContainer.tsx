@@ -12,7 +12,7 @@ import MessageList from "./MessageList";
 import QuotaWarning from "./QuotaWarning";
 import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
-import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
+import { FREE_MESSAGE_LIMIT } from "@/domain/conversation/lockUtils";
 import LightAvatar from "@/components/ui/LightAvatar";
 
 const EMPTY_THREAD: MessageDto[] = [];
@@ -106,7 +106,6 @@ export default function ChatContainer({
           currentUserId={currentUserId}
           initialMessages={{ messages, readCount: 0 }}
           chatId={chatId}
-          isPremium={isPremium}
         />
       </div>
 

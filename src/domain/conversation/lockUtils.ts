@@ -1,5 +1,7 @@
 import type { MessageWithSenderRecipient } from "@/types";
 
+export const FREE_MESSAGE_LIMIT = 5;
+
 export function applyLocks(
   messages: MessageWithSenderRecipient[],
   currentUserId: string,
