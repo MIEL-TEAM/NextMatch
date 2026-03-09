@@ -19,4 +19,5 @@ export type TableProps = {
   isArchived?: boolean;
   isStarred?: boolean;
   isPremium: boolean;
+  hasReachedQuota: boolean;
 };

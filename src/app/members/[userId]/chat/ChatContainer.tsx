@@ -12,8 +12,6 @@ import MessageList from "./MessageList";
 import QuotaWarning from "./QuotaWarning";
 import HeartLoading from "@/components/HeartLoading";
 import UpgradeModal from "@/components/premium/UpgradeModal";
-import useUpgradeModal from "@/hooks/useUpgradeModal";
-import Icon from "@/lib/table/Icon";
 import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
 import LightAvatar from "@/components/ui/LightAvatar";
 
@@ -35,7 +33,6 @@ export default function ChatContainer({
   const setActiveConversation = useConversationStore((s) => s.setActiveConversation);
   const setQuota = useConversationStore((s) => s.setQuota);
   const setThread = useConversationStore((s) => s.setThread);
-  const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
   const remainingQuota = useConversationStore((s) => s.remainingQuota);
   const messages = useConversationStore((s) => s.threads[chatId] ?? EMPTY_THREAD);
 
@@ -73,8 +70,6 @@ export default function ChatContainer({
   }, [chatId, recipientUserId, currentUserId, isPremium, setThread, setQuota]);
 
   const isOnline = usePresenceStore((s) => s.members.includes(recipientUserId));
-
-  const showUpgradeCta = !isPremium && isQuotaReached;
 
   if (isLoading) {
     return <HeartLoading message="טוען הודעות..." />;
@@ -116,20 +111,6 @@ export default function ChatContainer({
       </div>
 
       <QuotaWarning remainingQuota={remainingQuota} isPremium={isPremium} />
-
-      {showUpgradeCta && (
-        <div className="flex-shrink-0 pt-3 pb-1">
-          <button
-            onClick={() => useUpgradeModal.getState().open()}
-            className="flex items-center gap-1.5 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
-          >
-            <Icon name="binary-lock" className="size-[11px] bg-amber-500 flex-shrink-0" />
-            <span className="bg-gradient-to-l from-amber-500 to-orange-500 bg-clip-text text-transparent">
-              ההודעה מחכה לך — שדרג ל-Miel+
-            </span>
-          </button>
-        </div>
-      )}
 
       <UpgradeModal />
     </div>

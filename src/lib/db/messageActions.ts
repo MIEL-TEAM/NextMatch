@@ -260,6 +260,18 @@ export async function dbUpdateMessage(messageId: string, text: string) {
   });
 }
 
+export async function dbGetHasReachedSendQuota(
+  userId: string,
+  limit: number,
+): Promise<boolean> {
+  const groups = await prisma.message.groupBy({
+    by: ["recipientId"],
+    where: { senderId: userId, recipientId: { not: null } },
+    _count: { _all: true },
+  });
+  return groups.some((g) => g._count._all >= limit);
+}
+
 export async function dbCreateMessageWithLimit(
   text: string,
   recipientId: string,

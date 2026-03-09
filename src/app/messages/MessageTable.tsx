@@ -30,6 +30,7 @@ export default function MessageTable({
   isArchived,
   isStarred,
   isPremium,
+  hasReachedQuota,
 }: TableProps) {
   console.count("MessageTable render");
   console.time("MessageTable render time");
@@ -82,9 +83,7 @@ export default function MessageTable({
   const bootstrapInbox = useConversationStore((s) => s.bootstrapInbox);
   const isBootstrapped = useConversationStore((s) => s.isBootstrapped);
   const authUserId = useConversationStore((s) => s.currentUserId);
-  const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
-
-  const showUpgradeCard = !isPremium && isQuotaReached;
+  const showUpgradeCard = !isPremium && hasReachedQuota;
 
   useEffect(() => {
     if (isInbox && !isBootstrapped) {
@@ -313,6 +312,7 @@ export default function MessageTable({
                       conversationId={id}
                       authUserId={authUserId}
                       isPremium={isPremium}
+                      hasReachedQuota={hasReachedQuota}
                       onDeleteRequest={handleDeleteRequest}
                     />
                   ))}

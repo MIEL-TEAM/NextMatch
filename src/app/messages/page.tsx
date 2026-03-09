@@ -10,6 +10,8 @@ import { Metadata } from "next";
 import { getAuthUserId } from "@/lib/session";
 import { dbGetUserForNav } from "@/lib/db/userActions";
 import { isActivePremium } from "@/lib/premiumUtils";
+import { dbGetHasReachedSendQuota } from "@/lib/db/messageActions";
+import { FREE_MESSAGE_LIMIT } from "@/lib/messageLocks";
 
 export const metadata: Metadata = {
   title: "הודעות | Miel",
@@ -49,6 +51,9 @@ export default async function MessagesPage({
   const userId = await getAuthUserId();
   const dbUser = await dbGetUserForNav(userId);
   const isPremium = isActivePremium(dbUser);
+  const hasReachedQuota = isPremium
+    ? false
+    : await dbGetHasReachedSendQuota(userId, FREE_MESSAGE_LIMIT);
 
   let messages = [];
   let nextCursor = undefined;
@@ -81,6 +86,7 @@ export default async function MessagesPage({
             isArchived={params.container === "archived"}
             isStarred={params.container === "starred"}
             isPremium={isPremium}
+            hasReachedQuota={hasReachedQuota}
           />
         </div>
       </div>

@@ -59,13 +59,13 @@ export default function ChatForm({ currentUserId }: ChatFormProps) {
       },
     ]);
 
-    reset();
-
     try {
       const result = await createMessgae(recipientId, data);
 
       if (result.status === "success") {
         const real = result.data.message;
+
+        reset();
 
         if (result.data.remainingQuota !== null) {
           store.setQuota(result.data.remainingQuota);
