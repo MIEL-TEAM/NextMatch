@@ -312,6 +312,7 @@ export default function MessageTable({
                       key={id}
                       conversationId={id}
                       authUserId={authUserId}
+                      isPremium={isPremium}
                       onDeleteRequest={handleDeleteRequest}
                     />
                   ))}

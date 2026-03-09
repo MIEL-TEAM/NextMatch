@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import Icon from "@/lib/table/Icon";
 import { deleteMessage, editMessage } from "@/app/actions/messageActions";
 import { toast } from "sonner";
+import useUpgradeModal from "@/hooks/useUpgradeModal";
 
 function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: MessageBoxProps) {
   const isOptimistic = message.id.startsWith("optimistic-");
@@ -220,16 +221,24 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
             </div>
           </div>
         ) : isLocked ? (
-          <p
-            className={clsx("text-sm py-3 text-gray-900", {
-              "break-words whitespace-normal": isLongMessage,
-            })}
-            style={isLongMessage ? { wordBreak: "break-word" } : {}}
-          >
-            <span className="blur-sm select-none pointer-events-none">
-              {message.text}
-            </span>
-          </p>
+          <div className="relative py-3">
+            <p
+              className={clsx("text-sm text-gray-900", {
+                "break-words whitespace-normal": isLongMessage,
+              })}
+              style={isLongMessage ? { wordBreak: "break-word" } : {}}
+            >
+              <span className="blur-sm select-none pointer-events-none">
+                {message.text}
+              </span>
+            </p>
+            <button
+              className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-700"
+              onClick={() => useUpgradeModal.getState().open()}
+            >
+              <Icon name="lock" className="size-3.5 bg-gray-700" /> פתח את ההודעה עם Miel+
+            </button>
+          </div>
         ) : (
           <p
             className={clsx("text-sm py-3 text-gray-900", {

@@ -12,14 +12,16 @@ import { timeAgo } from "@/lib/util";
 interface InboxMessageRowProps {
   conversationId: string;
   authUserId: string | null;
+  isPremium: boolean;
   onDeleteRequest: (item: MessageDto) => void;
 }
 
-function InboxMessageRow({ conversationId, authUserId, onDeleteRequest }: InboxMessageRowProps) {
+function InboxMessageRow({ conversationId, authUserId, isPremium, onDeleteRequest }: InboxMessageRowProps) {
   const router = useRouter();
   const conversation = useConversationStore((s) => s.conversations[conversationId]);
   const updateConversationMessage = useConversationStore((s) => s.updateConversationMessage);
   const removeConversation = useConversationStore((s) => s.removeConversation);
+  const isQuotaReached = useConversationStore((s) => s.isQuotaReached);
 
   const [isStarring, setIsStarring] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
@@ -34,6 +36,7 @@ function InboxMessageRow({ conversationId, authUserId, onDeleteRequest }: InboxM
   const raw = item.text ?? "";
   const text = raw.length > 40 ? raw.substring(0, 40) + "..." : raw;
   const isUnread = !item.dateRead;
+  const shouldBlurPreview = !isPremium && isQuotaReached && !isSender;
 
   const handleRowClick = () => {
     const partnerId = isSender ? item.recipientId : item.senderId;
@@ -97,7 +100,9 @@ function InboxMessageRow({ conversationId, authUserId, onDeleteRequest }: InboxM
         </div>
       </td>
       <td className="truncate max-w-64">
-        <span className="text-gray-600">{text}</span>
+        <span className={shouldBlurPreview ? "blur-sm select-none pointer-events-none text-gray-600" : "text-gray-600"}>
+          {text}
+        </span>
       </td>
       <td className="truncate max-w-64">
         <span className="text-xs text-gray-500 whitespace-nowrap">
