@@ -16,9 +16,11 @@ import Icon from "@/lib/table/Icon";
 
 type ChatFormProps = {
   currentUserId: string;
+  currentUserName?: string | null;
+  currentUserImage?: string | null;
 };
 
-export default function ChatForm({ currentUserId }: ChatFormProps) {
+export default function ChatForm({ currentUserId, currentUserName, currentUserImage }: ChatFormProps) {
   const params = useParams<{ userId: string }>();
   const {
     register,
@@ -26,7 +28,7 @@ export default function ChatForm({ currentUserId }: ChatFormProps) {
     reset,
     setError,
     setFocus,
-    formState: { isSubmitting, isValid, errors },
+    formState: { isValid, errors },
   } = useForm<MessageSchema>({
     resolver: zodResolver(messagesSchema),
   });
@@ -43,7 +45,6 @@ export default function ChatForm({ currentUserId }: ChatFormProps) {
 
     // Optimistically add the message so the UI feels instant
     const prev = store.threads[chatId] ?? [];
-    const myPrevMsg = [...prev].reverse().find((m) => m.senderId === currentUserId);
     store.patchThread(chatId, [
       ...prev,
       {
@@ -52,12 +53,14 @@ export default function ChatForm({ currentUserId }: ChatFormProps) {
         created: new Date().toISOString(),
         dateRead: null,
         senderId: currentUserId,
-        senderName: myPrevMsg?.senderName,
-        senderImage: myPrevMsg?.senderImage,
+        senderName: currentUserName ?? undefined,
+        senderImage: currentUserImage ?? undefined,
         currentUserId,
         locked: false,
       },
     ]);
+
+    reset();
 
     try {
       const result = await createMessgae(recipientId, data);
@@ -65,19 +68,13 @@ export default function ChatForm({ currentUserId }: ChatFormProps) {
       if (result.status === "success") {
         const real = result.data.message;
 
-        reset();
-
         if (result.data.remainingQuota !== null) {
           store.setQuota(result.data.remainingQuota);
         }
 
         const current = useConversationStore.getState().threads[chatId] ?? [];
-        const withoutOptimistic = current.filter((m) => m.id !== optimisticId);
-        if (!withoutOptimistic.some((m) => m.id === real.id)) {
-          store.patchThread(chatId, [...withoutOptimistic, real]);
-        } else {
-          store.patchThread(chatId, withoutOptimistic);
-        }
+        const reconciled = { ...real, id: optimisticId };
+        store.patchThread(chatId, current.map((m) => m.id === optimisticId ? reconciled : m));
 
         store.handleConversationEvent({
           version: 1,
@@ -147,8 +144,7 @@ export default function ChatForm({ currentUserId }: ChatFormProps) {
           isIconOnly
           color="secondary"
           radius="full"
-          isLoading={isSubmitting}
-          isDisabled={!isValid || isSubmitting}
+          isDisabled={!isValid}
         >
           <Icon name="paper-plane-top" className="size-[18px] bg-white" />
         </Button>

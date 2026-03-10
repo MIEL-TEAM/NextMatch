@@ -29,7 +29,10 @@ export default async function ChatPage({ params }: UserParamsProps) {
     }
   }
 
-  const recipient = await getMemberByUserId(recipientId);
+  const [recipient, currentMember] = await Promise.all([
+    getMemberByUserId(recipientId),
+    getMemberByUserId(userId),
+  ]);
 
   const chatHeader = recipient ? (
     <div className="flex items-center gap-3">
@@ -54,7 +57,7 @@ export default async function ChatPage({ params }: UserParamsProps) {
           recipientUserId={recipientId}
         />
       }
-      footer={<ChatForm currentUserId={userId} />}
+      footer={<ChatForm currentUserId={userId} currentUserName={dbUser?.name} currentUserImage={currentMember?.image} />}
     />
   );
 }

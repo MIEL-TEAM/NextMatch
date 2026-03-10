@@ -17,7 +17,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
   const isOptimistic = message.id.startsWith("optimistic-");
   const isCurrentUserSender = message.senderId === currentUserId;
   const isLocked = message.locked === true;
-  const messageEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -27,7 +26,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isLongMessage = message.text.length > 50;
-
   const isStoryReply =
     message.text.includes("🖼️ הגיב/ה על הסטורי שלך:") &&
     message.text.includes("📸 תמונת הסטורי:");
@@ -43,11 +41,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
     const match = message.text.match(/🖼️ הגיב\/ה על הסטורי שלך: "(.+)"/);
     return match ? match[1] : message.text;
   };
-
-  useEffect(() => {
-    if (messageEndRef.current)
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [messageEndRef]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -122,7 +115,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
   };
 
   const renderAvatar = () => {
-    if (isOptimistic) {
+    if (isOptimistic && !message.senderImage) {
       return <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 self-end" />;
     }
     return (
@@ -233,7 +226,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
               </span>
             </p>
             <button
-              className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-700"
+              className="absolute inset-0 flex items-center justify-center gap-1.5 text-sm font-medium text-gray-700"
               onClick={() => useUpgradeModal.getState().open()}
             >
               <Icon name="lock" className="size-3.5 bg-gray-700" /> פתח את ההודעה עם Miel+
@@ -338,7 +331,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
         {isCurrentUserSender && renderAvatar()}
       </div>
 
-      <div ref={messageEndRef} />
     </div>
   );
 }

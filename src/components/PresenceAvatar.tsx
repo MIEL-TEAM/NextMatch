@@ -6,9 +6,9 @@ type PresenceAvatarProps = {
   src?: string | null;
 };
 export default function PresenceAvatar({ userId, src }: PresenceAvatarProps) {
-  const members = usePresenceStore((state) => state.members);
-
-  const isOnline = userId && members.indexOf(userId) !== -1;
+  const isOnline = usePresenceStore((state) =>
+    userId ? state.members.includes(userId) : false
+  );
 
   return (
     <Badge content="" color="success" shape="circle" isInvisible={!isOnline}>

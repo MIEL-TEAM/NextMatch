@@ -194,7 +194,7 @@ export class ConversationService {
       [userId, recipientUserId],
     );
 
-    await notifyNewMessage(
+    notifyNewMessage(
       recipientUserId,
       userId,
       senderDto.senderName || "משתמש",
@@ -205,22 +205,19 @@ export class ConversationService {
 
     const conversationId = createChatId(userId, recipientUserId);
 
-    const emailSent = await sendImmediateMessageEmail(
+    sendImmediateMessageEmail(
       message.id,
       conversationId,
       userId,
       recipientUserId,
       text,
-    );
-
-    if (emailSent) {
-      await scheduleReminderEmail(
-        message.id,
-        conversationId,
-        recipientUserId,
-        2,
-      );
-    }
+    ).then((emailSent) => {
+      if (emailSent) {
+        scheduleReminderEmail(message.id, conversationId, recipientUserId, 2).catch(
+          (e) => console.error("Failed to schedule reminder email:", e),
+        );
+      }
+    }).catch((e) => console.error("Failed to send message email:", e));
 
     return { message: senderDto, remainingQuota };
   }

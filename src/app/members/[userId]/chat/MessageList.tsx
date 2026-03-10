@@ -1,16 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import { Channel } from "pusher-js";
 import useConversationStore from "@/store/conversationStore";
 import { subscribeToPusher, unsubscribeFromPusher } from "@/lib/pusher-client";
 import { MessageDto } from "@/types";
 import { MessageListProps } from "@/types/chat";
-
-const MessageBox = dynamic(() => import("./MessageBox"), {
-  ssr: false,
-});
+import MessageBox from "./MessageBox";
 
 export default function MessageList({
   initialMessages,
@@ -56,16 +52,14 @@ export default function MessageList({
 
       const existingIdx = prev.findIndex((msg) => msg.id === message.id);
       if (existingIdx !== -1) {
-        const next = [...prev];
-        next[existingIdx] = message;
-        store.patchThread(chatId, next);
+        // Already in store from API response — skip redundant Pusher update
         return;
       }
 
       const optimisticIdx = prev.findIndex((m) => m.id.startsWith("optimistic-"));
       if (optimisticIdx !== -1) {
         const next = [...prev];
-        next[optimisticIdx] = message;
+        next[optimisticIdx] = { ...message, id: prev[optimisticIdx].id };
         store.patchThread(chatId, next);
       } else {
         store.patchThread(chatId, [...prev, message]);
