@@ -15,6 +15,8 @@ export default auth((req) => {
   const isAdmin = user?.role === "ADMIN";
   const isAdminRoute = pathname.startsWith("/admin");
 
+  console.log("pathname", pathname);
+
   // Public & auth action routes - always allow
   if (publicRoutes.includes(pathname) || authActionRoutes.includes(pathname)) {
     return NextResponse.next();
