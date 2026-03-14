@@ -41,7 +41,7 @@ export default function PremiumSuccessClient({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
           <div className="relative z-10 text-white drop-shadow-lg">
-            <div className="text-6xl mb-6 select-none"><Icon name="gem" type="sol" className="size-[30px] bg-secondary" /></div>
+            <div className="text-6xl mb-6 select-none"></div>
             <h2 className="text-[34px] font-bold leading-tight mb-4">
               ברוך הבא<br />ל-Miel Premium
             </h2>
@@ -119,7 +119,7 @@ export default function PremiumSuccessClient({
             href="/members"
             className="block text-center text-[13px] text-stone-400 hover:text-amber-700 transition-colors duration-150"
           >
-            גלה אנשים חדשים <Icon name="arrow-left" type="sol" className="size-[15px] bg-secondary" />
+            גלה אנשים חדשים
           </Link>
         </div>
       </div>

@@ -12,6 +12,7 @@ interface MutualMatchData {
     image?: string;
     userId: string;
   };
+  currentUserImage?: string;
   currentUserGender: "male" | "female";
   type: string;
   timestamp: string;
@@ -46,6 +47,7 @@ export function useCelebrationListener(
         userName: data.matchedUser.name,
         userImage: data.matchedUser.image,
         matchedUserId: data.matchedUser.userId,
+        currentUserImage: data.currentUserImage,
         customTitle: "🎉 מזל טוב! התאמה הדדית!",
         customSubtitle: `${genderText} ו${data.matchedUser.name} אוהבים ${loveText}! 💕`,
       });

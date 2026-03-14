@@ -23,7 +23,6 @@ const SUPPORTED_TYPES = new Set([
   "PROFILE_VIEW",
   "ACHIEVEMENT",
   "MATCH_ONLINE",
-  "MUTUAL_MATCH",
 ]);
 
 // ─── Priority ─────────────────────────────────────────────────────────────────
