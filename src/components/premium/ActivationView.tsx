@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-
 interface ActivationViewProps {
   firstName: string;
   boosts: number;
@@ -21,12 +18,6 @@ function benefits(boosts: number): string[] {
 }
 
 export function ActivationView({ firstName, boosts, onDone }: ActivationViewProps) {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace("/premium");
-  }, [router]);
-
   return (
     <div
       className="flex flex-col items-center justify-center py-24 gap-8 max-w-md mx-auto text-center"

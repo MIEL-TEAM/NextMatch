@@ -1,8 +1,8 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { getPremiumState } from "@/app/actions/premiumActions";
 import { getSession } from "@/lib/session";
 import PremiumSuccessClient from "./PremiumSuccessClient";
+import PremiumProcessingClient from "./PremiumProcessingClient";
 
 export const metadata: Metadata = {
   title: "Miel Premium — ברוך הבא",
@@ -15,9 +15,8 @@ export default async function PremiumSuccessPage() {
     getSession(),
   ]);
 
-  // Only active subscribers should see this page.
   if (state.status !== "ACTIVE") {
-    redirect("/premium");
+    return <PremiumProcessingClient />;
   }
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "";

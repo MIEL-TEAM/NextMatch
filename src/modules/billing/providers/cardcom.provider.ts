@@ -86,7 +86,7 @@ export class CardcomProvider implements PaymentProvider {
       ApiPassword: apiPassword,
       Amount: amount,
       ReturnValue: `${userId}|${planId}`,
-      SuccessRedirectUrl: `${appUrl}/premium?activated=1`,
+      SuccessRedirectUrl: `${appUrl}/premium/success`,
       FailedRedirectUrl: `${appUrl}/premium`,
       WebHookUrl: webhookUrl,
       ISOCoinId: 1,
