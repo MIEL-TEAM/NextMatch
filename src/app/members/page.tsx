@@ -1,4 +1,4 @@
-import MembersClient from "./MembersClient";
+import MembersServerData from "./MembersServerData";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MembersPage() {
-  return <MembersClient />;
+export default async function MembersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string; page?: string }>;
+}) {
+  const params = await searchParams;
+  return <MembersServerData searchParams={params} />;
 }

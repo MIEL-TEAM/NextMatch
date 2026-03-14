@@ -383,6 +383,23 @@ export async function getOrCreateGroupedNotification(
   }
 }
 
+export async function dbHasRecentNotification(
+  userId: string,
+  groupKeyPrefix: string,
+  windowMs: number,
+): Promise<boolean> {
+  const since = new Date(Date.now() - windowMs);
+  const found = await prisma.notification.findFirst({
+    where: {
+      userId,
+      groupKey: { startsWith: groupKeyPrefix },
+      createdAt: { gte: since },
+    },
+    select: { id: true },
+  });
+  return found !== null;  
+}
+
 // Get user's notification preferences
 export async function getUserNotificationPreferences() {
   try {
@@ -401,7 +418,6 @@ export async function getUserNotificationPreferences() {
       newLike: { toast: false, sound: true, push: true },
       mutualMatch: { toast: true, sound: true, push: true },
       profileView: { toast: false, sound: false, push: true },
-      storyView: { toast: false, sound: false, push: false },
       matchOnline: { toast: true, sound: true, push: true },
     };
 

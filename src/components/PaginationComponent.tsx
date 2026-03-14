@@ -4,16 +4,28 @@ import usePaginationStore from "@/hooks/usePaginationStore";
 import { Pagination } from "@nextui-org/react";
 import clsx from "clsx";
 import React, { useEffect } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 export default function PaginationComponent({
   totalCount,
 }: {
   totalCount: number;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const { setPage, setPageSize, setPagination, pagination } =
     usePaginationStore((state) => state);
 
   const { pageNumber, pageSize, totalPages } = pagination;
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    setPage(newPage);
+  };
 
   useEffect(() => {
     setPagination(totalCount);
@@ -34,9 +46,7 @@ export default function PaginationComponent({
           total={totalPages}
           color="secondary"
           page={pageNumber}
-          onChange={(newPage) => {
-            setPage(newPage);
-          }}
+          onChange={handlePageChange}
           variant="bordered"
           showControls
           size="sm"

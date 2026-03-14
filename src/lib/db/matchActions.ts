@@ -162,12 +162,12 @@ export async function dbGetPendingReveals(userId: string) {
           userId2: true,
           user1: {
             select: {
-              member: { select: { name: true, image: true, city: true } },
+              member: { select: { name: true, image: true, city: true, gender: true } },
             },
           },
           user2: {
             select: {
-              member: { select: { name: true, image: true, city: true } },
+              member: { select: { name: true, image: true, city: true, gender: true } },
             },
           },
         },
@@ -230,12 +230,12 @@ export async function dbGetResurfacingReveals(userId: string) {
               userId2: true,
               user1: {
                 select: {
-                  member: { select: { name: true, image: true, city: true } },
+                  member: { select: { name: true, image: true, city: true, gender: true } },
                 },
               },
               user2: {
                 select: {
-                  member: { select: { name: true, image: true, city: true } },
+                  member: { select: { name: true, image: true, city: true, gender: true } },
                 },
               },
             },

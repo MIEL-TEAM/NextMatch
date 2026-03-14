@@ -121,12 +121,13 @@ export function useCelebrationListener(
               videoUrl: data.videoUrl || null,
               name: data.name,
               title: `${data.name} זמינה לשיחה`,
+              gender: matchingInvitation.sender.gender ?? null,
               onAction: async () => {
                 // Mark as accepted on backend
                 await fetch(`/api/invitations/${matchingInvitation.id}/accept`, {
                   method: "POST",
                 }).catch((e) => console.error("Failed to accept invitation:", e));
-                
+
                 router.push(`/members/${data.userId}/chat`);
               },
             };

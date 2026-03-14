@@ -6,33 +6,24 @@ import UploadStatusView from "@/components/video/UploadStatusView";
 import VideoManagerActions from "@/components/video/VideoManagerActions";
 import { toast } from "sonner";
 import { Button, Spinner } from "@nextui-org/react";
-
-interface VideoUploadSectionProps {
-  memberId: string;
-  existingVideos?: Array<{ url: string; id: string; createdAt?: string }>;
-}
+import { VideoUploadSectionProps, VideoState } from "@/types/video";
 
 export default function VideoUploadSection({
   memberId,
   existingVideos = [],
 }: VideoUploadSectionProps) {
-  const [videos, setVideos] = useState(existingVideos);
-  const [videoUrl, setVideoUrl] = useState<string | null>(
-    videos.length > 0 ? videos[0].url : null
-  );
-  const [createdAt, setCreatedAt] = useState<string | null>(
-    videos.length > 0 ? videos[0].createdAt || null : null
-  );
-  const [currentVideoId, setCurrentVideoId] = useState<string | null>(
-    videos.length > 0 ? videos[0].id : null
-  );
-
-  const [isReplacing, setIsReplacing] = useState(false);
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [justUploaded, setJustUploaded] = useState(false);
-  const [justDeleted, setJustDeleted] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [state, setState] = useState<VideoState>({
+    videos: existingVideos,
+    videoUrl: existingVideos.length ? existingVideos[0].url : null,
+    createdAt: existingVideos.length ? existingVideos[0].createdAt || null : null,
+    currentVideoId: existingVideos.length ? existingVideos[0].id : null,
+    isReplacing: false,
+    isVideoModalOpen: false,
+    isDeleteModalOpen: false,
+    justUploaded: false,
+    justDeleted: false,
+    isDeleting: false,
+  });
 
   const handleUploadComplete = async (fileUrl: string) => {
     try {
@@ -47,12 +38,15 @@ export default function VideoUploadSection({
       const data = await response.json();
       const now = new Date().toISOString();
 
-      setVideoUrl(fileUrl);
-      setCreatedAt(now);
-      setCurrentVideoId(data.videoId);
-      setVideos([{ url: fileUrl, id: data.videoId, createdAt: now }]);
-      setIsReplacing(false);
-      setJustUploaded(true);
+      setState((prev) => ({
+        ...prev,
+        videoUrl: fileUrl,
+        createdAt: now,
+        currentVideoId: data.videoId,
+        videos: [{ url: fileUrl, id: data.videoId, createdAt: now }],
+        isReplacing: false,
+        justUploaded: true,
+      }));
       toast.success("הסרטון הועלה בהצלחה! 🎉");
     } catch (error) {
       console.error(error);
@@ -65,63 +59,69 @@ export default function VideoUploadSection({
   };
 
   const handleDeleteVideo = async () => {
-    setIsDeleting(true);
+    setState((prev) => ({ ...prev, isDeleting: true }));
     try {
       const response = await fetch(
-        `/api/videos/delete?videoId=${currentVideoId}&memberId=${memberId}`,
+        `/api/videos/delete?videoId=${state.currentVideoId}&memberId=${memberId}`,
         { method: "DELETE" }
       );
 
       if (!response.ok) throw new Error("Failed to delete video");
 
-      setVideoUrl(null);
-      setCurrentVideoId(null);
-      setVideos([]);
-      setJustDeleted(true);
-      setIsDeleteModalOpen(false);
+      setState((prev) => ({
+        ...prev,
+        videoUrl: null,
+        currentVideoId: null,
+        videos: [],
+        justDeleted: true,
+        isDeleteModalOpen: false,
+      }));
       toast.success("הסרטון נמחק בהצלחה");
     } catch (error) {
       console.error(error);
       toast.error("שגיאה במחיקת הסרטון");
     } finally {
-      setIsDeleting(false);
+      setState((prev) => ({ ...prev, isDeleting: false }));
     }
   };
 
-  if (justUploaded || justDeleted) {
+  if (state.justUploaded || state.justDeleted) {
     return (
       <UploadStatusView
-        status={justUploaded ? "uploaded" : "deleted"}
-        onReset={() => {
-          setJustUploaded(false);
-          setJustDeleted(false);
-        }}
+        status={state.justUploaded ? "uploaded" : "deleted"}
+        onReset={() =>
+          setState((prev) => ({ ...prev, justUploaded: false, justDeleted: false }))
+        }
       />
     );
   }
 
-  if (videoUrl && !isReplacing) {
+  if (state.videoUrl && !state.isReplacing) {
     return (
       <div className="p-4 border border-dashed border-amber-300 rounded-xl bg-white shadow-sm text-center">
         <h3 className="text-lg font-semibold text-amber-600 mb-2">
           הסרטון שלך
         </h3>
 
-        {isDeleting ? (
+        {state.isDeleting ? (
           <div className="flex flex-col items-center justify-center py-4">
             <Spinner color="warning" size="md" />
             <p className="text-amber-600 mt-2">מוחק...</p>
           </div>
         ) : (
           <VideoManagerActions
-            videoUrl={videoUrl}
-            createdAt={createdAt}
-            onReplace={() => setIsReplacing(true)}
+            videoUrl={state.videoUrl}
+            createdAt={state.createdAt}
+            onReplace={() => setState((prev) => ({ ...prev, isReplacing: true }))}
             onDelete={handleDeleteVideo}
-            isVideoModalOpen={isVideoModalOpen}
-            setVideoModalOpen={setIsVideoModalOpen}
-            isDeleteModalOpen={isDeleteModalOpen}
-            setDeleteModalOpen={setIsDeleteModalOpen}
+            isVideoModalOpen={state.isVideoModalOpen}
+            setVideoModalOpen={(v: boolean) =>
+              setState((prev) => ({ ...prev, isVideoModalOpen: v }))
+            }
+            isDeleteModalOpen={state.isDeleteModalOpen}
+            setDeleteModalOpen={(v: boolean) =>
+              setState((prev) => ({ ...prev, isDeleteModalOpen: v }))
+            }
           />
         )}
       </div>
@@ -131,7 +131,7 @@ export default function VideoUploadSection({
   return (
     <div className="p-4 border border-dashed border-amber-300 rounded-xl bg-white shadow-sm">
       <h3 className="text-lg font-semibold mb-2 text-amber-600">
-        {isReplacing ? "החלף את הסרטון שלך" : "העלה סרטון לפרופיל שלך"}
+        {state.isReplacing ? "החלף את הסרטון שלך" : "העלה סרטון לפרופיל שלך"}
       </h3>
       <p className="text-sm text-neutral-600 mb-4">
         סרטון קצר שלך יעזור לאחרים להכיר אותך טוב יותר.
@@ -141,11 +141,11 @@ export default function VideoUploadSection({
         onUploadComplete={handleUploadComplete}
         onError={handleError}
       />
-      {isReplacing && (
+      {state.isReplacing && (
         <Button
           className="mt-3"
           variant="light"
-          onPress={() => setIsReplacing(false)}
+          onPress={() => setState((prev) => ({ ...prev, isReplacing: false }))}
         >
           ביטול
         </Button>

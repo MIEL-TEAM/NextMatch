@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Image } from "@nextui-org/react";
 import { transformImageUrl } from "@/lib/util";
 import type { NotificationDto } from "@/types/notifications";
+import { gt } from "@/lib/gender";
 
 // ─── WhisperLike ──────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ export default function WhisperLike({ notification, onDismiss }: WhisperLikeProp
 
   const actorName = notification.actorName ?? "מישהו";
   const actorImage = notification.actorImage ?? null;
+  const actorGender = notification.data?.actorGender ?? null;
 
   return (
     <Link
@@ -46,7 +48,7 @@ export default function WhisperLike({ notification, onDismiss }: WhisperLikeProp
           <span>❤️</span>
           <span>{actorName}</span>
         </div>
-        <div className="text-[14px] text-gray-700 mt-0.5">אהב את הפרופיל שלך</div>
+        <div className="text-[14px] text-gray-700 mt-0.5">{gt("likedProfile", actorGender)}</div>
       </div>
 
       {/* CTA chip */}

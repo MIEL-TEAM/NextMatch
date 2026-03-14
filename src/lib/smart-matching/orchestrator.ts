@@ -47,7 +47,7 @@ export async function getSmartMatchesOrchestrator(userId: string): Promise<
         include: {
           interests: { select: { name: true } },
           user: { select: { emailVerified: true, oauthVerified: true } },
-          photos: true,
+          photos: { take: 1, orderBy: { isApproved: "desc" } },
         },
       });
 
@@ -70,10 +70,14 @@ export async function getSmartMatchesOrchestrator(userId: string): Promise<
     }
   }
 
-  // 1. Load user's search preferences from database
-  const searchPreferences = await prisma.userSearchPreference.findUnique({
-    where: { userId },
-  });
+  // 1. Load search preferences and user signals in parallel
+  const [searchPreferences, interactions, liked, messages, currentUser] = await Promise.all([
+    prisma.userSearchPreference.findUnique({ where: { userId } }),
+    dbGetUserInteractions(userId),
+    dbGetUserLikes(userId),
+    dbGetUserMessages(userId),
+    dbGetCurrentUserProfile(userId),
+  ]);
 
   // Create default preferences if none exist
   const preferences = searchPreferences || {
@@ -92,14 +96,6 @@ export async function getSmartMatchesOrchestrator(userId: string): Promise<
     city: preferences.city,
     interestsCount: preferences.interests.length,
   });
-
-  // 2. Gather User Signals
-  const [interactions, liked, messages, currentUser] = await Promise.all([
-    dbGetUserInteractions(userId),
-    dbGetUserLikes(userId),
-    dbGetUserMessages(userId),
-    dbGetCurrentUserProfile(userId),
-  ]);
 
   if (!currentUser) return { items: [], totalCount: 0 };
 

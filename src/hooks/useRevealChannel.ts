@@ -16,6 +16,7 @@ interface MatchRevealEvent {
     id: string;
     name: string;
     image: string | null;
+    gender?: string | null;
   };
 }
 
@@ -52,6 +53,7 @@ export function useRevealChannel(
           id: event.otherUser.id,
           name: event.otherUser.name,
           image: event.otherUser.image,
+          gender: event.otherUser.gender ?? null,
         },
         createdAt: new Date().toISOString(),
       };

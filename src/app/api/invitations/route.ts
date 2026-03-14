@@ -26,6 +26,7 @@ export async function GET() {
         name: invitation.sender.name || "User",
         image: invitation.sender.image,
         videoUrl: invitation.sender.member?.videoUrl || null,
+        gender: invitation.sender.member?.gender ?? null,
       },
     }));
 

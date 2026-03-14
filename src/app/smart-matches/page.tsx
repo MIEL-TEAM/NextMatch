@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import SmartMatchesClient from "./SmartMatchesClient";
+import SmartMatchesServerData from "./SmartMatchesServerData";
 
 export const metadata: Metadata = {
   title: "חיבורים חכמים | Miel",
@@ -27,5 +27,5 @@ export const metadata: Metadata = {
 };
 
 export default function SmartMatchesPage() {
-  return <SmartMatchesClient />;
+  return <SmartMatchesServerData />;
 }

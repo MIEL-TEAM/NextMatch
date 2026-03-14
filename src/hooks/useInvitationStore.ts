@@ -13,6 +13,7 @@ export interface Invitation {
   name: string;
   title: string;
   subtitle?: string;
+  gender?: string | null;
   onAction: () => void;
 }
 

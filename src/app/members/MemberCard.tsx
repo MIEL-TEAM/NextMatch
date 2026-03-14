@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import LikeButton from "@/components/LikeButton";
 import PresenceDot from "@/components/PresenceDot";
 import { calculateAge, transformImageUrl } from "@/lib/util";
@@ -17,6 +17,7 @@ import FloatingReaction from "@/components/FloatingReaction";
 import Carousel from "@/components/MemberImageCarousel";
 import { isActivePremium } from "@/lib/premiumUtils";
 import IconWithTooltip from "@/components/IconWithTooltip";
+import { gt } from "@/lib/gender";
 
 import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
 
@@ -27,36 +28,25 @@ export default function MemberCard({
   memberVideos = [],
   onLike,
   isPriority = false,
+  activeVibe,
 }: MemberCardProps) {
   const visibilityRef = useVisibilityTracking(member.userId);
 
-  const [hasLiked, setHasLiked] = useState<boolean>(
-    likeIds.includes(member.userId)
-  );
+  const hasLiked = likeIds.includes(member.userId);
   const [loading, setLoading] = useState<boolean>(false);
   const [showVideo, setShowVideo] = useState<boolean>(false);
-  const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [, setCurrentIndex] = useState<number>(0);
+  const activeVideo = memberVideos.length > 0 ? memberVideos[0].url : null;
+  const currentIndexRef = useRef<number>(0);
+  const handleIndexChange = (index: number) => {
+    currentIndexRef.current = index;
+  };
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [videoError, setVideoError] = useState<boolean>(false);
-  const [reactionKey, setReactionKey] = useState<number | null>(null);
+  const [showReaction, setShowReaction] = useState(false);
   const reactionCounter = useRef(0);
 
-  useEffect(() => {
-    if (memberVideos.length > 0 && !activeVideo) {
-      setActiveVideo(memberVideos[0].url);
-    }
-  }, [memberVideos, activeVideo]);
+  const age = calculateAge(member.dateOfBirth);
 
-  const age = useMemo(
-    () => calculateAge(member.dateOfBirth),
-    [member.dateOfBirth]
-  );
-
-
-  useEffect(() => {
-    setVideoError(false);
-  }, [activeVideo]);
 
   const toggleLike = useCallback(
     async (e: React.MouseEvent) => {
@@ -75,16 +65,24 @@ export default function MemberCard({
 
         if (result.success) {
           const newLikedState = !hasLiked;
-          setHasLiked(newLikedState);
 
           if (newLikedState) {
             reactionCounter.current += 1;
-            setReactionKey(reactionCounter.current);
+            setShowReaction(true);
           }
 
           if (onLike) {
             onLike(member.userId, newLikedState);
           }
+        } else if (result.error === "LIKE_LIMIT_REACHED") {
+          toast.error("הגעת למגבלת 3 לייקים ביום בפרופיל חינמי.", {
+            description: "שדרג לפרימיום כדי לשלוח לייקים ללא הגבלה.",
+            action: {
+              label: "שדרג עכשיו",
+              onClick: () => { window.location.href = "/premium"; },
+            },
+            duration: 6000,
+          });
         } else if (result.alreadyLiked) {
           toast.error(`כבר עשית לייק ל${member.name}`);
         } else {
@@ -100,20 +98,21 @@ export default function MemberCard({
     [member.userId, member.name, hasLiked, onLike, likeIds]
   );
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     if (memberVideos.length > 0 && activeVideo) {
+      setVideoError(false);
       setShowVideo(true);
     }
-  }, [memberVideos.length, activeVideo]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setShowVideo(false);
-  }, []);
+  };
 
-  const handleVideoError = useCallback(() => {
+  const handleVideoError = () => {
     setVideoError(true);
     setShowVideo(false);
-  }, []);
+  };
 
   const toggleMute = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -230,7 +229,7 @@ export default function MemberCard({
               <span className="bg-white p-[3px] rounded-full shadow-sm flex-shrink-0 flex items-center justify-center">
                 <IconWithTooltip
                   icon={<Icon name="fire" className="size-[15px] bg-[#FFB547]" />}
-                  title="חבר/ת Miel+"
+                  title={`${gt("premium", member.gender)} Miel+`}
                   description="חשבון פרימיום פעיל"
                   placement="above"
                   align="left"
@@ -255,18 +254,25 @@ export default function MemberCard({
               {member.description}
             </p>
           )}
+          {activeVibe && (
+            <div
+              dir="rtl"
+              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-[11px] text-orange-600 font-medium leading-none"
+            >
+              {activeVibe}
+            </div>
+          )}
+
         </div>
       </Card>
     ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       member,
-      handleMouseEnter,
-      handleMouseLeave,
       showVideo,
       activeVideo,
       videoError,
       isMuted,
-      handleVideoError,
       loading,
       toggleLike,
       hasLiked,
@@ -279,11 +285,11 @@ export default function MemberCard({
 
   const floatingReaction = (
     <AnimatePresence>
-      {reactionKey !== null && (
+      {showReaction && (
         <FloatingReaction
-          key={reactionKey}
+          key={reactionCounter.current}
           name={member.name}
-          onDismiss={() => setReactionKey(null)}
+          onDismiss={() => setShowReaction(false)}
         />
       )}
     </AnimatePresence>
@@ -306,7 +312,7 @@ export default function MemberCard({
     <div className="relative group" ref={visibilityRef}>
       <Carousel<{ url: string; id: string }>
         items={memberPhotos}
-        onIndexChange={setCurrentIndex}
+        onIndexChange={handleIndexChange}
         showArrows={true}
       >
         {(currentImage) =>

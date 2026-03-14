@@ -72,4 +72,26 @@ export type SmartMemberCardProps = {
   };
   memberPhotos?: Array<{ url: string; id: string }>;
   index?: number;
+  likedIds?: string[];
 };
+
+export type MemberPhoto = {
+  url: string;
+  id: string;
+};
+
+export type SmartMatch = Member & {
+  matchReason?: { text: string; tags: string[] } | string;
+  matchScore?: number;
+  premiumInsights?: string;
+  photos?: MemberPhoto[];
+  user?: {
+    oauthVerified?: boolean;
+    lastActiveAt?: Date | null;
+  };
+};
+
+export interface SmartMatchesClientProps {
+  matches: SmartMatch[];
+  likedIds: string[];
+}

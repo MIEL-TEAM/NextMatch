@@ -69,13 +69,6 @@ model User {
   SmartMatchCache       SmartMatchCache[]
   searchPreference      UserSearchPreference?
 
-  // Stories relations
-  stories        Story[]
-  storyViews     StoryView[]
-  storyReactions StoryReaction[]
-  storySent      StoryReply[]    @relation("StoryReplySender")
-  storyReceived  StoryReply[]    @relation("StoryReplyRecipient")
-
   // AI Assistant relations
   aiConversations       AIConversation[]
   aiUsageLogs           AIUsageLog[]
@@ -99,8 +92,11 @@ model User {
   // Quota
   quota UserQuota?
 
+  // Vibes
+  vibe UserVibe?
+
   // Notification preferences
-  notificationPreferences Json? @default("{\"newMessage\": {\"toast\": true, \"sound\": true, \"push\": true}, \"newLike\": {\"toast\": false, \"sound\": true, \"push\": true}, \"mutualMatch\": {\"toast\": true, \"sound\": true, \"push\": true}, \"profileView\": {\"toast\": false, \"sound\": false, \"push\": true}, \"storyView\": {\"toast\": false, \"sound\": false, \"push\": false}, \"matchOnline\": {\"toast\": true, \"sound\": true, \"push\": true}}")
+  notificationPreferences Json? @default("{\"newMessage\": {\"toast\": true, \"sound\": true, \"push\": true}, \"newLike\": {\"toast\": false, \"sound\": true, \"push\": true}, \"mutualMatch\": {\"toast\": true, \"sound\": true, \"push\": true}, \"profileView\": {\"toast\": false, \"sound\": false, \"push\": true}, \"matchOnline\": {\"toast\": true, \"sound\": true, \"push\": true}}")
 
   @@index([lastActiveAt(sort: Desc)])
 }
@@ -188,13 +184,15 @@ model Photo {
 model Like {
   sourceUserId      String
   targetUserId      String
-  processedForMatch Boolean @default(false)
-  sourceMember      Member  @relation("source", fields: [sourceUserId], references: [userId], onDelete: Cascade)
-  targetMember      Member  @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  processedForMatch Boolean  @default(false)
+  sourceMember      Member   @relation("source", fields: [sourceUserId], references: [userId], onDelete: Cascade)
+  targetMember      Member   @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
 
   @@id([sourceUserId, targetUserId])
   @@index([targetUserId])
   @@index([sourceUserId, targetUserId])
+  @@index([sourceUserId, createdAt])
 }
 
 model Message {
@@ -370,82 +368,6 @@ model AdminAuditLog {
   @@map("admin_audit_logs")
 }
 
-// Stories feature - Image only
-model Story {
-  id          String       @id @default(cuid())
-  userId      String
-  imageUrl    String
-  publicId    String?
-  textOverlay String?
-  textX       Float?
-  textY       Float?
-  filter      String?
-  privacy     StoryPrivacy @default(PUBLIC)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  expiresAt DateTime // 24 hours from creation
-  isActive  Boolean  @default(true)
-
-  // Relations
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  views     StoryView[]
-  reactions StoryReaction[]
-  replies   StoryReply[]
-
-  @@index([userId, isActive, expiresAt])
-  @@index([expiresAt]) // For cleanup jobs
-}
-
-model StoryView {
-  id       String   @id @default(cuid())
-  storyId  String
-  viewerId String
-  viewedAt DateTime @default(now())
-  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  viewer   User     @relation(fields: [viewerId], references: [id], onDelete: Cascade)
-
-  @@unique([storyId, viewerId])
-  @@index([viewerId])
-}
-
-model StoryReaction {
-  id           String       @id @default(cuid())
-  storyId      String
-  userId       String
-  reactionType ReactionType @default(HEART)
-  createdAt    DateTime     @default(now())
-  story        Story        @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([storyId, userId])
-}
-
-model StoryReply {
-  id          String   @id @default(cuid())
-  storyId     String
-  senderId    String
-  recipientId String
-  messageText String
-  createdAt   DateTime @default(now())
-  story       Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  sender      User     @relation("StoryReplySender", fields: [senderId], references: [id], onDelete: Cascade)
-  recipient   User     @relation("StoryReplyRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
-}
-
-enum StoryPrivacy {
-  PUBLIC
-  PREMIUM
-  PRIVATE
-}
-
-enum ReactionType {
-  HEART
-  FIRE
-  LOVE_EYES
-  EYES
-}
-
 model Invitation {
   id          String    @id @default(cuid())
   recipientId String
@@ -603,9 +525,6 @@ enum NotificationType {
   NEW_LIKE
   MUTUAL_MATCH
   PROFILE_VIEW
-  STORY_VIEW
-  STORY_REPLY
-  STORY_REACTION
   MATCH_ONLINE
   SYSTEM
   ACHIEVEMENT
@@ -647,4 +566,17 @@ model UserQuota {
   updatedAt    DateTime @updatedAt
 
   @@map("user_quota")
+}
+
+model UserVibe {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  vibeKey   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([vibeKey, expiresAt])
+  @@index([expiresAt])
+  @@map("user_vibes")
 }

@@ -58,9 +58,7 @@ export type NotificationPreferences = {
   newLike: NotificationPreference;
   mutualMatch: NotificationPreference;
   profileView: NotificationPreference;
-  storyView: NotificationPreference;
   matchOnline: NotificationPreference;
-  storyReply?: NotificationPreference;
   smartMatch?: NotificationPreference;
   achievement?: NotificationPreference;
   profileBoost?: NotificationPreference;

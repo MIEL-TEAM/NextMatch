@@ -3,7 +3,6 @@
 import PresenceAvatar from "@/components/PresenceAvatar";
 import { formatShortDateTime, timeAgo, transformImageUrl } from "@/lib/util";
 import { MessageBoxProps } from "@/types/chat";
-import Image from "next/image";
 
 import clsx from "clsx";
 import React, { useEffect, useRef, memo, useState } from "react";
@@ -26,21 +25,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isLongMessage = message.text.length > 50;
-  const isStoryReply =
-    message.text.includes("🖼️ הגיב/ה על הסטורי שלך:") &&
-    message.text.includes("📸 תמונת הסטורי:");
-
-  const getStoryImageFromMessage = () => {
-    if (!isStoryReply) return null;
-    const match = message.text.match(/📸 תמונת הסטורי: (.+)/);
-    return match ? match[1].trim() : null;
-  };
-
-  const getStoryReplyText = () => {
-    if (!isStoryReply) return message.text;
-    const match = message.text.match(/🖼️ הגיב\/ה על הסטורי שלך: "(.+)"/);
-    return match ? match[1] : message.text;
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -133,22 +117,18 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
     );
   };
 
-  const messageContentClasses = clsx("flex flex-col", {
-    "px-2 py-1": !isStoryReply,
-    "w-full": !isStoryReply,
-    "rounded-l-xl rounded-tr-xl text-white bg-blue-100":
-      isCurrentUserSender && !isStoryReply,
-    "rounded-r-xl rounded-tl-xl border-gray-200 bg-green-100":
-      !isCurrentUserSender && !isStoryReply,
+  const messageContentClasses = clsx("flex flex-col px-2 py-1 w-full", {
+    "rounded-l-xl rounded-tr-xl text-white bg-blue-100": isCurrentUserSender,
+    "rounded-r-xl rounded-tl-xl border-gray-200 bg-green-100": !isCurrentUserSender,
   });
 
   const renderMessageContent = () => (
     <div className="flex flex-col">
       <div
         className={messageContentClasses}
-        style={isLongMessage && !isStoryReply ? { maxWidth: "450px" } : {}}
+        style={isLongMessage ? { maxWidth: "450px" } : {}}
       >
-        {!isStoryReply && renderMessageHeader()}
+        {renderMessageHeader()}
 
         {isEditing ? (
           <div className="py-3">
@@ -177,40 +157,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
                 <Icon name="xmark" className="size-3.5 bg-gray-700" />
                 ביטול
               </button>
-            </div>
-          </div>
-        ) : isStoryReply ? (
-          <div className="flex flex-col gap-2">
-            <div className="text-xs text-gray-600 font-medium px-1">
-              {isCurrentUserSender ? "הגבת לסטורי שלהם" : "הגיבו לסטורי שלך"}
-            </div>
-
-            <div className="relative inline-block group">
-              <div className="w-48 h-80 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-100">
-                {getStoryImageFromMessage() && (
-                  <Image
-                    src={getStoryImageFromMessage()!}
-                    alt="Story"
-                    width={192}
-                    height={320}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-
-              <div
-                className={clsx(
-                  "absolute -bottom-4 w-4 h-16  flex items-center justify-center",
-                  {
-                    "right-0": isCurrentUserSender,
-                    "left-0": !isCurrentUserSender,
-                  }
-                )}
-              >
-                <span className="text-5xl leading-none">
-                  {getStoryReplyText()}
-                </span>
-              </div>
             </div>
           </div>
         ) : isLocked ? (
@@ -243,7 +189,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
           </p>
         )}
       </div>
-
     </div>
   );
 
@@ -265,15 +210,13 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
 
           {showMenu && (
             <div className="absolute top-8 right-0 z-50 w-32 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-              {!isStoryReply && (
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  <Icon name="pen-to-square" className="size-3.5 bg-gray-700" />
-                  ערוך
-                </button>
-              )}
+              <button
+                onClick={handleEdit}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <Icon name="pen-to-square" className="size-3.5 bg-gray-700" />
+                ערוך
+              </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
@@ -309,9 +252,7 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
   return (
     <div className="grid grid-rows-1">
       <div
-        className={clsx("flex mb-4", {
-          "gap-3": !isStoryReply,
-          "gap-1": isStoryReply,
+        className={clsx("flex mb-4 gap-3", {
           "justify-end": isCurrentUserSender,
           "justify-start": !isCurrentUserSender,
         })}
@@ -320,9 +261,8 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
 
         <div
           className={clsx({
-            "flex-1": !isStoryReply,
-            "max-w-[85%] sm:max-w-[80%]": !isLongMessage && !isStoryReply,
-            "flex-shrink-0": isStoryReply,
+            "flex-1": true,
+            "max-w-[85%] sm:max-w-[80%]": !isLongMessage,
           })}
         >
           {renderMessageContent()}
@@ -330,7 +270,6 @@ function MessageBox({ message, currentUserId, isFirstLocked: _isFirstLocked }: M
 
         {isCurrentUserSender && renderAvatar()}
       </div>
-
     </div>
   );
 }

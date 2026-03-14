@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSearchPreferencesStore } from "@/stores/searchPreferencesStore";
 import { DiscoveryMode } from "@/types/members";
 
@@ -15,8 +16,19 @@ const paramMap: Record<DiscoveryMode, string> = {
 const options: DiscoveryMode[] = ["smart", "activity", "newest", "distance"];
 
 export default function DiscoverySortControl() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const discoveryMode = useSearchPreferencesStore((s) => s.discoveryMode);
     const setDiscoveryMode = useSearchPreferencesStore((s) => s.setDiscoveryMode);
+
+    const handleSelect = (mode: DiscoveryMode) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("mode", mode);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        setDiscoveryMode(mode);
+    };
 
     return (
         <motion.div
@@ -29,7 +41,7 @@ export default function DiscoverySortControl() {
                 {options.map((mode) => (
                     <motion.button
                         key={mode}
-                        onClick={() => setDiscoveryMode(mode)}
+                        onClick={() => handleSelect(mode)}
                         className={`relative min-w-[70px] sm:min-w-[80px] px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-sm font-medium transition-all z-10 ${discoveryMode === mode
                             ? "text-white"
                             : "text-gray-600 hover:text-gray-900"

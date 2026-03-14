@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Image } from "@nextui-org/react";
 import { transformImageUrl } from "@/lib/util";
 import type { NotificationDto } from "@/types/notifications";
+import { gt } from "@/lib/gender";
 
 // ─── WhisperMatch ─────────────────────────────────────────────────────────────
 // Handles MUTUAL_MATCH and MATCH_ONLINE notification types.
@@ -24,12 +25,13 @@ export default function WhisperMatch({ notification, onDismiss }: WhisperMatchPr
 
   const actorName = notification.actorName ?? "מישהו";
   const actorImage = notification.actorImage ?? null;
+  const actorGender = notification.data?.actorGender ?? null;
 
   const ctaLabel = isMutualMatch ? "צפה בהתאמה" : "שלח הודעה";
   const emoji = isMutualMatch ? "💛" : "🟢";
   const subtext = isMutualMatch
     ? "התאמה הדדית! התחילו לשוחח"
-    : "מחובר עכשיו — שלח הודעה";
+    : `${gt("activeNow", actorGender)} — שלח הודעה`;
 
   return (
     <Link

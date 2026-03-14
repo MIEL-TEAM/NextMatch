@@ -65,52 +65,56 @@ export default function ProfileCompletionButton({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0">
-        <div className="w-80 max-w-sm space-y-4 rounded-xl bg-white p-4 text-right shadow-xl">
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">מצב הפרופיל שלך</p>
-            <div className="flex items-baseline justify-between">
-              <span className="text-lg font-semibold text-gray-900">
-                {status.completionPercentage}% הושלם
-              </span>
-              <span className="text-2xl font-bold text-[#E37B27]">
-                {status.completionPercentage}%
-              </span>
+        <div className="w-80 max-w-sm rounded-xl bg-white text-right shadow-xl flex flex-col max-h-[calc(100vh-120px)] overflow-hidden">
+          {/* Fixed header — always visible */}
+          <div className="flex-shrink-0 space-y-3 p-4 pb-0">
+            <div className="space-y-1">
+              <p className="text-sm text-gray-500">מצב הפרופיל שלך</p>
+              <div className="flex items-baseline justify-between">
+                <span className="text-lg font-semibold text-gray-900">
+                  {status.completionPercentage}% הושלם
+                </span>
+                <span className="text-2xl font-bold text-[#E37B27]">
+                  {status.completionPercentage}%
+                </span>
+              </div>
+              <Progress
+                value={status.completionPercentage}
+                maxValue={100}
+                color="warning"
+                className="h-2 rounded-full"
+                aria-label="אחוז השלמת פרופיל"
+              />
             </div>
-            <Progress
-              value={status.completionPercentage}
-              maxValue={100}
-              color="warning"
-              className="h-2 rounded-full"
-              aria-label="אחוז השלמת פרופיל"
-            />
+
+            {recommended && (
+              <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-amber-800">
+                <div className="flex items-center justify-end gap-2 text-sm font-semibold">
+                  <span>השלב הבא המומלץ</span>
+                  <Icon name="triangle-exclamation" className="size-4 bg-amber-500" />
+                </div>
+                <div className="text-sm font-semibold text-amber-900">
+                  {recommended.label}
+                </div>
+                <div className="text-sm leading-relaxed">
+                  {recommended.description}
+                </div>
+                <Button
+                  as={Link}
+                  href={recommended.actionHref}
+                  size="sm"
+                  className="h-8 w-full bg-[#E37B27] text-sm font-semibold text-white hover:bg-[#FFB547]"
+                >
+                  לטיפול עכשיו
+                </Button>
+              </div>
+            )}
           </div>
 
-          {recommended && (
-            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-amber-800">
-              <div className="flex items-center justify-end gap-2 text-sm font-semibold">
-                <span>השלב הבא המומלץ</span>
-                <Icon name="triangle-exclamation" className="size-4 bg-amber-500" />
-              </div>
-              <div className="text-sm font-semibold text-amber-900">
-                {recommended.label}
-              </div>
-              <div className="text-sm leading-relaxed">
-                {recommended.description}
-              </div>
-              <Button
-                as={Link}
-                href={recommended.actionHref}
-                size="sm"
-                className="h-8 w-full bg-[#E37B27] text-sm font-semibold text-white hover:bg-[#FFB547]"
-              >
-                לטיפול עכשיו
-              </Button>
-            </div>
-          )}
-
-          <Divider className="bg-gray-100" />
-
-          <div className="space-y-3">
+          {/* Scrollable task list */}
+          <div className="relative min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3">
+            <Divider className="mb-3 bg-gray-100" />
+            <div className="space-y-3">
             {incompleteTasks.map((task: any) => {
               const taskProgress = Math.round(task.progress * 100);
 
@@ -146,6 +150,7 @@ export default function ProfileCompletionButton({
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
       </PopoverContent>

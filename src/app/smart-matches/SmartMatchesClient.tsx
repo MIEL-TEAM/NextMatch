@@ -1,63 +1,53 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Member } from "@prisma/client";
 import Icon from "@/lib/table/Icon";
 import { useRouter } from "next/navigation";
 import SmartMemberCard from "../members/SmartMemberCard";
 import { motion, AnimatePresence } from "framer-motion";
 import AppModal from "@/components/AppModal";
-import { useSmartMatches } from "@/hooks/useSmartMatches";
+import { SmartMatchesClientProps } from "@/types/smart-matches";
 
-type MemberPhoto = {
-  url: string;
-  id: string;
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
 };
 
-type EnhancedMember = Member & {
-  matchReason?: { text: string; tags: string[] } | string;
-  matchScore?: number;
-  premiumInsights?: string;
-  photos?: MemberPhoto[];
+const item = {
+  hidden: { y: 20, opacity: 0 },
+  show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300 } },
 };
 
-export default function SmartMatchesClient() {
-  const [page, setPage] = useState(1);
+export default function SmartMatchesClient({
+  matches,
+  likedIds,
+}: SmartMatchesClientProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<string>("");
   const [showStats, setShowStats] = useState(false);
   const [filterScore, setFilterScore] = useState(0);
   const router = useRouter();
-  const pageSize = 8;
 
-  const { data, isLoading, isError, refetch } = useSmartMatches(page, pageSize);
+  const filteredMembers =
+    filterScore > 0
+      ? matches.filter((m) => (m.matchScore || 0) >= filterScore)
+      : matches;
 
-  const memoizedMembers = useMemo(() => {
-    const members = (data?.items as EnhancedMember[]) || [];
-
-    // Filter by score if needed
-    if (filterScore > 0) {
-      return members.filter((m) => (m.matchScore || 0) >= filterScore);
-    }
-
-    return members;
-  }, [data?.items, filterScore]);
-
-  const totalCount = data?.totalCount || 0;
-
-  // Calculate statistics
   const matchStats = useMemo(() => {
-    const allMembers = (data?.items as EnhancedMember[]) || [];
-    const scores = allMembers.map((m) => m.matchScore || 0);
+    const scores = matches.map((m) => m.matchScore || 0);
 
     return {
-      total: allMembers.length,
-      perfect: allMembers.filter((m) => (m.matchScore || 0) >= 90).length,
-      excellent: allMembers.filter(
+      perfect: matches.filter((m) => (m.matchScore || 0) >= 90).length,
+      excellent: matches.filter(
         (m) => (m.matchScore || 0) >= 75 && (m.matchScore || 0) < 90
       ).length,
-      good: allMembers.filter(
+      good: matches.filter(
         (m) => (m.matchScore || 0) >= 60 && (m.matchScore || 0) < 75
       ).length,
       average:
@@ -66,7 +56,7 @@ export default function SmartMatchesClient() {
           : 0,
       highest: Math.round(Math.max(...scores, 0)),
     };
-  }, [data?.items]);
+  }, [matches]);
 
   const handleRefreshClick = async () => {
     setRefreshing(true);
@@ -79,50 +69,18 @@ export default function SmartMatchesClient() {
         setModalContent(
           "✅ ניתוח העדפות עודכן בהצלחה! המערכת למדה מההתנהגות שלך ותציע התאמות טובות יותר."
         );
-        refetch();
+        router.refresh();
       } else {
         setModalContent("❌ שגיאה בעדכון ניתוח - נסה שוב מאוחר יותר.");
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setModalContent("❌ שגיאה ברשת או בשרת - בדוק את החיבור לאינטרנט.");
     } finally {
       setRefreshing(false);
       setModalOpen(true);
     }
   };
-
-  function handleNextPage() {
-    if (page * pageSize < totalCount) {
-      setPage(page + 1);
-    }
-  }
-
-  function handlePrevPage() {
-    if (page > 1) {
-      setPage(page - 1);
-    }
-  }
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300 } },
-  };
-
-  const matchText =
-    memoizedMembers.length === 1
-      ? "נמצאה התאמה מושלמת אחת עבורך"
-      : `נמצאו ${memoizedMembers.length} התאמות איכותיות עבורך`;
 
   return (
     <div className="min-h-screen bg-[#FDFCF8] py-8">
@@ -148,7 +106,7 @@ export default function SmartMatchesClient() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <div className="text-center">
+            <div className="text-center pt-4">
               <motion.h1
                 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight"
                 initial={{ y: -20 }}
@@ -282,38 +240,7 @@ export default function SmartMatchesClient() {
             )}
           </AnimatePresence>
 
-          {/* Error State */}
-          {isError && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center p-6 bg-red-50 border border-red-100 rounded-2xl mb-8 max-w-md"
-            >
-              <div className="text-red-600 font-medium mb-2">
-                שגיאה בטעינת ההתאמות
-              </div>
-              <button
-                onClick={() => refetch()}
-                className="text-sm underline text-red-500 hover:text-red-700"
-              >
-                נסה שוב
-              </button>
-            </motion.div>
-          )}
-
-          {/* Loading State */}
-          {isLoading ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-24"
-            >
-              <div className="flex items-center justify-center mb-4">
-                <div className="animate-spin w-8 h-8 border-2 border-gray-200 border-t-orange-500 rounded-full"></div>
-              </div>
-              <div className="text-gray-400 text-sm">מחפש התאמות...</div>
-            </motion.div>
-          ) : memoizedMembers.length > 0 ? (
+          {filteredMembers.length > 0 ? (
             <>
               {/* Results Summary */}
               <motion.div
@@ -322,7 +249,9 @@ export default function SmartMatchesClient() {
                 className="mb-8 text-center"
               >
                 <p className="text-gray-500 text-sm">
-                  {matchText}
+                  {filteredMembers.length === 1
+                    ? "נמצאה התאמה מושלמת אחת עבורך"
+                    : `נמצאו ${filteredMembers.length} התאמות איכותיות עבורך`}
                   {filterScore > 0 && ` (מעל ${filterScore}%)`}
                 </p>
               </motion.div>
@@ -334,7 +263,7 @@ export default function SmartMatchesClient() {
                 animate="show"
                 className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 w-full mb-16 items-start"
               >
-                {memoizedMembers.map((member, index) => (
+                {filteredMembers.map((member, index) => (
                   <motion.div
                     key={member.id}
                     variants={item}
@@ -344,39 +273,11 @@ export default function SmartMatchesClient() {
                       member={member}
                       memberPhotos={member.photos || []}
                       index={index}
+                      likedIds={likedIds}
                     />
                   </motion.div>
                 ))}
               </motion.div>
-
-              {/* Pagination */}
-              {Math.ceil(totalCount / pageSize) > 1 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-center items-center gap-4"
-                >
-                  <button
-                    className="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                    onClick={handlePrevPage}
-                    disabled={page === 1}
-                  >
-                    → הקודם
-                  </button>
-
-                  <span className="text-gray-400 text-sm font-medium">
-                    {page} / {Math.ceil(totalCount / pageSize)}
-                  </span>
-
-                  <button
-                    className="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                    onClick={handleNextPage}
-                    disabled={page * pageSize >= totalCount}
-                  >
-                    הבא  ←
-                  </button>
-                </motion.div>
-              )}
             </>
           ) : (
             /* Empty State */

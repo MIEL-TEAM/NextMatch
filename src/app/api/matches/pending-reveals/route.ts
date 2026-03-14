@@ -43,6 +43,7 @@ export async function GET() {
           name: otherMember?.name ?? "משתמש",
           image: otherMember?.image ?? null,
           city: otherMember?.city ?? null,
+          gender: otherMember?.gender ?? null,
         },
       };
     };

@@ -5,11 +5,8 @@ import PresenceDot from "@/components/PresenceDot";
 import { transformImageUrl } from "@/lib/util";
 import { Card } from "@nextui-org/react";
 import NextImage from "next/image";
-import { useState, useEffect, useRef, useMemo } from "react";
-import {
-  toggleLikeMember,
-  fetchCurrentUserLikeIds,
-} from "../actions/likeActions";
+import { useState, useMemo } from "react";
+import { toggleLikeMember } from "../actions/likeActions";
 
 import { useInteractionTracking } from "@/hooks/useInteractionTracking";
 import { useRouter } from "next/navigation";
@@ -25,25 +22,20 @@ import { useVisibilityTracking } from "@/hooks/useVisibilityTracking";
 export default function SmartMemberCard({
   member,
   memberPhotos = [],
+  likedIds = [],
 }: SmartMemberCardProps) {
-  const [hasLiked, setHasLiked] = useState(false);
+  const [hasLiked, setHasLiked] = useState(() => likedIds.includes(member.userId));
   const [loading, setLoading] = useState(false);
   const trackInteractions = useInteractionTracking(member.userId);
 
-  // Visibility tracking for batched views
   const visibilityRef = useVisibilityTracking(member.userId);
 
   const router = useRouter();
-  const likeCheckedRef = useRef(false);
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
 
-  // Measureable data computation
   const measurableExplanation = useMemo(() => {
     const rawReason = member.matchReason;
     const tags = typeof rawReason === 'string' ? [] : (rawReason?.tags || []);
 
-    // Filter tags
     const interestTags = tags.filter(tag =>
       !tag.includes('גיל') &&
       !tag.includes('Age') &&
@@ -52,26 +44,18 @@ export default function SmartMemberCard({
       !tag.includes('התאמה')
     );
 
-    // 1. Behavioral similarity (score threshold > 0.75)
-    // Assuming score passed is a percentage, so > 75
     if (member.matchScore && member.matchScore > 75) {
       return `דמיון התנהגותי גבוה (${Math.round(member.matchScore)}%) נמצא בניתוח נתונים`;
     }
 
-    // 2. Interest overlap (min 2 shared keywords)
     if (interestTags.length >= 2) {
       return `זוהו ${interestTags.length} מילות מפתח משותפות: ${interestTags.join(', ')}`;
     }
 
-    // 3. Age trend alignment (minimum 60% of recent likes)
-    // Skipping as data not available in props strictly
-
-    // 4. Strong location match
     if (tags.some(t => t === member.city)) {
       return "התאמה גיאוגרפית בטווח המועדף";
     }
 
-    // If none pass thresholds → do not render insight block.
     return null;
   }, [member.matchReason, member.matchScore, member.city, member.dateOfBirth]);
 
@@ -84,36 +68,6 @@ export default function SmartMemberCard({
     }
     return [];
   }, [memberPhotos, member.image]);
-
-  useEffect(() => {
-    const target = cardRef.current;
-    if (!target) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "100px" }
-    );
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible || likeCheckedRef.current) return;
-    (async () => {
-      try {
-        const likedIds = await fetchCurrentUserLikeIds();
-        if (likedIds.includes(member.userId)) setHasLiked(true);
-        likeCheckedRef.current = true;
-      } catch (error) {
-        console.error("Error checking like status:", error);
-      }
-    })();
-  }, [isVisible, member.userId]);
 
   async function toggleLike(e: React.MouseEvent) {
     if (e) {
@@ -131,6 +85,15 @@ export default function SmartMemberCard({
         setHasLiked(!hasLiked);
 
         toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים");
+      } else if (result.error === "LIKE_LIMIT_REACHED") {
+        toast.error("הגעת למגבלת 3 לייקים ביום בפרופיל חינמי.", {
+          description: "שדרג לפרימיום כדי לשלוח לייקים ללא הגבלה.",
+          action: {
+            label: "שדרג עכשיו",
+            onClick: () => { window.location.href = "/premium"; },
+          },
+          duration: 6000,
+        });
       } else if (result.alreadyLiked) {
         toast.error(`כבר עשית לייק (ID: ${member.userId})`);
       } else {
@@ -156,9 +119,6 @@ export default function SmartMemberCard({
       transition={{ duration: 0.3 }}
       className="w-full"
       ref={(node) => {
-        // Merge refs: one for existing logic, one for new batcher
-        cardRef.current = node;
-        // visibilityRef is a RefObject, we can assign to current if it exists
         if (visibilityRef && typeof visibilityRef === 'object') {
           (visibilityRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }

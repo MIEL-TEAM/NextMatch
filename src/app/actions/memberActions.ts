@@ -305,6 +305,7 @@ export async function getMembers({
       created: true,
       latitude: true,
       longitude: true,
+      gender: true,
       user: {
         select: {
           oauthVerified: true,

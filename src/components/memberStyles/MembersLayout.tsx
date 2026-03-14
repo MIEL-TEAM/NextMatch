@@ -6,18 +6,45 @@ import DiscoverySortControl from "@/components/search/DiscoverySortControl";
 import SpotlightMember from "./SpotlightMember";
 import AnimatedBackground from "./AnimatedBackground";
 import MembersGrid from "./MembersGrid";
-import InlineEmptyState from "@/components/EmptyState";
-import Icon from "@/lib/table/Icon";
+import MembersEmptyState from "@/components/memberStyles/MembersEmptyState";
+import { VibesContainer } from "@/components/vibes/VibesContainer";
 import { Props } from "@/types/members";
+
+const EMPTY_STATE_COPY: Record<string, { title: string; description: string }> =
+  {
+    activity: {
+      title: "אף אחד לא מחובר כרגע",
+      description: "נסה שוב מאוחר יותר או בחר סינון אחר",
+    },
+    newest: {
+      title: "לא נמצאו אנשים חדשים",
+      description: "נסה לשנות את הגדרות הסינון או חזור מאוחר יותר",
+    },
+    smart: {
+      title: "לא נמצאו התאמות חכמות",
+      description: "נסה לשנות את הגדרות הסינון או חזור מאוחר יותר",
+    },
+    distance: {
+      title: "לא נמצאו אנשים קרובים",
+      description: "נסה להרחיב את טווח החיפוש",
+    },
+  };
+
+const DEFAULT_EMPTY_STATE = {
+  title: "לא נמצאו תוצאות",
+  description: "נסה לשנות את הגדרות הסינון",
+};
 
 const MembersLayout: React.FC<Props> = ({
   membersData,
   totalCount,
   likeIds,
-  isOnlineFilter,
+  mode,
   noResults,
   hasSeenIntro,
+  currentUserId,
   onLikeUpdate,
+  memberVibes,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showIntro, setShowIntro] = useState(!hasSeenIntro);
@@ -97,7 +124,7 @@ const MembersLayout: React.FC<Props> = ({
       )}
 
       <motion.div
-        className="relative pt-1 sm:pt-4 pb-4 sm:pb-6 px-3 sm:px-4 md:px-8 text-center"
+        className="relative pt-12 pb-4 sm:pb-6 px-3 sm:px-4 md:px-8 text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -144,18 +171,14 @@ const MembersLayout: React.FC<Props> = ({
       </motion.div>
 
       {(membersData.length === 0 || noResults) && (
-        <div className="max-w-4xl mx-auto px-4">
-          <InlineEmptyState
-            message={
-              isOnlineFilter ? "אף אחד לא מחובר כרגע" : "אין משתמשים זמינים"
-            }
-            subMessage={
-              isOnlineFilter
-                ? "נסה שוב מאוחר יותר או בחר סינון אחר"
-                : "נסה שוב מאוחר יותר או שנה את הגדרות הסינון"
-            }
-            icon={<Icon name="image-slash" className="size-12 bg-amber-500" />}
-          />
+        <MembersEmptyState
+          {...(EMPTY_STATE_COPY[mode] ?? DEFAULT_EMPTY_STATE)}
+        />
+      )}
+
+      {currentUserId && (
+        <div className="mb-6 px-4 sm:px-7">
+          <VibesContainer currentUserId={currentUserId} />
         </div>
       )}
 
@@ -164,6 +187,7 @@ const MembersLayout: React.FC<Props> = ({
         likeIds={likes}
         totalCount={totalCount}
         onLike={handleLike}
+        memberVibes={memberVibes}
       />
     </div>
   );

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Image } from "@nextui-org/react";
 import { transformImageUrl } from "@/lib/util";
 import type { NotificationDto } from "@/types/notifications";
+import { gt } from "@/lib/gender";
+import Icon from "@/lib/table/Icon";
 
 // ─── WhisperProfileView ───────────────────────────────────────────────────────
 
@@ -22,6 +24,7 @@ export default function WhisperProfileView({
 
   const actorName = notification.actorName ?? "מישהו";
   const actorImage = notification.actorImage ?? null;
+  const actorGender = notification.data?.actorGender ?? null;
 
   return (
     <Link
@@ -30,12 +33,12 @@ export default function WhisperProfileView({
       className="flex items-center gap-3 w-full max-w-[360px] rounded-[24px] px-4 py-2.5 shadow-2xl active:opacity-80 transition-opacity"
       style={{
         background:
-          "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0.10) 100%)",
+          "linear-gradient(135deg, rgba(79,70,229,0.82) 0%, rgba(99,102,241,0.72) 100%)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        border: "1px solid rgba(129,140,248,0.30)",
+        border: "1px solid rgba(165,180,252,0.40)",
         boxShadow:
-          "0 8px 32px rgba(79,70,229,0.18), 0 1.5px 0 rgba(165,180,252,0.15) inset",
+          "0 8px 32px rgba(79,70,229,0.35), 0 1.5px 0 rgba(165,180,252,0.20) inset",
       }}
     >
       {/* Avatar */}
@@ -52,14 +55,14 @@ export default function WhisperProfileView({
       {/* Text */}
       <div className="flex flex-col justify-center flex-1 min-w-0">
         <div className="font-semibold text-white text-sm leading-tight truncate flex items-center gap-1.5">
-          <span>👀</span>
+          <span><Icon name="eye" type="lit" /></span>
           <span>{actorName}</span>
         </div>
-        <div className="text-xs text-white/75 mt-0.5">צפה בפרופיל שלך</div>
+        <div className="text-xs text-white/90 mt-0.5">{gt("viewedProfile", actorGender)}</div>
       </div>
 
       {/* CTA chip */}
-      <div className="flex-shrink-0 text-xs font-medium text-indigo-200/90 bg-indigo-500/20 border border-indigo-400/20 rounded-full px-3 py-1 whitespace-nowrap">
+      <div className="flex-shrink-0 text-xs font-medium text-white bg-white/20 border border-white/30 rounded-full px-3 py-1 whitespace-nowrap">
         בדוק
       </div>
     </Link>

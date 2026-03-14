@@ -7,6 +7,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { sendNewMatchEmail } from "@/lib/mail";
 import {
   dbCreateLike,
+  dbCreateLikeWithDailyLimit,
   dbDeleteLike,
   dbGetLikeIds,
   dbGetLikedUserIds,
@@ -17,7 +18,9 @@ import {
   dbGetSourceLikes,
   dbGetTargetLikes,
   dbGetUserEmailName,
+  dbGetUserPremiumStatus,
 } from "@/lib/db/likeActions";
+import { isActivePremium } from "@/lib/premiumUtils";
 import { dbCreateMatchAtomic } from "@/lib/db/matchActions";
 import {
   notifyNewLike,
@@ -41,7 +44,12 @@ export async function toggleLikeMember(
     if (isLiked) {
       await dbDeleteLike(userId, targetUserId);
     } else {
-      const like = await dbCreateLike(userId, targetUserId);
+      const user = await dbGetUserPremiumStatus(userId);
+      const premium = isActivePremium(user);
+
+      const like = premium
+        ? await dbCreateLike(userId, targetUserId)
+        : await dbCreateLikeWithDailyLimit(userId, targetUserId);
       feedback = {
         city: like.targetMember?.city,
         primaryInterest: like.targetMember?.interests[0]?.name,
@@ -87,7 +95,7 @@ export async function toggleLikeMember(
               image: targetMember?.image,
               userId: targetUserId,
             },
-            currentUserGender: currentUser?.gender || "female",
+            currentUserGender: currentUser?.gender ?? null,
             type: "mutual-like",
             timestamp: new Date().toISOString(),
           }),
@@ -97,7 +105,7 @@ export async function toggleLikeMember(
               image: like.sourceMember.image,
               userId: userId,
             },
-            currentUserGender: targetUser?.gender || "female",
+            currentUserGender: targetUser?.gender ?? null,
             type: "mutual-like",
             timestamp: new Date().toISOString(),
           }),
@@ -123,6 +131,7 @@ export async function toggleLikeMember(
                 id: targetUserId,
                 name: targetMember?.name || "משתמש",
                 image: targetMember?.image || null,
+                gender: targetMember?.gender ?? null,
               },
             }),
             pusherServer.trigger(`private-${targetUserId}`, "match:reveal", {
@@ -133,6 +142,7 @@ export async function toggleLikeMember(
                 id: userId,
                 name: like.sourceMember.name,
                 image: like.sourceMember.image,
+                gender: like.sourceMember.gender ?? null,
               },
             }),
           ]).catch((e) =>
@@ -178,6 +188,7 @@ export async function toggleLikeMember(
           userId,
           like.sourceMember.name,
           like.sourceMember.image,
+          like.sourceMember.gender ?? null,
         ).catch((e) => console.error("Failed to create like notification:", e));
       }
     }
@@ -185,6 +196,10 @@ export async function toggleLikeMember(
     return { success: true, feedback };
   } catch (error) {
     console.log("Server action error:", error);
+
+    if (error instanceof Error && error.message === "LIKE_LIMIT_REACHED") {
+      return { success: false, error: "LIKE_LIMIT_REACHED" };
+    }
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorString = JSON.stringify(error);

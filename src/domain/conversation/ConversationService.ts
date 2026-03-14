@@ -8,6 +8,7 @@ import {
   sendImmediateMessageEmail,
 } from "@/lib/email-rate-limiting";
 import { notifyNewMessage } from "@/lib/notifications/notificationService";
+import { dbGetMemberGender } from "@/lib/db/likeActions";
 import { trackUserInteraction } from "@/app/actions/smartMatchActions";
 import {
   dbArchiveMessages,
@@ -194,14 +195,19 @@ export class ConversationService {
       [userId, recipientUserId],
     );
 
-    notifyNewMessage(
-      recipientUserId,
-      userId,
-      senderDto.senderName || "משתמש",
-      senderDto.senderImage || null,
-      message.id,
-      text,
-    ).catch((e) => console.error("Failed to create notification:", e));
+    dbGetMemberGender(userId)
+      .then((m) =>
+        notifyNewMessage(
+          recipientUserId,
+          userId,
+          senderDto.senderName || "משתמש",
+          senderDto.senderImage || null,
+          message.id,
+          text,
+          m?.gender ?? null,
+        ),
+      )
+      .catch((e) => console.error("Failed to create notification:", e));
 
     const conversationId = createChatId(userId, recipientUserId);
 

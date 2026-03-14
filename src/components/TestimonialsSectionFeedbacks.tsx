@@ -46,7 +46,7 @@ const TestimonialsSection = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const storyDuration = 7000;
+  const slideDuration = 7000;
 
   const next = useCallback(() => {
     setDirection(1);
@@ -84,7 +84,7 @@ const TestimonialsSection = () => {
         if (prev >= 100) {
           return 0;
         }
-        return prev + (100 / storyDuration) * 50;
+        return prev + (100 / slideDuration) * 50;
       });
     }, 50);
 
@@ -105,7 +105,7 @@ const TestimonialsSection = () => {
 
     intervalRef.current = setInterval(() => {
       next();
-    }, storyDuration);
+    }, slideDuration);
 
     return () => {
       if (intervalRef.current) {

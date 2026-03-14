@@ -29,8 +29,8 @@ export async function GET() {
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const views = await getProfileViews(userId);
-    return NextResponse.json({ views });
+    const result = await getProfileViews(userId);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("/api/views GET error:", error);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });

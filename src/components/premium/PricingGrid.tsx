@@ -3,7 +3,6 @@
 import type { PlanOption } from "./types";
 import { PlanCard } from "./PlanCard";
 
-// ─── Static plan metadata (copy + features per planId) ───────────────────────
 
 const FREE_CARD = {
   name: "חינם",
@@ -11,12 +10,20 @@ const FREE_CARD = {
   period: "לחודש",
   ctaLabel: "התחל בחינם",
   features: [
-    "צפייה מוגבלת בפרופילים",
-    "התאמות יומיות בסיסיות",
-    "ללא בוסטים",
-    "ללא צפייה במי אהב אותך",
+    "עד 5 הודעות לשיחה",
+    "עד 3 לייקים ביום",
+    "ללא צפייה במי ביקר בפרופיל",
+    "ללא פילטרים מתקדמים",
   ],
 } as const;
+
+const CORE_PREMIUM_FEATURES = [
+  "הודעות ללא הגבלה",
+  "לייקים ללא הגבלה",
+  "ראה מי צפה בפרופיל שלך",
+  "פילטרים מתקדמים",
+  "עוזר AI מורחב",
+] as const;
 
 const PLAN_META: Record<
   string,
@@ -24,30 +31,15 @@ const PLAN_META: Record<
 > = {
   basic: {
     name: "בסיסי",
-    features: [
-      "ראה מי אהב אותך",
-      "5 בוסטים לחודש",
-      "סינון מתקדם",
-      "עדיפות בתוצאות",
-    ],
+    features: [...CORE_PREMIUM_FEATURES, "5 בוסטים לפרופיל"],
   },
   popular: {
     name: "פופולרי",
-    features: [
-      "ראה מי אהב אותך",
-      "10 בוסטים לחודש",
-      "סינון מתקדם מלא",
-      "חשיפה מוגברת בפרופילים",
-    ],
+    features: [...CORE_PREMIUM_FEATURES, "10 בוסטים לפרופיל"],
   },
   annual: {
     name: "שנתי",
-    features: [
-      "ראה מי אהב אותך",
-      "15 בוסטים לחודש",
-      "סינון מתקדם מלא",
-      "חשיפה מוגברת בפרופילים",
-    ],
+    features: [...CORE_PREMIUM_FEATURES, "15 בוסטים לפרופיל"],
     subtext: "הכי משתלם לחיפוש רציני",
   },
 };

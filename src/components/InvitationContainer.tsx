@@ -31,6 +31,7 @@ export default function InvitationContainer() {
             videoUrl={currentReveal.videoSnapshot}
             name={currentReveal.otherUser.name}
             title={`${currentReveal.otherUser.name}  התאמה הדדית! 💕`}
+            gender={currentReveal.otherUser.gender as "male" | "female" | null}
             userId={currentReveal.otherUser.id}
             onAction={() => {}}
             onDismiss={() => dismissReveal(currentReveal.id)}
@@ -44,6 +45,7 @@ export default function InvitationContainer() {
             name={currentInvitation.name}
             title={currentInvitation.title}
             subtitle={currentInvitation.subtitle}
+            gender={currentInvitation.gender as "male" | "female" | null}
             userId={currentInvitation.userId}
             onAction={currentInvitation.onAction}
             onDismiss={dismissInvitation}

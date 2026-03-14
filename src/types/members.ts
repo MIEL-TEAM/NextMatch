@@ -13,13 +13,13 @@ export type MemberCardData = {
   created: Date;
   latitude: number | null;
   longitude: number | null;
+  gender?: string | null;
   user: {
     oauthVerified: boolean;
     lastActiveAt: Date | null;
   };
 };
 
-// Location state machine states
 export type LocationState =
   | "initial"
   | "checkingUrlLocation"
@@ -31,20 +31,17 @@ export type LocationState =
   | "noLocationAvailable"
   | "readyToQuery";
 
-// Location data structure
 export interface LocationData {
   latitude: number;
   longitude: number;
 }
 
-// Database location status
 export interface DbLocationStatus {
   hasLocation: boolean;
   locationEnabled: boolean;
   coordinates: LocationData | null;
 }
 
-// Stable URL params for location
 export interface StableLocationParams {
   userLat: string | null;
   userLon: string | null;
@@ -62,10 +59,12 @@ export interface Props {
   membersData: MemberWithMedia[];
   totalCount: number;
   likeIds: string[];
-  isOnlineFilter: boolean;
+  mode: DiscoveryMode;
   noResults: boolean;
   hasSeenIntro: boolean;
+  currentUserId?: string;
   onLikeUpdate?: (memberId: string, isLiked: boolean) => void;
+  memberVibes?: Record<string, string>;
 }
 
 export interface MemberCardProps {
@@ -83,6 +82,7 @@ export interface MemberCardProps {
   memberVideos?: Array<{ url: string; id: string }>;
   onLike?: (memberId: string, isLiked: boolean) => void;
   isPriority?: boolean;
+  activeVibe?: string;
 }
 
 export type MemberPhotosProps = {

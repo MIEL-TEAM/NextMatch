@@ -42,7 +42,7 @@ export default function PremiumPageClient({ state, activated, firstName }: Premi
     try {
       const result = await activatePremium(fd);
       if (result?.success) {
-        router.push("/premium?activated=1");
+        router.push("/premium/success");
       }
     } catch {
       setStatusMessage({ message: "שגיאה בהפעלת המנוי, אנא נסה שוב", type: "error" });
@@ -86,11 +86,6 @@ export default function PremiumPageClient({ state, activated, firstName }: Premi
   
 
   const view = (() => {
-
-    console.log("STATUS:", state.status)
-    console.log("ACTIVATED PARAM:", activated)
-    console.log("NOW:", new Date())
-
     switch (state.status) {
       case "FREE":
         return (

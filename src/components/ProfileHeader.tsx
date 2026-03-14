@@ -42,6 +42,15 @@ export default function ProfileHeader({
         setHasLiked(!hasLiked);
         onLikeToggle?.(member.userId, hasLiked);
         toast.success(hasLiked ? "הוסר מהאהובים" : "נוסף לאהובים");
+      } else if (result.error === "LIKE_LIMIT_REACHED") {
+        toast.error("הגעת למגבלת 3 לייקים ביום בפרופיל חינמי.", {
+          description: "שדרג לפרימיום כדי לשלוח לייקים ללא הגבלה.",
+          action: {
+            label: "שדרג עכשיו",
+            onClick: () => router.push("/premium"),
+          },
+          duration: 6000,
+        });
       } else if (result.alreadyLiked) {
         toast.error(`כבר עשית לייק ל${member.name}`);
       } else {

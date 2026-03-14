@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Member } from "@prisma/client";
-import { differenceInHours } from "date-fns";
-import { useMemo } from "react";
+import { differenceInMinutes, differenceInHours, differenceInDays } from "date-fns";
+import { useMemo, type ReactNode } from "react";
+import Icon from "@/lib/table/Icon";
+import { gt } from "@/lib/gender";
 
 interface SpotlightMemberProps {
   spotlight: Member | null;
@@ -24,22 +26,106 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
 }) => {
   const router = useRouter();
 
-  const titleLabel = useMemo(() => {
-    if (!spotlight) return "";
-    const hoursSinceJoined = differenceInHours(
-      new Date(),
-      new Date(spotlight.created)
-    );
-    const isFemale = spotlight.gender === "female";
+  const titleLabel = useMemo((): ReactNode => {
+    if (!spotlight) return null;
 
-    if (hoursSinceJoined < 24)
-      return isFemale ? "הצטרפה ממש עכשיו ✨" : "הצטרף ממש עכשיו ✨";
-    if (hoursSinceJoined < 72)
-      return isFemale ? "פנים חדשות בקהילה 💛" : "חדש בקהילה 💛";
-    if (hoursSinceJoined < 168)
-      return isFemale ? "מישהי חדשה באתר 👋" : "מישהו חדש באתר 👋";
-    return "שווה להכיר 💫";
-  }, [spotlight]);
+    const gender = spotlight.gender as "male" | "female" | null;
+    const now = new Date();
+    const user = (spotlight as any).user as {
+      lastActiveAt?: Date | string | null;
+      isPremium?: boolean;
+      oauthVerified?: boolean;
+    } | undefined;
+    const lastActiveAt = user?.lastActiveAt ? new Date(user.lastActiveAt) : null;
+    const boostedUntil = (spotlight as any).boostedUntil
+      ? new Date((spotlight as any).boostedUntil)
+      : null;
+
+    const spotlightEntry = membersData.find((m: any) => m.member?.id === spotlight.id) as any;
+    const videos = spotlightEntry?.videos as Array<unknown> | undefined;
+
+    if (lastActiveAt && differenceInMinutes(now, lastActiveAt) < 5) {
+      return (
+        <span className="flex items-center gap-1.5 text-orange-500">
+          <span className="relative flex size-2.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-orange-500" />
+          </span>
+          {gt("activeNow", gender)}
+        </span>
+      );
+    }
+
+    if (lastActiveAt && differenceInHours(now, lastActiveAt) < 24) {
+      return (
+        <span className="flex items-center gap-1 text-amber-500">
+          <Icon name="bolt" className="size-4 bg-current" />
+          {gt("activeToday", gender)}
+        </span>
+      );
+    }
+
+    if (boostedUntil && boostedUntil > now) {
+      return (
+        <span className="flex items-center gap-1 text-orange-600">
+          <Icon name="fire-flame-curved" className="size-4 bg-current" />
+          פרופיל מומלץ
+        </span>
+      );
+    }
+
+    if (user?.isPremium) {
+      return (
+        <span className="flex items-center gap-1 text-amber-500">
+          <Icon name="crown" className="size-4 bg-current" />
+          {gt("premium", gender)}
+        </span>
+      );
+    }
+
+    if (user?.oauthVerified) {
+      return (
+        <span className="flex items-center gap-1 text-amber-600">
+          <Icon name="badge-check" className="size-4 bg-current" />
+          {gt("verified", gender)}
+        </span>
+      );
+    }
+
+    if (lastActiveAt && differenceInDays(now, lastActiveAt) < 7) {
+      return (
+        <span className="flex items-center gap-1 text-amber-400">
+          <Icon name="clock" className="size-4 bg-current" />
+          {gt("recentlyActive", gender)}
+        </span>
+      );
+    }
+
+    if (videos && videos.length > 0) {
+      return (
+        <span className="flex items-center gap-1 text-orange-500">
+          <Icon name="video" className="size-4 bg-current" />
+          וידאו בפרופיל
+        </span>
+      );
+    }
+
+    if (differenceInDays(now, new Date(spotlight.created)) < 7) {
+      return (
+        <span className="flex items-center gap-1 text-amber-400">
+          <Icon name="star" className="size-4 bg-current" />
+          {gt("newMember", gender)}
+        </span>
+      );
+    }
+
+    return (
+      <span className="flex items-center gap-1 text-orange-600">
+        <Icon name="sparkles" className="size-4 bg-current" />
+        שווה להכיר
+      </span>
+    );
+  }, [spotlight, membersData]);
 
   if (!spotlight || !membersData.length) return null;
 
@@ -75,10 +161,9 @@ const SpotlightMember: React.FC<SpotlightMemberProps> = ({
             >
               <div className="absolute inset-0">
 
-                {/* 🔥 לא משנים סטייל בכלל */}
                 {imageUrl ? (
                   <Image
-                    key={imageUrl} // קריטי כדי למנוע reuse
+                    key={imageUrl}
                     src={imageUrl}
                     alt={spotlight.name || "Profile image"}
                     className="object-cover"

@@ -8,11 +8,9 @@ import { useEffect } from "react";
 
 import NavLink from "./NavLink";
 import UserMenu from "./UserMenu";
-import ProfileViewsButton from "../profile-view/ProfileViewsButton";
 import ProfileCompletionButton from "./ProfileCompletionButton";
 import SearchButton from "../search/SearchButton";
 import useConversationStore from "@/store/conversationStore";
-import useNotificationStore from "@/store/notificationStore";
 import type { TopNavClientProps } from "@/types/navigation";
 import { useSession } from "next-auth/react";
 
@@ -25,18 +23,13 @@ export default function TopNavClient({
   isAdmin,
   isPremium,
   initialUnreadCount,
-  initialUnseenNotificationCount,
-  initialNotifications,
+  notificationBell,
 }: TopNavClientProps) {
   useEffect(() => {
     const convStore = useConversationStore.getState();
     if (userId) convStore.setCurrentUser(userId);
     if (initialUnreadCount > 0) convStore.setInitialUnread(initialUnreadCount);
-
-    useNotificationStore
-      .getState()
-      .setInitialState(initialNotifications, initialUnseenNotificationCount);
-  }, [userId, initialUnreadCount, initialNotifications, initialUnseenNotificationCount]);
+  }, [userId, initialUnreadCount]);
 
   const pathname = usePathname();
   const { status: sessionStatus } = useSession();
@@ -144,7 +137,7 @@ export default function TopNavClient({
                     <SearchButton
                       className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md shadow-md border border-white/20"
                     />
-                    <ProfileViewsButton />
+                    {notificationBell}
                   </>
                 )}
               </div>
@@ -161,7 +154,7 @@ export default function TopNavClient({
                 {!isAdmin && (
                   <>
                     <SearchButton />
-                    <ProfileViewsButton />
+                    {notificationBell}
                   </>
                 )}
               </div>

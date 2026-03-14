@@ -9,8 +9,12 @@ import {
   dbMarkProfileViewsAsSeen,
   dbUpsertProfileView,
 } from "@/lib/db/viewActions";
-import { dbGetMemberNameImage } from "@/lib/db/likeActions";
-import { notifyProfileView } from "@/lib/notifications/notificationService";
+import { dbGetMemberNameImage, dbGetUserPremiumStatus } from "@/lib/db/likeActions";
+import {
+  notifyProfileView,
+  notifyProfileViewTeaser,
+} from "@/lib/notifications/notificationService";
+import { isActivePremium } from "@/lib/premiumUtils";
 
 export async function recordProfileView(viewerId: string, viewedId: string) {
   if (!viewerId || viewerId === viewedId) return;
@@ -33,16 +37,25 @@ export async function recordProfileView(viewerId: string, viewedId: string) {
       timestamp: new Date().toISOString(),
     });
 
-    // Create profile view notification
-    const viewerInfo = await dbGetMemberNameImage(viewerId).catch(() => null);
-    if (viewerInfo) {
-      await notifyProfileView(
-        viewedId,
-        viewerId,
-        viewerInfo.name || "משתמש",
-        viewerInfo.image || null,
-      ).catch((e) =>
-        console.error("Failed to create profile view notification:", e),
+    const viewedUser = await dbGetUserPremiumStatus(viewedId).catch(() => null);
+    const viewedIsPremium = isActivePremium(viewedUser);
+
+    if (viewedIsPremium) {
+      const viewerInfo = await dbGetMemberNameImage(viewerId).catch(() => null);
+      if (viewerInfo) {
+        await notifyProfileView(
+          viewedId,
+          viewerId,
+          viewerInfo.name || "משתמש",
+          viewerInfo.image || null,
+          viewerInfo.gender ?? null,
+        ).catch((e) =>
+          console.error("Failed to create profile view notification:", e),
+        );
+      }
+    } else {
+      await notifyProfileViewTeaser(viewedId).catch((e) =>
+        console.error("Failed to create profile view teaser notification:", e),
       );
     }
   } catch (error) {
@@ -50,21 +63,43 @@ export async function recordProfileView(viewerId: string, viewedId: string) {
   }
 }
 
-export async function getProfileViews(userId?: string) {
+export async function getProfileViews(userId?: string): Promise<
+  | { restricted: true; views: [] }
+  | {
+      restricted: false;
+      views: Array<{
+        id: string;
+        name: string | null;
+        image: string | null;
+        viewedAt: Date;
+        seen: boolean;
+      }>;
+    }
+> {
   if (!userId) {
     const session = await getSession();
     userId = session?.user?.id;
     if (!userId) throw new Error("Unauthorized");
   }
 
+  const user = await dbGetUserPremiumStatus(userId).catch(() => null);
+  if (!isActivePremium(user)) {
+    return { restricted: true, views: [] };
+  }
+
   try {
     const views = await dbGetProfileViews(userId);
 
-    return views.map((view) => ({
-      ...view.viewer,
-      viewedAt: view.viewedAt,
-      seen: view.seen,
-    }));
+    return {
+      restricted: false,
+      views: views.map((view) => ({
+        id: view.viewer.id,
+        name: view.viewer.name,
+        image: view.viewer.image,
+        viewedAt: view.viewedAt,
+        seen: view.seen,
+      })),
+    };
   } catch (error) {
     console.error("Failed to fetch profile views:", error);
     throw new Error("Failed to fetch profile views");

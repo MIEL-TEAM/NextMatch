@@ -65,6 +65,7 @@ export function useInvitationLoader() {
         name: invitation.sender.name,
         title: `${invitation.sender.name} זמינה לשיחה`,
         subtitle: undefined,
+        gender: invitation.sender.gender ?? null,
         onAction: async () => {
           try {
             await fetch(`/api/invitations/${invitation.id}/accept`, {
@@ -101,6 +102,7 @@ export function useInvitationLoader() {
             name: invitation.sender.name,
             title: `${invitation.sender.name} זמינה לשיחה`,
             subtitle: undefined,
+            gender: invitation.sender.gender ?? null,
             onAction: async () => {
               try {
                 await fetch(`/api/invitations/${invitation.id}/accept`, {

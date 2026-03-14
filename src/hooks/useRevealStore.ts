@@ -12,6 +12,7 @@ export interface PendingReveal {
     name: string;
     image: string | null;
     city?: string | null;
+    gender?: string | null;
   };
   createdAt: string;
 }

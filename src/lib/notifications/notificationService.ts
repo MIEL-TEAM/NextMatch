@@ -3,10 +3,12 @@
 import { NotificationType } from "@prisma/client";
 import {
   createNotification,
+  dbHasRecentNotification,
   getOrCreateGroupedNotification,
 } from "@/lib/db/notificationActions";
 import { pusherServer } from "@/lib/pusher-server";
 import { CreateNotificationParams } from "@/types/notifications";
+import { gt } from "@/lib/gender";
 
 // Helper to get today's date key for grouping
 function getTodayKey() {
@@ -34,12 +36,14 @@ export async function notifyNewMessage(
   senderImage: string | null,
   messageId: string,
   messagePreview: string,
+  senderGender?: string | null,
 ) {
   const params: CreateNotificationParams = {
     userId: recipientId,
     type: "NEW_MESSAGE" as NotificationType,
-    title: `${senderName} שלח לך הודעה`,
+    title: `${senderName} ${gt("sentMessage", senderGender ?? null)}`,
     message: messagePreview.slice(0, 100),
+    data: { actorGender: senderGender ?? null },
     icon: "💬",
     actorId: senderId,
     actorName: senderName,
@@ -65,6 +69,7 @@ export async function notifyNewLike(
   likerId: string,
   likerName: string,
   likerImage: string | null,
+  likerGender?: string | null,
 ) {
   const groupKey = `likes_${targetUserId}_${getTodayKey()}`;
 
@@ -76,7 +81,8 @@ export async function notifyNewLike(
       userId: targetUserId,
       type: "NEW_LIKE" as NotificationType,
       title: "יש לך לייקים חדשים!",
-      message: `${likerName} אהב את הפרופיל שלך`,
+      message: `${likerName} ${gt("likedProfile", likerGender ?? null)}`,
+      data: { actorGender: likerGender ?? null },
       icon: "❤️",
       actorId: likerId,
       actorName: likerName,
@@ -138,6 +144,7 @@ export async function notifyProfileView(
   viewerId: string,
   viewerName: string,
   viewerImage: string | null,
+  viewerGender?: string | null,
 ) {
   const groupKey = `views_${viewedUserId}_${getTodayKey()}`;
 
@@ -149,7 +156,8 @@ export async function notifyProfileView(
       userId: viewedUserId,
       type: "PROFILE_VIEW" as NotificationType,
       title: "צפיות בפרופיל",
-      message: `${viewerName} צפה בפרופיל שלך`,
+      message: `${viewerName} ${gt("viewedProfile", viewerGender ?? null)}`,
+      data: { actorGender: viewerGender ?? null },
       icon: "👁️",
       actorId: viewerId,
       actorName: viewerName,
@@ -175,82 +183,44 @@ export async function notifyProfileView(
   return result;
 }
 
-// Create a story view notification (with batching)
-export async function notifyStoryView(
-  storyOwnerId: string,
-  viewerId: string,
-  viewerName: string,
-  viewerImage: string | null,
-  storyId: string,
-) {
-  const groupKey = `story_views_${storyId}_${getTodayKey()}`;
+const TEASER_THROTTLE_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+export async function notifyProfileViewTeaser(viewedUserId: string) {
+  // Throttle: skip if a teaser was already sent in the last 6 hours
+  const alreadySent = await dbHasRecentNotification(
+    viewedUserId,
+    `views_teaser_${viewedUserId}_`,
+    TEASER_THROTTLE_MS,
+  );
+  if (alreadySent) return;
+
+  const groupKey = `views_teaser_${viewedUserId}_${getTodayKey()}`;
 
   const result = await getOrCreateGroupedNotification(
-    storyOwnerId,
+    viewedUserId,
     groupKey,
-    "STORY_VIEW" as NotificationType,
+    "PROFILE_VIEW" as NotificationType,
     {
-      userId: storyOwnerId,
-      type: "STORY_VIEW" as NotificationType,
-      title: "צפיות בסטורי",
-      message: `${viewerName} צפה בסטורי שלך`,
-      icon: "📸",
-      actorId: viewerId,
-      actorName: viewerName,
-      actorImage: viewerImage || undefined,
-      relatedId: storyId,
-      linkUrl: `/stories`,
+      userId: viewedUserId,
+      type: "PROFILE_VIEW" as NotificationType,
+      title: "מישהו צפה בפרופיל שלך",
+      message: "שדרג לפרמיום כדי לגלות מי",
+      icon: "👁️",
+      linkUrl: "/premium",
       groupKey,
       priority: 2,
-      expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   );
 
-  // Update message for batched notifications
   if (result.success && result.notification && !result.isNew) {
     const count = result.notification.batchSize || 1;
-    result.notification.message = `${count} אנשים צפו בסטורי שלך`;
-    result.notification.title = `${count} צפיות חדשות`;
+    result.notification.message = `${count} אנשים צפו בפרופיל שלך — שדרג לפרמיום לגלות מי`;
   }
 
   if (result.success && result.notification) {
-    await sendRealtimeNotification(storyOwnerId, result.notification);
+    await sendRealtimeNotification(viewedUserId, result.notification);
   }
-
-  return result;
-}
-
-// Create a story reply notification
-export async function notifyStoryReply(
-  storyOwnerId: string,
-  replierId: string,
-  replierName: string,
-  replierImage: string | null,
-  replyText: string,
-  storyId: string,
-) {
-  const params: CreateNotificationParams = {
-    userId: storyOwnerId,
-    type: "STORY_REPLY" as NotificationType,
-    title: `${replierName} הגיב לסטורי שלך`,
-    message: replyText.slice(0, 100),
-    icon: "💬",
-    actorId: replierId,
-    actorName: replierName,
-    actorImage: replierImage || undefined,
-    relatedId: storyId,
-    linkUrl: `/members/${replierId}/chat`,
-    priority: 6,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  };
-
-  const result = await createNotification(params);
-
-  if (result.success && result.notification) {
-    await sendRealtimeNotification(storyOwnerId, result.notification);
-  }
-
-  return result;
 }
 
 // Create a match online notification
@@ -259,11 +229,12 @@ export async function notifyMatchOnline(
   matchId: string,
   matchName: string,
   matchImage: string | null,
+  matchGender?: string | null,
 ) {
   const params: CreateNotificationParams = {
     userId,
     type: "MATCH_ONLINE" as NotificationType,
-    title: `${matchName} מחובר עכשיו!`,
+    title: `${matchName} ${gt("activeNow", matchGender ?? null)}!`,
     message: "זה הזמן לשלוח הודעה",
     icon: "🟢",
     actorId: matchId,

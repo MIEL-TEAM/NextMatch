@@ -25,7 +25,23 @@ import {
 import useNotificationStore from "@/store/notificationStore";
 import type { NotificationDto } from "@/types/notifications";
 
-export default function ProfileViewsBell() {
+type ProfileViewsBellProps = {
+  initialNotifications: NotificationDto[];
+  initialUnseenCount: number;
+};
+
+export default function ProfileViewsBell({
+  initialNotifications,
+  initialUnseenCount,
+}: ProfileViewsBellProps) {
+  // Seed the store on mount so real-time Pusher updates can layer on top
+  useEffect(() => {
+    useNotificationStore
+      .getState()
+      .setInitialState(initialNotifications, initialUnseenCount);
+  }, [initialNotifications, initialUnseenCount]);
+
+  // Read reactively from store so real-time additions are reflected immediately
   const unseenCount = useNotificationStore((s) => s.unseenCount);
   const notifications = useNotificationStore((s) => s.notifications);
 
@@ -85,8 +101,6 @@ export default function ProfileViewsBell() {
       NEW_LIKE: "❤️",
       MUTUAL_MATCH: "💕",
       PROFILE_VIEW: "👁️",
-      STORY_VIEW: "📸",
-      STORY_REPLY: "💬",
       MATCH_ONLINE: "🟢",
       SMART_MATCH: "✨",
       ACHIEVEMENT: "🏆",
@@ -98,7 +112,11 @@ export default function ProfileViewsBell() {
   };
 
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <Dropdown
         placement="bottom-end"
         isOpen={dropdownOpen}
@@ -261,6 +279,6 @@ export default function ProfileViewsBell() {
           </DropdownSection>
         </DropdownMenu>
       </Dropdown>
-    </>
+    </motion.div>
   );
 }

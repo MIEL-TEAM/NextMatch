@@ -5,12 +5,9 @@ import {
 } from "@/app/actions/userActions";
 import { getCurrentUserLocationStatus } from "@/app/actions/memberActions";
 import { getUnreadMessageCount } from "@/app/actions/messageActions";
-import {
-  getUnseenNotificationCount,
-  getUserNotifications,
-} from "@/lib/db/notificationActions";
 import { isActivePremium } from "@/lib/premiumUtils";
 import TopNavClient from "./TopNavClient";
+import ProfileViewsBellWrapper from "../profile-view/ProfileViewsBellWrapper";
 
 export default async function TopNav() {
   const session = await getSession();
@@ -33,13 +30,11 @@ export default async function TopNav() {
   const links = isAdmin ? adminLinks : memberLinks;
 
   // Run all independent DB calls in parallel instead of sequentially.
-  const [userInfo, profileCompletion, initialUnreadCount, unseenResult, notifResult, locationStatus] =
+  const [userInfo, profileCompletion, initialUnreadCount, locationStatus] =
     await Promise.all([
       session?.user ? getUserInfoForNav() : Promise.resolve(null),
       userId && session?.user && !isAdmin ? getProfileCompletionStatus(userId) : Promise.resolve(null),
       userId && !isAdmin ? getUnreadMessageCount() : Promise.resolve(0),
-      userId && !isAdmin ? getUnseenNotificationCount() : Promise.resolve(null),
-      userId && !isAdmin ? getUserNotifications(20, 0) : Promise.resolve(null),
       userId && !isAdmin
         ? getCurrentUserLocationStatus().catch((error) => {
             console.warn("Failed to load user location:", error);
@@ -49,8 +44,6 @@ export default async function TopNav() {
     ]);
 
   const isPremium = isActivePremium(userInfo);
-  const initialUnseenNotificationCount = unseenResult?.count ?? 0;
-  const initialNotifications = (notifResult?.notifications ?? []) as any;
   const userLocation = locationStatus?.coordinates ?? null;
 
   return (
@@ -63,9 +56,8 @@ export default async function TopNav() {
       isAdmin={isAdmin}
       isPremium={isPremium}
       initialUnreadCount={initialUnreadCount}
-      initialUnseenNotificationCount={initialUnseenNotificationCount}
-      initialNotifications={initialNotifications}
       userLocation={userLocation}
+      notificationBell={!isAdmin && userId ? <ProfileViewsBellWrapper /> : null}
     />
   );
 }

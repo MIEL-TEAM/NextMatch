@@ -1,9 +1,5 @@
 import React from "react";
-import ListsTab from "./ListsTab";
-import {
-  fetchCurrentUserLikeIds,
-  fetchLikedMembers,
-} from "../actions/likeActions";
+import ListsServerData from "./ListsServerData";
 import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -36,16 +32,14 @@ export const metadata: Metadata = {
 export default async function ListsPage({
   searchParams: searchParamsPromise,
 }: {
-  searchParams: Promise<{ type: string }>;
+  searchParams: Promise<{ type?: string }>;
 }) {
   const searchParams = await searchParamsPromise;
-
-  const likeIds = await fetchCurrentUserLikeIds();
-  const members = await fetchLikedMembers(searchParams.type);
+  const type = searchParams?.type ?? "source";
 
   return (
     <div className="w-full max-w-screen-2xl mx-auto px-2 md:px-4 py-2 md:py-4">
-      <ListsTab members={members} likeIds={likeIds} />
+      <ListsServerData type={type} />
     </div>
   );
 }

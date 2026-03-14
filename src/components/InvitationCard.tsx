@@ -5,6 +5,8 @@ import Icon from "@/lib/table/Icon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import VideoPlayer from "@/components/video/VideoPlayer";
+import { gt } from "@/lib/gender";
+import type { Gender } from "@/lib/gender";
 
 export interface InvitationCardProps {
   image: string | null;
@@ -12,6 +14,7 @@ export interface InvitationCardProps {
   name: string;
   title: string;
   subtitle?: string;
+  gender?: Gender;
   userId?: string;
   onAction: () => void;
   onDismiss: () => void;
@@ -22,6 +25,7 @@ export default function InvitationCard({
   videoUrl,
   name,
   subtitle,
+  gender,
   userId,
   onAction,
   onDismiss,
@@ -143,7 +147,7 @@ export default function InvitationCard({
               {name}
             </p>
             <p className="text-white/80 text-sm drop-shadow-md">
-              {subtitle ?? "מחוברת עכשיו"}
+              {subtitle ?? gt("activeNow", gender)}
             </p>
           </div>
         </div>

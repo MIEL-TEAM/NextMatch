@@ -1,8 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { membersData } from "./membersData";
-import { storiesData } from "./storiesData";
 import { hash } from "bcryptjs";
-import { add } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -75,63 +73,6 @@ async function seedMembers() {
   );
 }
 
-async function seedStories() {
-  console.log("Seeding stories...");
-
-  const users = await prisma.user.findMany({
-    select: { id: true, email: true },
-  });
-
-  const emailToUserId = new Map(users.map((user) => [user.email, user.id]));
-
-  await Promise.all(
-    storiesData.map(async (storyData) => {
-      const userId = emailToUserId.get(storyData.userId);
-      if (!userId) {
-        console.warn(`User not found for email: ${storyData.userId}`);
-        return;
-      }
-
-      const createdAt = add(new Date(), { hours: -storyData.hoursAgo });
-      const expiresAt = add(createdAt, {
-        hours: storyData.expiresInHours || 24,
-      });
-
-      const existingStory = await prisma.story.findFirst({
-        where: {
-          userId,
-          imageUrl: storyData.imageUrl,
-          createdAt: {
-            gte: add(createdAt, { minutes: -5 }),
-            lte: add(createdAt, { minutes: 5 }),
-          },
-        },
-      });
-
-      if (existingStory) {
-        console.log(`Story already exists for ${storyData.userId}`);
-        return;
-      }
-
-      await prisma.story.create({
-        data: {
-          userId,
-          imageUrl: storyData.imageUrl,
-          textX: storyData.textX,
-          textY: storyData.textY,
-          filter: storyData.filter,
-          privacy: storyData.privacy,
-          createdAt,
-          expiresAt,
-          isActive: true,
-        },
-      });
-    }),
-  );
-
-  console.log("Stories seeded successfully!");
-}
-
 async function seedVideos() {
   console.log("Seeding videos...");
 
@@ -194,9 +135,6 @@ async function main() {
   ) {
     console.log("Seeding members...");
     await seedMembers();
-
-    console.log("Seeding stories...");
-    await seedStories();
 
     console.log("Seeding videos...");
     await seedVideos();

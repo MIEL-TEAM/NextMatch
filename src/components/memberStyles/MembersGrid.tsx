@@ -17,6 +17,7 @@ interface Props {
   likeIds: string[];
   totalCount: number;
   onLike: (memberId: string, isLiked: boolean) => void;
+  memberVibes?: Record<string, string>;
 }
 
 const MembersGrid: React.FC<Props> = ({
@@ -24,6 +25,7 @@ const MembersGrid: React.FC<Props> = ({
   likeIds,
   totalCount,
   onLike,
+  memberVibes,
 }) => {
   const container = {
     hidden: { opacity: 0 },
@@ -68,6 +70,7 @@ const MembersGrid: React.FC<Props> = ({
                 memberPhotos={photos}
                 memberVideos={videos}
                 onLike={onLike}
+                activeVibe={memberVibes?.[member.userId]}
               />
             </div>
           </motion.div>

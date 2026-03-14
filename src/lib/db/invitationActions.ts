@@ -112,6 +112,7 @@ export async function dbGetPendingInvitations(userId: string) {
           member: {
             select: {
               videoUrl: true,
+              gender: true,
             },
           },
         },
