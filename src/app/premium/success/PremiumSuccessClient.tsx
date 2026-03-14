@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -27,25 +28,24 @@ export default function PremiumSuccessClient({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 w-full max-w-5xl rounded-3xl overflow-hidden shadow-md border border-stone-200">
 
         {/* ── Left hero ─────────────────────────────────────────── */}
-        <div
-          className="hidden lg:flex relative flex-col justify-end p-12 min-h-[560px]"
-          style={{
-            background:
-              "linear-gradient(145deg, #78350f 0%, #92400e 35%, #b45309 65%, #d97706 100%)",
-          }}
-        >
-          {/* decorative circles */}
-          <div className="absolute top-8 right-8 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute top-28 right-28 w-20 h-20 rounded-full bg-white/10" />
-          <div className="absolute bottom-32 left-8 w-32 h-32 rounded-full bg-white/[0.07]" />
-          <div className="absolute top-16 left-10 w-10 h-10 rounded-full bg-white/10" />
+        <div className="hidden lg:flex relative flex-col justify-end p-12 min-h-[560px] overflow-hidden">
+          {/* full-cover photo */}
+          <Image
+            src="/images/subscribed.jpg"
+            alt="Miel Premium"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* gradient overlay — bottom-heavy so text always pops */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-          <div className="relative z-10 text-white">
-            <div className="text-6xl mb-6 select-none">💎</div>
-            <h2 className="text-[34px] font-bold leading-tight mb-4">
+          <div className="relative z-10 text-white drop-shadow-lg">
+            <div className="text-6xl mb-5 select-none">💎</div>
+            <h2 className="text-[34px] font-bold leading-tight mb-3">
               ברוך הבא<br />ל-Miel Premium
             </h2>
-            <p className="text-white/75 text-[16px] leading-relaxed">
+            <p className="text-white/80 text-[16px] leading-relaxed">
               עכשיו אתה יכול להכיר אנשים<br />בצורה חופשית יותר.
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function PremiumSuccessClient({
             <p className="text-[13px] text-stone-600">
               עכשיו יש לך{" "}
               <span className="font-semibold text-amber-700">תג פרימיום</span>
-              {" "}בפרופיל שלך — פרופילים עם פרימיום מקבלים יותר אינטראקציות.
+              {" "}בפרופיל שלך פרופילים עם פרימיום מקבלים יותר אינטראקציות.
             </p>
           </div>
 
