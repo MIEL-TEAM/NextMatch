@@ -64,7 +64,6 @@ export interface Props {
   hasSeenIntro: boolean;
   currentUserId?: string;
   onLikeUpdate?: (memberId: string, isLiked: boolean) => void;
-  memberVibes?: Record<string, string>;
 }
 
 export interface MemberCardProps {
@@ -82,7 +81,6 @@ export interface MemberCardProps {
   memberVideos?: Array<{ url: string; id: string }>;
   onLike?: (memberId: string, isLiked: boolean) => void;
   isPriority?: boolean;
-  activeVibe?: string;
 }
 
 export type MemberPhotosProps = {

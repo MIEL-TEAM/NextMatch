@@ -17,29 +17,27 @@ interface Props {
   likeIds: string[];
   totalCount: number;
   onLike: (memberId: string, isLiked: boolean) => void;
-  memberVibes?: Record<string, string>;
 }
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 },
+  },
+};
+
+const item = {
+  hidden: { y: 20, opacity: 0 },
+  show: { y: 0, opacity: 1 },
+};
 
 const MembersGrid: React.FC<Props> = ({
   membersData,
   likeIds,
   totalCount,
   onLike,
-  memberVibes,
 }) => {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 },
-    },
-  };
-
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1 },
-  };
-
   const isFetching = useIsFetching({ queryKey: ["members"] }) > 0;
 
   if (isFetching) {
@@ -62,7 +60,7 @@ const MembersGrid: React.FC<Props> = ({
             whileHover={{ y: -10, transition: { duration: 0.2 } }}
             className="relative group"
           >
-            <div className="absolute inset-1 bg-gradient-to-r from-amber-300/20 to-orange-400/20 rounded-lg blur-[0.5px] opacity-0 group-hover:opacity-30 transition duration-300"></div>
+            <div className="absolute inset-1 bg-gradient-to-r from-amber-300/20 to-orange-400/20 rounded-lg blur-[0.5px] opacity-0 group-hover:opacity-30 transition duration-300" />
             <div className="relative">
               <MemberCard
                 member={member}
@@ -70,7 +68,6 @@ const MembersGrid: React.FC<Props> = ({
                 memberPhotos={photos}
                 memberVideos={videos}
                 onLike={onLike}
-                activeVibe={memberVibes?.[member.userId]}
               />
             </div>
           </motion.div>

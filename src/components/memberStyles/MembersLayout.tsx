@@ -7,7 +7,6 @@ import SpotlightMember from "./SpotlightMember";
 import AnimatedBackground from "./AnimatedBackground";
 import MembersGrid from "./MembersGrid";
 import MembersEmptyState from "@/components/memberStyles/MembersEmptyState";
-import { VibesContainer } from "@/components/vibes/VibesContainer";
 import { Props } from "@/types/members";
 
 const EMPTY_STATE_COPY: Record<string, { title: string; description: string }> =
@@ -42,9 +41,8 @@ const MembersLayout: React.FC<Props> = ({
   mode,
   noResults,
   hasSeenIntro,
-  currentUserId,
+  currentUserId: _currentUserId,
   onLikeUpdate,
-  memberVibes,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showIntro, setShowIntro] = useState(!hasSeenIntro);
@@ -176,18 +174,11 @@ const MembersLayout: React.FC<Props> = ({
         />
       )}
 
-      {currentUserId && (
-        <div className="mb-6 px-4 sm:px-7">
-          <VibesContainer currentUserId={currentUserId} />
-        </div>
-      )}
-
       <MembersGrid
         membersData={membersData}
         likeIds={likes}
         totalCount={totalCount}
         onLike={handleLike}
-        memberVibes={memberVibes}
       />
     </div>
   );

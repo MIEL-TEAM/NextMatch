@@ -92,11 +92,8 @@ model User {
   // Quota
   quota UserQuota?
 
-  // Vibes
-  vibe UserVibe?
-
   // Notification preferences
-  notificationPreferences Json? @default("{\"newMessage\": {\"toast\": true, \"sound\": true, \"push\": true}, \"newLike\": {\"toast\": false, \"sound\": true, \"push\": true}, \"mutualMatch\": {\"toast\": true, \"sound\": true, \"push\": true}, \"profileView\": {\"toast\": false, \"sound\": false, \"push\": true}, \"matchOnline\": {\"toast\": true, \"sound\": true, \"push\": true}}")
+  notificationPreferences Json?     @default("{\"newMessage\": {\"toast\": true, \"sound\": true, \"push\": true}, \"newLike\": {\"toast\": false, \"sound\": true, \"push\": true}, \"mutualMatch\": {\"toast\": true, \"sound\": true, \"push\": true}, \"profileView\": {\"toast\": false, \"sound\": false, \"push\": true}, \"matchOnline\": {\"toast\": true, \"sound\": true, \"push\": true}}")
 
   @@index([lastActiveAt(sort: Desc)])
 }
@@ -568,15 +565,3 @@ model UserQuota {
   @@map("user_quota")
 }
 
-model UserVibe {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  vibeKey   String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([vibeKey, expiresAt])
-  @@index([expiresAt])
-  @@map("user_vibes")
-}

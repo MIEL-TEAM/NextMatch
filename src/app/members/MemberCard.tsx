@@ -28,7 +28,6 @@ export default function MemberCard({
   memberVideos = [],
   onLike,
   isPriority = false,
-  activeVibe,
 }: MemberCardProps) {
   const visibilityRef = useVisibilityTracking(member.userId);
 
@@ -254,15 +253,6 @@ export default function MemberCard({
               {member.description}
             </p>
           )}
-          {activeVibe && (
-            <div
-              dir="rtl"
-              className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-[11px] text-orange-600 font-medium leading-none"
-            >
-              {activeVibe}
-            </div>
-          )}
-
         </div>
       </Card>
     ),

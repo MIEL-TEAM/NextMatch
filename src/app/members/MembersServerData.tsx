@@ -7,8 +7,6 @@ import {
 import { getMemberVideosForCards } from "@/app/actions/videoActions";
 import { fetchCurrentUserLikeIds } from "@/app/actions/likeActions";
 import { dbGetUserSearchPreferences } from "@/app/actions/userSearchPreferenceActions";
-import { dbGetMemberVibes } from "@/lib/db/vibeActions";
-import { VIBE_LABEL } from "@/lib/vibes";
 import MembersLayout from "@/components/memberStyles/MembersLayout";
 import type { GetMemberParams } from "@/types";
 import type { DiscoveryMode, MemberWithMedia } from "@/types/members";
@@ -51,7 +49,7 @@ export default async function MembersServerData({
 
   const coordinates = locationStatus?.coordinates ?? null;
 
-  // ── Build query params (mirrors useMembersQuery logic) ──────────────────────
+  // ── Build query params ───────────────────────────────────────────────────────
   const ageMin = preferences?.ageMin ?? 18;
   const ageMax = preferences?.ageMax ?? 65;
   const gender = preferences?.gender?.join(",") ?? "male,female";
@@ -83,20 +81,14 @@ export default async function MembersServerData({
 
   const memberIds = members.map((m) => m.userId);
 
-  // ── Fetch media + likes + vibes in parallel ──────────────────────────────────
-  const [photos, videos, likeIds, vibeRows] = await Promise.all([
+  // ── Fetch media + likes in parallel ─────────────────────────────────────────
+  const [photos, videos, likeIds] = await Promise.all([
     getMembersWithPhotos(memberIds),
     getMemberVideosForCards(memberIds),
     userId
       ? fetchCurrentUserLikeIds().catch(() => [] as string[])
       : Promise.resolve([] as string[]),
-    dbGetMemberVibes(memberIds),
   ]);
-
-  const memberVibes: Record<string, string> = {};
-  for (const row of vibeRows) {
-    memberVibes[row.userId] = VIBE_LABEL[row.vibeKey] ?? row.vibeKey;
-  }
 
   const membersData = members.map((member) => ({
     member: {
@@ -116,7 +108,6 @@ export default async function MembersServerData({
       noResults={membersData.length === 0}
       hasSeenIntro={true}
       currentUserId={userId ?? undefined}
-      memberVibes={memberVibes}
     />
   );
 }

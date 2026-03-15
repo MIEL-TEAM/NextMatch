@@ -42,16 +42,18 @@ export default function PaginationComponent({
           {resultText}
         </div>
 
-        <Pagination
-          total={totalPages}
-          color="secondary"
-          page={pageNumber}
-          onChange={handlePageChange}
-          variant="bordered"
-          showControls
-          size="sm"
-          className="flex justify-center mx-2 sm:mx-4"
-        />
+        <div dir="ltr">
+          <Pagination
+            total={totalPages}
+            color="secondary"
+            page={pageNumber}
+            onChange={handlePageChange}
+            variant="bordered"
+            showControls
+            size="sm"
+            className="flex justify-center mx-2 sm:mx-4"
+          />
+        </div>
 
         <div className="flex flex-row gap-2 sm:gap-3 items-center">
           <span className="hidden sm:inline text-sm sm:text-base whitespace-nowrap">
