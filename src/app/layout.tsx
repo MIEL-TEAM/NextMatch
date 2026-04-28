@@ -16,6 +16,7 @@ import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { CookieConsentManager } from "@/components/cookies";
 import { getServerConsentCookie } from "@/lib/cookies/cookieUtils.server";
 import { SearchPreferencesProvider } from "@/providers/SearchPreferencesProvider";
+import MobileBlocker from "@/components/MobileBlocker";
 
 export const dynamic = "force-dynamic";
 
@@ -145,6 +146,7 @@ export default async function RootLayout({
         <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
       <body>
+        <MobileBlocker />
         <CookieConsentProvider initialPreferences={cookieConsent}>
           <SessionProvider session={session as Session}>
             {!session?.user && !isAdmin && <GoogleOneTap />}
